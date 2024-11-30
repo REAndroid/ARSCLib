@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<ClassId> {
+public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedItem, Comparable<ClassId> {
 
     private final ClassTypeId classTypeId;
     private final IndirectInteger accessFlagValue;
@@ -92,6 +92,45 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         }
         this.classTypeId.setKey(key);
         keyChanged(old);
+    }
+
+    @Override
+    public AnnotationSetKey getAnnotation() {
+        return AnnotationSetKey.create(
+                ComputeIterator.of(getAnnotationItemBlocks(), AnnotationItem::getKey));
+    }
+    @Override
+    public void setAnnotation(AnnotationSetKey annotationSet) {
+        clearAnnotations();
+        writeAnnotation(annotationSet);
+    }
+    @Override
+    public void clearAnnotations() {
+        writeAnnotation(AnnotationSetKey.EMPTY);
+    }
+    private boolean hasAnnotationSetBlocks() {
+        return getAnnotationItemBlocks().hasNext();
+    }
+    private Iterator<AnnotationItem> getAnnotationItemBlocks() {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            AnnotationSet annotationSet = directory.getClassAnnotations();
+            if (annotationSet != null) {
+                return annotationSet.iterator();
+            }
+        }
+        return EmptyIterator.of();
+    }
+    private void writeAnnotation(AnnotationSetKey key) {
+        if (key == null || key.isEmpty()) {
+            if (hasAnnotationSetBlocks()) {
+                AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
+                directory.setClassAnnotations((AnnotationSetKey )null);
+            }
+        } else {
+            AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
+            directory.setClassAnnotations(key);
+        }
     }
     public String getName(){
         TypeId typeId = getId();
@@ -384,10 +423,10 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         }
         return encodedArray;
     }
-    public ArrayKey getStaticValues() {
-        return (ArrayKey) staticValues.getKey();
+    public ArrayValueKey getStaticValues() {
+        return (ArrayValueKey) staticValues.getKey();
     }
-    public void setStaticValues(ArrayKey staticValues){
+    public void setStaticValues(ArrayValueKey staticValues){
         this.staticValues.setKey(staticValues);
         this.staticValues.addUniqueUser(this);
     }
@@ -521,7 +560,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
             getOrCreateClassData().fromSmali(smaliClass);
         }
         if(smaliClass.hasAnnotation()) {
-            setClassAnnotations(smaliClass.getAnnotationSetKey());
+            setAnnotation(smaliClass.getAnnotationSetKey());
         }
     }
     public SmaliClass toSmali() {
@@ -549,12 +588,12 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         if(interfaces != null){
             interfaces.appendInterfaces(writer);
         }
-        AnnotationSet annotationSet = getClassAnnotations();
-        if(annotationSet != null){
+        AnnotationSetKey annotation = getAnnotation();
+        if(!annotation.isEmpty()){
             writer.newLine();
             writer.newLine();
             writer.appendComment("annotations");
-            annotationSet.append(writer);
+            writer.appendAllWithDoubleNewLine(annotation.iterator());
             writer.newLine();
         }
         ClassData classData = getClassData();

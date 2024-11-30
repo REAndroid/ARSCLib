@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.ArrayValueKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -36,17 +36,17 @@ public class SmaliValueArray extends SmaliValue implements Iterable<SmaliValue>{
     }
 
     @Override
-    public ArrayKey getKey() {
+    public ArrayValueKey getKey() {
         int size = size();
         Key[] elements = new Key[size];
         for (int i = 0; i < size; i++) {
             elements[i] = get(i).getKey();
         }
-        return new ArrayKey(elements);
+        return ArrayValueKey.create(elements);
     }
     @Override
     public void setKey(Key key) {
-        ArrayKey arrayKey = (ArrayKey) key;
+        ArrayValueKey arrayKey = (ArrayValueKey) key;
         clear();
         for (Key entry : arrayKey) {
             addValue(entry);

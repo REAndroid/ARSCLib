@@ -294,11 +294,11 @@ public class TypeKey implements Key{
     }
     @Override
     public int compareTo(Object obj) {
-        if(obj == null){
-            return -1;
-        }
-        if(obj == this){
+        if (obj == this) {
             return 0;
+        }
+        if (!(obj instanceof TypeKey)) {
+            return StringsUtil.compareToString(this, obj);
         }
         TypeKey key = (TypeKey) obj;
         return CompareUtil.compare(getTypeName(), key.getTypeName());
@@ -513,61 +513,7 @@ public class TypeKey implements Key{
         }
         return null;
     }
-    public static final TypeKey NULL = new TypeKey("00"){
-        @Override
-        public boolean isPlatform() {
-            return false;
-        }
-        @Override
-        public boolean isPrimitive() {
-            return false;
-        }
-        @Override
-        public boolean isTypeArray() {
-            return false;
-        }
-        @Override
-        public boolean isTypeObject() {
-            return false;
-        }
-        @Override
-        public TypeKey getDeclaring() {
-            return this;
-        }
-        @Override
-        public String getTypeName() {
-            return StringsUtil.EMPTY;
-        }
-        @Override
-        public Iterator<TypeKey> mentionedKeys() {
-            return EmptyIterator.of();
-        }
-        @Override
-        public Key replaceKey(Key search, Key replace) {
-            return this;
-        }
 
-        @Override
-        public boolean isPackage(String packageName) {
-            return false;
-        }
-        @Override
-        public boolean isPackage(String packageName, boolean checkSubPackage) {
-            return false;
-        }
-        @Override
-        public TypeKey setArrayDimension(int dimension) {
-            return this;
-        }
-        @Override
-        public TypeKey setPackage(String packageName) {
-            return this;
-        }
-
-        @Override
-        public void append(SmaliWriter writer) {
-        }
-    };
     static class PrimitiveTypeKey extends TypeKey {
         private final String sourceName;
 

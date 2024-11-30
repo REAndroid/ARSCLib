@@ -20,7 +20,7 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.SizeXIns;
-import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.ArrayValueKey;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -122,14 +122,14 @@ public class StaticFieldDefArray extends FieldDefArray {
         if (classId == null) {
             return;
         }
-        ArrayKey cached = buildCachedKey();
-        ArrayKey encoded = classId.getStaticValues();
+        ArrayValueKey cached = buildCachedKey();
+        ArrayValueKey encoded = classId.getStaticValues();
         if (!ObjectsUtil.equals(cached, encoded)) {
             classId.setStaticValues(cached);
         }
         mLockedBy = null;
     }
-    private ArrayKey buildCachedKey() {
+    private ArrayValueKey buildCachedKey() {
         int lastIndex = lastCachedKeyIndex();
         if (lastIndex < 0) {
             return null;
@@ -145,7 +145,7 @@ public class StaticFieldDefArray extends FieldDefArray {
             elements[i] = key;
             fieldDef.cachedStaticValue(null);
         }
-        return new ArrayKey(elements);
+        return ArrayValueKey.create(elements);
     }
     private int lastCachedKeyIndex() {
         int result = -1;

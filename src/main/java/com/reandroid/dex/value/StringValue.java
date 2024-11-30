@@ -52,7 +52,7 @@ public class StringValue extends SectionIdValue<StringId> {
 
             AnnotationItem annotationItem = getParentInstance(AnnotationItem.class);
             if(annotationItem != null &&
-                    TypeKey.DALVIK_Signature.equals(annotationItem.getTypeKey())){
+                    TypeKey.DALVIK_Signature.equals(annotationItem.getType())){
                 stringId.addUsageType(UsageMarker.USAGE_SIGNATURE_TYPE);
             }
         }
@@ -65,13 +65,5 @@ public class StringValue extends SectionIdValue<StringId> {
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.STRING;
-    }
-    @Override
-    public String getData() {
-        return getString();
-    }
-    @Override
-    public void setData(Object data) {
-        setString((String) data);
     }
 }

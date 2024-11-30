@@ -33,7 +33,7 @@ public class FieldKey implements Key {
     private final StringKey name;
     private final TypeKey type;
 
-    private FieldKey(TypeKey declaring, StringKey name, TypeKey type) {
+    FieldKey(TypeKey declaring, StringKey name, TypeKey type) {
         this.declaring = declaring;
         this.name = name;
         this.type = type;

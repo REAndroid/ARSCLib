@@ -15,25 +15,26 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.common.AnnotatedItem;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class MethodParameter implements DefIndex, SmaliRegion {
+public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
 
     private final MethodDef methodDef;
     private final int index;
@@ -43,47 +44,42 @@ public class MethodParameter implements DefIndex, SmaliRegion {
         this.index = index;
     }
 
-    public void removeSelf() {
+    @Override
+    public AnnotationSetKey getAnnotation() {
+        return AnnotationSetKey.create(
+                ComputeIterator.of(getAnnotationItemBlocks(), AnnotationItem::getKey));
+    }
+    @Override
+    public void setAnnotation(AnnotationSetKey annotationSet) {
+        clearAnnotations();
+        writeAnnotation(annotationSet);
+    }
+    @Override
+    public void clearAnnotations() {
+        writeAnnotation(AnnotationSetKey.EMPTY);
+    }
+
+    public void onRemoved() {
         clearAnnotations();
         clearDebugParameter();
     }
 
-    public void clearAnnotations() {
-        MethodDef methodDef = getMethodDef();
-        AnnotationsDirectory directory = methodDef.getUniqueAnnotationsDirectory();
-        if (directory == null || !hasAnnotationSetBlocks()) {
-            return;
-        }
-        Iterator<DirectoryEntry<MethodDef, AnnotationGroup>> iterator =
-                directory.getParameterEntries(methodDef);
-        int index = getDefinitionIndex();
-        while (iterator.hasNext()) {
-            DirectoryEntry<MethodDef, AnnotationGroup> entry = iterator.next();
-            AnnotationGroup group = entry.getValue();
-            if (group == null || group.getItem(index) == null) {
-                continue;
-            }
-            AnnotationGroup update = group.getSection(SectionType.ANNOTATION_GROUP)
-                    .createItem();
-            entry.setValue(update);
-            update.setItemKeyAt(index, null);
-            update.refresh();
-        }
-    }
-
-    public boolean hasAnnotationSetBlocks() {
-        return getAnnotationSetBlocks().hasNext();
-    }
-
-    public Iterator<AnnotationItem> getAnnotationItemBlocks() {
-        return ExpandIterator.of(getAnnotationSetBlocks());
-    }
-
-    public Iterator<AnnotationSet> getAnnotationSetBlocks() {
+    private boolean hasAnnotationSetBlocks() {
         MethodDef methodDef = getMethodDef();
         AnnotationsDirectory directory = methodDef.getAnnotationsDirectory();
         if (directory != null) {
-            return directory.getParameterAnnotation(methodDef, getDefinitionIndex());
+            return directory.getParameterAnnotation(methodDef,
+                    getDefinitionIndex()).hasNext();
+        }
+        return false;
+    }
+
+    public Iterator<AnnotationItem> getAnnotationItemBlocks() {
+        MethodDef methodDef = getMethodDef();
+        AnnotationsDirectory directory = methodDef.getAnnotationsDirectory();
+        if (directory != null) {
+            return ExpandIterator.of(directory
+                    .getParameterAnnotation(methodDef, getDefinitionIndex()));
         }
         return EmptyIterator.of();
     }
@@ -96,16 +92,24 @@ public class MethodParameter implements DefIndex, SmaliRegion {
         return getOrCreateAnnotationSet().getOrCreate(typeKey);
     }
 
+
     public AnnotationSet getOrCreateAnnotationSet() {
         MethodDef methodDef = getMethodDef();
         AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
         return directory.getOrCreateParameterAnnotation(methodDef, getDefinitionIndex());
     }
 
-    public AnnotationSet setAnnotationSetBlock(AnnotationSetKey key) {
+    private void writeAnnotation(AnnotationSetKey key) {
         MethodDef methodDef = getMethodDef();
-        AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
-        return directory.setParameterAnnotation(methodDef, getDefinitionIndex(), key);
+        if (key == null || key.isEmpty()) {
+            if (hasAnnotationSetBlocks()) {
+                AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
+                directory.removeParameterAnnotation(methodDef, getDefinitionIndex());
+            }
+        } else {
+            AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
+            directory.setParameterAnnotation(methodDef, getDefinitionIndex(), key);
+        }
     }
 
     public TypeKey getType() {
@@ -199,7 +203,7 @@ public class MethodParameter implements DefIndex, SmaliRegion {
 
     public void fromSmali(SmaliMethodParameter smaliMethodParameter) {
         if (smaliMethodParameter.hasAnnotations()) {
-            setAnnotationSetBlock(smaliMethodParameter.getAnnotationSet().getKey());
+            setAnnotation(smaliMethodParameter.getAnnotationSet().getKey());
         }
         setDebugName(smaliMethodParameter.getName());
     }
@@ -209,7 +213,7 @@ public class MethodParameter implements DefIndex, SmaliRegion {
         if (debugParameter != null && debugParameter.getNameId() != null) {
             return false;
         }
-        return !getAnnotationItemBlocks().hasNext();
+        return !hasAnnotations();
     }
 
     @Override
@@ -217,8 +221,8 @@ public class MethodParameter implements DefIndex, SmaliRegion {
         DebugParameter debugParameter = getDebugParameter();
         boolean has_debug = debugParameter != null &&
                 debugParameter.getNameId() != null;
-        Iterator<AnnotationSet> annotations = getAnnotationSetBlocks();
-        boolean has_annotation = annotations.hasNext();
+        AnnotationSetKey annotation = getAnnotation();
+        boolean has_annotation = !annotation.isEmpty();
         if (!has_debug && !has_annotation) {
             return;
         }
@@ -233,7 +237,7 @@ public class MethodParameter implements DefIndex, SmaliRegion {
             return;
         }
         writer.indentPlus();
-        writer.appendAllWithDoubleNewLine(annotations);
+        writer.appendAllWithDoubleNewLine(annotation.iterator());
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }

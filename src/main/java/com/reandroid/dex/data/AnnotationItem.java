@@ -156,7 +156,7 @@ public class AnnotationItem extends DataItem
     }
     @Override
     public AnnotationItemKey getKey(){
-        return checkKey(new AnnotationItemKey(getVisibility(), getTypeKey(), getElements()));
+        return checkKey(new AnnotationItemKey(getVisibility(), getType(), getElements()));
     }
     @Override
     public void setKey(Key key){
@@ -213,14 +213,7 @@ public class AnnotationItem extends DataItem
         }
         return this.visibility.get();
     }
-    public String getTypeName(){
-        TypeId typeId = getTypeId();
-        if(typeId != null){
-            return typeId.getName();
-        }
-        return null;
-    }
-    public TypeKey getTypeKey(){
+    public TypeKey getType() {
         return (TypeKey) typeId.getKey();
     }
     public TypeId getTypeId(){
@@ -239,7 +232,7 @@ public class AnnotationItem extends DataItem
         }
     }
     public Iterator<IdItem> usedIds(){
-        TypeKey typeKey = getTypeKey();
+        TypeKey typeKey = getType();
         if(typeKey.getTypeName().startsWith("Ldalvik/annotation/")){
             return EmptyIterator.of();
         }
@@ -263,7 +256,7 @@ public class AnnotationItem extends DataItem
             return;
         }
         setVisibility(annotationItem.getVisibilityValue());
-        setType(annotationItem.getTypeKey());
+        setType(annotationItem.getType());
         annotationElements.ensureCapacity(annotationItem.getElementsCount());
         for(AnnotationElement coming : annotationItem){
             createNewElement().merge(coming);
@@ -320,7 +313,7 @@ public class AnnotationItem extends DataItem
             return false;
         }
         AnnotationItem item = (AnnotationItem) obj;
-        if(!ObjectsUtil.equals(this.getTypeName(), item.getTypeName())){
+        if(!ObjectsUtil.equals(this.getType(), item.getType())){
             return false;
         }
         if(this.getVisibilityValue() != item.getVisibilityValue()){
@@ -333,7 +326,7 @@ public class AnnotationItem extends DataItem
     public int hashCode() {
         return ObjectsUtil.hash(
                 getVisibility(),
-                getTypeName(),
+                getType(),
                 annotationElements);
     }
 
@@ -341,7 +334,7 @@ public class AnnotationItem extends DataItem
     public String toString(){
         StringBuilder builder = new StringBuilder();
         builder.append('@');
-        builder.append(getTypeName());
+        builder.append(getType());
         boolean appendOnce = false;
         for(AnnotationElement element : this){
             if(appendOnce){

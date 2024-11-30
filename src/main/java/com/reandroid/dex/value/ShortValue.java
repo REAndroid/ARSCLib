@@ -18,9 +18,12 @@ package com.reandroid.dex.value;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueShort;
 import com.reandroid.utils.HexUtil;
+
+import java.io.IOException;
 
 public class ShortValue extends PrimitiveValueBlock {
 
@@ -28,14 +31,6 @@ public class ShortValue extends PrimitiveValueBlock {
         super(DexValueType.SHORT);
     }
 
-    @Override
-    public Short getData() {
-        return get();
-    }
-    @Override
-    public void setData(Number number) {
-        this.set((Short) number);
-    }
     public short get(){
         return (short) getSignedValue();
     }
@@ -55,10 +50,6 @@ public class ShortValue extends PrimitiveValueBlock {
     public void setKey(Key key) {
         set(((PrimitiveKey.ShortKey) key).value());
     }
-    @Override
-    public String getHex() {
-        return HexUtil.toSignedHex(get()) + "S";
-    }
 
     @Override
     public TypeKey getDataTypeKey() {
@@ -66,8 +57,18 @@ public class ShortValue extends PrimitiveValueBlock {
     }
 
     @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.appendHex(get());
+    }
+
+    @Override
     public void fromSmali(SmaliValue smaliValue) {
         SmaliValueShort smaliValueShort = (SmaliValueShort) smaliValue;
         set(smaliValueShort.getValue());
+    }
+
+    @Override
+    public String toString() {
+        return HexUtil.toSignedHex(get()) + "S";
     }
 }

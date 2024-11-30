@@ -138,14 +138,6 @@ public abstract class SectionValue<T extends SectionItem> extends DexValueBlock<
     }
 
     @Override
-    public String getAsString() {
-        Key key = getKey();
-        if(key != null){
-            return key.toString();
-        }
-        return null;
-    }
-    @Override
     public void append(SmaliWriter writer) throws IOException {
         T data = getItem();
         if(data == null){

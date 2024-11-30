@@ -2,7 +2,6 @@ package com.reandroid.dex.value;
 
 import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueAnnotation;
@@ -28,17 +27,14 @@ public class AnnotationValue extends DexValueBlock<AnnotationItem> {
     public DexValueType<?> getValueType() {
         return DexValueType.ANNOTATION;
     }
-    @Override
-    public String getAsString() {
-        return get().toString();
-    }
+
     @Override
     public void merge(DexValueBlock<?> valueBlock){
         super.merge(valueBlock);
         AnnotationValue value = (AnnotationValue) valueBlock;
         AnnotationItem coming = value.get();
         AnnotationItem item = get();
-        item.setType(coming.getTypeKey());
+        item.setType(coming.getType());
         item.merge(coming);
     }
 

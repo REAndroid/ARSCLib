@@ -359,7 +359,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     }
     default boolean removeAnnotations(TypeKey typeKey) {
         return removeEntries(SectionType.ANNOTATION_ITEM,
-                annotationItem -> typeKey.equals(annotationItem.getTypeKey()));
+                annotationItem -> typeKey.equals(annotationItem.getType()));
     }
     default int removeAnnotationElements(MethodKey methodKey) {
         int removeCount = 0;

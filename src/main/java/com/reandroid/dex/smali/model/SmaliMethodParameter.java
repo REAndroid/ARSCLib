@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.smali.*;
@@ -60,6 +62,13 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
     public boolean hasAnnotations(){
         SmaliAnnotationSet annotationSet = getAnnotationSet();
         return annotationSet != null && !annotationSet.isEmpty();
+    }
+    public AnnotationSetKey getAnnotations() {
+        SmaliAnnotationSet annotationSet = getAnnotationSet();
+        if (annotationSet != null) {
+            return annotationSet.getKey();
+        }
+        return AnnotationSetKey.EMPTY;
     }
     public SmaliAnnotationSet getAnnotationSet() {
         return annotationSet;
@@ -126,6 +135,11 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
         }
         parseName(reader);
         parseAnnotationSet(reader);
+        AnnotationItemKey duplicate = getAnnotations().getDuplicate();
+        if (duplicate != null) {
+            throw new SmaliParseException("Multiple annotation of type: "
+                    + duplicate.getType() + "\n", reader);
+        }
     }
     private void parseName(SmaliReader reader) throws IOException {
         reader.skipSpaces();

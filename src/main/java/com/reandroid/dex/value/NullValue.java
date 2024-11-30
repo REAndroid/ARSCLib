@@ -17,7 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.NullKey;
+import com.reandroid.dex.key.NullValueKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueNull;
@@ -36,8 +36,8 @@ public class NullValue extends DexValueBlock<Block> {
     }
 
     @Override
-    public NullKey getKey() {
-        return NullKey.INSTANCE;
+    public NullValueKey getKey() {
+        return NullValueKey.INSTANCE;
     }
 
     @Override
@@ -57,10 +57,6 @@ public class NullValue extends DexValueBlock<Block> {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append("null");
-    }
-    @Override
-    public String getAsString() {
-        return "null";
     }
 
     @Override

@@ -15,15 +15,17 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class NullKey implements Key {
+public class NullValueKey implements Key {
 
-    public static NullKey INSTANCE = new NullKey();
+    public static NullValueKey INSTANCE = new NullValueKey();
 
-    public NullKey() {
+    private NullValueKey() {
     }
 
     @Override
@@ -56,5 +58,14 @@ public class NullKey implements Key {
     @Override
     public String toString() {
         return "null";
+    }
+
+    public static NullValueKey read(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, 'n');
+        SmaliParseException.expect(reader, 'u');
+        SmaliParseException.expect(reader, 'l');
+        SmaliParseException.expect(reader, 'l');
+        return INSTANCE;
     }
 }

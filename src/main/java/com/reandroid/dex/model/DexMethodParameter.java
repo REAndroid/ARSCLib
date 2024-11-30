@@ -120,7 +120,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
 
     @Override
     public void removeSelf() {
-        getParameter().removeSelf();
+        getParameter().onRemoved();
     }
 
     @Override

@@ -15,8 +15,6 @@
  */
 package com.reandroid.dex.key;
 
-
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
@@ -28,13 +26,13 @@ import java.util.Iterator;
 
 public interface Key extends Comparable<Object>, SmaliFormat {
 
-    default boolean uses(Key key){
+    default boolean uses(Key key) {
         return this.equals(key) || CollectionUtil.contains(mentionedKeys(), key);
     }
-    default TypeKey getDeclaring(){
-        return TypeKey.NULL;
+    default TypeKey getDeclaring() {
+        return null;
     }
-    default Iterator<? extends Key> mentionedKeys(){
+    default Iterator<? extends Key> mentionedKeys() {
         throw new RuntimeException("Method 'mentionedKeys()' Not implemented for: " + getClass());
     }
     default Key replaceKey(Key search, Key replace){
@@ -43,22 +41,46 @@ public interface Key extends Comparable<Object>, SmaliFormat {
     default boolean isPrimitiveKey() {
         return false;
     }
-    default boolean isPlatform(){
-        return DexUtils.isPlatform(getDeclaring());
-    }
+
     default void append(SmaliWriter writer) throws IOException{
         writer.append(toString());
     }
+    @Override
+    int compareTo(Object o);
 
-    static Key parseBasic(String text){
+    static Key parseBasic(String text) {
         if(StringsUtil.isEmpty(text)) {
             return null;
         }
-        int i = text.indexOf('"');
-        if(i == 0) {
+        char first = text.charAt(0);
+        if (first == '"') {
             return StringKey.parseQuotedString(text);
         }
-        i = text.indexOf('(');
+        if (first == 'L' || first == '[') {
+            if (first == 'L' && text.indexOf(':') > 0) {
+                return FieldKey.parse(text);
+            }
+            if (text.indexOf('(') > 0) {
+                return MethodKey.parse(text);
+            }
+            return TypeKey.parse(text);
+        }
+        if (first == '(') {
+            if (text.indexOf(',') > 0) {
+                return CallSiteKey.parse(text);
+            }
+            return ProtoKey.parse(text);
+        }
+        if (first == '{') {
+            return ArrayValueKey.parse(text);
+        }
+        if (text.startsWith(".annotation") || text.startsWith(".subannotation")) {
+            return AnnotationItemKey.parse(text);
+        }
+        if (text.startsWith(".enum")) {
+            return EnumKey.parse(text);
+        }
+        int i = text.indexOf('(');
         if(i > 0) {
             return MethodKey.parse(text);
         }
@@ -66,7 +88,7 @@ public interface Key extends Comparable<Object>, SmaliFormat {
         if(i > 0) {
             return FieldKey.parse(text);
         }
-        return TypeKey.parse(text);
+        return PrimitiveKey.parse(text);
     }
     String DALVIK_accessFlags = ObjectsUtil.of("accessFlags");
     String DALVIK_name = ObjectsUtil.of("name");

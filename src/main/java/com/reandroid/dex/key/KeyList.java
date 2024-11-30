@@ -135,6 +135,29 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return newInstance(result);
     }
 
+    public T getDuplicate() {
+        T[] elements = getSortedElements();
+        int length = elements.length;
+        if (length < 2) {
+            return null;
+        }
+        T last = elements[0];
+        for (int i = 1; i < length; i++) {
+            T element = elements[i];
+            if (ObjectsUtil.equals(last, element)) {
+                return element;
+            }
+            last = element;
+        }
+        return null;
+    }
+    public KeyList<T> sorted() {
+        T[] elements = this.sortedElements;
+        if (elements == null) {
+            return this;
+        }
+        return newInstance(elements);
+    }
     private T[] getSortedElements() {
         T[] elements = this.sortedElements;
         if (elements == null) {

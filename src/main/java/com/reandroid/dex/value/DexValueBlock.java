@@ -25,19 +25,17 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class DexValueBlock<T extends Block> extends FixedBlockContainer
         implements KeyReference, SmaliFormat {
 
     private final ByteItem valueTypeItem;
     private final T valueContainer;
-
-    private boolean mTemporary;
 
     DexValueBlock(T value, DexValueType<?> type){
         super(2);
@@ -49,13 +47,6 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer
     }
     DexValueBlock(DexValueType<?> type){
         this(null, type);
-    }
-
-    public boolean isTemporary() {
-        return mTemporary;
-    }
-    public void setTemporary(boolean temporary) {
-        this.mTemporary = temporary;
     }
 
     T getValueContainer(){
@@ -99,13 +90,7 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        T value = getValueContainer();
-        if(value instanceof SmaliFormat){
-            ((SmaliFormat)value).append(writer);
-        }
-    }
-    public String getAsString() {
-        return String.valueOf(getValueContainer());
+        getKey().append(writer);
     }
 
     public boolean is(DexValueType<?> dexValueType){
@@ -113,12 +98,6 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer
     }
     public TypeKey getDataTypeKey(){
         return TypeKey.OBJECT;
-    }
-    public Object getData() {
-        return null;
-    }
-    public void setData(Object data) {
-        throw new RuntimeException("Method not implemented");
     }
 
     @Override
@@ -137,7 +116,7 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer
             return false;
         }
         DexValueBlock<?> value = (DexValueBlock<?>) obj;
-        return Objects.equals(getValueContainer(), value.getValueContainer());
+        return ObjectsUtil.equals(getValueContainer(), value.getValueContainer());
     }
 
 

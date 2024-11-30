@@ -18,9 +18,9 @@ package com.reandroid.dex.key;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.NumberX;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
@@ -28,9 +28,6 @@ public abstract class PrimitiveKey implements Key {
 
     public PrimitiveKey() {
     }
-
-    @Override
-    public boolean isPrimitiveKey() { return true; }
 
     public abstract Object getValue();
     public abstract TypeKey valueType();
@@ -48,9 +45,17 @@ public abstract class PrimitiveKey implements Key {
     public boolean isShort() { return false; }
     public boolean isX() { return false; }
 
-
     @Override
-    public abstract int compareTo(Object obj);
+    public int compareTo(Object obj) {
+        if (obj == this) {
+            return 0;
+        }
+        if (!(obj instanceof PrimitiveKey)) {
+            return StringsUtil.compareToString(this, obj);
+        }
+        PrimitiveKey other = (PrimitiveKey) obj;
+        return Long.compare(this.getValueAsLong(), other.getValueAsLong());
+    }
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
 
@@ -142,13 +147,6 @@ public abstract class PrimitiveKey implements Key {
         }
 
         @Override
-        public int compareTo(Object obj) {
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return CompareUtil.compare(value(), ((BooleanKey) obj).value());
-        }
-        @Override
         public int hashCode() {
             return value() ? 1 : 0;
         }
@@ -210,16 +208,6 @@ public abstract class PrimitiveKey implements Key {
         }
 
         @Override
-        public int compareTo(Object obj) {
-            if (obj == this) {
-                return 0;
-            }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return Byte.compare(value(), ((ByteKey) obj).value());
-        }
-        @Override
         public int hashCode() {
             return value();
         }
@@ -280,16 +268,6 @@ public abstract class PrimitiveKey implements Key {
             return true;
         }
 
-        @Override
-        public int compareTo(Object obj) {
-            if (obj == this) {
-                return 0;
-            }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return Character.compare(value(), ((CharKey) obj).value());
-        }
         @Override
         public int hashCode() {
             return value();
@@ -355,8 +333,8 @@ public abstract class PrimitiveKey implements Key {
             if (obj == this) {
                 return 0;
             }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
+            if (!(obj instanceof DoubleKey)) {
+                return StringsUtil.compareToString(this, obj);
             }
             return Double.compare(value(), ((DoubleKey) obj).value());
         }
@@ -426,8 +404,8 @@ public abstract class PrimitiveKey implements Key {
             if (obj == this) {
                 return 0;
             }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
+            if (!(obj instanceof FloatKey)) {
+                return StringsUtil.compareToString(this, obj);
             }
             return Float.compare(value(), ((FloatKey) obj).value());
         }
@@ -494,13 +472,6 @@ public abstract class PrimitiveKey implements Key {
         }
 
         @Override
-        public int compareTo(Object obj) {
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return CompareUtil.compare(value(), ((IntegerKey) obj).value());
-        }
-        @Override
         public int hashCode() {
             return value();
         }
@@ -562,16 +533,6 @@ public abstract class PrimitiveKey implements Key {
         }
 
         @Override
-        public int compareTo(Object obj) {
-            if (obj == this) {
-                return 0;
-            }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return Long.compare(value(), ((LongKey) obj).value());
-        }
-        @Override
         public int hashCode() {
             return Long.hashCode(value());
         }
@@ -632,16 +593,6 @@ public abstract class PrimitiveKey implements Key {
         }
 
         @Override
-        public int compareTo(Object obj) {
-            if (obj == this) {
-                return 0;
-            }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return Short.compare(value(), ((ShortKey) obj).value());
-        }
-        @Override
         public int hashCode() {
             return value();
         }
@@ -681,7 +632,21 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public NumberX getValue() {
+        public Number getValue() {
+            int width = width();
+            long value = value();
+            if (width == 1) {
+                return (byte) value;
+            }
+            if (width == 2) {
+                return (short) value;
+            }
+            if (width == 4) {
+                return (int) value;
+            }
+            if (width == 8) {
+                return value;
+            }
             return NumberX.valueOf(width(), value());
         }
         @Override
@@ -701,16 +666,6 @@ public abstract class PrimitiveKey implements Key {
             return null;
         }
 
-        @Override
-        public int compareTo(Object obj) {
-            if (obj == this) {
-                return 0;
-            }
-            if (obj == null || obj.getClass() != getClass()) {
-                return 0;
-            }
-            return Long.compare(value(), ((NumberXKey) obj).value());
-        }
         @Override
         public int hashCode() {
             return Long.hashCode(value());

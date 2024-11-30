@@ -45,7 +45,7 @@ public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>
     }
 
     public TypeKey getType(){
-        return getAnnotationItem().getTypeKey();
+        return getAnnotationItem().getType();
     }
     public void setType(TypeKey typeKey){
         getAnnotationItem().setType(typeKey);

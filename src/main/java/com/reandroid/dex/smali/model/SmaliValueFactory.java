@@ -160,11 +160,11 @@ public class SmaliValueFactory {
             smaliValue = new SmaliValueSectionData();
         } else if(key instanceof FieldKey) {
             smaliValue = new SmaliValueEnum();
-        } else if(key instanceof ArrayKey) {
+        } else if(key instanceof ArrayValueKey) {
             smaliValue = new SmaliValueArray();
         } else if(key instanceof AnnotationItemKey) {
             smaliValue = new SmaliValueAnnotation();
-        } else if(key instanceof NullKey) {
+        } else if(key instanceof NullValueKey) {
             smaliValue = new SmaliValueNull();
         } else {
             throw new IllegalArgumentException("Undefined key: " + key.getClass() + ", " + key);

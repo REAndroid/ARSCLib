@@ -135,7 +135,7 @@ public class MethodDef extends Def<MethodId>{
         if(parameter == null){
             return;
         }
-        parameter.removeSelf();
+        parameter.onRemoved();
         MethodKey methodKey = getKey();
         if(methodKey == null){
             return;
@@ -362,7 +362,7 @@ public class MethodDef extends Def<MethodId>{
             getOrCreateCodeItem().fromSmali(smaliMethod);
         }
         if(smaliMethod.hasAnnotation()){
-            addAnnotationSet(smaliMethod.getAnnotationSetKey());
+            setAnnotation(smaliMethod.getAnnotationSetKey());
         }
         Iterator<SmaliMethodParameter> iterator = smaliMethod.getParameters();
         while (iterator.hasNext()){

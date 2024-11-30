@@ -20,7 +20,7 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.ArrayValueKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
@@ -51,20 +51,21 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
     }
 
     @Override
-    public ArrayKey getKey() {
+    public ArrayValueKey getKey() {
         int size = size();
         Key[] keys = new Key[size];
         for (int i = 0; i < size; i++) {
             keys[i] = get(i).getKey();
         }
-        return checkKey(new ArrayKey(keys));
+        return checkKey(ArrayValueKey.create(keys));
     }
-
+    @Override
     public void setKey(Key key) {
-        ArrayKey arrayKey = (ArrayKey) key;
+        ArrayValueKey arrayKey = (ArrayValueKey) key;
         clear();
-        for (Key k : arrayKey) {
-            add(k);
+        int size = arrayKey.size();
+        for (int i = 0; i < size; i++) {
+            add(arrayKey.get(i));
         }
     }
 

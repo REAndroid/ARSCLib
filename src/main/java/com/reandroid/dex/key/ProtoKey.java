@@ -4,6 +4,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -137,11 +138,11 @@ public class ProtoKey implements Key {
 
     @Override
     public int compareTo(Object obj) {
-        if (obj == null) {
-            return -1;
-        }
         if (obj == this) {
             return 0;
+        }
+        if (!(obj instanceof ProtoKey)) {
+            return StringsUtil.compareToString(this, obj);
         }
         ProtoKey key = (ProtoKey) obj;
         int i = CompareUtil.compare(getReturnType(), key.getReturnType());

@@ -21,6 +21,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
@@ -60,7 +61,7 @@ public class CallSiteKey implements Key {
         for (int i = 0; i < argumentsLength; i++) {
             elements[i + 3] = arguments.get(i);
         }
-        return new ArrayKey(elements);
+        return ArrayKey.create(elements);
     }
     public CallSiteKey changeMethodHandle(MethodHandleKey methodHandle) {
         if (methodHandle.equals(getMethodHandle())) {
@@ -80,7 +81,7 @@ public class CallSiteKey implements Key {
         }
         return new CallSiteKey(getMethodHandle(), getName(), proto, getArguments());
     }
-    public CallSiteKey changeArguments(ArrayKey arguments) {
+    public CallSiteKey changeArguments(ArrayValueKey arguments) {
         if (arguments.equals(getArguments())) {
             return this;
         }
@@ -94,9 +95,12 @@ public class CallSiteKey implements Key {
         writer.append(", ");
         getProto().append(writer);
         ArrayKey arguments = getArguments();
-        if (!arguments.isEmpty()) {
-            writer.append(", ");
-            getArguments().append(writer, ", ");
+        int size = arguments.size();
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
+                writer.append(", ");
+            }
+            arguments.get(i).append(writer);
         }
         writer.append(')');
         getMethodHandle().append(writer, false);
@@ -108,7 +112,7 @@ public class CallSiteKey implements Key {
             return 0;
         }
         if (!(obj instanceof CallSiteKey)) {
-            return 0;
+            return StringsUtil.compareToString(this, obj);
         }
         CallSiteKey key = (CallSiteKey) obj;
         int i = CompareUtil.compare(this.getMethodHandle(), key.getMethodHandle());
@@ -183,6 +187,11 @@ public class CallSiteKey implements Key {
         SmaliParseException.expect(reader, '@');
         MethodHandleKey methodHandleKey = MethodHandleKey.read(MethodHandleType.INVOKE_STATIC, reader);
         return new CallSiteKey(methodHandleKey, name, protoKey, arguments);
+    }
+
+    public static CallSiteKey parse(String text) {
+        //FIXME
+        throw new RuntimeException("CallSiteKey.parse not implemented");
     }
     private static String readCallSiteLabel(SmaliReader reader) throws IOException {
         int position = reader.position();

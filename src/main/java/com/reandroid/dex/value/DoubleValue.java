@@ -21,7 +21,6 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueDouble;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
@@ -31,14 +30,6 @@ public class DoubleValue extends PrimitiveValueBlock {
         super(DexValueType.DOUBLE);
     }
 
-    @Override
-    public Double getData() {
-        return get();
-    }
-    @Override
-    public void setData(Number number) {
-        this.set((Double) number);
-    }
     public double get(){
         return Double.longBitsToDouble(getLongBits());
     }
@@ -70,11 +61,6 @@ public class DoubleValue extends PrimitiveValueBlock {
     public void setKey(Key key) {
         set(((PrimitiveKey.DoubleKey) key).value());
     }
-    @Override
-    public String getHex() {
-        int shift = (7 - getValueSize()) * 8;
-        return HexUtil.toHex(getUnsigned() << shift, 8) + "L";
-    }
 
     @Override
     public TypeKey getDataTypeKey() {
@@ -94,6 +80,6 @@ public class DoubleValue extends PrimitiveValueBlock {
     }
     @Override
     public String toString() {
-        return getHex() + " # " + get();
+        return Double.toString(get());
     }
 }

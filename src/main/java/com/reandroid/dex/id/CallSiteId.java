@@ -103,7 +103,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         for (int i = 0; i < size; i++) {
             results[i] = getArgument(i);
         }
-        return new ArrayKey(results);
+        return ArrayKey.create(results);
     }
     public Iterator<DexValueBlock<?>> getArgumentValues() {
         EncodedArray encodedArray = getEncodedArray();
@@ -138,7 +138,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         }
         return 0;
     }
-    public void setArguments(ArrayKey key) {
+    public void setArguments(ArrayValueKey key) {
         if (!key.equals(getArguments())) {
             setKey(getKey().changeArguments(key));
         }

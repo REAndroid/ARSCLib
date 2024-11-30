@@ -22,7 +22,6 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueChar;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
@@ -32,38 +31,6 @@ public class CharValue extends PrimitiveValueBlock {
         super(DexValueType.CHAR);
     }
 
-    @Override
-    public Number getData() {
-        int i = (int) getSignedValue();
-        if((i & 0xff) == i){
-            return (byte) i;
-        }
-        if((i & 0xffff) == i){
-            return (short) i;
-        }
-        return i;
-    }
-    @Override
-    public void setData(Number number) {
-        if(number == null){
-            throw new NullPointerException();
-        }
-        if(number instanceof Integer){
-            Integer v = (Integer) number;
-            set((char) v.intValue());
-        }else if(number instanceof Short){
-            Short v = (Short) number;
-            int i = v & 0xffff;
-            set((char) i);
-        }else if(number instanceof Byte){
-            Byte v = (Byte) number;
-            int i = v & 0xff;
-            set((char) i);
-        }
-        throw new NumberFormatException("Invalid '"
-                + number.getClass().getSimpleName()
-                + "' value for char " + number);
-    }
     public char get(){
         return (char) (getUnsigned() & 0xffff);
     }
@@ -83,15 +50,7 @@ public class CharValue extends PrimitiveValueBlock {
     public void setKey(Key key) {
         set(((PrimitiveKey.CharKey) key).value());
     }
-    @Override
-    public String getHex() {
-        return HexUtil.toSignedHex(get()) + "C";
-    }
 
-    @Override
-    public String getAsString() {
-        return DexUtils.quoteChar(get());
-    }
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_C;
@@ -109,6 +68,6 @@ public class CharValue extends PrimitiveValueBlock {
     }
     @Override
     public String toString() {
-        return getAsString();
+        return DexUtils.quoteChar(get());
     }
 }

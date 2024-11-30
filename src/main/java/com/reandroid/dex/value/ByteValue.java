@@ -18,23 +18,17 @@ package com.reandroid.dex.value;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueByte;
 import com.reandroid.utils.HexUtil;
+
+import java.io.IOException;
 
 public class ByteValue extends PrimitiveValueBlock {
 
     public ByteValue() {
         super(DexValueType.BYTE);
-    }
-
-    @Override
-    public Byte getData() {
-        return get();
-    }
-    @Override
-    public void setData(Number number) {
-        this.set((Byte) number);
     }
 
     public byte get(){
@@ -57,10 +51,6 @@ public class ByteValue extends PrimitiveValueBlock {
     public void setKey(Key key) {
         set(((PrimitiveKey.ByteKey) key).value());
     }
-    @Override
-    public String getHex() {
-        return HexUtil.toSignedHex(get()) + "t";
-    }
 
     @Override
     public TypeKey getDataTypeKey() {
@@ -68,8 +58,18 @@ public class ByteValue extends PrimitiveValueBlock {
     }
 
     @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.appendHex(get());
+    }
+
+    @Override
     public void fromSmali(SmaliValue smaliValue) {
         SmaliValueByte smaliValueByte = (SmaliValueByte) smaliValue;
         set(smaliValueByte.getValue());
+    }
+
+    @Override
+    public String toString() {
+        return HexUtil.toSignedHex(get()) + "t";
     }
 }

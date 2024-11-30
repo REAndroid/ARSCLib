@@ -15,23 +15,33 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.common.MethodHandleType;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.List;
 import java.util.function.Predicate;
 
 public class ArrayKey extends KeyList<Key> {
 
-    private static final Key[] EMPTY = new Key[0];
+    public static final ArrayKey EMPTY;
+    static final Key[] EMPTY_ARRAY;
 
-    public ArrayKey(Key[] elements) {
-        super(checkNullOrEmpty(elements));
+    static {
+        Key[] emptyArray = new Key[0];
+        EMPTY_ARRAY = emptyArray;
+        EMPTY = new ArrayKey(emptyArray);
     }
+
+    ArrayKey(Key[] elements) {
+        super(elements);
+    }
+
 
     @Override
     public ArrayKey add(Key item) {
@@ -56,12 +66,12 @@ public class ArrayKey extends KeyList<Key> {
 
     @Override
     ArrayKey newInstance(Key[] elements) {
-        return new ArrayKey(elements);
+        return create(elements);
     }
     @Override
     Key[] newArray(int length) {
         if (length == 0) {
-            return EMPTY;
+            return EMPTY_ARRAY;
         }
         return new Key[length];
     }
@@ -111,7 +121,7 @@ public class ArrayKey extends KeyList<Key> {
             return 0;
         }
         if (!(obj instanceof ArrayKey)) {
-            return 0;
+            return StringsUtil.compareToString(this, obj);
         }
         return compareElements((ArrayKey) obj);
     }
@@ -132,13 +142,22 @@ public class ArrayKey extends KeyList<Key> {
         return equalsElements((ArrayKey) obj);
     }
 
+    public static ArrayKey create(Key ... elements) {
+        if (elements == null || elements.length == 0) {
+            return EMPTY;
+        }
+        return new ArrayKey(elements);
+    }
     public static ArrayKey read(SmaliReader reader, char end) throws IOException {
+        return create(readElements(reader, end));
+    }
+    public static Key[] readElements(SmaliReader reader, char end) throws IOException {
         reader.skipWhitespacesOrComment();
         if (reader.getASCII(reader.position()) == end) {
             reader.readASCII();
-            return new ArrayKey(new Key[0]);
+            return EMPTY_ARRAY;
         }
-        List<Key> results = new ArrayCollection<>();
+        ArrayCollection<Key> results = new ArrayCollection<>();
         while (true) {
             Key key = readNext(reader);
             results.add(key);
@@ -149,7 +168,7 @@ public class ArrayKey extends KeyList<Key> {
             SmaliParseException.expect(reader, ',');
         }
         SmaliParseException.expect(reader, end);
-        return new ArrayKey(results.toArray(new Key[results.size()]));
+        return results.toArrayFill(new Key[results.size()]);
     }
     private static Key readNext(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
@@ -184,13 +203,35 @@ public class ArrayKey extends KeyList<Key> {
             }
             return FieldKey.read(reader);
         }
-        return StringKey.read(reader);
+        if (c == '{') {
+            return ArrayValueKey.read(reader);
+        }
+        if (c == '.') {
+            SmaliDirective directive = SmaliDirective.parse(reader, false);
+            if (directive == SmaliDirective.SUB_ANNOTATION) {
+                return AnnotationItemKey.read(reader);
+            }
+            if (directive == SmaliDirective.ENUM) {
+                return EnumKey.read(reader);
+            }
+            throw new SmaliParseException("Unexpected value ", reader);
+        }
+        if (c == 'n') {
+            return NullValueKey.read(reader);
+        }
+        if (MethodHandleType.startsWithHandleType(reader)) {
+            return MethodHandleKey.read(reader);
+        }
+
+        PrimitiveKey primitiveKey = PrimitiveKey.readSafe(reader);
+        if (primitiveKey != null) {
+            return primitiveKey;
+        }
+        throw new SmaliParseException("Unexpected value ", reader);
     }
 
-    private static Key[] checkNullOrEmpty(Key[] elements) {
-        if (elements == null || elements.length == 0) {
-            return EMPTY;
-        }
-        return elements;
+    public static ArrayKey parse(String text) {
+        //FIXME
+        throw new RuntimeException("ArrayKey.parse not implemented");
     }
 }

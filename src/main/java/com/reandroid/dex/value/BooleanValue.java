@@ -26,9 +26,11 @@ import com.reandroid.dex.smali.model.SmaliValueBoolean;
 import java.io.IOException;
 
 public class BooleanValue extends DexValueBlock<Block> {
+
     public BooleanValue(){
         super(DexValueType.BOOLEAN);
     }
+
     public boolean get(){
         return getValueSize() == 1;
     }
@@ -54,25 +56,10 @@ public class BooleanValue extends DexValueBlock<Block> {
     public void append(SmaliWriter writer) throws IOException {
         writer.append(Boolean.toString(get()));
     }
-    @Override
-    public String getAsString() {
-        return Boolean.toString(get());
-    }
 
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_Z;
-    }
-    @Override
-    public Boolean getData() {
-        if(get()) {
-            return Boolean.TRUE;
-        }
-        return Boolean.FALSE;
-    }
-    @Override
-    public void setData(Object data) {
-        set((Boolean) data);
     }
 
     @Override
@@ -100,7 +87,7 @@ public class BooleanValue extends DexValueBlock<Block> {
         return get() == value.get();
     }
     @Override
-    public String toString(){
-        return getAsString();
+    public String toString() {
+        return Boolean.toString(get());
     }
 }

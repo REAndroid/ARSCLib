@@ -32,13 +32,15 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDef;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool implements
-        IdDefinition<T>, EditableItem, Comparable<Def<T>>, SmaliRegion, DefIndex, IdUsageIterator {
+        IdDefinition<T>, EditableItem, Comparable<Def<T>>, AnnotatedItem, SmaliRegion,
+        DefIndex, IdUsageIterator {
 
     private final SectionType<T> sectionType;
     private final Ule128Item relativeId;
@@ -55,6 +57,42 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         this.accessFlags = new Ule128Item();
         addChild(0, relativeId);
         addChild(1, accessFlags);
+    }
+    @Override
+    public AnnotationSetKey getAnnotation() {
+        return AnnotationSetKey.create(
+                ComputeIterator.of(getAnnotationItemBlocks(), AnnotationItem::getKey));
+    }
+    @Override
+    public void setAnnotation(AnnotationSetKey annotationSet) {
+        if (!ObjectsUtil.equals(getAnnotation(), annotationSet)) {
+            clearAnnotations();
+            writeAnnotation(annotationSet);
+        }
+    }
+    @Override
+    public void clearAnnotations() {
+        writeAnnotation(AnnotationSetKey.EMPTY);
+    }
+    private boolean hasAnnotationSetBlocks() {
+        return getAnnotationItemBlocks().hasNext();
+    }
+    private Iterator<AnnotationItem> getAnnotationItemBlocks() {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return ExpandIterator.of(directory
+                    .getAnnotations(this));
+        }
+        return EmptyIterator.of();
+    }
+    private void writeAnnotation(AnnotationSetKey key) {
+        if (key == null || key.isEmpty()) {
+            if (hasAnnotationSetBlocks()) {
+                getOrCreateUniqueAnnotationsDirectory().remove(this);
+            }
+        } else {
+            getOrCreateUniqueAnnotationsDirectory().addAnnotation(this, key);
+        }
     }
 
     @Override
@@ -195,7 +233,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     public AnnotationsDirectory getAnnotationsDirectory(){
         ClassId classId = getClassId();
-        if(classId != null){
+        if (classId != null) {
             return classId.getAnnotationsDirectory();
         }
         return null;

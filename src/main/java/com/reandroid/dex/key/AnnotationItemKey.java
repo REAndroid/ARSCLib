@@ -17,6 +17,7 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
@@ -174,6 +175,9 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         return ObjectsUtil.hash(getVisibility(), getType()) * 31 + super.computeHash();
     }
 
+    public boolean equalsType(TypeKey typeKey) {
+        return ObjectsUtil.equals(getType(), typeKey);
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -192,6 +196,16 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     @Override
     public int hashCode() {
         return getHashCode();
+    }
+
+
+    public static AnnotationItemKey read(SmaliReader reader) throws IOException {
+        //FIXME
+        throw new RuntimeException("AnnotationItemKey.read not implemented");
+    }
+    public static AnnotationItemKey parse(String text) {
+        //FIXME
+        throw new RuntimeException("AnnotationItemKey.parse not implemented");
     }
 
     private static AnnotationElementKey[] removeNulls(AnnotationElementKey[] elements) {

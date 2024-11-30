@@ -29,14 +29,6 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
         super(new NumberValue(), type);
     }
 
-    @Override
-    public abstract Number getData();
-    @Override
-    public void setData(Object number) {
-        setData((Number) number);
-    }
-    public abstract void setData(Number number);
-
     public long getSignedValue(){
         return getValueContainer().getSignedNumber();
     }
@@ -101,11 +93,6 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
     @Override
     public abstract void setKey(Key key);
 
-    public abstract String getHex();
-    @Override
-    public String getAsString() {
-        return getHex();
-    }
     @Override
     public abstract TypeKey getDataTypeKey();
     @Override
@@ -123,11 +110,10 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
         getValueContainer().merge(coming.getValueContainer());
     }
     @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.append(getHex());
-    }
+    public abstract void append(SmaliWriter writer) throws IOException;
+
     @Override
     public String toString() {
-        return getHex();
+        return SmaliWriter.toStringSafe(this);
     }
 }

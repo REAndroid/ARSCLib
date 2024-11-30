@@ -51,11 +51,6 @@ public class StringKey implements Key{
         return encodeSimpleName(getString());
     }
 
-    @Override
-    public boolean isPlatform() {
-        return false;
-    }
-
     public boolean isSignature() {
         return mSignature;
     }
@@ -101,8 +96,11 @@ public class StringKey implements Key{
 
     @Override
     public int compareTo(Object obj) {
-        if(obj == null){
-            return -1;
+        if (obj == this) {
+            return 0;
+        }
+        if (!(obj instanceof StringKey)) {
+            return StringsUtil.compareToString(this, obj);
         }
         StringKey key = (StringKey) obj;
         return CompareUtil.compare(getString(), key.getString());

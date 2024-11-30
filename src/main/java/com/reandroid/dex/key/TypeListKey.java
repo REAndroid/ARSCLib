@@ -85,8 +85,8 @@ public class TypeListKey extends KeyList<TypeKey> {
         if (obj == this) {
             return 0;
         }
-        if (obj == null) {
-            return -1;
+        if (!(obj instanceof TypeListKey)) {
+            return StringsUtil.compareToString(this, obj);
         }
         return compareElements((TypeListKey) obj);
     }

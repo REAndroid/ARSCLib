@@ -16,7 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.NullKey;
+import com.reandroid.dex.key.NullValueKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -36,12 +36,12 @@ public class SmaliValueNull extends SmaliValue {
     }
 
     @Override
-    public NullKey getKey() {
-        return NullKey.INSTANCE;
+    public NullValueKey getKey() {
+        return NullValueKey.INSTANCE;
     }
     @Override
     public void setKey(Key key) {
-        NullKey nullKey = (NullKey) key;
+        NullValueKey nullValueKey = (NullValueKey) key;
     }
 
     @Override

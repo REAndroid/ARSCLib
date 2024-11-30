@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.id.FieldId;
+import com.reandroid.dex.key.EnumKey;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -29,8 +30,8 @@ public class EnumValue extends SectionIdValue<FieldId> {
     }
 
     @Override
-    public FieldKey getKey() {
-        return (FieldKey) super.getKey();
+    public EnumKey getKey() {
+        return EnumKey.create((FieldKey) super.getKey());
     }
 
     @Override
@@ -39,11 +40,10 @@ public class EnumValue extends SectionIdValue<FieldId> {
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(".enum ");
-        super.append(writer);
+        getKey().append(writer);
     }
     @Override
-    public String toString(){
-        return ".enum " + super.toString();
+    public String toString() {
+        return getKey().toString();
     }
 }

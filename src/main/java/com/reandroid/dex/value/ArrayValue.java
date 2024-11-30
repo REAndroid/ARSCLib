@@ -17,7 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.dex.data.EncodedArray;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.ArrayValueKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -26,7 +26,6 @@ import com.reandroid.dex.smali.model.SmaliValueArray;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -105,7 +104,7 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     }
 
     @Override
-    public ArrayKey getKey() {
+    public ArrayValueKey getKey() {
         return getValueContainer().getKey();
     }
 
@@ -138,15 +137,6 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
             return typeKey.setArrayDimension(typeKey.getArrayDimension() + 1);
         }
         return TypeKey.OBJECT.setArrayDimension(1);
-    }
-    @Override
-    public Object[] getData() {
-        int size = size();
-        Object[] result = new Object[size];
-        for(int i = 0; i < size; i++) {
-            result[i] = get(i).getData();
-        }
-        return result;
     }
 
     @Override

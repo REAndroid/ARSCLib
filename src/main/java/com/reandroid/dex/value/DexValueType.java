@@ -217,10 +217,10 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         if(key instanceof StringKey) {
             return STRING;
         }
-        if(key instanceof ArrayKey) {
+        if(key instanceof ArrayValueKey) {
             return ARRAY;
         }
-        if(key instanceof NullKey) {
+        if(key instanceof NullValueKey) {
             return NULL;
         }
         if(key instanceof PrimitiveKey) {
@@ -266,7 +266,7 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
     }
     public static Key createDefaultValue(TypeKey typeKey) {
         if (!typeKey.isPrimitive()) {
-            return NullKey.INSTANCE;
+            return NullValueKey.INSTANCE;
         }
         if (TypeKey.TYPE_B.equals(typeKey)) {
             return PrimitiveKey.of((byte) 0);

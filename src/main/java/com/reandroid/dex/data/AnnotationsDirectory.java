@@ -149,6 +149,10 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         methodsAnnotationMap.remove(def);
         parametersAnnotationMap.remove(def);
     }
+    public void addAnnotation(Def<?> def, AnnotationSetKey key){
+        addAnnotation(def, getOrCreateSectionItem(
+                SectionType.ANNOTATION_SET, key));
+    }
     public void addAnnotation(Def<?> def, AnnotationSet annotationSet){
         if(def instanceof FieldDef){
             addFieldAnnotation((FieldDef) def, annotationSet);
@@ -231,6 +235,15 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public AnnotationSet setParameterAnnotation(MethodDef methodDef, int parameterIndex, AnnotationSetKey key){
         AnnotationGroup annotationGroup = getEmptyParameterAnnotationGroup(methodDef, parameterIndex);
         return annotationGroup.setItemKeyAt(parameterIndex, key);
+    }
+    public void removeParameterAnnotation(MethodDef methodDef, int parameterIndex) {
+        Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);
+        while (iterator.hasNext()) {
+            AnnotationGroup group = iterator.next();
+            if (group != null) {
+                group.clearAt(parameterIndex);
+            }
+        }
     }
     private AnnotationGroup getEmptyParameterAnnotationGroup(MethodDef methodDef, int parameterIndex){
         Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);

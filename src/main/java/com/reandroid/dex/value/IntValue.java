@@ -33,14 +33,6 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     }
 
     @Override
-    public Integer getData() {
-        return get();
-    }
-    @Override
-    public void setData(Number number) {
-        this.set((Integer) number);
-    }
-    @Override
     public int get() {
         return (int) getSignedValue();
     }
@@ -61,10 +53,7 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     public void setKey(Key key) {
         set(((PrimitiveKey.IntegerKey) key).value());
     }
-    @Override
-    public String getHex() {
-        return HexUtil.toHex(getSignedValue(), getValueSize());
-    }
+
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_I;
@@ -78,5 +67,10 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     public void fromSmali(SmaliValue smaliValue) {
         SmaliValueInteger smaliValueInteger = (SmaliValueInteger) smaliValue;
         set(smaliValueInteger.getValue());
+    }
+
+    @Override
+    public String toString() {
+        return HexUtil.toSignedHex(get());
     }
 }

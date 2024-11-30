@@ -133,6 +133,19 @@ public class MethodHandleType implements Comparable<MethodHandleType>, SmaliForm
         return nameMap.get(name);
     }
 
+    public static boolean startsWithHandleType(SmaliReader reader) {
+        return get(reader) != null;
+    }
+    public static MethodHandleType get(SmaliReader reader) {
+        if (reader.available() < 10) {
+            return null;
+        }
+        int position = reader.position();
+        MethodHandleType type = read(reader);
+        reader.position(position);
+        return type;
+    }
+
     public static MethodHandleType read(SmaliReader reader) {
         reader.skipWhitespaces();
         int position = reader.position();

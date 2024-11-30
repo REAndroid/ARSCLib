@@ -174,7 +174,7 @@ public class AnnotationElement extends DataItem implements KeyReference,
     public TypeKey getParentType(){
         AnnotationItem parent = getParentInstance(AnnotationItem.class);
         if(parent != null){
-            return parent.getTypeKey();
+            return parent.getType();
         }
         return null;
     }

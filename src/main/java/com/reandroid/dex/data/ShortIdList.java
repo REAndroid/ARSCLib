@@ -60,7 +60,7 @@ public class ShortIdList<T extends IdItem> extends DataItem
     public KeyList<?> getKey() {
         Key[] elements = new Key[size()];
         getItemKeys(elements);
-        return new ArrayKey(elements);
+        return ArrayKey.create(elements);
     }
     public void setKey(Key key) {
         KeyList<?> old = getKey();

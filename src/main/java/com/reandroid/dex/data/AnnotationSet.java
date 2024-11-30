@@ -28,12 +28,14 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliAnnotationItem;
 import com.reandroid.dex.smali.model.SmaliAnnotationSet;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         implements KeyReference, SmaliFormat, PositionAlignedItem, FullRefresh {
@@ -42,6 +44,15 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         super(SectionType.ANNOTATION_ITEM, UsageMarker.USAGE_ANNOTATION, new DexPositionAlign());
     }
 
+    public boolean remove(TypeKey typeKey) {
+        return removeIf(item -> ObjectsUtil.equals(typeKey, item.getType()));
+    }
+    public boolean remove(AnnotationItemKey itemKey) {
+        return removeIf(item -> ObjectsUtil.equals(itemKey, item.getKey()));
+    }
+    public boolean removeAnnotationIf(Predicate<? super AnnotationItemKey> predicate) {
+        return removeIf(item -> predicate.test(item.getKey()));
+    }
     @Override
     public boolean isBlank() {
         return isEmpty();
@@ -51,7 +62,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     public AnnotationSetKey getKey() {
         AnnotationItemKey[] elements = new AnnotationItemKey[size()];
         getItemKeys(elements);
-        return checkKey(new AnnotationSetKey(elements));
+        return checkKey(AnnotationSetKey.create(elements));
     }
     @Override
     public void setKey(Key key) {
@@ -81,26 +92,18 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     }
     public AnnotationItem get(TypeKey typeKey) {
         for(AnnotationItem item : this){
-            if(typeKey.equals(item.getTypeKey())){
+            if(typeKey.equals(item.getType())){
                 return item;
             }
         }
         return null;
     }
     public Iterator<AnnotationItem> getAll(TypeKey typeKey) {
-        return FilterIterator.of(iterator(), item -> typeKey.equals(item.getTypeKey()));
-    }
-    public boolean contains(String typeName) {
-        for(AnnotationItem item : this){
-            if(typeName.equals(item.getTypeName())){
-                return true;
-            }
-        }
-        return false;
+        return FilterIterator.of(iterator(), item -> typeKey.equals(item.getType()));
     }
     public boolean contains(TypeKey typeKey) {
         for(AnnotationItem item : this){
-            if(typeKey.equals(item.getTypeKey())){
+            if(typeKey.equals(item.getType())){
                 return true;
             }
         }
@@ -133,7 +136,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     }
     public AnnotationItem get(TypeKey type, String name){
         for (AnnotationItem item : this) {
-            if (type.equals(item.getTypeKey())
+            if (type.equals(item.getType())
                     && item.containsName(name)) {
                 return item;
             }

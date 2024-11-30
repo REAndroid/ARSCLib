@@ -20,11 +20,7 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.FieldKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.NullKey;
-import com.reandroid.dex.key.PrimitiveKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.Smali;
@@ -90,13 +86,12 @@ public class FieldDef extends Def<FieldId> {
 
         appendStaticValue(writer);
 
-        Iterator<AnnotationSet> annotations = getAnnotationSets(true);
-        if(!annotations.hasNext()){
+        AnnotationSetKey annotations = getAnnotation();
+        if (annotations.isEmpty()) {
             return;
         }
-        writer.indentPlus();
-        writer.appendAllWithDoubleNewLine(annotations);
-        writer.indentMinus();
+        writer.newLine();
+        annotations.append(writer);
         getSmaliDirective().appendEnd(writer);
     }
     private void appendStaticValue(SmaliWriter writer) throws IOException {
@@ -114,7 +109,7 @@ public class FieldDef extends Def<FieldId> {
             PrimitiveKey primitiveKey = (PrimitiveKey) key;
             return primitiveKey.getValueAsLong() != 0;
         }
-        return !(key instanceof NullKey);
+        return !(key instanceof NullValueKey);
     }
     public boolean isInitializedInStaticConstructor() {
         StaticFieldDefArray fieldDefArray = getParentInstance(
@@ -153,7 +148,7 @@ public class FieldDef extends Def<FieldId> {
                     + SmaliWriter.toStringSafe(staticValue));
         }
         TypeKey typeKey = fieldKey.getType();
-        if (typeKey.isPrimitive() != staticValue.isPrimitiveKey()) {
+        if (typeKey.isPrimitive() != (staticValue instanceof PrimitiveKey)) {
             throw new DexException("Mismatch in type object vs primitive for value: "
                     + SmaliWriter.toStringSafe(staticValue) + ", in field: " + fieldKey + "\n");
         }
@@ -186,7 +181,7 @@ public class FieldDef extends Def<FieldId> {
         setAccessFlagsValue(smaliField.getAccessFlagsValue());
         addHiddenApiFlags(smaliField.getHiddenApiFlags());
         if(smaliField.hasAnnotation()){
-            addAnnotationSet(smaliField.getAnnotationSetKey());
+            setAnnotation(smaliField.getAnnotationSetKey());
         }
         SmaliValue smaliValue = smaliField.getValue();
         if(smaliValue != null) {
@@ -206,6 +201,9 @@ public class FieldDef extends Def<FieldId> {
 
     @Override
     public String toString() {
+        return SmaliWriter.toStringSafe(this);
+    }
+    public String toString1() {
         FieldId fieldId = getId();
         if (fieldId != null) {
             StringBuilder builder = new StringBuilder();

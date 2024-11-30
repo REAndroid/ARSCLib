@@ -31,14 +31,6 @@ public class LongValue extends PrimitiveValueBlock {
         super(DexValueType.LONG);
     }
 
-    @Override
-    public Long getData() {
-        return get();
-    }
-    @Override
-    public void setData(Number number) {
-        this.set((Long) number);
-    }
     public long get() {
         return getSignedValue();
     }
@@ -58,10 +50,6 @@ public class LongValue extends PrimitiveValueBlock {
     public void setKey(Key key) {
         set(((PrimitiveKey.LongKey) key).value());
     }
-    @Override
-    public String getHex() {
-        return HexUtil.toSignedHex(get()) + "L";
-    }
 
     @Override
     public TypeKey getDataTypeKey() {
@@ -76,11 +64,10 @@ public class LongValue extends PrimitiveValueBlock {
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        super.append(writer);
-        writer.appendComment(Long.toString(get()));
+        writer.appendHex(get());
     }
     @Override
     public String toString() {
-        return getHex() + " # " + get();
+        return HexUtil.toSignedHex(get()) + "L";
     }
 }

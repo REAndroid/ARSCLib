@@ -21,7 +21,6 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueFloat;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
@@ -31,14 +30,6 @@ public class FloatValue extends PrimitiveValueBlock {
         super(DexValueType.FLOAT);
     }
 
-    @Override
-    public Float getData() {
-        return get();
-    }
-    @Override
-    public void setData(Number number) {
-        this.set((Float) number);
-    }
     public float get(){
         return Float.intBitsToFloat(getFloatBits());
     }
@@ -70,10 +61,6 @@ public class FloatValue extends PrimitiveValueBlock {
     public void setKey(Key key) {
         set(((PrimitiveKey.FloatKey) key).value());
     }
-    @Override
-    public String getHex() {
-        return HexUtil.toHex(getUnsigned(), getValueSize()) + "L";
-    }
 
     @Override
     public TypeKey getDataTypeKey() {
@@ -92,6 +79,6 @@ public class FloatValue extends PrimitiveValueBlock {
     }
     @Override
     public String toString() {
-        return getHex() + " # " + get();
+        return get() + "f";
     }
 }

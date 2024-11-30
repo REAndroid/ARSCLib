@@ -55,7 +55,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     public KeyList<?> getKey() {
         Key[] elements = new Key[size()];
         getItemKeys(elements);
-        return new ArrayKey(elements);
+        return ArrayKey.create(elements);
     }
     public void setKey(Key key) {
         KeyList<?> keyList = (KeyList<?>) key;
@@ -114,6 +114,12 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         reference.setKey(key);
         return reference.getItem();
     }
+    public void clearAt(int index) {
+        IntegerDataReference<T> reference = getReference(index);
+        if (reference != null) {
+            reference.setItem(null);
+        }
+    }
     void getItemKeys(Key[] out) {
         int length = out.length;
         for (int i = 0; i < length; i++) {
@@ -130,8 +136,8 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     public void remove(T item) {
         removeIf(t -> t == item);
     }
-    public void removeIf(Predicate<? super T> filter) {
-        referenceList.removeIf(reference -> filter.test(reference.getItem()));
+    public boolean removeIf(Predicate<? super T> filter) {
+        return referenceList.removeIf(reference -> filter.test(reference.getItem()));
     }
     void removeNulls() {
         removeIf(item -> item == null);

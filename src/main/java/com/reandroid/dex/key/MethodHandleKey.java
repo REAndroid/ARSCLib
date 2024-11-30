@@ -21,6 +21,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -78,8 +79,11 @@ public class MethodHandleKey implements Key{
 
     @Override
     public int compareTo(Object obj) {
-        if(obj == null){
-            return -1;
+        if (obj == this) {
+            return 0;
+        }
+        if (!(obj instanceof MethodHandleKey)) {
+            return StringsUtil.compareToString(this, obj);
         }
         MethodHandleKey other = (MethodHandleKey) obj;
         int i = CompareUtil.compare(getHandleType(), other.getHandleType());

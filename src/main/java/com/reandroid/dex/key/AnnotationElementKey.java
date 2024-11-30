@@ -18,6 +18,7 @@ package com.reandroid.dex.key;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -100,7 +101,7 @@ public class AnnotationElementKey implements Key {
             return 0;
         }
         if (!(obj instanceof AnnotationElementKey)) {
-            return -1;
+            return StringsUtil.compareToString(this, obj);
         }
         AnnotationElementKey elementKey = (AnnotationElementKey) obj;
         int i = CompareUtil.compare(getName(), elementKey.getName());
