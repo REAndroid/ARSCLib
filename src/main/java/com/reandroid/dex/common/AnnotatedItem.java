@@ -20,7 +20,6 @@ import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
-import java.util.Iterator;
 import java.util.function.Predicate;
 
 public interface AnnotatedItem {
@@ -31,7 +30,6 @@ public interface AnnotatedItem {
 
     default void addAnnotation(AnnotationItemKey annotation) {
         AnnotationSetKey key = getAnnotation()
-                .remove(annotation.getType())
                 .add(annotation);
         setAnnotation(key);
     }
@@ -45,30 +43,25 @@ public interface AnnotatedItem {
         return true;
     }
 
-    default Iterator<AnnotationItemKey> getAnnotations() {
-        return getAnnotation().iterator();
-    }
     default boolean hasAnnotations() {
         return !getAnnotation().isEmpty();
     }
+    default boolean hasAnnotation(TypeKey typeKey) {
+        return getAnnotation(typeKey) != null;
+    }
     default AnnotationItemKey getAnnotation(TypeKey typeKey) {
-        Iterator<AnnotationItemKey> iterator = getAnnotations();
-        while (iterator.hasNext()) {
-            AnnotationItemKey key = iterator.next();
-            if (typeKey.equals(key.getType())) {
-                return key;
-            }
-        }
-        return null;
+        return getAnnotation().get(typeKey);
     }
     default Key getAnnotationValue(TypeKey typeKey, String name) {
-        AnnotationItemKey annotationItemKey = getAnnotation(typeKey);
-        if (annotationItemKey != null) {
-            return annotationItemKey.get(name);
-        }
-        return null;
+        return getAnnotation().getAnnotationValue(typeKey, name);
     }
     default boolean removeAnnotation(TypeKey typeKey) {
-        return removeAnnotationIf(key -> key.equalsType(typeKey));
+        AnnotationSetKey annotation = getAnnotation();
+        AnnotationSetKey update = annotation.remove(typeKey);
+        if (annotation.equals(update)) {
+            return false;
+        }
+        setAnnotation(update);
+        return true;
     }
 }

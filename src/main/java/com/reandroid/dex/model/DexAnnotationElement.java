@@ -15,8 +15,7 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.data.AnnotationElement;
-import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -24,35 +23,90 @@ import java.io.IOException;
 public class DexAnnotationElement extends Dex {
 
     private final DexAnnotation dexAnnotation;
-    private final AnnotationElement annotationElement;
+    private String name;
+    private AnnotationElementKey mRemoved;
 
-    public DexAnnotationElement(DexAnnotation dexAnnotation, AnnotationElement annotationElement){
+    public DexAnnotationElement(DexAnnotation dexAnnotation, String name) {
         super();
         this.dexAnnotation = dexAnnotation;
-        this.annotationElement = annotationElement;
+        this.name = name;
     }
 
     public String getName(){
-        return getAnnotationElement().getName();
+        return name;
     }
-    public void setName(String name){
-        getAnnotationElement().setName(name);
+    public void setName(String name) {
+        setKey(getKey().changeName(name));
+    }
+    public AnnotationElementKey getKey() {
+        AnnotationElementKey key = this.mRemoved;
+        if (key == null) {
+            key = getDexAnnotation()
+                    .getKey()
+                    .get(getName());
+        }
+        return key;
+    }
+    public void setKey(Key key) {
+        AnnotationElementKey elementKey = (AnnotationElementKey) key;
+        DexAnnotation annotation = getDexAnnotation();
+        AnnotationItemKey itemKey = annotation.getKey()
+                .remove(getName())
+                .add(elementKey);
+        annotation.setKey(itemKey);
+        this.name = elementKey.getName();
     }
 
-    public Key getValue(){
-        return getAnnotationElement().getValue();
+    public Key getValue() {
+        return getKey().getValue();
     }
     public void setValue(Key value) {
-        getAnnotationElement().setValue(value);
+        setKey(getKey().changeValue(value));
     }
 
     @Override
-    public void removeSelf(){
-        getAnnotationElement().removeSelf();
+    public void removeSelf() {
+        if (!isRemoved()) {
+            applyRemoveSelf();
+        }
+    }
+    public boolean isRemoved() {
+        checkRemoved();
+        return this.name == null;
+    }
+    private void checkRemoved() {
+        DexAnnotation annotation = getDexAnnotation();
+        if (annotation.isRemoved()) {
+            applyRemoveSelf();
+            return;
+        }
+        AnnotationElementKey key = this.mRemoved;
+        if (key != null) {
+            if (!annotation.isRemoved()) {
+                String name = key.getName();
+                if (annotation.contains(key.getName())) {
+                    this.name = name;
+                    this.mRemoved = null;
+                }
+            }
+        }
+    }
+    private void applyRemoveSelf() {
+        AnnotationElementKey key = this.mRemoved;
+        if (key != null) {
+            this.name = null;
+            return;
+        }
+        key = getKey();
+        this.name = null;
+        if (key != null) {
+            this.mRemoved = key;
+            getDexAnnotation().remove(key.getName());
+        }
     }
 
-    public AnnotationElement getAnnotationElement() {
-        return annotationElement;
+    public TypeKey getType() {
+        return getDexAnnotation().getType();
     }
     public DexAnnotation getDexAnnotation() {
         return dexAnnotation;
@@ -60,7 +114,7 @@ public class DexAnnotationElement extends Dex {
 
     @Override
     public boolean uses(Key key) {
-        return getAnnotationElement().uses(key);
+        return getKey().uses(key);
     }
 
     @Override
@@ -70,12 +124,29 @@ public class DexAnnotationElement extends Dex {
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getAnnotationElement().append(writer);
+        if (!isRemoved()) {
+            getKey().append(writer);
+        }
     }
 
-    public static DexAnnotationElement create(DexAnnotation dexAnnotation, AnnotationElement annotationElement){
-        if(dexAnnotation != null && annotationElement != null){
-            return new DexAnnotationElement(dexAnnotation, annotationElement);
+    @Override
+    public String toString() {
+        AnnotationElementKey key = getKey();
+        if (isRemoved()) {
+            return "#REMOVED " + key;
+        }
+        return String.valueOf(key);
+    }
+
+    public static DexAnnotationElement create(DexAnnotation dexAnnotation, String name) {
+        if(dexAnnotation != null && name != null) {
+            return new DexAnnotationElement(dexAnnotation, name);
+        }
+        return null;
+    }
+    public static DexAnnotationElement create(DexAnnotation dexAnnotation, AnnotationElementKey elementKey) {
+        if (dexAnnotation != null && elementKey != null) {
+            return create(dexAnnotation, elementKey.getName());
         }
         return null;
     }

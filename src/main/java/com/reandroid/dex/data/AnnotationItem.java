@@ -156,7 +156,7 @@ public class AnnotationItem extends DataItem
     }
     @Override
     public AnnotationItemKey getKey(){
-        return checkKey(new AnnotationItemKey(getVisibility(), getType(), getElements()));
+        return checkKey(AnnotationItemKey.create(getVisibility(), getType(), getElements()));
     }
     @Override
     public void setKey(Key key){

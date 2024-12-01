@@ -181,27 +181,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         setItem(key);
     }
 
-    public AnnotationSet getOrCreateAnnotationSet(){
-        AnnotationSet annotationSet = CollectionUtil.getFirst(getAnnotationSets());
-        if(annotationSet != null){
-            return annotationSet;
-        }
-        AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
-        annotationSet = directory.createSectionItem(SectionType.ANNOTATION_SET);
-        directory.addAnnotation(this, annotationSet);
-        return annotationSet;
-    }
-    public void addAnnotationSet(AnnotationSetKey key) {
-        AnnotationSet annotationSet = getOrCreateSectionItem(SectionType.ANNOTATION_SET, key);
-        addAnnotationSet(annotationSet);
-    }
-    public void addAnnotationSet(AnnotationSet annotationSet){
-        AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
-        addAnnotationSet(directory, annotationSet);
-    }
-    void addAnnotationSet(AnnotationsDirectory directory, AnnotationSet annotationSet){
-        directory.addAnnotation(this, annotationSet);
-    }
     public Iterator<AnnotationItemKey> getAnnotationKeys() {
         Iterator<AnnotationSetKey> iterator = getAnnotationSetKeys();
         if (!iterator.hasNext()) {
@@ -216,9 +195,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     public Iterator<AnnotationSetKey> getAnnotationSetKeys() {
         return ComputeIterator.of(getAnnotationSets(true), AnnotationSet::getKey);
-    }
-    public Iterator<AnnotationSet> getAnnotationSets() {
-        return getAnnotationSets(false);
     }
     public Iterator<AnnotationSet> getAnnotationSets(boolean skipEmpty){
         AnnotationsDirectory directory = getAnnotationsDirectory();
@@ -242,13 +218,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         ClassId classId = getClassId();
         if(classId != null){
             return classId.getOrCreateUniqueAnnotationsDirectory();
-        }
-        return null;
-    }
-    public AnnotationsDirectory getUniqueAnnotationsDirectory(){
-        ClassId classId = getClassId();
-        if(classId != null){
-            return classId.getUniqueAnnotationsDirectory();
         }
         return null;
     }

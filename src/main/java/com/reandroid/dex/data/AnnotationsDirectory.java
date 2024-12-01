@@ -87,7 +87,21 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public AnnotationSet getOrCreateClassAnnotations(){
         return header.classAnnotation.getOrCreate();
     }
-    public AnnotationSet getClassAnnotations(){
+    public AnnotationSetKey getClassAnnotation() {
+        AnnotationSetKey key = (AnnotationSetKey) header.classAnnotation.getKey();
+        if (key == null) {
+            key = AnnotationSetKey.EMPTY;
+        }
+        return key;
+    }
+    public boolean hasClassAnnotation() {
+        AnnotationSet annotationSet = header.classAnnotation.getItem();
+        if (annotationSet != null) {
+            return !annotationSet.isEmpty();
+        }
+        return false;
+    }
+    public AnnotationSet getClassAnnotationBlock() {
         return header.classAnnotation.getItem();
     }
     public void setClassAnnotations(AnnotationSet annotationSet){
@@ -99,20 +113,12 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public boolean isBlank() {
         return isEmpty();
     }
-    public boolean isEmpty(){
-        return getClassAnnotations() == null &&
+    public boolean isEmpty() {
+        return !hasClassAnnotation() &&
                 fieldsAnnotationMap.isEmpty() &&
                 methodsAnnotationMap.isEmpty() &&
                 parametersAnnotationMap.isEmpty();
     }
-    public int countField(){
-        return  fieldsAnnotationMap.getCount() ;
-    }
-    public int countMethod(){
-        return  methodsAnnotationMap.getCount() +
-                parametersAnnotationMap.getCount();
-    }
-
 
     public void sortFields() {
         fieldsAnnotationMap.sort();
@@ -187,20 +193,11 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public Iterator<AnnotationSet> getFieldsAnnotation(FieldDef fieldDef){
         return fieldsAnnotationMap.getValues(fieldDef);
     }
-    public Iterator<AnnotationSet> getFieldsAnnotation(int index){
-        return fieldsAnnotationMap.getValues(index);
-    }
-    public Iterator<AnnotationSet> getMethodAnnotation(int index){
-        return methodsAnnotationMap.getValues(index);
-    }
     public Iterator<AnnotationSet> getMethodAnnotation(MethodDef methodDef){
         return methodsAnnotationMap.getValues(methodDef);
     }
     public Iterator<AnnotationGroup> getParameterAnnotation(MethodDef methodDef){
         return parametersAnnotationMap.getValues(methodDef);
-    }
-    public Iterator<DirectoryEntry<MethodDef, AnnotationGroup>> getParameterEntries(MethodDef methodDef){
-        return parametersAnnotationMap.getEntries(methodDef);
     }
     public Iterator<AnnotationGroup> getParameterAnnotation(int methodIndex){
         return parametersAnnotationMap.getValues(methodIndex);
@@ -213,28 +210,9 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         return ComputeIterator.of(getParameterAnnotation(methodIndex),
                 annotationGroup -> annotationGroup.getItem(parameterIndex));
     }
-    public AnnotationSet getOrCreateParameterAnnotation(MethodDef methodDef, int parameterIndex){
-        AnnotationGroup annotationGroup = getOrCreateParameterAnnotationGroup(methodDef);
-        return annotationGroup.getOrCreateAt(parameterIndex);
-    }
-    private AnnotationGroup getOrCreateParameterAnnotationGroup(MethodDef methodDef){
-        AnnotationGroup annotationGroup;
-        Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);
-        if(iterator.hasNext()){
-            annotationGroup = iterator.next();
-        }else {
-            annotationGroup = getOrCreateSection(SectionType.ANNOTATION_GROUP).createItem();
-            this.parametersAnnotationMap.add(methodDef, annotationGroup);
-        }
-        return annotationGroup;
-    }
-    public AnnotationSet createNewParameterAnnotation(MethodDef methodDef, int parameterIndex){
+    public void setParameterAnnotation(MethodDef methodDef, int parameterIndex, AnnotationSetKey key) {
         AnnotationGroup annotationGroup = getEmptyParameterAnnotationGroup(methodDef, parameterIndex);
-        return annotationGroup.getOrCreateAt(parameterIndex);
-    }
-    public AnnotationSet setParameterAnnotation(MethodDef methodDef, int parameterIndex, AnnotationSetKey key){
-        AnnotationGroup annotationGroup = getEmptyParameterAnnotationGroup(methodDef, parameterIndex);
-        return annotationGroup.setItemKeyAt(parameterIndex, key);
+        annotationGroup.setItemKeyAt(parameterIndex, key);
     }
     public void removeParameterAnnotation(MethodDef methodDef, int parameterIndex) {
         Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);
@@ -245,7 +223,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
             }
         }
     }
-    private AnnotationGroup getEmptyParameterAnnotationGroup(MethodDef methodDef, int parameterIndex){
+    private AnnotationGroup getEmptyParameterAnnotationGroup(MethodDef methodDef, int parameterIndex) {
         Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);
         while (iterator.hasNext()){
             AnnotationGroup group = iterator.next();
@@ -259,7 +237,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     }
 
     public void replaceKeys(Key search, Key replace){
-        AnnotationSet set = getClassAnnotations();
+        AnnotationSet set = getClassAnnotationBlock();
         if(set != null){
             set.replaceKeys(search, replace);
         }
@@ -285,7 +263,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     }
 
     public Iterator<IdItem> usedIds(){
-        AnnotationSet classAnnotation = getClassAnnotations();
+        AnnotationSet classAnnotation = getClassAnnotationBlock();
         Iterator<IdItem> iterator1;
         if(classAnnotation == null){
             iterator1 = EmptyIterator.of();

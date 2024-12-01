@@ -15,59 +15,27 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.common.IdDefinition;
 import com.reandroid.dex.data.MethodParameter;
 import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
-import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
-public class DexMethodParameter extends Dex implements AnnotatedDex{
+public class DexMethodParameter extends Dex implements AnnotatedDex {
 
     private final DexMethod dexMethod;
     private final MethodParameter parameter;
 
-    public DexMethodParameter(DexMethod dexMethod, MethodParameter parameter){
+    public DexMethodParameter(DexMethod dexMethod, MethodParameter parameter) {
         this.dexMethod = dexMethod;
         this.parameter = parameter;
-    }
-
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(){
-        return ComputeIterator.of(getParameter().getAnnotationItemBlocks(),
-                annotationItem -> DexAnnotation.create(
-                        DexMethodParameter.this, annotationItem));
-    }
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(TypeKey typeKey){
-        return FilterIterator.of(getAnnotations(),
-                dexAnnotation -> typeKey.equals(dexAnnotation.getType()));
-    }
-    @Override
-    public DexAnnotation getAnnotation(TypeKey typeKey){
-        return CollectionUtil.getFirst(getAnnotations(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getParameter().getOrCreateAnnotationItemBlock(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
-        return DexAnnotation.create(this,
-                getParameter().getOrCreateAnnotationSet().getOrCreate(annotationItemKey));
-    }
-    @Override
-    public DexAnnotation newAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getParameter().addAnnotationItemBlock(typeKey));
     }
 
     public String getDebugName(){
@@ -120,16 +88,42 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
 
     @Override
     public void removeSelf() {
-        getParameter().onRemoved();
+        getDexMethod().removeParameter(getIndex());
+    }
+
+    @Override
+    public Iterator<DexAnnotation> getAnnotations() {
+        AnnotationSetKey annotation = getParameter().getAnnotation();
+        return ComputeIterator.of(annotation.iterator(), this::initializeAnnotation);
+    }
+    @Override
+    public DexAnnotation getAnnotation(TypeKey typeKey) {
+        return initializeAnnotation(typeKey);
+    }
+    @Override
+    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey) {
+        MethodParameter parameter = getParameter();
+        AnnotationSetKey annotationSetKey = parameter.getAnnotation();
+        if (!annotationSetKey.contains(typeKey)) {
+            annotationSetKey = annotationSetKey.getOrCreate(typeKey);
+            parameter.setAnnotation(annotationSetKey);
+        }
+        return initializeAnnotation(typeKey);
+    }
+
+    private DexAnnotation initializeAnnotation(TypeKey typeKey) {
+        return DexAnnotation.create(this, getParameter(), typeKey);
+    }
+    DexAnnotation initializeAnnotation(AnnotationItemKey key) {
+        if (key != null) {
+            return DexAnnotation.create(this, getParameter(), key.getType());
+        }
+        return null;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getParameter().append(writer);
-    }
-    @Override
-    public ElementType getElementType(){
-        return ElementType.PARAMETER;
     }
 
     public static DexMethodParameter create(DexMethod dexMethod, MethodParameter parameter){

@@ -15,13 +15,12 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySort;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -35,17 +34,110 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
     static {
         AnnotationItemKey[] emptyArray = new AnnotationItemKey[0];
         EMPTY_ARRAY = emptyArray;
-        EMPTY = new AnnotationSetKey(emptyArray, false);
-    }
-
-    private AnnotationSetKey(AnnotationItemKey[] elements, boolean unused) {
-        super(elements);
+        EMPTY = new AnnotationSetKey(emptyArray);
     }
 
     private AnnotationSetKey(AnnotationItemKey[] elements) {
-        super(removeNulls(elements));
+        super(elements);
     }
 
+    public AnnotationSetKey removeElementIf(TypeKey typeKey, Predicate<? super AnnotationElementKey> predicate) {
+        AnnotationSetKey result = this;
+        AnnotationItemKey itemKey = result.get(typeKey);
+        if (itemKey == null) {
+            return result;
+        }
+        int i = result.indexOf(itemKey);
+        itemKey = itemKey.removeIf(predicate);
+        return result.set(i, itemKey);
+    }
+    public AnnotationSetKey removeElement(TypeKey typeKey, String name) {
+        AnnotationSetKey result = this;
+        AnnotationItemKey itemKey = result.get(typeKey);
+        if (itemKey == null) {
+            return result;
+        }
+        int i = result.indexOf(itemKey);
+        itemKey = itemKey.remove(name);
+        return result.set(i, itemKey);
+    }
+    public AnnotationSetKey changeType(TypeKey typeKey, TypeKey newType) {
+        AnnotationSetKey result = this;
+        AnnotationItemKey itemKey = result.get(typeKey);
+        if (itemKey == null) {
+            return result;
+        }
+        int i = result.indexOf(itemKey);
+        itemKey = itemKey.changeType(newType);
+        return result.set(i, itemKey).sorted();
+    }
+    public AnnotationSetKey renameElement(TypeKey typeKey, String name, String newName) {
+        AnnotationSetKey result = this;
+        AnnotationItemKey itemKey = result.get(typeKey);
+        if (itemKey == null) {
+            return result;
+        }
+        int i = result.indexOf(itemKey);
+        itemKey = itemKey.rename(name, newName);
+        return result.set(i, itemKey);
+    }
+    public AnnotationSetKey setAnnotation(TypeKey typeKey, String name, Key value) {
+        AnnotationSetKey result = this;
+        result = result.getOrCreate(typeKey);
+        AnnotationItemKey itemKey = result.get(typeKey);
+        int i = result.indexOf(itemKey);
+        itemKey = itemKey.setValue(name, value);
+        return result.set(i, itemKey);
+    }
+    public AnnotationSetKey getOrCreate(TypeKey typeKey, String name) {
+        AnnotationSetKey result = this;
+        result = result.getOrCreate(typeKey);
+        AnnotationItemKey itemKey = result.get(typeKey);
+        int i = result.indexOf(itemKey);
+        itemKey = itemKey.getOrCreate(name);
+        return result.set(i, itemKey);
+    }
+    public AnnotationSetKey setVisibility(TypeKey typeKey, AnnotationVisibility visibility) {
+        AnnotationItemKey itemKey = get(typeKey);
+        if (itemKey == null) {
+            return this;
+        }
+        int i = indexOf(itemKey);
+        itemKey = itemKey.changeVisibility(visibility);
+        return set(i, itemKey);
+    }
+    public AnnotationSetKey getOrCreate(TypeKey typeKey) {
+        AnnotationItemKey itemKey = get(typeKey);
+        if (itemKey != null) {
+            return this;
+        }
+        itemKey = AnnotationItemKey.create(AnnotationVisibility.BUILD, typeKey);
+        return this.add(itemKey).sorted();
+    }
+    public Key getAnnotationValue(TypeKey typeKey, String name) {
+        AnnotationItemKey itemKey = get(typeKey);
+        if (itemKey != null) {
+            return itemKey.get(name);
+        }
+        return null;
+    }
+    public boolean containsElement(TypeKey typeKey, String name) {
+        AnnotationItemKey itemKey = get(typeKey);
+        if (itemKey != null) {
+            return itemKey.containsElement(name);
+        }
+        return false;
+    }
+    public boolean contains(TypeKey typeKey) {
+        int length = size();
+        for (int i = 0; i < length; i++) {
+            AnnotationItemKey itemKey = get(i);
+            if (itemKey != null && ObjectsUtil.equals(typeKey, itemKey.getType())) {
+                return true;
+            }
+        }
+        return false;
+    }
     public AnnotationItemKey get(TypeKey typeKey) {
         int length = size();
         for (int i = 0; i < length; i++) {
@@ -59,6 +151,14 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
 
     @Override
     public AnnotationSetKey add(AnnotationItemKey item) {
+        if (item == null) {
+            return this;
+        }
+        return this.remove(item.getType())
+                .addUnchecked(item)
+                .sorted();
+    }
+    private AnnotationSetKey addUnchecked(AnnotationItemKey item) {
         return (AnnotationSetKey) super.add(item);
     }
     @Override

@@ -25,21 +25,17 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.model.SmaliMethod;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.value.NullValue;
-import com.reandroid.dex.value.StringValue;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
-import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
 
 public class DexClass extends DexDeclaration implements Comparable<DexClass> {
+
     private final DexLayout dexLayout;
     private final ClassId classId;
 
@@ -453,40 +449,24 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
             iterator.next().clearDebug();
         }
     }
-    public void removeAnnotations(Predicate<AnnotationItem> filter) {
-        ClassId classId = getId();
-        AnnotationSet annotationSet = classId.getClassAnnotations();
-        if(annotationSet == null) {
+    public void fixDalvikInnerClassName() {
+        DexAnnotation annotation = getAnnotation(TypeKey.DALVIK_InnerClass);
+        if (annotation == null) {
             return;
         }
-        annotationSet.removeIf(filter);
-        annotationSet.refresh();
-        if(annotationSet.size() == 0){
-            annotationSet.removeSelf();
-            classId.setClassAnnotations((AnnotationSet) null);
-        }
-        getId().refresh();
-    }
-    public void fixDalvikInnerClassName(){
-        AnnotationItem annotationItem = getId().getDalvikInnerClass();
-        if(annotationItem == null){
+        DexAnnotationElement element = annotation.get(Key.DALVIK_name);
+        if (element == null) {
             return;
         }
-        AnnotationElement element = annotationItem.getElement("name");
-        if(element == null){
-            return;
-        }
-        DexValueBlock<?> valueBlock = element.getValueBlock();
-        if(!valueBlock.is(DexValueType.STRING)){
+        if (!(element.getValue() instanceof StringKey)) {
             return;
         }
         TypeKey typeKey = getKey();
-        if(!typeKey.isInnerName()){
-            element.setValue(new NullValue());
-            return;
+        if (!typeKey.isInnerName()) {
+            element.setValue(NullValueKey.INSTANCE);
+        } else {
+            element.setValue(StringKey.create(typeKey.getSimpleInnerName()));
         }
-        StringValue value = (StringValue) valueBlock;
-        value.setString(typeKey.getSimpleInnerName());
     }
     public Set<Key> fixAccessibility(){
         DexClassRepository repository = getClassRepository();
@@ -544,63 +524,21 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return null;
     }
     public String getDalvikInnerClassName(){
-        Key key = getAnnotationValue(TypeKey.DALVIK_InnerClass, "name");
+        Key key = getAnnotationValue(TypeKey.DALVIK_InnerClass, Key.DALVIK_name);
         if(key instanceof StringKey){
             return ((StringKey) key).getString();
         }
         return null;
     }
     public void updateDalvikInnerClassName(String name){
-        DexAnnotationElement element = getAnnotationElement(TypeKey.DALVIK_InnerClass, "name");
+        DexAnnotationElement element = getAnnotationElement(TypeKey.DALVIK_InnerClass, Key.DALVIK_name);
         if (element != null) {
             element.setValue(StringKey.create(name));
         }
     }
     public void createDalvikInnerClassName(String name){
-        DexAnnotationElement element = getOrCreateAnnotationElement(TypeKey.DALVIK_InnerClass, "name");
+        DexAnnotationElement element = getOrCreateAnnotationElement(TypeKey.DALVIK_InnerClass, Key.DALVIK_name);
         element.setValue(StringKey.create(name));
-    }
-
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(){
-        AnnotationSet annotationSet = getId().getClassAnnotations();
-        if(annotationSet != null){
-            return ComputeIterator.of(annotationSet.iterator(), annotationItem ->
-                    DexAnnotation.create(DexClass.this, annotationItem));
-        }
-        return EmptyIterator.of();
-    }
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(TypeKey typeKey){
-        AnnotationSet annotationSet = getId().getClassAnnotations();
-        if(annotationSet != null){
-            return ComputeIterator.of(annotationSet.getAll(typeKey), annotationItem ->
-                    DexAnnotation.create(DexClass.this, annotationItem));
-        }
-        return EmptyIterator.of();
-    }
-    @Override
-    public DexAnnotation getAnnotation(TypeKey typeKey){
-        AnnotationSet annotationSet = getId().getClassAnnotations();
-        if(annotationSet != null){
-            return DexAnnotation.create(this, annotationSet.get(typeKey));
-        }
-        return null;
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getId().getOrCreateClassAnnotations().getOrCreate(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
-        return DexAnnotation.create(this,
-                getId().getOrCreateClassAnnotations().getOrCreate(annotationItemKey));
-    }
-    @Override
-    public DexAnnotation newAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getId().getOrCreateClassAnnotations().addNewItem(typeKey));
     }
 
     ClassData getOrCreateClassData(){
@@ -691,11 +629,6 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public String toSmali(SmaliWriter writer) throws IOException {
         return SmaliWriter.toString(writer,this);
-    }
-
-    @Override
-    public ElementType getElementType(){
-        return ElementType.TYPE;
     }
 
     @Override

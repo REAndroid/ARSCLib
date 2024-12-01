@@ -31,7 +31,7 @@ public class AnnotationElementKey implements Key {
     private final String name;
     private final Key value;
 
-    public AnnotationElementKey(String name, Key value) {
+    private AnnotationElementKey(String name, Key value) {
         this.name = name;
         this.value = value;
     }
@@ -52,13 +52,13 @@ public class AnnotationElementKey implements Key {
         if (ObjectsUtil.equals(getName(), name)) {
             return this;
         }
-        return new AnnotationElementKey(name, getValue());
+        return create(name, getValue());
     }
     public AnnotationElementKey changeValue(Key value) {
         if (ObjectsUtil.equals(getValue(), value)) {
             return this;
         }
-        return new AnnotationElementKey(getName(), value);
+        return create(getName(), value);
     }
 
     @Override
@@ -139,5 +139,15 @@ public class AnnotationElementKey implements Key {
     @Override
     public String toString() {
         return getName() + " = " + getValue();
+    }
+
+    public static AnnotationElementKey create(String name, Key value) {
+        if (name == null) {
+            return null;
+        }
+        if (value == null) {
+            value = NullValueKey.INSTANCE;
+        }
+        return new AnnotationElementKey(name, value);
     }
 }

@@ -20,7 +20,7 @@ import com.reandroid.dex.id.IdItem;
 
 import java.util.Iterator;
 
-public interface IdDefinition<T extends IdItem> {
+public interface IdDefinition<T extends IdItem> extends AnnotatedItem {
     T getId();
     int getAccessFlagsValue();
     Iterator<? extends Modifier> getAccessFlags();

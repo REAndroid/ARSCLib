@@ -29,13 +29,13 @@ import java.util.function.Predicate;
 
 public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements Key, Iterable<AnnotationElementKey> {
 
-    private static final AnnotationElementKey[] EMPTY = new AnnotationElementKey[0];
+    private static final AnnotationElementKey[] EMPTY_ARRAY = new AnnotationElementKey[0];
 
     private final AnnotationVisibility visibility;
     private final TypeKey type;
 
-    public AnnotationItemKey(AnnotationVisibility visibility, TypeKey type, AnnotationElementKey[] elements) {
-        super(removeNulls(elements));
+    private AnnotationItemKey(AnnotationVisibility visibility, TypeKey type, AnnotationElementKey[] elements) {
+        super(elements);
         this.visibility = visibility;
         this.type = type;
     }
@@ -53,7 +53,41 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         if (typeKey.equals(getType())) {
             return this;
         }
-        return new AnnotationItemKey(getVisibility(), getType(), getElements());
+        return create(getVisibility(), typeKey, getElements());
+    }
+    public AnnotationItemKey remove(String name) {
+        return removeIf(elementKey -> ObjectsUtil.equals(elementKey.getName(), name));
+    }
+    public AnnotationItemKey rename(String name, String newName) {
+        AnnotationItemKey result = this;
+        AnnotationElementKey elementKey = result.get(name);
+        if (elementKey == null) {
+            return result;
+        }
+        int i = result.indexOf(elementKey);
+        elementKey = elementKey.changeName(newName);
+        return result.set(i, elementKey).sorted();
+    }
+    public AnnotationItemKey setValue(String name, Key value) {
+        AnnotationItemKey result = this;
+        result = result.getOrCreate(name);
+        AnnotationElementKey elementKey = result.get(name);
+        int i = result.indexOf(elementKey);
+        elementKey = elementKey.changeValue(value);
+        return result.set(i, elementKey);
+    }
+    public AnnotationItemKey getOrCreate(String name) {
+        AnnotationElementKey elementKey = get(name);
+        if (elementKey != null) {
+            return this;
+        }
+        return add(AnnotationElementKey.create(name, null)).sorted();
+    }
+    public AnnotationItemKey changeVisibility(AnnotationVisibility visibility) {
+        if (ObjectsUtil.equals(getVisibility(), visibility)) {
+            return this;
+        }
+        return create(visibility, getType(), getElements());
     }
     public AnnotationElementKey get(String name) {
         int size = size();
@@ -65,9 +99,37 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         }
         return null;
     }
+    public Key getValue(String name) {
+        AnnotationElementKey element = get(name);
+        if (element != null) {
+            return element.getValue();
+        }
+        return null;
+    }
+    public boolean containsElement(String name) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            AnnotationElementKey elementKey = get(i);
+            if (elementKey != null && ObjectsUtil.equals(name, elementKey.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    public AnnotationItemKey add(String name, Key value) {
+        return add(AnnotationElementKey.create(name, value));
+    }
     @Override
     public AnnotationItemKey add(AnnotationElementKey item) {
+        if (item == null) {
+            return this;
+        }
+        return this.remove(item.getName())
+                .addUnchecked(item)
+                .sorted();
+    }
+    private AnnotationItemKey addUnchecked(AnnotationElementKey item) {
         return (AnnotationItemKey) super.add(item);
     }
     @Override
@@ -86,15 +148,19 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     public AnnotationItemKey set(int i, AnnotationElementKey item) {
         return (AnnotationItemKey) super.set(i, item);
     }
+    @Override
+    public AnnotationItemKey sorted() {
+        return (AnnotationItemKey) super.sorted();
+    }
 
     @Override
     AnnotationItemKey newInstance(AnnotationElementKey[] elements) {
-        return new AnnotationItemKey(getVisibility(), getType(), elements);
+        return create(getVisibility(), getType(), elements);
     }
     @Override
     AnnotationElementKey[] newArray(int length) {
         if (length == 0) {
-            return EMPTY;
+            return EMPTY_ARRAY;
         }
         return new AnnotationElementKey[length];
     }
@@ -198,6 +264,13 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         return getHashCode();
     }
 
+    public static AnnotationItemKey create(AnnotationVisibility visibility, TypeKey typeKey, AnnotationElementKey ... elements) {
+        if (typeKey == null) {
+            return null;
+        }
+        elements = removeNulls(elements);
+        return new AnnotationItemKey(visibility, typeKey, elements);
+    }
 
     public static AnnotationItemKey read(SmaliReader reader) throws IOException {
         //FIXME
@@ -210,7 +283,7 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
 
     private static AnnotationElementKey[] removeNulls(AnnotationElementKey[] elements) {
         if (elements == null || elements.length == 0) {
-            return EMPTY;
+            return EMPTY_ARRAY;
         }
         int length = elements.length;
         int size = 0;
@@ -224,7 +297,7 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
             return elements;
         }
         if (size == 0) {
-            return EMPTY;
+            return EMPTY_ARRAY;
         }
         AnnotationElementKey[] results = new AnnotationElementKey[size];
         int j = 0;

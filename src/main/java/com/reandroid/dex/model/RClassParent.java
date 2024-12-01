@@ -24,16 +24,14 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.ins.Ins35c;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.data.*;
+import com.reandroid.dex.key.ArrayValueKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.value.ArrayValue;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.value.TypeValue;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -90,55 +88,32 @@ public class RClassParent extends DexClass {
         return rClass;
     }
     public void addMemberAnnotation(String simpleName){
-        ArrayValue arrayValue = getOrCreateMembersArray();
-        Iterator<String> iterator = FilterIterator.of(getMemberSimpleNames(), simpleName::equals);
-        if(iterator.hasNext()){
+        if(CollectionUtil.contains(getMemberSimpleNames(), simpleName)) {
             return;
         }
-        TypeValue typeValue = arrayValue.createNext(DexValueType.TYPE);
-        typeValue.setKey(getKey().createInnerClass(simpleName));
+        ArrayValueKey arrayValue = getOrCreateMembersArray()
+                .add(getKey().createInnerClass(simpleName));
+        DexAnnotation annotation = getOrCreateAnnotation(TypeKey.DALVIK_MemberClass);
+        DexAnnotationElement element = annotation.getOrCreate(Key.DALVIK_value);
+        element.setValue(arrayValue);
     }
-    public Iterator<String> getMemberSimpleNames(){
-        return ComputeIterator.of(getMemberNames(), DexUtils::getSimpleInnerName);
+    public Iterator<String> getMemberSimpleNames() {
+        return ComputeIterator.of(getMemberNames(), TypeKey::getSimpleInnerName);
     }
-    public Iterator<String> getMemberNames(){
-        ArrayValue arrayValue = getOrCreateMembersArray();
-        return ComputeIterator.of(arrayValue.iterator(TypeValue.class), typeValue -> getKey().getTypeName());
+    public Iterator<TypeKey> getMemberNames(){
+        return getOrCreateMembersArray().iterator(TypeKey.class);
     }
-    private ArrayValue getOrCreateMembersArray(){
-        AnnotationItem item = getOrCreateMemberAnnotation();
-        AnnotationElement element = item.getElement("value");
-        DexValueBlock<?> value = element.getValueBlock();
-        if(value == null){
-            ArrayValue array = DexValueType.ARRAY.newInstance();
-            element.setValue(array);
-            value = array;
+    private ArrayValueKey getOrCreateMembersArray() {
+        DexAnnotation annotation = getOrCreateAnnotation(TypeKey.DALVIK_MemberClass);
+        annotation.setVisibility(AnnotationVisibility.SYSTEM);
+        DexAnnotationElement element = annotation.getOrCreate(Key.DALVIK_value);
+        Key key = element.getValue();
+        if (key instanceof ArrayValueKey) {
+            return (ArrayValueKey) key;
         }
-        return (ArrayValue) value;
-    }
-    private AnnotationItem getOrCreateMemberAnnotation(){
-        AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        String name = "value";
-        AnnotationItem item = annotationSet.getOrCreate(TypeKey.DALVIK_MemberClass, name);
-        AnnotationElement element = item.getElement(name);
-        if(element.getValueType() == DexValueType.ARRAY){
-            return item;
-        }
-        item.setVisibility(AnnotationVisibility.SYSTEM);
-        ArrayValue array = DexValueType.ARRAY.newInstance();
-        element.setValue(array);
-        return item;
-    }
-    private AnnotationSet getOrCreateClassAnnotations() {
-        AnnotationSet annotationSet = getClassAnnotations();
-        if(annotationSet != null){
-            return annotationSet;
-        }
-        annotationSet = getId().getOrCreateClassAnnotations();
-        return annotationSet;
-    }
-    private AnnotationSet getClassAnnotations() {
-        return getId().getClassAnnotations();
+        ArrayValueKey arrayValueKey = ArrayValueKey.EMPTY;
+        element.setValue(arrayValueKey);
+        return arrayValueKey;
     }
     public void initialize(){
         ClassId classId = getId();

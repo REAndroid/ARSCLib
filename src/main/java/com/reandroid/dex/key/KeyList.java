@@ -20,6 +20,7 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
@@ -49,6 +50,12 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
     @Override
     public Iterator<T> iterator() {
         return ArrayIterator.of(this.elements);
+    }
+    public Iterator<T> iterator(Predicate<? super T> predicate) {
+        return ArrayIterator.of(this.elements, predicate);
+    }
+    public<T1 extends Key> Iterator<T1> iterator(Class<T1> instance) {
+        return InstanceIterator.of(iterator(), instance);
     }
 
     public int indexOf(Object key) {

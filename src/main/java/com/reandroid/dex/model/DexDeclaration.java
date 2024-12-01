@@ -19,8 +19,11 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.IdDefinition;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Iterator;
 
@@ -148,32 +151,44 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
             return true;
         }
         DexLayout dexLayout = getDexLayout();
-        if(dexLayout == null){
+        if (dexLayout == null) {
             return false;
         }
         return dexLayout == dexDeclaration.getDexLayout();
-    }
-    public boolean isInSameFile(DexLayout dexLayout){
-        return dexLayout != null &&
-                dexLayout.getDexLayoutBlock() == getDexLayout().getDexLayoutBlock();
-    }
-    public boolean isInSameDirectory(DexDeclaration dexDeclaration){
-        if(dexDeclaration == null){
-            return false;
-        }
-        if(isInSameFile(dexDeclaration)){
-            return true;
-        }
-        DexDirectory directory = getDexDirectory();
-        if(directory == null){
-            return false;
-        }
-        return directory == dexDeclaration.getDexDirectory();
     }
     public boolean isInSameDirectory(DexDirectory directory){
         return getDexDirectory() == directory;
     }
 
+    @Override
+    public Iterator<DexAnnotation> getAnnotations() {
+        AnnotationSetKey annotation = getDefinition().getAnnotation();
+        return ComputeIterator.of(annotation.iterator(), this::initializeAnnotation);
+    }
+    @Override
+    public DexAnnotation getAnnotation(TypeKey typeKey) {
+        return initializeAnnotation(typeKey);
+    }
+    @Override
+    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey) {
+        IdDefinition<?> definition = getDefinition();
+        AnnotationSetKey annotationSetKey = definition.getAnnotation();
+        if (!annotationSetKey.contains(typeKey)) {
+            annotationSetKey = annotationSetKey.getOrCreate(typeKey);
+            definition.setAnnotation(annotationSetKey);
+        }
+        return initializeAnnotation(typeKey);
+    }
+
+    DexAnnotation initializeAnnotation(TypeKey typeKey) {
+        return DexAnnotation.create(this, getDefinition(), typeKey);
+    }
+    DexAnnotation initializeAnnotation(AnnotationItemKey key) {
+        if (key != null) {
+            return DexAnnotation.create(this, getDefinition(), key.getType());
+        }
+        return null;
+    }
 
     @Override
     public int hashCode() {

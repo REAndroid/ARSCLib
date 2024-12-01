@@ -35,7 +35,7 @@ public class SmaliAnnotationElement extends Smali implements KeyReference {
 
     @Override
     public AnnotationElementKey getKey() {
-        return new AnnotationElementKey(getName(), getValueKey());
+        return AnnotationElementKey.create(getName(), getValueKey());
     }
     @Override
     public void setKey(Key key) {

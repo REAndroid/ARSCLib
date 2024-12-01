@@ -74,7 +74,7 @@ public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
         return false;
     }
 
-    public Iterator<AnnotationItem> getAnnotationItemBlocks() {
+    private Iterator<AnnotationItem> getAnnotationItemBlocks() {
         MethodDef methodDef = getMethodDef();
         AnnotationsDirectory directory = methodDef.getAnnotationsDirectory();
         if (directory != null) {
@@ -84,31 +84,18 @@ public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
         return EmptyIterator.of();
     }
 
-    public AnnotationItem addAnnotationItemBlock(TypeKey typeKey) {
-        return getOrCreateAnnotationSet().addNewItem(typeKey);
-    }
-
-    public AnnotationItem getOrCreateAnnotationItemBlock(TypeKey typeKey) {
-        return getOrCreateAnnotationSet().getOrCreate(typeKey);
-    }
-
-
-    public AnnotationSet getOrCreateAnnotationSet() {
-        MethodDef methodDef = getMethodDef();
-        AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
-        return directory.getOrCreateParameterAnnotation(methodDef, getDefinitionIndex());
-    }
-
     private void writeAnnotation(AnnotationSetKey key) {
         MethodDef methodDef = getMethodDef();
+        int index = getDefinitionIndex();
         if (key == null || key.isEmpty()) {
             if (hasAnnotationSetBlocks()) {
                 AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
-                directory.removeParameterAnnotation(methodDef, getDefinitionIndex());
+                directory.removeParameterAnnotation(methodDef, index);
             }
         } else {
             AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
-            directory.setParameterAnnotation(methodDef, getDefinitionIndex(), key);
+            directory.removeParameterAnnotation(methodDef, index);
+            directory.setParameterAnnotation(methodDef, index, key);
         }
     }
 

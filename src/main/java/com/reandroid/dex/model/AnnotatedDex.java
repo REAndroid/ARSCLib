@@ -15,42 +15,31 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
-import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
 public interface AnnotatedDex {
 
     Iterator<DexAnnotation> getAnnotations();
-    Iterator<DexAnnotation> getAnnotations(TypeKey typeKey);
     DexAnnotation getAnnotation(TypeKey typeKey);
-    DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey);
     DexAnnotation getOrCreateAnnotation(TypeKey typeKey);
-    DexAnnotation newAnnotation(TypeKey typeKey);
-
-    ElementType getElementType();
 
     default DexAnnotationElement getAnnotationElement(TypeKey typeKey, String name){
         DexAnnotation dexAnnotation = getAnnotation(typeKey);
-        if(dexAnnotation != null){
+        if(dexAnnotation != null) {
             return dexAnnotation.get(name);
         }
         return null;
     }
-    default DexAnnotationElement getOrCreateAnnotationElement(TypeKey typeKey, String name){
-        DexAnnotationElement element = getAnnotationElement(typeKey, name);
-        if(element != null){
-            return element;
-        }
+    default DexAnnotationElement getOrCreateAnnotationElement(TypeKey typeKey, String name) {
         DexAnnotation annotation = getOrCreateAnnotation(typeKey);
         return annotation.getOrCreate(name);
     }
-    default Key getAnnotationValue(TypeKey typeKey, String name){
+    default Key getAnnotationValue(TypeKey typeKey, String name) {
         DexAnnotationElement element = getAnnotationElement(typeKey, name);
-        if(element != null){
+        if (element != null) {
             return element.getValue();
         }
         return null;

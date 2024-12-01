@@ -23,17 +23,13 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.ins.TryBlock;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
-import java.lang.annotation.ElementType;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -126,35 +122,6 @@ public class DexMethod extends DexDeclaration {
         getDefinition().setName(name);
     }
 
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(){
-        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotationSets()),
-                annotationItem -> DexAnnotation.create(DexMethod.this, annotationItem));
-    }
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(TypeKey typeKey){
-        return FilterIterator.of(getAnnotations(),
-                item -> typeKey.equals(item.getType()));
-    }
-    @Override
-    public DexAnnotation getAnnotation(TypeKey typeKey){
-        return CollectionUtil.getFirst(getAnnotations(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
-        return DexAnnotation.create(this,
-                getDefinition().getOrCreateAnnotationSet().getOrCreate(annotationItemKey));
-    }
-    @Override
-    public DexAnnotation newAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getDefinition().getOrCreateAnnotationSet().addNewItem(typeKey));
-    }
     public Iterator<DexInstruction> getInstructions(Opcode<?> opcode) {
         return getInstructions(ins -> ins.getOpcode() == opcode);
     }
@@ -323,6 +290,9 @@ public class DexMethod extends DexDeclaration {
         return ComputeIterator.of(getDefinition().getParameters(),
                 parameter -> DexMethodParameter.create(DexMethod.this, parameter));
     }
+    public void removeParameter(int index) {
+        getDefinition().removeParameter(index);
+    }
 
     @Override
     public void removeSelf(){
@@ -332,10 +302,7 @@ public class DexMethod extends DexDeclaration {
     public void append(SmaliWriter writer) throws IOException {
         getDefinition().append(writer);
     }
-    @Override
-    public ElementType getElementType(){
-        return ElementType.METHOD;
-    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

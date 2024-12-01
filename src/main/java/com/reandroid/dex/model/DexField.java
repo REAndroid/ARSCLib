@@ -21,13 +21,8 @@ import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.ExpandIterator;
-import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
-import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
 public class DexField extends DexDeclaration {
@@ -130,35 +125,6 @@ public class DexField extends DexDeclaration {
     }
 
     @Override
-    public Iterator<DexAnnotation> getAnnotations(){
-        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotationSets()),
-                annotationItem -> DexAnnotation.create(DexField.this, annotationItem));
-    }
-    @Override
-    public Iterator<DexAnnotation> getAnnotations(TypeKey typeKey){
-        return FilterIterator.of(getAnnotations(),
-                item -> typeKey.equals(item.getType()));
-    }
-    @Override
-    public DexAnnotation getAnnotation(TypeKey typeKey){
-        return CollectionUtil.getFirst(getAnnotations(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey));
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
-        return DexAnnotation.create(this,
-                getDefinition().getOrCreateAnnotationSet().getOrCreate(annotationItemKey));
-    }
-    @Override
-    public DexAnnotation newAnnotation(TypeKey typeKey){
-        return DexAnnotation.create(this,
-                getDefinition().getOrCreateAnnotationSet().addNewItem(typeKey));
-    }
-    @Override
     public void removeSelf(){
         getDefinition().removeSelf();
     }
@@ -166,11 +132,6 @@ public class DexField extends DexDeclaration {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getDefinition().append(writer);
-    }
-
-    @Override
-    public ElementType getElementType(){
-        return ElementType.FIELD;
     }
 
     @Override

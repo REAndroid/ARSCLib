@@ -48,7 +48,7 @@ public class AnnotationElement extends DataItem implements KeyReference,
 
     @Override
     public AnnotationElementKey getKey(){
-        return new AnnotationElementKey(getName(), getValue());
+        return AnnotationElementKey.create(getName(), getValue());
     }
     @Override
     public void setKey(Key key) {

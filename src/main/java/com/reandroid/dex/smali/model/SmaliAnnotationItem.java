@@ -47,7 +47,7 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement>
         for (int i = 0; i < length; i++) {
             elements[i] = get(i).getKey();
         }
-        return new AnnotationItemKey(getVisibility(), getType(), elements);
+        return AnnotationItemKey.create(getVisibility(), getType(), elements);
     }
     @Override
     public void setKey(Key key) {

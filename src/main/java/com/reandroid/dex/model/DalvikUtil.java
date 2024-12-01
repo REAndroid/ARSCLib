@@ -18,6 +18,7 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.Iterator;
 
@@ -33,7 +34,7 @@ public class DalvikUtil {
     }
     public static int cleanMissingMembers(DexClass dexClass) {
         int result = 0;
-        Iterator<DexAnnotation> iterator = dexClass.getAnnotations(TypeKey.DALVIK_MemberClass);
+        Iterator<DexAnnotation> iterator = SingleIterator.of(dexClass.getAnnotation(TypeKey.DALVIK_MemberClass));
         while (iterator.hasNext()) {
             DexAnnotation annotation = iterator.next();
             DexAnnotationElement element = annotation.get("value");

@@ -26,7 +26,6 @@ import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.model.SmaliClass;
-import com.reandroid.dex.value.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
@@ -35,7 +34,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedItem, Comparable<ClassId> {
+public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<ClassId> {
 
     private final ClassTypeId classTypeId;
     private final IndirectInteger accessFlagValue;
@@ -96,8 +95,11 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedIt
 
     @Override
     public AnnotationSetKey getAnnotation() {
-        return AnnotationSetKey.create(
-                ComputeIterator.of(getAnnotationItemBlocks(), AnnotationItem::getKey));
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getClassAnnotation();
+        }
+        return AnnotationSetKey.EMPTY;
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotationSet) {
@@ -108,28 +110,21 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedIt
     public void clearAnnotations() {
         writeAnnotation(AnnotationSetKey.EMPTY);
     }
-    private boolean hasAnnotationSetBlocks() {
-        return getAnnotationItemBlocks().hasNext();
-    }
-    private Iterator<AnnotationItem> getAnnotationItemBlocks() {
+    @Override
+    public boolean hasAnnotations() {
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if (directory != null) {
-            AnnotationSet annotationSet = directory.getClassAnnotations();
-            if (annotationSet != null) {
-                return annotationSet.iterator();
-            }
+            return directory.hasClassAnnotation();
         }
-        return EmptyIterator.of();
+        return false;
     }
     private void writeAnnotation(AnnotationSetKey key) {
         if (key == null || key.isEmpty()) {
-            if (hasAnnotationSetBlocks()) {
-                AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
-                directory.setClassAnnotations((AnnotationSetKey )null);
+            if (hasAnnotations()) {
+                getOrCreateUniqueAnnotationsDirectory().setClassAnnotations((AnnotationSetKey )null);
             }
         } else {
-            AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
-            directory.setClassAnnotations(key);
+            getOrCreateUniqueAnnotationsDirectory().setClassAnnotations(key);
         }
     }
     public String getName(){
@@ -207,55 +202,33 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedIt
     }
 
     public Key getDalvikEnclosing(){
-        TypeValue typeValue = getDalvikEnclosingClass();
-        if(typeValue != null){
-            return typeValue.getKey();
+        TypeKey typeKey = getDalvikEnclosingClass();
+        if(typeKey != null) {
+            return typeKey;
         }
-        MethodIdValue methodIdValue = getDalvikEnclosingMethodId();
-        if(methodIdValue != null){
-            return methodIdValue.getKey();
-        }
-        return null;
-    }
-    public MethodIdValue getDalvikEnclosingMethodId(){
-        AnnotationItem annotationItem = getDalvikEnclosingMethod();
-        if(annotationItem != null){
-            DexValueBlock<?> value = annotationItem.getElementValue(Key.DALVIK_value);
-            if(value instanceof MethodIdValue){
-                return (MethodIdValue) value;
-            }
+        MethodKey enclosingMethod = getDalvikEnclosingMethod();
+        if (enclosingMethod != null) {
+            return enclosingMethod.getDeclaring();
         }
         return null;
     }
-    public Iterator<TypeKey> getMemberClassKeys(){
-        return ComputeIterator.of(getDalvikMemberClasses(), TypeValue::getKey);
-    }
-    public Iterator<TypeValue> getDalvikMemberClasses(){
-        AnnotationItem annotationItem = getDalvikMemberClass();
-        if(annotationItem != null){
-            DexValueBlock<?> value = annotationItem.getElementValue(Key.DALVIK_value);
-            if(value instanceof ArrayValue){
-                return ((ArrayValue)value).iterator(TypeValue.class);
-            }
+    public Iterator<TypeKey> getDalvikMemberClasses() {
+        Key key = getAnnotationValue(TypeKey.DALVIK_MemberClass, Key.DALVIK_value);
+        if (key instanceof KeyList<?>) {
+            return ((KeyList<?>) key).iterator(TypeKey.class);
         }
         return EmptyIterator.of();
     }
-    public AnnotationItem getDalvikEnclosingMethod(){
-        return getClassAnnotation(TypeKey.DALVIK_EnclosingMethod);
-    }
-    public AnnotationItem getDalvikMemberClass(){
-        return getClassAnnotation(TypeKey.DALVIK_MemberClass);
-    }
-    public AnnotationItem getDalvikInnerClass(){
-        AnnotationSet annotationSet = getClassAnnotations();
-        if(annotationSet == null){
-            return null;
+    public MethodKey getDalvikEnclosingMethod() {
+        Key key = getAnnotationValue(TypeKey.DALVIK_EnclosingMethod, Key.DALVIK_value);
+        if (key instanceof MethodKey) {
+            return (MethodKey) key;
         }
-        return annotationSet.get(TypeKey.DALVIK_InnerClass);
+        return null;
     }
-    public AnnotationItem getOrCreateDalvikInnerClass(){
+    public AnnotationItemKey getOrCreateDalvikInnerClass(){
         TypeKey typeKey = getKey();
-        if(typeKey == null){
+        if (typeKey == null) {
             return null;
         }
         String inner = typeKey.getSimpleInnerName();
@@ -266,26 +239,16 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedIt
         }
         return getOrCreateDalvikInnerClass(getAccessFlagsValue(), inner);
     }
-    public AnnotationItem getOrCreateDalvikInnerClass(int flags, String name){
-        AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationItem item = annotationSet.getOrCreate(TypeKey.DALVIK_InnerClass);
-        item.setVisibility(AnnotationVisibility.SYSTEM);
-
-        AnnotationElement accessFlags = item.getOrCreateElement(Key.DALVIK_accessFlags);
-        IntValue accessFlagsValue = accessFlags.getOrCreateValue(DexValueType.INT);
-        accessFlagsValue.set(flags);
-
-        AnnotationElement nameElement = item.getOrCreateElement(Key.DALVIK_name);
-
-        if(name != null){
-            StringValue stringValue = nameElement.getOrCreateValue(DexValueType.STRING);
-            stringValue.setKey(new StringKey(name));
-        }else {
-            nameElement.getOrCreateValue(DexValueType.NULL);
-        }
-        return item;
+    public AnnotationItemKey getOrCreateDalvikInnerClass(int flags, String name) {
+        AnnotationItemKey itemKey = AnnotationItemKey.create(AnnotationVisibility.SYSTEM,
+                TypeKey.DALVIK_InnerClass)
+                .add(Key.DALVIK_accessFlags, PrimitiveKey.of(flags))
+                .add(Key.DALVIK_name, name == null ? NullValueKey.INSTANCE : StringKey.create(name));
+        AnnotationSetKey annotation = getAnnotation().add(itemKey);
+        setAnnotation(annotation);
+        return itemKey;
     }
-    public TypeValue getOrCreateDalvikEnclosingClass(){
+    public TypeKey getOrCreateDalvikEnclosingClass(){
         TypeKey key = getKey();
         if(key != null){
             TypeKey enclosing = key.getEnclosingClass();
@@ -295,88 +258,23 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedIt
         }
         return null;
     }
-    public TypeValue getOrCreateDalvikEnclosingClass(TypeKey enclosing){
-        if(enclosing == null){
+    public TypeKey getOrCreateDalvikEnclosingClass(TypeKey enclosing) {
+        if (enclosing == null) {
             return null;
         }
-        AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationItem item = annotationSet.getOrCreate(TypeKey.DALVIK_EnclosingClass);
-        item.setVisibility(AnnotationVisibility.SYSTEM);
-        AnnotationElement element = item.getOrCreateElement(Key.DALVIK_value);
-        TypeValue typeValue = element.getOrCreateValue(DexValueType.TYPE);
-        typeValue.setKey(enclosing);
-        return typeValue;
+        AnnotationItemKey itemKey = AnnotationItemKey.create(AnnotationVisibility.SYSTEM,
+                TypeKey.DALVIK_EnclosingClass)
+                .add(Key.DALVIK_value, enclosing);
+        AnnotationSetKey annotation = getAnnotation().add(itemKey);
+        setAnnotation(annotation);
+        return enclosing;
     }
-    public TypeValue getDalvikEnclosingClass(){
-        AnnotationItem item = getDalvikEnclosingClassAnnotation();
-        if(item == null){
-            return null;
-        }
-        AnnotationElement element = item.getElement(Key.DALVIK_value);
-        DexValueBlock<?> value = element.getValueBlock();
-        if(value instanceof TypeValue){
-            return (TypeValue) value;
+    public TypeKey getDalvikEnclosingClass() {
+        Key key = getAnnotationValue(TypeKey.DALVIK_EnclosingClass, Key.DALVIK_value);
+        if (key instanceof TypeKey) {
+            return (TypeKey) key;
         }
         return null;
-    }
-    public AnnotationItem getDalvikEnclosingClassAnnotation(){
-        AnnotationSet annotationSet = getClassAnnotations();
-        if(annotationSet != null){
-            return annotationSet.get(TypeKey.DALVIK_EnclosingClass);
-        }
-        return null;
-    }
-    public void setClassAnnotations(AnnotationSetKey setKey) {
-        AnnotationsDirectory directory = getAnnotationsDirectory();
-        if (directory == null) {
-            if (setKey == null) {
-                return;
-            }
-            directory = getOrCreateAnnotationsDirectory();
-        }
-        directory.setClassAnnotations(setKey);
-    }
-    public AnnotationSet getOrCreateClassAnnotations(){
-        return getOrCreateAnnotationsDirectory().getOrCreateClassAnnotations();
-    }
-    public AnnotationItem getClassAnnotation(TypeKey typeKey){
-        AnnotationSet classAnnotations = getClassAnnotations();
-        if(classAnnotations != null){
-            return classAnnotations.get(typeKey);
-        }
-        return null;
-    }
-    public Iterator<AnnotationItem> getClassAnnotations(TypeKey typeKey){
-        AnnotationSet classAnnotations = getClassAnnotations();
-        if(classAnnotations != null){
-            return classAnnotations.getAll(typeKey);
-        }
-        return EmptyIterator.of();
-    }
-    public AnnotationSetKey getAnnotationSetKey(){
-        AnnotationSet annotationSet = getClassAnnotations();
-        if (annotationSet != null) {
-            return annotationSet.getKey();
-        }
-        return null;
-    }
-    public AnnotationSet getClassAnnotations(){
-        AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
-        if(annotationsDirectory != null){
-            return annotationsDirectory.getClassAnnotations();
-        }
-        return null;
-    }
-    public void setClassAnnotations(AnnotationSet annotationSet){
-        AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
-        if(annotationsDirectory != null){
-            annotationsDirectory.setClassAnnotations(annotationSet);
-        }
-    }
-    public AnnotationsDirectory getOrCreateAnnotationsDirectory(){
-        AnnotationsDirectory directory = annotationsDirectory.getOrCreate();
-        directory.addUniqueUser(this);
-        return directory;
     }
     public AnnotationsDirectory getUniqueAnnotationsDirectory(){
         return annotationsDirectory.getUniqueItem(this);
@@ -570,7 +468,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, AnnotatedIt
         smaliClass.setSuperClass(getSuperClassKey());
         smaliClass.setSourceFile(getSourceFile().getKey());
         smaliClass.setInterfaces(getInterfacesReference().getKey());
-        smaliClass.setAnnotation(getAnnotationSetKey());
+        smaliClass.setAnnotation(getAnnotation());
         ClassData classData = getClassData();
         if (classData != null) {
             classData.toSmali(smaliClass);
