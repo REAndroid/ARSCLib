@@ -255,7 +255,7 @@ public class FieldKey implements Key {
 
         String name = text.substring(start, i);
         start = start + name.length() + 1;
-        i = text.length() - start;
+        i = text.length();
 
         TypeKey type = TypeKey.parseBinaryType(text, start, i);
 
