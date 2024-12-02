@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.common;
+package com.reandroid.dex.program;
 
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
@@ -22,7 +22,7 @@ import com.reandroid.dex.key.TypeKey;
 
 import java.util.function.Predicate;
 
-public interface AnnotatedItem {
+public interface AnnotatedProgram {
 
     AnnotationSetKey getAnnotation();
     void setAnnotation(AnnotationSetKey annotationSet);

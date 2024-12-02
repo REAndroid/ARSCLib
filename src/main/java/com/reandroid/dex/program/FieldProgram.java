@@ -13,11 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.data;
+package com.reandroid.dex.program;
 
-import com.reandroid.dex.key.ProgramKey;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
 
-public interface DefIndex {
-    int getDefinitionIndex();
-    ProgramKey getKey();
+import java.lang.annotation.ElementType;
+
+public interface FieldProgram extends AccessibleProgram {
+
+    @Override
+    FieldKey getKey();
+    Key getStaticValue();
+
+    @Override
+    default ElementType getElementType() {
+        return ElementType.FIELD;
+    }
+    default boolean isInstance() {
+        return !isStatic();
+    }
 }

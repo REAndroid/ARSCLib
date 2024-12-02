@@ -15,20 +15,18 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.common.IdDefinition;
 import com.reandroid.dex.data.MethodParameter;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.MethodParameterProgram;
+import com.reandroid.dex.program.ProgramElement;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DexMethodParameter extends Dex implements AnnotatedDex {
+public class DexMethodParameter extends Dex implements AnnotatedDex, MethodParameterProgram {
 
     private final DexMethod dexMethod;
     private final MethodParameter parameter;
@@ -38,17 +36,18 @@ public class DexMethodParameter extends Dex implements AnnotatedDex {
         this.parameter = parameter;
     }
 
-    public String getDebugName(){
+    @Override
+    public TypeKey getKey() {
+        return getParameter().getKey();
+    }
+
+    @Override
+    public String getDebugName() {
         return getParameter().getDebugName();
     }
-    public void removeDebugName(){
-        getParameter().setDebugName(null);
-    }
-    public void setDebugName(String name){
+    @Override
+    public void setDebugName(String name) {
         getParameter().setDebugName(name);
-    }
-    public void clearAnnotations(){
-        getParameter().clearAnnotations();
     }
     public DexClass getTypeClass(){
         return getClassRepository().getDexClass(getType());
@@ -71,7 +70,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex {
         if(ObjectsUtil.equals(getType(), key)) {
             return true;
         }
-        Iterator<DexAnnotation> iterator = getAnnotations();
+        Iterator<DexAnnotation> iterator = getDexAnnotations();
         while (iterator.hasNext()){
             DexAnnotation dexAnnotation = iterator.next();
             if(dexAnnotation.uses(key)){
@@ -92,33 +91,8 @@ public class DexMethodParameter extends Dex implements AnnotatedDex {
     }
 
     @Override
-    public Iterator<DexAnnotation> getAnnotations() {
-        AnnotationSetKey annotation = getParameter().getAnnotation();
-        return ComputeIterator.of(annotation.iterator(), this::initializeAnnotation);
-    }
-    @Override
-    public DexAnnotation getAnnotation(TypeKey typeKey) {
-        return initializeAnnotation(typeKey);
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey) {
-        MethodParameter parameter = getParameter();
-        AnnotationSetKey annotationSetKey = parameter.getAnnotation();
-        if (!annotationSetKey.contains(typeKey)) {
-            annotationSetKey = annotationSetKey.getOrCreate(typeKey);
-            parameter.setAnnotation(annotationSetKey);
-        }
-        return initializeAnnotation(typeKey);
-    }
-
-    private DexAnnotation initializeAnnotation(TypeKey typeKey) {
-        return DexAnnotation.create(this, getParameter(), typeKey);
-    }
-    DexAnnotation initializeAnnotation(AnnotationItemKey key) {
-        if (key != null) {
-            return DexAnnotation.create(this, getParameter(), key.getType());
-        }
-        return null;
+    public ProgramElement getProgramElement() {
+        return getParameter();
     }
 
     @Override

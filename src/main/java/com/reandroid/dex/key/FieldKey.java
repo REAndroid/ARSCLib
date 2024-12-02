@@ -24,10 +24,11 @@ import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 
-public class FieldKey implements Key {
+public class FieldKey implements ProgramKey {
 
     private final TypeKey declaring;
     private final StringKey name;
@@ -39,6 +40,10 @@ public class FieldKey implements Key {
         this.type = type;
     }
 
+    @Override
+    public ElementType getElementType() {
+        return ElementType.FIELD;
+    }
     @Override
     public TypeKey getDeclaring() {
         return declaring;

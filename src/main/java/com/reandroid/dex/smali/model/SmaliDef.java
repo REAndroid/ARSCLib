@@ -19,20 +19,18 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.AccessibleProgram;
 import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.CollectionUtil;
 
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
-public abstract class SmaliDef extends Smali implements SmaliRegion {
+public abstract class SmaliDef extends Smali implements AccessibleProgram, SmaliRegion {
 
     private StringKey name;
-    private AccessFlag[] accessFlags;
+    private int accessFlagsValue;
+
     private SmaliAnnotationSet annotation;
 
     private HiddenApiFlag[] hiddenApiFlags;
@@ -43,25 +41,48 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         super();
     }
 
-    public abstract Key getKey();
-    public AccessFlag[] getAccessFlags() {
-        return accessFlags;
+    @Override
+    public abstract ProgramKey getKey();
+
+    @Override
+    public int getAccessFlagsValue() {
+        return accessFlagsValue;
     }
+    @Override
+    public void setAccessFlagsValue(int accessFlagsValue) {
+        this.accessFlagsValue = accessFlagsValue;
+    }
+    @Override
+    public AnnotationSetKey getAnnotation() {
+        SmaliAnnotationSet annotationSet = getAnnotationSet();
+        if (annotationSet != null) {
+            return annotationSet.getKey();
+        }
+        return AnnotationSetKey.EMPTY;
+    }
+    @Override
+    public void setAnnotation(AnnotationSetKey annotation) {
+        if (annotation == null || annotation.isEmpty()) {
+            setSmaliAnnotationSet(null);
+        } else {
+            getOrCreateSmaliAnnotationSet().setKey(annotation);
+        }
+    }
+    @Override
+    public boolean hasAnnotations() {
+        SmaliAnnotationSet annotationSet = getAnnotationSet();
+        return annotationSet != null && !annotationSet.isEmpty();
+    }
+    @Override
+    public void clearAnnotations() {
+        setSmaliAnnotationSet(null);
+    }
+
     public void setAccessFlags(AccessFlag[] accessFlags) {
-        this.accessFlags = accessFlags;
+        setAccessFlagsValue(Modifier.combineValues(accessFlags));
     }
     public void setAccessFlags(Iterator<AccessFlag> iterator) {
-        AccessFlag[] accessFlags;
-        if (!iterator.hasNext()) {
-            accessFlags = null;
-        } else {
-            List<AccessFlag> list = CollectionUtil.toList(iterator);
-            accessFlags = list.toArray(new AccessFlag[list.size()]);
-        }
-        setAccessFlags(accessFlags);
-    }
-    public int getAccessFlagsValue(){
-        return Modifier.combineValues(getAccessFlags());
+        setAccessFlagsValue(Modifier.combineValues(iterator));
     }
     public Iterator<HiddenApiFlag> getHiddenApiFlags() {
         return ArrayIterator.of(hiddenApiFlags());
@@ -111,46 +132,29 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         }
         return null;
     }
-    public void setAnnotation(AnnotationSetKey annotation) {
-        if (annotation != null) {
-            setAnnotation(annotation.iterator());
-        } else {
-            setAnnotation((SmaliAnnotationSet) null);
-        }
-    }
     public void setAnnotation(Iterator<AnnotationItemKey> iterator) {
         if (iterator.hasNext()) {
-            getOrCreateAnnotation().addAllKeys(iterator);
+            getOrCreateSmaliAnnotationSet().addAllKeys(iterator);
         } else {
-            setAnnotation((SmaliAnnotationSet) null);
-        }
-    }
-    public void addAnnotation(AnnotationSetKey annotation) {
-        SmaliAnnotationSet annotationSet = getOrCreateAnnotation();
-        annotationSet.addAllKeys(annotation);
-    }
-
-    public void addAnnotations(Iterator<AnnotationItemKey> iterator) {
-        if (iterator.hasNext()) {
-            getOrCreateAnnotation().addAllKeys(iterator);
+            setSmaliAnnotationSet(null);
         }
     }
     public void addAnnotation(AnnotationItemKey annotation) {
-        SmaliAnnotationSet annotationSet = getOrCreateAnnotation();
+        SmaliAnnotationSet annotationSet = getOrCreateSmaliAnnotationSet();
         annotationSet.addKey(annotation);
     }
     public SmaliAnnotationSet getAnnotationSet() {
         return annotation;
     }
-    public SmaliAnnotationSet getOrCreateAnnotation() {
+    public SmaliAnnotationSet getOrCreateSmaliAnnotationSet() {
         SmaliAnnotationSet directory = getAnnotationSet();
         if(directory == null){
             directory = new SmaliAnnotationSet();
-            setAnnotation(directory);
+            setSmaliAnnotationSet(directory);
         }
         return directory;
     }
-    public void setAnnotation(SmaliAnnotationSet annotation) {
+    public void setSmaliAnnotationSet(SmaliAnnotationSet annotation) {
         SmaliAnnotationSet old = this.annotation;
         this.annotation = annotation;
         if (annotation != null) {
@@ -169,16 +173,6 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         return null;
     }
 
-    public boolean isStatic(){
-        return Modifier.contains(getAccessFlags(), AccessFlag.STATIC);
-    }
-    public boolean isFinal(){
-        return Modifier.contains(getAccessFlags(), AccessFlag.FINAL);
-    }
-    public boolean isPrivate(){
-        return Modifier.contains(getAccessFlags(), AccessFlag.PRIVATE);
-    }
-
     private SmaliDefSet<?> getDefSet(){
         return getParentInstance(SmaliDefSet.class);
     }
@@ -187,9 +181,5 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
             return (SmaliClass) this;
         }
         return getParentInstance(SmaliClass.class);
-    }
-
-    public SmaliAnnotationItem parseAnnotation(SmaliReader reader) throws IOException {
-        return getOrCreateAnnotation().parseNext(reader);
     }
 }

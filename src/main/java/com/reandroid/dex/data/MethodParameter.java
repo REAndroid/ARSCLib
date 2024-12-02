@@ -15,13 +15,12 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.dex.common.AnnotatedItem;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.AnnotationSetKey;
-import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.MethodParameterProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -34,7 +33,7 @@ import com.reandroid.utils.collection.ExpandIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
+public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliRegion {
 
     private final MethodDef methodDef;
     private final int index;
@@ -142,6 +141,7 @@ public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
         }
     }
 
+    @Override
     public String getDebugName() {
         DebugParameter debugParameter = getDebugParameter();
         if (debugParameter != null) {
@@ -149,7 +149,7 @@ public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
         }
         return null;
     }
-
+    @Override
     public void setDebugName(String name) {
         if (StringsUtil.isEmpty(name)) {
             name = null;
@@ -180,7 +180,7 @@ public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
     }
 
     @Override
-    public Key getKey() {
+    public TypeKey getKey() {
         TypeId typeId = getTypeId();
         if (typeId != null) {
             return typeId.getKey();
@@ -190,9 +190,9 @@ public class MethodParameter implements DefIndex, AnnotatedItem, SmaliRegion {
 
     public void fromSmali(SmaliMethodParameter smaliMethodParameter) {
         if (smaliMethodParameter.hasAnnotations()) {
-            setAnnotation(smaliMethodParameter.getAnnotationSet().getKey());
+            setAnnotation(smaliMethodParameter.getSmaliAnnotationSet().getKey());
         }
-        setDebugName(smaliMethodParameter.getName());
+        setDebugName(smaliMethodParameter.getDebugName());
     }
 
     public boolean isEmpty() {

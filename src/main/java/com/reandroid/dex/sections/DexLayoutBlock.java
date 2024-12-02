@@ -116,10 +116,8 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
             return;
         }
         for (ClassId classId : section) {
-            Iterator<TypeKey> interfaceKeys = classId.getInterfaceKeys();
-            while (interfaceKeys.hasNext()){
-                TypeKey typeKey = interfaceKeys.next();
-                if(!DexUtils.isJavaFramework(typeKey.getTypeName())) {
+            for (TypeKey typeKey : classId.getInterfacesKey()) {
+                if (!DexUtils.isJavaFramework(typeKey.getTypeName())) {
                     interfaceMap.put(typeKey, classId);
                 }
             }

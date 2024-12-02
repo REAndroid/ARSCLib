@@ -20,6 +20,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.function.Predicate;
 
 public class ArrayValueKey extends ArrayKey {
@@ -119,6 +120,10 @@ public class ArrayValueKey extends ArrayKey {
     @Override
     public ArrayValueKey set(int i, Key item) {
         return (ArrayValueKey) super.set(i, item);
+    }
+    @Override
+    public ArrayValueKey sort(Comparator<? super Key> comparator) {
+        return (ArrayValueKey) super.sort(comparator);
     }
 
     @Override

@@ -21,15 +21,17 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
+import com.reandroid.dex.program.ClassProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
-public class SmaliClass extends SmaliDef{
+public class SmaliClass extends SmaliDef implements ClassProgram {
 
     private TypeKey superClass;
     private StringKey sourceFile;
@@ -51,6 +53,11 @@ public class SmaliClass extends SmaliDef{
     }
 
     @Override
+    public ElementType getElementType() {
+        return ElementType.TYPE;
+    }
+
+    @Override
     public TypeKey getKey() {
         return TypeKey.create(getName());
     }
@@ -64,29 +71,36 @@ public class SmaliClass extends SmaliDef{
         setName(name);
     }
 
-    public TypeKey getSuperClass() {
+    @Override
+    public TypeKey getSuperClassKey() {
         return superClass;
     }
     public void setSuperClass(TypeKey typeKey) {
         this.superClass = typeKey;
     }
-    public StringKey getSourceFile() {
-        return sourceFile;
-    }
-    public void setSourceFile(StringKey sourceFile) {
-        this.sourceFile = sourceFile;
-    }
+    @Override
     public String getSourceFileName() {
-        StringKey key = getSourceFile();
-        if(key != null){
+        StringKey key = getSourceFileKey();
+        if (key != null) {
             return key.getString();
         }
         return null;
     }
+    public StringKey getSourceFileKey() {
+        return sourceFile;
+    }
+    public void setSourceFile(String sourceFile) {
+        StringKey key = sourceFile == null ? null : StringKey.create(sourceFile);
+        setSourceFile(key);
+    }
+    public void setSourceFile(StringKey sourceFile) {
+        this.sourceFile = sourceFile;
+    }
     public SmaliInterfaceSet getInterfaces() {
         return interfaces;
     }
-    public TypeListKey getInterfacesKey(){
+    @Override
+    public TypeListKey getInterfacesKey() {
         return getInterfaces().getKey();
     }
     public void setInterfaces(TypeListKey key){
@@ -95,18 +109,22 @@ public class SmaliClass extends SmaliDef{
     public boolean hasClassData(){
         return !fields.isEmpty() || !methods.isEmpty();
     }
+    @Override
     public Iterator<SmaliField> getStaticFields(){
         return fields.getStaticFields();
     }
+    @Override
     public Iterator<SmaliField> getInstanceFields(){
         return fields.getInstanceFields();
     }
     public void addFields(Iterator<SmaliField> iterator) {
         fields.addAll(iterator);
     }
+    @Override
     public Iterator<SmaliMethod> getDirectMethods(){
         return methods.getDirectMethods();
     }
+    @Override
     public Iterator<SmaliMethod> getVirtualMethods(){
         return methods.getVirtualMethods();
     }
@@ -144,8 +162,8 @@ public class SmaliClass extends SmaliDef{
         writer.appendOptional(getKey());
         writer.newLine();
         SmaliDirective.SUPER.append(writer);
-        writer.appendOptional(getSuperClass());
-        StringKey source = getSourceFile();
+        writer.appendOptional(getSuperClassKey());
+        StringKey source = getSourceFileKey();
         if(source != null){
             writer.newLine();
             SmaliDirective.SOURCE.append(writer);
@@ -191,7 +209,7 @@ public class SmaliClass extends SmaliDef{
             return true;
         }
         if(directive == SmaliDirective.ANNOTATION){
-            getOrCreateAnnotation().parse(reader);
+            getOrCreateSmaliAnnotationSet().parse(reader);
             return true;
         }
         if(directive == SmaliDirective.FIELD){

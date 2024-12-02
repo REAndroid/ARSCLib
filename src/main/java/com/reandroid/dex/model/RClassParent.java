@@ -18,20 +18,16 @@ package com.reandroid.dex.model;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.dalvik.DalvikMemberClass;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.ins.Ins35c;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.ArrayValueKey;
-import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -87,33 +83,8 @@ public class RClassParent extends DexClass {
         rClass.initialize();
         return rClass;
     }
-    public void addMemberAnnotation(String simpleName){
-        if(CollectionUtil.contains(getMemberSimpleNames(), simpleName)) {
-            return;
-        }
-        ArrayValueKey arrayValue = getOrCreateMembersArray()
-                .add(getKey().createInnerClass(simpleName));
-        DexAnnotation annotation = getOrCreateAnnotation(TypeKey.DALVIK_MemberClass);
-        DexAnnotationElement element = annotation.getOrCreate(Key.DALVIK_value);
-        element.setValue(arrayValue);
-    }
-    public Iterator<String> getMemberSimpleNames() {
-        return ComputeIterator.of(getMemberNames(), TypeKey::getSimpleInnerName);
-    }
-    public Iterator<TypeKey> getMemberNames(){
-        return getOrCreateMembersArray().iterator(TypeKey.class);
-    }
-    private ArrayValueKey getOrCreateMembersArray() {
-        DexAnnotation annotation = getOrCreateAnnotation(TypeKey.DALVIK_MemberClass);
-        annotation.setVisibility(AnnotationVisibility.SYSTEM);
-        DexAnnotationElement element = annotation.getOrCreate(Key.DALVIK_value);
-        Key key = element.getValue();
-        if (key instanceof ArrayValueKey) {
-            return (ArrayValueKey) key;
-        }
-        ArrayValueKey arrayValueKey = ArrayValueKey.EMPTY;
-        element.setValue(arrayValueKey);
-        return arrayValueKey;
+    public void addMemberAnnotation(String simpleName) {
+        DalvikMemberClass.getOrCreate(this).addSimpleName(simpleName);
     }
     public void initialize(){
         ClassId classId = getId();

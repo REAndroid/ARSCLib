@@ -34,7 +34,7 @@ public class SmaliInterfaceSet extends SmaliSet<SmaliInterface> implements Smali
     public TypeListKey getKey(){
         int size = size();
         if(size == 0){
-            return null;
+            return TypeListKey.EMPTY;
         }
         TypeKey[] keys = new TypeKey[size];
         for (int i = 0; i < size; i++) {

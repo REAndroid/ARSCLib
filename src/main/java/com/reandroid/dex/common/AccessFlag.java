@@ -18,7 +18,9 @@ package com.reandroid.dex.common;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
+import java.lang.annotation.ElementType;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -117,6 +119,18 @@ public class AccessFlag extends Modifier{
     public boolean isSet(int accessFlags) {
         return (getValue() & accessFlags) != 0;
     }
+    public boolean isSet(ElementType elementType, int accessFlags) {
+        if (elementType == ElementType.TYPE) {
+            return isSetForClass(accessFlags);
+        }
+        if (elementType == ElementType.FIELD) {
+            return isSetForField(accessFlags);
+        }
+        if (elementType == ElementType.METHOD) {
+            return isSetForMethod(accessFlags);
+        }
+        return false;
+    }
     private boolean isSetForField(int value) {
         return validForField && (getValue() & value) != 0;
     }
@@ -127,6 +141,18 @@ public class AccessFlag extends Modifier{
         return validForClass && (getValue() & value) != 0;
     }
 
+    public static Iterator<AccessFlag> valuesOf(ElementType elementType, int value) {
+        if (elementType == ElementType.TYPE) {
+            return valuesOfClass(value);
+        }
+        if (elementType == ElementType.FIELD) {
+            return valuesOfField(value);
+        }
+        if (elementType == ElementType.METHOD) {
+            return valuesOfMethod(value);
+        }
+        return EmptyIterator.of();
+    }
     public static Iterator<AccessFlag> valuesOfClass(int value) {
         return getValues(accessFlag -> accessFlag.isSetForClass(value));
     }

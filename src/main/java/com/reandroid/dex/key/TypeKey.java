@@ -26,15 +26,21 @@ import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
-public class TypeKey implements Key{
+public class TypeKey implements ProgramKey {
 
     private final String typeName;
     private String simpleName;
 
     public TypeKey(String typeName) {
         this.typeName = typeName;
+    }
+
+    @Override
+    public ElementType getElementType() {
+        return ElementType.TYPE;
     }
 
     public String getTypeName() {
@@ -583,10 +589,12 @@ public class TypeKey implements Key{
     public static final TypeKey CLASS = new TypeKey("Ljava/lang/Class;");
     public static final TypeKey OBJECT = new TypeKey("Ljava/lang/Object;");
     public static final TypeKey STRING = new TypeKey("Ljava/lang/String;");
+    public static final TypeKey EXCEPTION = new TypeKey("Ljava/lang/Exception;");
 
     public static final TypeKey DALVIK_EnclosingClass = new TypeKey("Ldalvik/annotation/EnclosingClass;");
     public static final TypeKey DALVIK_EnclosingMethod = new TypeKey("Ldalvik/annotation/EnclosingMethod;");
     public static final TypeKey DALVIK_InnerClass = new TypeKey("Ldalvik/annotation/InnerClass;");
     public static final TypeKey DALVIK_MemberClass = new TypeKey("Ldalvik/annotation/MemberClasses;");
     public static final TypeKey DALVIK_Signature = new TypeKey("Ldalvik/annotation/Signature;");
+    public static final TypeKey DALVIK_Throws = new TypeKey("Ldalvik/annotation/Throws;");
 }

@@ -16,7 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.common.ArraySupplier;
-import com.reandroid.dex.common.AnnotatedItem;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -29,14 +29,14 @@ import java.util.Iterator;
 public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>{
 
     private final Dex declaring;
-    private final AnnotatedItem annotatedItem;
+    private final AnnotatedProgram annotatedProgram;
     private TypeKey typeKey;
     private AnnotationItemKey mRemoved;
 
-    public DexAnnotation(Dex declaring, AnnotatedItem annotatedItem, TypeKey typeKey){
+    public DexAnnotation(Dex declaring, AnnotatedProgram annotatedProgram, TypeKey typeKey){
         super();
         this.declaring = declaring;
-        this.annotatedItem = annotatedItem;
+        this.annotatedProgram = annotatedProgram;
         this.typeKey = typeKey;
     }
 
@@ -154,8 +154,8 @@ public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>
     public Dex getDeclaring() {
         return declaring;
     }
-    private AnnotatedItem getAnnotatedItem() {
-        return annotatedItem;
+    private AnnotatedProgram getAnnotatedItem() {
+        return annotatedProgram;
     }
     private AnnotationSetKey getAnnotationSet() {
         return getAnnotatedItem().getAnnotation();
@@ -199,16 +199,16 @@ public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>
         return String.valueOf(key);
     }
 
-    public static DexAnnotation create(Dex declaring, AnnotatedItem annotatedItem, TypeKey typeKey) {
-        if(declaring != null && annotatedItem != null && annotatedItem.hasAnnotation(typeKey)) {
-            return new DexAnnotation(declaring, annotatedItem, typeKey);
+    public static DexAnnotation create(Dex declaring, AnnotatedProgram annotatedProgram, TypeKey typeKey) {
+        if(declaring != null && annotatedProgram != null && annotatedProgram.hasAnnotation(typeKey)) {
+            return new DexAnnotation(declaring, annotatedProgram, typeKey);
         }
         return null;
     }
 
-    public static DexAnnotation create(Dex declaring, AnnotatedItem annotatedItem, AnnotationItemKey itemKey) {
-        if(declaring != null && annotatedItem != null && itemKey != null) {
-            return create(declaring, annotatedItem, itemKey.getType());
+    public static DexAnnotation create(Dex declaring, AnnotatedProgram annotatedProgram, AnnotationItemKey itemKey) {
+        if(declaring != null && annotatedProgram != null && itemKey != null) {
+            return create(declaring, annotatedProgram, itemKey.getType());
         }
         return null;
     }

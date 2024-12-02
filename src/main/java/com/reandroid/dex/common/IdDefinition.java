@@ -17,26 +17,10 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.program.AccessibleProgram;
 
-import java.util.Iterator;
+public interface IdDefinition<T extends IdItem> extends AccessibleProgram {
 
-public interface IdDefinition<T extends IdItem> extends AnnotatedItem {
     T getId();
-    int getAccessFlagsValue();
-    Iterator<? extends Modifier> getAccessFlags();
-    default Iterator<? extends Modifier> getModifiers(){
-        return getAccessFlags();
-    }
-    void setAccessFlagsValue(int value);
-    default void addAccessFlag(AccessFlag flag) {
-        int current = getAccessFlagsValue();
-        int value = flag.getValue();
-        if((value & 0x7) != 0){
-            current = current & ~0x7;
-        }
-        setAccessFlagsValue(current | value);
-    }
-    default void removeAccessFlag(AccessFlag flag) {
-        setAccessFlagsValue(getAccessFlagsValue() & ~flag.getValue());
-    }
+
 }

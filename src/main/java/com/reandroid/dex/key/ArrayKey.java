@@ -25,6 +25,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Comparator;
 import java.util.function.Predicate;
 
 public class ArrayKey extends KeyList<Key> {
@@ -62,6 +63,10 @@ public class ArrayKey extends KeyList<Key> {
     @Override
     public ArrayKey set(int i, Key item) {
         return (ArrayKey) super.set(i, item);
+    }
+    @Override
+    public ArrayKey sort(Comparator<? super Key> comparator) {
+        return (ArrayKey) super.sort(comparator);
     }
 
     @Override

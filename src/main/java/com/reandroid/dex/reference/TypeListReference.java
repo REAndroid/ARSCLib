@@ -18,6 +18,7 @@ package com.reandroid.dex.reference;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.data.TypeList;
 import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.sections.SectionType;
@@ -50,6 +51,16 @@ public class TypeListReference extends DataItemIndirectReference<TypeList> imple
     public TypeListKey getKey() {
         return (TypeListKey) super.getKey();
     }
+
+    @Override
+    public void setKey(Key key) {
+        TypeListKey typeListKey = (TypeListKey) key;
+        if (typeListKey != null && typeListKey.isEmpty()) {
+            key = null;
+        }
+        super.setKey(key);
+    }
+
     public void add(TypeKey typeKey){
         TypeListKey key = getKey();
         if (key != null) {

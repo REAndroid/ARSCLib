@@ -22,6 +22,7 @@ import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.FieldProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -30,7 +31,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliField extends SmaliDef{
+public class SmaliField extends SmaliDef implements FieldProgram {
 
     private TypeKey type;
     private SmaliValue value;
@@ -64,14 +65,23 @@ public class SmaliField extends SmaliDef{
         this.type = type;
     }
 
+    @Override
+    public Key getStaticValue() {
+        SmaliValue value = getValue();
+        if (value != null) {
+            return value.getKey();
+        }
+        return null;
+    }
+    public void setStaticValue(Key key) {
+        setStaticValue(SmaliValueFactory.createForValue(key));
+    }
+
     public SmaliValue getValue() {
         return value;
     }
 
-    public void setValue(Key key) {
-        setValue(SmaliValueFactory.createForValue(key));
-    }
-    public void setValue(SmaliValue value) {
+    public void setStaticValue(SmaliValue value) {
         SmaliValue oldValue = this.value;
         this.value = value;
         if (value != null) {
@@ -91,7 +101,7 @@ public class SmaliField extends SmaliDef{
             return;
         }
         if(!isInitializedInStaticConstructor(smaliClass, fieldKey)) {
-            setValue(SmaliValueFactory.createForField(fieldKey.getType()));
+            setStaticValue(SmaliValueFactory.createForField(fieldKey.getType()));
         }
     }
     private boolean isInitializedInStaticConstructor(SmaliClass smaliClass, FieldKey fieldKey) {
@@ -112,10 +122,6 @@ public class SmaliField extends SmaliDef{
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.FIELD;
-    }
-
-    public boolean isInstance(){
-        return !isStatic();
     }
 
     @Override
@@ -163,7 +169,7 @@ public class SmaliField extends SmaliDef{
         reader.skip(1); // =
         reader.skipWhitespaces();
         SmaliValue value = SmaliValueFactory.create(reader);
-        setValue(value);
+        setStaticValue(value);
         value.parse(reader);
     }
     private void parseAnnotationSet(SmaliReader reader) throws IOException {
@@ -178,7 +184,7 @@ public class SmaliField extends SmaliDef{
         annotationSet.parse(reader);
         reader.skipWhitespacesOrComment();
         if(getSmaliDirective().isEnd(reader)){
-            setAnnotation(annotationSet);
+            setSmaliAnnotationSet(annotationSet);
             SmaliDirective.parse(reader);
         }else {
             // put back, it is method annotation

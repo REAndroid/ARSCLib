@@ -21,10 +21,7 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.*;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.AnnotationSetKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
@@ -39,7 +36,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool implements
-        IdDefinition<T>, EditableItem, Comparable<Def<T>>, AnnotatedItem, SmaliRegion,
+        IdDefinition<T>, EditableItem, Comparable<Def<T>>, SmaliRegion,
         DefIndex, IdUsageIterator {
 
     private final SectionType<T> sectionType;
@@ -170,13 +167,8 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         relativeId.set(0);
     }
     @Override
-    public Key getKey(){
-        T item = getId();
-        if(item != null){
-            return item.getKey();
-        }
-        return null;
-    }
+    public abstract ProgramKey getKey();
+
     public void setKey(Key key){
         setItem(key);
     }
@@ -268,21 +260,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     public void setAccessFlagsValue(int value) {
         accessFlags.set(value);
-    }
-    public boolean isPrivate(){
-        return AccessFlag.PRIVATE.isSet(getAccessFlagsValue());
-    }
-    public boolean isNative(){
-        return AccessFlag.NATIVE.isSet(getAccessFlagsValue());
-    }
-    public boolean isStatic(){
-        return AccessFlag.STATIC.isSet(getAccessFlagsValue());
-    }
-    public boolean isFinal(){
-        return AccessFlag.FINAL.isSet(getAccessFlagsValue());
-    }
-    public boolean isConstructor(){
-        return AccessFlag.CONSTRUCTOR.isSet(getAccessFlagsValue());
     }
     public boolean isDirect(){
         return false;

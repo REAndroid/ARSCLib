@@ -25,6 +25,7 @@ import com.reandroid.dex.id.*;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -35,10 +36,11 @@ import com.reandroid.dex.smali.model.SmaliMethodParameter;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class MethodDef extends Def<MethodId>{
+public class MethodDef extends Def<MethodId> implements MethodProgram {
 
     private final DataItemUle128Reference<CodeItem> codeOffset;
 
@@ -47,14 +49,12 @@ public class MethodDef extends Def<MethodId>{
         this.codeOffset = new DataItemUle128Reference<>(SectionType.CODE, UsageMarker.USAGE_DEFINITION);
         addChild(2, codeOffset);
     }
-    public boolean isBridge(){
-        return AccessFlag.BRIDGE.isSet(getAccessFlagsValue());
-    }
 
     @Override
-    public boolean isDirect(){
-        return isConstructor() || isPrivate() || isStatic();
+    public ElementType getElementType() {
+        return ElementType.METHOD;
     }
+
     public String getName() {
         MethodId methodId = getId();
         if(methodId != null) {
@@ -117,7 +117,11 @@ public class MethodDef extends Def<MethodId>{
     }
     @Override
     public MethodKey getKey(){
-        return (MethodKey) super.getKey();
+        MethodId id = getId();
+        if (id != null) {
+            return id.getKey();
+        }
+        return null;
     }
 
     @Override
@@ -125,7 +129,7 @@ public class MethodDef extends Def<MethodId>{
         CodeItem codeItem = codeOffset.getItem();
         if(codeItem != null){
             codeItem.setMethodDef(null);
-            this.codeOffset.setItem((CodeItem) null);
+            this.codeOffset.setItem(null);
         }
         super.onRemove();
     }
@@ -246,7 +250,7 @@ public class MethodDef extends Def<MethodId>{
         return codeItem;
     }
     public void clearCode(){
-        codeOffset.setItem((CodeItem) null);
+        codeOffset.setItem(null);
     }
     public void clearDebug(){
         CodeItem codeItem = getCodeItem();
@@ -260,25 +264,6 @@ public class MethodDef extends Def<MethodId>{
             codeItem.addUniqueUser(this);
             codeItem.setMethodDef(this);
         }
-    }
-
-    public Iterator<AnnotationGroup> getParameterAnnotations(){
-        AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory != null){
-            return directory.getParameterAnnotation(this);
-        }
-        return EmptyIterator.of();
-    }
-    public Iterator<AnnotationSet> getParameterAnnotations(int parameterIndex){
-        AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory == null){
-            return EmptyIterator.of();
-        }
-        return directory.getParameterAnnotation(getDefinitionIndex(), parameterIndex);
-    }
-    @Override
-    public Iterator<? extends Modifier> getAccessFlags(){
-        return AccessFlag.valuesOfMethod(getAccessFlagsValue());
     }
 
     @Override

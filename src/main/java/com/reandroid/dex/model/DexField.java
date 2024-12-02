@@ -20,17 +20,18 @@ import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.FieldProgram;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DexField extends DexDeclaration {
+public class DexField extends DexDeclaration implements FieldProgram {
 
     private final DexClass dexClass;
     private final FieldDef fieldDef;
 
-    public DexField(DexClass dexClass, FieldDef fieldDef){
+    public DexField(DexClass dexClass, FieldDef fieldDef) {
         this.dexClass = dexClass;
         this.fieldDef = fieldDef;
     }
@@ -42,18 +43,23 @@ public class DexField extends DexDeclaration {
         getId().setName(name);
     }
 
-    public Key getStaticInitialValue() {
+    @Override
+    public Key getStaticValue() {
         return getDefinition().getStaticValue();
     }
+    public void setStaticValue(Key value) {
+        getDefinition().setStaticValue(value);
+    }
+
     public IntegerReference getStaticValueIntegerReference() {
-        if (!(getStaticInitialValue() instanceof PrimitiveKey.IntegerKey)) {
+        if (!(getStaticValue() instanceof PrimitiveKey.IntegerKey)) {
             return null;
         }
         final DexField dexField = this;
         return new IntegerReference() {
             @Override
             public int get() {
-                Key key = dexField.getStaticInitialValue();
+                Key key = dexField.getStaticValue();
                 if (key instanceof PrimitiveKey.IntegerKey) {
                     return ((PrimitiveKey.IntegerKey) key).value();
                 }
@@ -102,9 +108,6 @@ public class DexField extends DexDeclaration {
             return constInstruction.getAsIntegerReference();
         }
         return null;
-    }
-    public void setStaticValue(Key value) {
-        getDefinition().setStaticValue(value);
     }
 
     @Override

@@ -15,23 +15,43 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.AnnotationSetKey;
-import com.reandroid.dex.key.ProtoKey;
-import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.MethodParameterProgram;
 import com.reandroid.dex.smali.*;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
-public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
+public class SmaliMethodParameter extends SmaliDebug implements MethodParameterProgram, SmaliRegion {
 
     private final SmaliRegisterSet registerSet;
     private StringKey name;
     private SmaliAnnotationSet annotationSet;
 
-    public SmaliMethodParameter(){
+    public SmaliMethodParameter() {
         super();
         registerSet = new SmaliRegisterSet();
+    }
+
+    @Override
+    public TypeKey getKey(){
+        SmaliMethod smaliMethod = getParentInstance(SmaliMethod.class);
+        if(smaliMethod == null){
+            return null;
+        }
+        ProtoKey protoKey = smaliMethod.getProtoKey();
+        if(protoKey == null){
+            return null;
+        }
+        SmaliRegister smaliRegister = getSmaliRegister();
+        if(smaliRegister == null){
+            return null;
+        }
+        int index = smaliRegister.getNumber();
+        if(!smaliMethod.isStatic()){
+            index = index - 1;
+        }
+        return protoKey.getParameter(protoKey.getParameterIndex(index));
     }
 
     public SmaliRegister getSmaliRegister(){
@@ -51,29 +71,56 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
     public void setName(StringKey name) {
         this.name = name;
     }
-    public String getName() {
+    @Override
+    public String getDebugName() {
         StringKey key = getNameKey();
         if(key != null){
             return key.getString();
         }
         return null;
     }
-
-    public boolean hasAnnotations(){
-        SmaliAnnotationSet annotationSet = getAnnotationSet();
-        return annotationSet != null && !annotationSet.isEmpty();
+    @Override
+    public void setDebugName(String name) {
+        if (StringsUtil.isEmpty(name)) {
+            name = null;
+        }
+        StringKey key = name == null ? null : StringKey.create(name);
+        setName(key);
     }
-    public AnnotationSetKey getAnnotations() {
-        SmaliAnnotationSet annotationSet = getAnnotationSet();
+
+    @Override
+    public AnnotationSetKey getAnnotation() {
+        SmaliAnnotationSet annotationSet = getSmaliAnnotationSet();
         if (annotationSet != null) {
             return annotationSet.getKey();
         }
         return AnnotationSetKey.EMPTY;
     }
-    public SmaliAnnotationSet getAnnotationSet() {
+    @Override
+    public void setAnnotation(AnnotationSetKey annotation) {
+        if (annotation == null || annotation.isEmpty()) {
+            setSmaliAnnotationSet(null);
+        } else {
+            getOrCreateSmaliAnnotationSet().setKey(annotation);
+        }
+    }
+    @Override
+    public void clearAnnotations() {
+        setSmaliAnnotationSet(null);
+    }
+
+    public SmaliAnnotationSet getSmaliAnnotationSet() {
         return annotationSet;
     }
-    public void setAnnotationSet(SmaliAnnotationSet annotationSet) {
+    public SmaliAnnotationSet getOrCreateSmaliAnnotationSet() {
+        SmaliAnnotationSet annotationSet = getSmaliAnnotationSet();
+        if (annotationSet == null) {
+            annotationSet = new SmaliAnnotationSet();
+            setSmaliAnnotationSet(annotationSet);
+        }
+        return annotationSet;
+    }
+    public void setSmaliAnnotationSet(SmaliAnnotationSet annotationSet) {
         this.annotationSet = annotationSet;
         if(annotationSet != null){
             annotationSet.setParent(this);
@@ -114,7 +161,7 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
             writer.append(", ");
             name.append(writer);
         }
-        SmaliAnnotationSet annotationSet = getAnnotationSet();
+        SmaliAnnotationSet annotationSet = getSmaliAnnotationSet();
         if(annotationSet != null){
             writer.indentPlus();
             writer.newLine();
@@ -135,7 +182,7 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
         }
         parseName(reader);
         parseAnnotationSet(reader);
-        AnnotationItemKey duplicate = getAnnotations().getDuplicate();
+        AnnotationItemKey duplicate = getAnnotation().getDuplicate();
         if (duplicate != null) {
             throw new SmaliParseException("Multiple annotation of type: "
                     + duplicate.getType() + "\n", reader);
@@ -158,7 +205,7 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
         annotationSet.parse(reader);
         reader.skipWhitespacesOrComment();
         if(getSmaliDirective().isEnd(reader)){
-            setAnnotationSet(annotationSet);
+            setSmaliAnnotationSet(annotationSet);
             SmaliDirective.parse(reader);
         }else {
             // put back, it is method annotation

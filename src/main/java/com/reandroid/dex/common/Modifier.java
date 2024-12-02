@@ -125,4 +125,11 @@ public abstract class Modifier implements SmaliFormat {
         }
         return result;
     }
+    public static int combineValues(Iterator<? extends Modifier> iterator) {
+        int result = 0;
+        while (iterator.hasNext()) {
+            result += iterator.next().getValue();
+        }
+        return result;
+    }
 }

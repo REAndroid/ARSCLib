@@ -25,12 +25,13 @@ import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class MethodKey implements Key {
+public class MethodKey implements ProgramKey {
 
     private final TypeKey declaring;
     private final StringKey nameKey;
@@ -43,6 +44,11 @@ public class MethodKey implements Key {
     }
     public MethodKey(TypeKey declaring, String name, ProtoKey proto){
         this(declaring, StringKey.create(name), proto);
+    }
+
+    @Override
+    public ElementType getElementType() {
+        return ElementType.METHOD;
     }
 
     public int getRegister(int index) {

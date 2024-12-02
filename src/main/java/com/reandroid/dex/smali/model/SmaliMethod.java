@@ -20,6 +20,7 @@ import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -31,7 +32,7 @@ import com.reandroid.dex.smali.fix.SmaliGotoFix;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliMethod extends SmaliDef implements RegistersTable{
+public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTable {
 
     private ProtoKey protoKey;
 
@@ -108,17 +109,6 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         return SmaliDirective.METHOD;
     }
 
-
-    public boolean isConstructor(){
-        return Modifier.contains(getAccessFlags(), AccessFlag.CONSTRUCTOR);
-    }
-    public boolean isDirect(){
-        return isConstructor() || isStatic() || isPrivate();
-    }
-    public boolean isVirtual(){
-        return !isDirect();
-    }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
@@ -168,7 +158,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
             return true;
         }
         if(directive == SmaliDirective.ANNOTATION){
-            getOrCreateAnnotation().parse(reader);
+            getOrCreateSmaliAnnotationSet().parse(reader);
             return true;
         }
         if(directive == SmaliDirective.PARAM){

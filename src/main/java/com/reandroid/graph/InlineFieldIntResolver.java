@@ -84,7 +84,7 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
         if(dexField == null) {
             return null;
         }
-        return dexField.getStaticInitialValue();
+        return dexField.getStaticValue();
     }
     private void resolve(DexInstruction instruction, Key value) {
         if (!(value instanceof PrimitiveKey)) {

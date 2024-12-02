@@ -18,12 +18,10 @@ package com.reandroid.dex.key;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.InstanceIterator;
-import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -67,6 +65,16 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
             }
         }
         return -1;
+    }
+    public boolean contains(Object item) {
+        T[] elements = this.elements;
+        int length = elements.length;
+        for (int i = 0; i < length; i++) {
+            if (ObjectsUtil.equals(elements[i], item)) {
+                return true;
+            }
+        }
+        return false;
     }
     public KeyList<T> set(int i, T item) {
         if (ObjectsUtil.equals(item, get(i))) {
@@ -163,6 +171,29 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         if (elements == null) {
             return this;
         }
+        return newInstance(elements);
+    }
+    public KeyList<T> sort(Comparator<? super T> comparator) {
+        T[] elements = this.elements;
+        int length = elements.length;
+        if (length < 2) {
+            return this;
+        }
+        boolean sortRequired = false;
+        T previous = elements[0];
+        for (int i = 1; i < length; i++) {
+            T item = elements[i];
+            if (comparator.compare(previous, item) > 0) {
+                sortRequired = true;
+                break;
+            }
+            previous = item;
+        }
+        if (!sortRequired) {
+            return this;
+        }
+        elements = elements.clone();
+        ArraySort.sort(elements, comparator);
         return newInstance(elements);
     }
     private T[] getSortedElements() {

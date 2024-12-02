@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.data;
+package com.reandroid.dex.key;
 
-import com.reandroid.dex.key.ProgramKey;
+import java.lang.annotation.ElementType;
 
-public interface DefIndex {
-    int getDefinitionIndex();
-    ProgramKey getKey();
+public interface ProgramKey extends Key {
+    TypeKey getDeclaring();
+    ElementType getElementType();
 }

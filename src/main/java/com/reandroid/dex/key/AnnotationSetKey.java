@@ -21,6 +21,7 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySort;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -41,6 +42,9 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
         super(elements);
     }
 
+    public Iterator<TypeKey> getTypes() {
+        return ComputeIterator.of(iterator(), AnnotationItemKey::getType);
+    }
     public AnnotationSetKey removeElementIf(TypeKey typeKey, Predicate<? super AnnotationElementKey> predicate) {
         AnnotationSetKey result = this;
         AnnotationItemKey itemKey = result.get(typeKey);

@@ -24,6 +24,7 @@ import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
@@ -34,7 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class DexMethod extends DexDeclaration {
+public class DexMethod extends DexDeclaration implements MethodProgram {
 
     private final DexClass dexClass;
     private final MethodDef methodDef;
@@ -272,18 +273,6 @@ public class DexMethod extends DexDeclaration {
     @Override
     public MethodDef getDefinition() {
         return methodDef;
-    }
-    public boolean isConstructor() {
-        return AccessFlag.CONSTRUCTOR.isSet(getAccessFlagsValue());
-    }
-    public boolean isBridge() {
-        return AccessFlag.BRIDGE.isSet(getAccessFlagsValue());
-    }
-    public boolean isDirect(){
-        return isConstructor() || isPrivate() || isStatic();
-    }
-    public boolean isVirtual(){
-        return !isDirect();
     }
 
     public Iterator<DexMethodParameter> getParameters(){

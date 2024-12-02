@@ -19,22 +19,24 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.*;
+import com.reandroid.dex.dalvik.DalvikEnclosing;
+import com.reandroid.dex.dalvik.DalvikMemberClass;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.ClassProgram;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<ClassId> {
+public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId>, Comparable<ClassId> {
 
     private final ClassTypeId classTypeId;
     private final IndirectInteger accessFlagValue;
@@ -150,10 +152,6 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         return accessFlagValue.get();
     }
     @Override
-    public Iterator<? extends Modifier> getAccessFlags(){
-        return AccessFlag.valuesOfClass(getAccessFlagsValue());
-    }
-    @Override
     public void setAccessFlagsValue(int value) {
         accessFlagValue.set(value);
     }
@@ -163,33 +161,37 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     public SuperClassId getSuperClassId(){
         return superClassId;
     }
-    public TypeId getSuperClassType(){
+    public TypeId getSuperClassType() {
         return getSuperClassId().getItem();
     }
+    @Override
     public TypeKey getSuperClassKey(){
         return getSuperClassId().getKey();
     }
     public void setSuperClass(TypeKey typeKey){
         this.superClassId.setKey(typeKey);
     }
-    public void setSuperClass(String superClass){
-        this.superClassId.setKey(new TypeKey(superClass));
-    }
-    public SourceFile getSourceFile(){
+    public SourceFile getSourceFileReference(){
         return sourceFile;
     }
-    public String getSourceFileName(){
-        return getSourceFile().getString();
+    @Override
+    public String getSourceFileName() {
+        return getSourceFileReference().getString();
     }
     public void setSourceFile(String sourceFile){
-        getSourceFile().setString(sourceFile);
+        getSourceFileReference().setString(sourceFile);
     }
 
     public Iterator<TypeKey> getInstanceKeys(){
-        return CombiningIterator.singleOne(getSuperClassKey(), getInterfaceKeys());
+        return CombiningIterator.singleOne(getSuperClassKey(), getInterfacesKey().iterator());
     }
-    public Iterator<TypeKey> getInterfaceKeys(){
-        return getInterfacesReference().getTypeKeys();
+    @Override
+    public TypeListKey getInterfacesKey() {
+        TypeListKey typeListKey = interfaces.getKey();
+        if (typeListKey == null) {
+            typeListKey = TypeListKey.EMPTY;
+        }
+        return typeListKey;
     }
     public TypeList getInterfaceTypeList(){
         return interfaces.getItem();
@@ -201,80 +203,53 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         this.interfaces.setKey(typeListKey);
     }
 
-    public Key getDalvikEnclosing(){
-        TypeKey typeKey = getDalvikEnclosingClass();
-        if(typeKey != null) {
-            return typeKey;
+    @Override
+    public Iterator<FieldDef> getStaticFields() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getStaticFields();
         }
-        MethodKey enclosingMethod = getDalvikEnclosingMethod();
-        if (enclosingMethod != null) {
-            return enclosingMethod.getDeclaring();
+        return EmptyIterator.of();
+    }
+    @Override
+    public Iterator<FieldDef> getInstanceFields() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getInstanceFields();
+        }
+        return EmptyIterator.of();
+    }
+
+    @Override
+    public Iterator<MethodDef> getDirectMethods() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getDirectMethods();
+        }
+        return EmptyIterator.of();
+    }
+    @Override
+    public Iterator<MethodDef> getVirtualMethods() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getVirtualMethods();
+        }
+        return EmptyIterator.of();
+    }
+
+    public TypeKey getDalvikEnclosing() {
+        DalvikEnclosing<?> enclosing = DalvikEnclosing.of(this);
+        if (enclosing != null) {
+            return enclosing.getEnclosingClass();
         }
         return null;
     }
     public Iterator<TypeKey> getDalvikMemberClasses() {
-        Key key = getAnnotationValue(TypeKey.DALVIK_MemberClass, Key.DALVIK_value);
-        if (key instanceof KeyList<?>) {
-            return ((KeyList<?>) key).iterator(TypeKey.class);
+        DalvikMemberClass dalvikMemberClass = DalvikMemberClass.of(this);
+        if (dalvikMemberClass != null) {
+            return dalvikMemberClass.getMembers();
         }
         return EmptyIterator.of();
-    }
-    public MethodKey getDalvikEnclosingMethod() {
-        Key key = getAnnotationValue(TypeKey.DALVIK_EnclosingMethod, Key.DALVIK_value);
-        if (key instanceof MethodKey) {
-            return (MethodKey) key;
-        }
-        return null;
-    }
-    public AnnotationItemKey getOrCreateDalvikInnerClass(){
-        TypeKey typeKey = getKey();
-        if (typeKey == null) {
-            return null;
-        }
-        String inner = typeKey.getSimpleInnerName();
-        if(AccessFlag.SYNTHETIC.isSet(getAccessFlagsValue())
-                || inner.equals(typeKey.getSimpleName())
-                || StringsUtil.isDigits(inner)){
-            inner = null;
-        }
-        return getOrCreateDalvikInnerClass(getAccessFlagsValue(), inner);
-    }
-    public AnnotationItemKey getOrCreateDalvikInnerClass(int flags, String name) {
-        AnnotationItemKey itemKey = AnnotationItemKey.create(AnnotationVisibility.SYSTEM,
-                TypeKey.DALVIK_InnerClass)
-                .add(Key.DALVIK_accessFlags, PrimitiveKey.of(flags))
-                .add(Key.DALVIK_name, name == null ? NullValueKey.INSTANCE : StringKey.create(name));
-        AnnotationSetKey annotation = getAnnotation().add(itemKey);
-        setAnnotation(annotation);
-        return itemKey;
-    }
-    public TypeKey getOrCreateDalvikEnclosingClass(){
-        TypeKey key = getKey();
-        if(key != null){
-            TypeKey enclosing = key.getEnclosingClass();
-            if(!key.equals(enclosing)){
-                return getOrCreateDalvikEnclosingClass(enclosing);
-            }
-        }
-        return null;
-    }
-    public TypeKey getOrCreateDalvikEnclosingClass(TypeKey enclosing) {
-        if (enclosing == null) {
-            return null;
-        }
-        AnnotationItemKey itemKey = AnnotationItemKey.create(AnnotationVisibility.SYSTEM,
-                TypeKey.DALVIK_EnclosingClass)
-                .add(Key.DALVIK_value, enclosing);
-        AnnotationSetKey annotation = getAnnotation().add(itemKey);
-        setAnnotation(annotation);
-        return enclosing;
-    }
-    public TypeKey getDalvikEnclosingClass() {
-        Key key = getAnnotationValue(TypeKey.DALVIK_EnclosingClass, Key.DALVIK_value);
-        if (key instanceof TypeKey) {
-            return (TypeKey) key;
-        }
-        return null;
     }
     public AnnotationsDirectory getUniqueAnnotationsDirectory(){
         return annotationsDirectory.getUniqueItem(this);
@@ -450,7 +425,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
 
         setKey(smaliClass.getKey());
         setAccessFlagsValue(smaliClass.getAccessFlagsValue());
-        setSuperClass(smaliClass.getSuperClass());
+        setSuperClass(smaliClass.getSuperClassKey());
         setSourceFile(smaliClass.getSourceFileName());
         setInterfaces(smaliClass.getInterfacesKey());
 
@@ -466,7 +441,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         smaliClass.setKey(getKey());
         smaliClass.setAccessFlags(InstanceIterator.of(getAccessFlags(), AccessFlag.class));
         smaliClass.setSuperClass(getSuperClassKey());
-        smaliClass.setSourceFile(getSourceFile().getKey());
+        smaliClass.setSourceFile(getSourceFileReference().getKey());
         smaliClass.setInterfaces(getInterfacesReference().getKey());
         smaliClass.setAnnotation(getAnnotation());
         ClassData classData = getClassData();
@@ -480,7 +455,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     public void append(SmaliWriter writer) throws IOException {
         getClassTypeId().append(writer);
         getSuperClassId().append(writer);
-        getSourceFile().append(writer);
+        getSourceFileReference().append(writer);
         writer.newLine();
         TypeList interfaces = getInterfaceTypeList();
         if(interfaces != null){

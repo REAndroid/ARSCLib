@@ -16,11 +16,12 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.dalvik.DalvikInnerClass;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.reference.TypeListReference;
+import com.reandroid.dex.program.ClassProgram;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliField;
@@ -34,7 +35,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
 
-public class DexClass extends DexDeclaration implements Comparable<DexClass> {
+public class DexClass extends DexDeclaration implements ClassProgram, Comparable<DexClass> {
 
     private final DexLayout dexLayout;
     private final ClassId classId;
@@ -285,19 +286,13 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public FieldDef getOrCreateStatic(FieldKey fieldKey){
         return getOrCreateClassData().getOrCreateStatic(fieldKey);
     }
+    @Override
     public Iterator<DexField> getStaticFields() {
-        ClassData classData = getClassData();
-        if(classData == null){
-            return EmptyIterator.of();
-        }
-        return ComputeIterator.of(classData.getStaticFields(), this::initializeField);
+        return ComputeIterator.of(getId().getStaticFields(), this::initializeField);
     }
+    @Override
     public Iterator<DexField> getInstanceFields() {
-        ClassData classData = getClassData();
-        if(classData == null){
-            return EmptyIterator.of();
-        }
-        return ComputeIterator.of(classData.getInstanceFields(), this::initializeField);
+        return ComputeIterator.of(getId().getInstanceFields(), this::initializeField);
     }
     public DexField getOrCreateInstanceField(FieldKey fieldKey){
         return initializeField(getOrCreateInstance(fieldKey));
@@ -315,19 +310,13 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public Iterator<DexMethod> getDeclaredMethods() {
         return CombiningIterator.two(getDirectMethods(), getVirtualMethods());
     }
+    @Override
     public Iterator<DexMethod> getDirectMethods() {
-        ClassData classData = getClassData();
-        if(classData == null){
-            return EmptyIterator.of();
-        }
-        return ComputeIterator.of(classData.getDirectMethods(), this::initializeMethod);
+        return ComputeIterator.of(getId().getDirectMethods(), this::initializeMethod);
     }
+    @Override
     public Iterator<DexMethod> getVirtualMethods() {
-        ClassData classData = getClassData();
-        if(classData == null){
-            return EmptyIterator.of();
-        }
-        return ComputeIterator.of(classData.getVirtualMethods(), this::initializeMethod);
+        return ComputeIterator.of(getId().getVirtualMethods(), this::initializeMethod);
     }
     public DexMethod getOrCreateDirectMethod(MethodKey methodKey){
         return initializeMethod(getOrCreateClassData().getOrCreateDirect(methodKey));
@@ -408,6 +397,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return getId();
     }
 
+    @Override
     public TypeKey getSuperClassKey(){
         return getId().getSuperClassKey();
     }
@@ -422,26 +412,31 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
 
     public Iterator<DexClass> getInterfaceClasses(){
-        return ComputeIterator.of(getInterfaces(), this::search);
+        return ComputeIterator.of(getInterfacesKey().iterator(), this::search);
     }
     DexClass search(TypeKey typeKey){
         return getClassRepository().getDexClass(typeKey);
     }
     public boolean containsInterface(TypeKey typeKey) {
-        return CollectionUtil.contains(getInterfaces(), typeKey);
+        return getInterfacesKey().contains(typeKey);
     }
-    public Iterator<TypeKey> getInterfaces(){
-        return getId().getInterfaceKeys();
+    @Override
+    public TypeListKey getInterfacesKey() {
+        return getId().getInterfacesKey();
     }
     public void addInterface(TypeKey typeKey) {
-        getId().getInterfacesReference().add(typeKey);
+        TypeListKey typeListKey = getInterfacesKey()
+                .remove(typeKey)
+                .add(typeKey);
+        getId().setInterfaces(typeListKey);
     }
     public void removeInterface(TypeKey typeKey) {
-        getId().getInterfacesReference().remove(typeKey);
+        TypeListKey typeListKey = getInterfacesKey()
+                .remove(typeKey);
+        getId().setInterfaces(typeListKey);
     }
     public void clearInterfaces() {
-        TypeListReference reference = getId().getInterfacesReference();
-        reference.setItem((TypeList) null);
+        getId().setInterfaces(TypeListKey.EMPTY);
     }
     public void clearDebug(){
         Iterator<DexMethod> iterator = getDeclaredMethods();
@@ -450,22 +445,15 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         }
     }
     public void fixDalvikInnerClassName() {
-        DexAnnotation annotation = getAnnotation(TypeKey.DALVIK_InnerClass);
-        if (annotation == null) {
-            return;
-        }
-        DexAnnotationElement element = annotation.get(Key.DALVIK_name);
-        if (element == null) {
-            return;
-        }
-        if (!(element.getValue() instanceof StringKey)) {
+        DalvikInnerClass dalvikInnerClass = DalvikInnerClass.of(this);
+        if (dalvikInnerClass == null || dalvikInnerClass.getName() == null) {
             return;
         }
         TypeKey typeKey = getKey();
         if (!typeKey.isInnerName()) {
-            element.setValue(NullValueKey.INSTANCE);
+            dalvikInnerClass.setName(null);
         } else {
-            element.setValue(StringKey.create(typeKey.getSimpleInnerName()));
+            dalvikInnerClass.setName(typeKey.getSimpleInnerName());
         }
     }
     public Set<Key> fixAccessibility(){
@@ -523,22 +511,21 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         }
         return null;
     }
-    public String getDalvikInnerClassName(){
-        Key key = getAnnotationValue(TypeKey.DALVIK_InnerClass, Key.DALVIK_name);
-        if(key instanceof StringKey){
-            return ((StringKey) key).getString();
+    public String getDalvikInnerClassName() {
+        DalvikInnerClass dalvikInnerClass = DalvikInnerClass.of(this);
+        if (dalvikInnerClass != null) {
+            return dalvikInnerClass.getName();
         }
         return null;
     }
     public void updateDalvikInnerClassName(String name){
-        DexAnnotationElement element = getAnnotationElement(TypeKey.DALVIK_InnerClass, Key.DALVIK_name);
-        if (element != null) {
-            element.setValue(StringKey.create(name));
+        DalvikInnerClass dalvikInnerClass = DalvikInnerClass.of(this);
+        if (dalvikInnerClass != null) {
+            dalvikInnerClass.setName(name);
         }
     }
-    public void createDalvikInnerClassName(String name){
-        DexAnnotationElement element = getOrCreateAnnotationElement(TypeKey.DALVIK_InnerClass, Key.DALVIK_name);
-        element.setValue(StringKey.create(name));
+    public void createDalvikInnerClassName(String name) {
+        DalvikInnerClass.getOrCreate(this).setName(name);
     }
 
     ClassData getOrCreateClassData(){

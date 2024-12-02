@@ -17,6 +17,7 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
@@ -73,6 +74,15 @@ public class TypeListKey extends KeyList<TypeKey> {
     @Override
     public TypeListKey set(int i, TypeKey item) {
         return (TypeListKey) super.set(i, item);
+    }
+    public boolean contains(TypeKey typeKey) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            if (ObjectsUtil.equals(typeKey, get(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

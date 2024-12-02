@@ -21,18 +21,18 @@ import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.FieldProgram;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliField;
-import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class FieldDef extends Def<FieldId> {
+public class FieldDef extends Def<FieldId> implements FieldProgram {
 
     private Key cachedStaticValue;
 
@@ -42,9 +42,14 @@ public class FieldDef extends Def<FieldId> {
 
     @Override
     public FieldKey getKey() {
-        return (FieldKey) super.getKey();
+        FieldId id = getId();
+        if (id != null) {
+            return id.getKey();
+        }
+        return null;
     }
 
+    @Override
     public Key getStaticValue() {
         StaticFieldDefArray fieldDefArray = getParentInstance(
                 StaticFieldDefArray.class);
@@ -69,11 +74,6 @@ public class FieldDef extends Def<FieldId> {
     }
     void cachedStaticValue(Key staticValue) {
         this.cachedStaticValue = staticValue;
-    }
-
-    @Override
-    public Iterator<? extends Modifier> getAccessFlags(){
-        return AccessFlag.valuesOfField(getAccessFlagsValue());
     }
 
     @Override
@@ -152,7 +152,7 @@ public class FieldDef extends Def<FieldId> {
             throw new DexException("Mismatch in type object vs primitive for value: "
                     + SmaliWriter.toStringSafe(staticValue) + ", in field: " + fieldKey + "\n");
         }
-        if (typeKey.isPrimitive()) {
+        if (staticValue instanceof PrimitiveKey) {
             TypeKey valueType = ((PrimitiveKey) staticValue).valueType();
             if (!typeKey.equals(valueType)) {
                 throw new DexException("Mismatch in type: " + typeKey
@@ -160,6 +160,10 @@ public class FieldDef extends Def<FieldId> {
                         + ", for value: "
                         + SmaliWriter.toStringSafe(staticValue) + ", in field: " + fieldKey);
             }
+        } else if (typeKey.isPrimitive()) {
+            throw new DexException("Mismatch in type: " + typeKey
+                    + " vs L " +  ", for value: "
+                    + SmaliWriter.toStringSafe(staticValue) + ", in field: " + fieldKey);
         }
     }
     @Override
@@ -183,9 +187,9 @@ public class FieldDef extends Def<FieldId> {
         if(smaliField.hasAnnotation()){
             setAnnotation(smaliField.getAnnotationSetKey());
         }
-        SmaliValue smaliValue = smaliField.getValue();
-        if(smaliValue != null) {
-            setStaticValue(smaliValue.getKey());
+        Key value = smaliField.getStaticValue();
+        if(value != null) {
+            setStaticValue(value);
         }
     }
 
@@ -194,7 +198,7 @@ public class FieldDef extends Def<FieldId> {
         SmaliField smaliField = new SmaliField();
         smaliField.setKey(getKey());
         smaliField.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
-        smaliField.setValue(getStaticValue());
+        smaliField.setStaticValue(getStaticValue());
         smaliField.setAnnotation(getAnnotationKeys());
         return smaliField;
     }
@@ -202,24 +206,5 @@ public class FieldDef extends Def<FieldId> {
     @Override
     public String toString() {
         return SmaliWriter.toStringSafe(this);
-    }
-    public String toString1() {
-        FieldId fieldId = getId();
-        if (fieldId != null) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(getSmaliDirective());
-            builder.append(" ");
-            builder.append(Modifier.toString(getModifiers()));
-            builder.append(" ");
-            builder.append(fieldId);
-            Key staticValue = getStaticValue();
-            if (staticValue != null) {
-                builder.append(" = ");
-                builder.append(staticValue);
-            }
-            return builder.toString();
-        }
-        return getSmaliDirective() + " " + Modifier.toString(getModifiers())
-                + " " + getRelativeIdValue();
     }
 }

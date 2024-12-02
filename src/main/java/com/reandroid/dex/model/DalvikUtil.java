@@ -15,10 +15,7 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.key.ArrayKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.TypeKey;
-import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.dex.dalvik.DalvikMemberClass;
 
 import java.util.Iterator;
 
@@ -34,29 +31,12 @@ public class DalvikUtil {
     }
     public static int cleanMissingMembers(DexClass dexClass) {
         int result = 0;
-        Iterator<DexAnnotation> iterator = SingleIterator.of(dexClass.getAnnotation(TypeKey.DALVIK_MemberClass));
-        while (iterator.hasNext()) {
-            DexAnnotation annotation = iterator.next();
-            DexAnnotationElement element = annotation.get("value");
-            if(element == null) {
-                continue;
-            }
-            Key value = element.getValue();
-            if(value instanceof ArrayKey) {
-                ArrayKey valueArray = (ArrayKey) value;
-                DexClassRepository repository = dexClass.getClassRepository();
-                ArrayKey changedKey = valueArray.removeIf(key -> !repository.containsClass((TypeKey) key));
-                if(changedKey != valueArray) {
-                    result ++;
-                    if(changedKey.isEmpty()) {
-                        element.removeSelf();
-                    } else {
-                        element.setValue(changedKey);
-                    }
-                }
-            }
-            if(annotation.size() == 0) {
-                annotation.removeSelf();
+        DalvikMemberClass dalvikMemberClass = DalvikMemberClass.of(dexClass);
+        if (dalvikMemberClass != null) {
+            DexClassRepository repository = dexClass.getClassRepository();
+            dalvikMemberClass.removeIf(typeKey -> !repository.containsClass(typeKey));
+            if (dalvikMemberClass.isEmpty()) {
+                dexClass.removeAnnotation(dalvikMemberClass.getAnnotationType());
             }
         }
         return result;

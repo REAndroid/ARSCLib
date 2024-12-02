@@ -19,15 +19,14 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.IdDefinition;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ProgramKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.dex.program.AccessibleProgram;
 
 import java.util.Iterator;
 
-public abstract class DexDeclaration extends Dex implements AnnotatedDex {
+public abstract class DexDeclaration extends Dex implements AccessibleDex {
 
     public boolean uses(Key key) {
         if(getKey().equals(key)){
@@ -55,33 +54,6 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
         }
         return myClass == this || isAccessibleTo(defining);
     }
-    public boolean isInternal() {
-        return (getAccessFlagsValue() & 0x7) == 0;
-    }
-    public boolean isFinal() {
-        return AccessFlag.FINAL.isSet(getAccessFlagsValue());
-    }
-    public boolean isPublic() {
-        return AccessFlag.PUBLIC.isSet(getAccessFlagsValue());
-    }
-    public boolean isProtected() {
-        return AccessFlag.PROTECTED.isSet(getAccessFlagsValue());
-    }
-    public boolean isPrivate() {
-        return AccessFlag.PRIVATE.isSet(getAccessFlagsValue());
-    }
-    public boolean isNative() {
-        return AccessFlag.NATIVE.isSet(getAccessFlagsValue());
-    }
-    public boolean isStatic() {
-        return AccessFlag.STATIC.isSet(getAccessFlagsValue());
-    }
-    public boolean isSynthetic() {
-        return AccessFlag.SYNTHETIC.isSet(getAccessFlagsValue());
-    }
-    public boolean isAbstract() {
-        return AccessFlag.ABSTRACT.isSet(getAccessFlagsValue());
-    }
     public boolean hasAccessFlag(AccessFlag accessFlag) {
         return accessFlag.isSet(getAccessFlagsValue());
     }
@@ -95,7 +67,7 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     }
 
     public abstract IdDefinition<?> getDefinition();
-    public abstract Key getKey();
+    public abstract ProgramKey getKey();
     public abstract IdItem getId();
     public abstract DexClass getDexClass();
 
@@ -109,9 +81,6 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
         getDefinition().removeAccessFlag(accessFlag);
     }
 
-    int getAccessFlagsValue(){
-        return getDefinition().getAccessFlagsValue();
-    }
     public TypeKey getDefining(){
         return getKey().getDeclaring();
     }
@@ -161,33 +130,8 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     }
 
     @Override
-    public Iterator<DexAnnotation> getAnnotations() {
-        AnnotationSetKey annotation = getDefinition().getAnnotation();
-        return ComputeIterator.of(annotation.iterator(), this::initializeAnnotation);
-    }
-    @Override
-    public DexAnnotation getAnnotation(TypeKey typeKey) {
-        return initializeAnnotation(typeKey);
-    }
-    @Override
-    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey) {
-        IdDefinition<?> definition = getDefinition();
-        AnnotationSetKey annotationSetKey = definition.getAnnotation();
-        if (!annotationSetKey.contains(typeKey)) {
-            annotationSetKey = annotationSetKey.getOrCreate(typeKey);
-            definition.setAnnotation(annotationSetKey);
-        }
-        return initializeAnnotation(typeKey);
-    }
-
-    DexAnnotation initializeAnnotation(TypeKey typeKey) {
-        return DexAnnotation.create(this, getDefinition(), typeKey);
-    }
-    DexAnnotation initializeAnnotation(AnnotationItemKey key) {
-        if (key != null) {
-            return DexAnnotation.create(this, getDefinition(), key.getType());
-        }
-        return null;
+    public AccessibleProgram getProgramElement() {
+        return getDefinition();
     }
 
     @Override

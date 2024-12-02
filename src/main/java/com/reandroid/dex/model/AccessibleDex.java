@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.data;
+package com.reandroid.dex.model;
 
-import com.reandroid.dex.key.ProgramKey;
+import com.reandroid.dex.program.AccessibleProgram;
 
-public interface DefIndex {
-    int getDefinitionIndex();
-    ProgramKey getKey();
+public interface AccessibleDex extends AnnotatedDex, AccessibleProgram {
+    @Override
+    AccessibleProgram getProgramElement();
+
+    @Override
+    default int getAccessFlagsValue() {
+        return getProgramElement().getAccessFlagsValue();
+    }
+    @Override
+    default void setAccessFlagsValue(int value) {
+        getProgramElement().setAccessFlagsValue(value);
+    }
 }

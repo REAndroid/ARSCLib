@@ -17,8 +17,7 @@ package com.reandroid.dex.resource;
 
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.dex.key.ArrayKey;
-import com.reandroid.dex.key.Key;
+import com.reandroid.dex.dalvik.DalvikMemberClass;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.*;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -123,25 +122,11 @@ public class R implements Iterable<RTypeItem> {
         return typeKey.equals(childKey.getEnclosingClass());
     }
     private boolean containsOnMembers(TypeKey typeKey) {
-        ArrayKey valueArray = getDalvikMemberClasses();
-        if(valueArray != null) {
-            return CollectionUtil.contains(valueArray.iterator(), typeKey);
+        DalvikMemberClass dalvikMemberClass = DalvikMemberClass.of(getDexClass());
+        if (dalvikMemberClass != null) {
+            return dalvikMemberClass.contains(typeKey);
         }
         return false;
-    }
-    private ArrayKey getDalvikMemberClasses() {
-        DexAnnotation annotation = getDexClass()
-                .getAnnotation(TypeKey.DALVIK_MemberClass);
-        if(annotation != null) {
-            DexAnnotationElement element = annotation.get("value");
-            if(element != null) {
-                Key value = element.getValue();
-                if(value instanceof ArrayKey) {
-                    return (ArrayKey) value;
-                }
-            }
-        }
-        return null;
     }
 
     public String getName() {

@@ -18,13 +18,17 @@ package com.reandroid.dex.model;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.dalvik.DalvikEnclosingClass;
+import com.reandroid.dex.dalvik.DalvikInnerClass;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.data.ClassData;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -105,10 +109,38 @@ public class RClass extends DexClass {
         initializeAnnotations();
 
     }
-    private void initializeAnnotations(){
-        ClassId classId = getId();
-        classId.getOrCreateDalvikEnclosingClass();
-        classId.getOrCreateDalvikInnerClass();
+    private void initializeAnnotations() {
+        ensureDalvikEnclosingClass();
+        ensureDalvikInnerClass();
+    }
+
+    private void ensureDalvikInnerClass() {
+        TypeKey typeKey = getKey();
+        if (typeKey == null) {
+            return;
+        }
+        String inner = typeKey.getSimpleInnerName();
+        if(AccessFlag.SYNTHETIC.isSet(getAccessFlagsValue())
+                || inner.equals(typeKey.getSimpleName())
+                || StringsUtil.isDigits(inner)){
+            inner = null;
+        }
+        DalvikInnerClass dalvikInnerClass = DalvikInnerClass.getOrCreate(this);
+        dalvikInnerClass.setName(inner);
+        dalvikInnerClass.setAccessFlags(getAccessFlagsValue());
+    }
+    private void ensureDalvikEnclosingClass() {
+        TypeKey typeKey = getKey();
+        if (typeKey == null) {
+            return;
+        }
+        TypeKey enclosing = typeKey.getEnclosingClass();
+        if(typeKey.equals(enclosing)) {
+            return;
+        }
+        DalvikEnclosingClass dalvikEnclosingClass = DalvikEnclosingClass
+                .getOrCreate(this);
+        dalvikEnclosingClass.setEnclosing(enclosing);
     }
 
     @Override
