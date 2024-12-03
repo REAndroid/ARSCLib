@@ -18,12 +18,10 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.key.ProgramKey;
 import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.key.AnnotationSetKey;
-import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.ProgramElement;
 import com.reandroid.utils.collection.ComputeIterator;
 
-import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
 public interface AnnotatedDex extends ProgramElement {
@@ -83,12 +81,5 @@ public interface AnnotatedDex extends ProgramElement {
     default DexAnnotationElement getOrCreateDexAnnotationElement(TypeKey typeKey, String name) {
         DexAnnotation annotation = getOrCreateDexAnnotation(typeKey);
         return annotation.getOrCreate(name);
-    }
-    default Key getAnnotationValue(TypeKey typeKey, String name) {
-        DexAnnotationElement element = getDexAnnotationElement(typeKey, name);
-        if (element != null) {
-            return element.getValue();
-        }
-        return null;
     }
 }

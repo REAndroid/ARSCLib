@@ -26,6 +26,7 @@ import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -251,6 +252,10 @@ public class AnnotationItem extends DataItem
         // AnnotationElement are unique (not shared)
     }
 
+    public AnnotatedProgram asAnnotated() {
+        return new WarpedAnnotation(this);
+    }
+
     public void merge(AnnotationItem annotationItem){
         if(annotationItem == this){
             return;
@@ -349,5 +354,83 @@ public class AnnotationItem extends DataItem
             builder.append(')');
         }
         return builder.toString();
+    }
+
+    static class WarpedAnnotation implements AnnotatedProgram {
+
+        private final AnnotationItem mItem;
+
+        public WarpedAnnotation(AnnotationItem item) {
+            this.mItem = item;
+        }
+        private AnnotationItemKey getItemKey() {
+            if (!mItem.isRemoved()) {
+                return mItem.getKey();
+            }
+            return null;
+        }
+        @Override
+        public AnnotationSetKey getAnnotation() {
+            AnnotationItemKey key = getItemKey();
+            if (key != null) {
+                return AnnotationSetKey.create(new AnnotationItemKey[]{key});
+            }
+            return AnnotationSetKey.EMPTY;
+        }
+        @Override
+        public void setAnnotation(AnnotationSetKey annotationSet) {
+            if (annotationSet.isEmpty()) {
+                return;
+            }
+            if (mItem.isRemoved()) {
+                throw new IllegalArgumentException("AnnotationItem was removed");
+            }
+            if (annotationSet.size() > 1) {
+                throw new IllegalArgumentException("Multiple AnnotationItem");
+            }
+            mItem.setKey(annotationSet.get(0));
+        }
+        @Override
+        public void clearAnnotations() {
+            mItem.removeSelf();
+        }
+        @Override
+        public boolean hasAnnotations() {
+            return !mItem.isRemoved();
+        }
+        @Override
+        public boolean hasAnnotation(TypeKey typeKey) {
+            AnnotationItemKey itemKey = getItemKey();
+            if (itemKey != null && itemKey.getType().equals(typeKey)) {
+                return true;
+            }
+            return false;
+        }
+        @Override
+        public AnnotationItemKey getAnnotation(TypeKey typeKey) {
+            AnnotationItemKey itemKey = getItemKey();
+            if (itemKey != null && itemKey.getType().equals(typeKey)) {
+                return itemKey;
+            }
+            return null;
+        }
+        @Override
+        public boolean removeAnnotation(TypeKey typeKey) {
+            AnnotationItemKey itemKey = getItemKey();
+            if (itemKey != null && itemKey.getType().equals(typeKey)) {
+                clearAnnotations();
+                return true;
+            }
+            return false;
+        }
+        @Override
+        public boolean removeAnnotationIf(Predicate<? super AnnotationItemKey> predicate) {
+            AnnotationItemKey itemKey = getItemKey();
+            if (itemKey != null && predicate.test(itemKey)) {
+                clearAnnotations();
+                return true;
+            }
+            return false;
+        }
     }
 }
