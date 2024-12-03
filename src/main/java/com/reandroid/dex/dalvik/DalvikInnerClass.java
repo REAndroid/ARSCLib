@@ -18,14 +18,14 @@ package com.reandroid.dex.dalvik;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
 
 import java.util.Iterator;
 
 public class DalvikInnerClass extends DalvikAnnotation {
 
-    private DalvikInnerClass(ProgramElement programElement) {
-        super(programElement, TypeKey.DALVIK_InnerClass);
+    private DalvikInnerClass(AnnotatedProgram annotatedProgram) {
+        super(annotatedProgram, TypeKey.DALVIK_InnerClass);
     }
 
     public Iterator<AccessFlag> getAccessFlags() {
@@ -55,15 +55,15 @@ public class DalvikInnerClass extends DalvikAnnotation {
         return AccessFlag.toString(getAccessFlags()) + getName();
     }
 
-    public static DalvikInnerClass of(ProgramElement programElement) {
-        if (programElement.hasAnnotation(TypeKey.DALVIK_InnerClass)) {
-            return new DalvikInnerClass(programElement);
+    public static DalvikInnerClass of(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram.hasAnnotation(TypeKey.DALVIK_InnerClass)) {
+            return new DalvikInnerClass(annotatedProgram);
         }
         return null;
     }
-    public static DalvikInnerClass getOrCreate(ProgramElement programElement) {
-        if (!programElement.hasAnnotation(TypeKey.DALVIK_InnerClass)) {
-            programElement.addAnnotation(AnnotationItemKey.create(
+    public static DalvikInnerClass getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_InnerClass)) {
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_InnerClass,
                     AnnotationElementKey.create(Key.DALVIK_accessFlags, PrimitiveKey.of(0)),
@@ -71,6 +71,6 @@ public class DalvikInnerClass extends DalvikAnnotation {
                     )
             );
         }
-        return of(programElement);
+        return of(annotatedProgram);
     }
 }

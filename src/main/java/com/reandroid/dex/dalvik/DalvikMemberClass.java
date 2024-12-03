@@ -18,18 +18,19 @@ package com.reandroid.dex.dalvik;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.program.ClassProgram;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class DalvikMemberClass extends DalvikAnnotation {
 
-    private DalvikMemberClass(ProgramElement programElement) {
-        super(programElement, TypeKey.DALVIK_MemberClass);
+    private DalvikMemberClass(AnnotatedProgram annotatedProgram) {
+        super(annotatedProgram, TypeKey.DALVIK_MemberClass);
     }
 
     public Iterator<TypeKey> getMembers() {
@@ -62,10 +63,28 @@ public class DalvikMemberClass extends DalvikAnnotation {
     public boolean isEmpty() {
         return getArray().isEmpty();
     }
+    public TypeKey findEnclosing() {
+        TypeKey enclosing;
+        AnnotatedProgram annotatedProgram = getAnnotatedProgram();
+        if (annotatedProgram instanceof ClassProgram) {
+            enclosing = ((ClassProgram) getAnnotatedProgram()).getKey();
+        } else {
+            enclosing = CollectionUtil.getFirst(getMembers());
+            if (enclosing != null) {
+                enclosing = enclosing.getEnclosingClass();
+            }
+        }
+        return enclosing;
+    }
     public void addSimpleName(String simpleName) {
-        TypeKey typeKey = ((ClassProgram) getProgramElement()).getKey();
-        typeKey = typeKey.createInnerClass(simpleName);
-        add(typeKey);
+        addSimpleName(findEnclosing(), simpleName);
+    }
+    public void addSimpleName(TypeKey enclosing, String simpleName) {
+        if (enclosing == null) {
+            throw new NullPointerException("Null enclosing type");
+        }
+        enclosing = enclosing.createInnerClass(simpleName);
+        add(enclosing);
     }
     public ArrayValueKey getArray() {
         ArrayValueKey arrayValueKey = (ArrayValueKey) readValue(Key.DALVIK_value);
@@ -86,21 +105,21 @@ public class DalvikMemberClass extends DalvikAnnotation {
         return StringsUtil.join(getMembers(), "\n");
     }
 
-    public static DalvikMemberClass of(ProgramElement programElement) {
-        if (programElement.hasAnnotation(TypeKey.DALVIK_MemberClass)) {
-            return new DalvikMemberClass(programElement);
+    public static DalvikMemberClass of(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram.hasAnnotation(TypeKey.DALVIK_MemberClass)) {
+            return new DalvikMemberClass(annotatedProgram);
         }
         return null;
     }
-    public static DalvikMemberClass getOrCreate(ProgramElement programElement) {
-        if (!programElement.hasAnnotation(TypeKey.DALVIK_MemberClass)) {
-            programElement.addAnnotation(AnnotationItemKey.create(
+    public static DalvikMemberClass getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_MemberClass)) {
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_MemberClass,
                     AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.EMPTY)
                     )
             );
         }
-        return of(programElement);
+        return of(annotatedProgram);
     }
 }

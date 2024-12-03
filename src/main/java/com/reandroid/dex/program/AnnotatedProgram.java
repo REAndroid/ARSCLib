@@ -53,7 +53,11 @@ public interface AnnotatedProgram {
         return getAnnotation().get(typeKey);
     }
     default Key getAnnotationValue(TypeKey typeKey, String name) {
-        return getAnnotation().getAnnotationValue(typeKey, name);
+        AnnotationItemKey itemKey = getAnnotation(typeKey);
+        if (itemKey != null) {
+            return itemKey.getValue(name);
+        }
+        return null;
     }
     default boolean removeAnnotation(TypeKey typeKey) {
         AnnotationSetKey annotation = getAnnotation();

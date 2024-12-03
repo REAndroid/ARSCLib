@@ -15,36 +15,36 @@
  */
 package com.reandroid.dex.dalvik;
 
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
 public class DalvikAnnotation {
 
-    private final ProgramElement programElement;
+    private final AnnotatedProgram annotatedProgram;
     private final TypeKey annotationType;
 
-    protected DalvikAnnotation(ProgramElement programElement, TypeKey annotationType) {
-        this.programElement = programElement;
+    protected DalvikAnnotation(AnnotatedProgram annotatedProgram, TypeKey annotationType) {
+        this.annotatedProgram = annotatedProgram;
         this.annotationType = annotationType;
     }
 
     public AnnotationItemKey getKey() {
-        return getProgramElement().getAnnotation(getAnnotationType());
+        return getAnnotatedProgram().getAnnotation(getAnnotationType());
     }
     public void setKey(AnnotationItemKey key) {
         if (!getAnnotationType().equals(key.getType())) {
             throw new IllegalArgumentException("Different annotation type: "
                     + getAnnotationType() + ", " + key.getType());
         }
-        getProgramElement().addAnnotation(key);
+        getAnnotatedProgram().addAnnotation(key);
     }
     public TypeKey getAnnotationType() {
         return annotationType;
     }
-    public ProgramElement getProgramElement() {
-        return programElement;
+    public AnnotatedProgram getAnnotatedProgram() {
+        return annotatedProgram;
     }
 
     Key readValue(String name) {

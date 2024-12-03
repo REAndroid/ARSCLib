@@ -36,8 +36,8 @@ public class DalvikThrows extends DalvikAnnotation {
     }
 
     @Override
-    public MethodProgram getProgramElement() {
-        return (MethodProgram) super.getProgramElement();
+    public MethodProgram getAnnotatedProgram() {
+        return (MethodProgram) super.getAnnotatedProgram();
     }
 
     @Override

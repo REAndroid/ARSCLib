@@ -17,29 +17,29 @@ package com.reandroid.dex.dalvik;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
 
 public class DalvikEnclosingMethod extends DalvikEnclosing<MethodKey> {
 
-    private DalvikEnclosingMethod(ProgramElement programElement) {
-        super(programElement, TypeKey.DALVIK_EnclosingMethod);
+    private DalvikEnclosingMethod(AnnotatedProgram annotatedProgram) {
+        super(annotatedProgram, TypeKey.DALVIK_EnclosingMethod);
     }
 
-    public static DalvikEnclosingMethod of(ProgramElement programElement) {
-        if (programElement.hasAnnotation(TypeKey.DALVIK_EnclosingMethod)) {
-            return new DalvikEnclosingMethod(programElement);
+    public static DalvikEnclosingMethod of(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram.hasAnnotation(TypeKey.DALVIK_EnclosingMethod)) {
+            return new DalvikEnclosingMethod(annotatedProgram);
         }
         return null;
     }
-    public static DalvikEnclosingMethod getOrCreate(ProgramElement programElement) {
-        if (!programElement.hasAnnotation(TypeKey.DALVIK_EnclosingMethod)) {
-            programElement.addAnnotation(AnnotationItemKey.create(
+    public static DalvikEnclosingMethod getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_EnclosingMethod)) {
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_EnclosingMethod,
                     AnnotationElementKey.create(Key.DALVIK_value, NullValueKey.INSTANCE)
                     )
             );
         }
-        return of(programElement);
+        return of(annotatedProgram);
     }
 }

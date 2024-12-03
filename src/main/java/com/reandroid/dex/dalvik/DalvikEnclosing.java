@@ -18,13 +18,13 @@ package com.reandroid.dex.dalvik;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.NullValueKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.utils.ObjectsUtil;
 
 public abstract class DalvikEnclosing<T extends Key> extends DalvikAnnotation {
 
-    public DalvikEnclosing(ProgramElement programElement, TypeKey annotationType) {
-        super(programElement, annotationType);
+    public DalvikEnclosing(AnnotatedProgram annotatedProgram, TypeKey annotationType) {
+        super(annotatedProgram, annotationType);
     }
 
     public T getEnclosing() {
@@ -51,10 +51,10 @@ public abstract class DalvikEnclosing<T extends Key> extends DalvikAnnotation {
         return String.valueOf(getEnclosing());
     }
 
-    public static DalvikEnclosing<?> of(ProgramElement programElement) {
-        DalvikEnclosing<?> enclosing = DalvikEnclosingClass.of(programElement);
+    public static DalvikEnclosing<?> of(AnnotatedProgram annotatedProgram) {
+        DalvikEnclosing<?> enclosing = DalvikEnclosingClass.of(annotatedProgram);
         if (enclosing == null) {
-            enclosing = DalvikEnclosingMethod.of(programElement);
+            enclosing = DalvikEnclosingMethod.of(annotatedProgram);
         }
         return enclosing;
     }

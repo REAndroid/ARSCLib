@@ -21,6 +21,7 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
@@ -38,7 +39,8 @@ import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
-        implements KeyReference, SmaliFormat, PositionAlignedItem, FullRefresh {
+        implements KeyReference, SmaliFormat, PositionAlignedItem,
+        FullRefresh, AnnotatedProgram {
 
     public AnnotationSet(){
         super(SectionType.ANNOTATION_ITEM, UsageMarker.USAGE_ANNOTATION, new DexPositionAlign());
@@ -123,14 +125,13 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
         return addNew(type, name);
     }
-    public AnnotationItem addNewItem(TypeKey typeKey){
+    private AnnotationItem addNewItem(TypeKey typeKey){
         AnnotationItem item = addNewItem();
         item.setType(typeKey);
         return item;
     }
-    public AnnotationItem addNew(TypeKey type, String name){
-        AnnotationItem item = addNewItem();
-        item.setType(type);
+    private AnnotationItem addNew(TypeKey type, String name){
+        AnnotationItem item = getOrCreate(type);
         item.getOrCreateElement(name);
         return item;
     }
@@ -171,6 +172,49 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     public boolean sort(){
         return super.sort(CollectionUtil.getComparator());
     }
+
+
+
+    /////////////////// AnnotatedProgram /////////////////////
+    @Override
+    public AnnotationSetKey getAnnotation() {
+        return getKey();
+    }
+    @Override
+    public void setAnnotation(AnnotationSetKey annotationSet) {
+        setKey(annotationSet);
+    }
+    @Override
+    public void clearAnnotations() {
+        clear();
+    }
+    @Override
+    public boolean hasAnnotations() {
+        return !isEmpty();
+    }
+    @Override
+    public boolean hasAnnotation(TypeKey typeKey) {
+        return contains(typeKey);
+    }
+    @Override
+    public AnnotationItemKey getAnnotation(TypeKey typeKey) {
+        AnnotationItem item = get(typeKey);
+        if (item != null) {
+            return item.getKey();
+        }
+        return null;
+    }
+    @Override
+    public boolean removeAnnotation(TypeKey typeKey) {
+        return remove(typeKey);
+    }
+    @Override
+    public void addAnnotation(AnnotationItemKey annotation) {
+        remove(annotation.getType());
+        addNewItem().setKey(annotation);
+    }
+    //----------------- AnnotatedProgram -------------------//
+
     @Override
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<AnnotationItem, IdItem>(iterator()) {

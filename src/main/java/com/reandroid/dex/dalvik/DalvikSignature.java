@@ -17,12 +17,12 @@ package com.reandroid.dex.dalvik;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
 
 public class DalvikSignature extends DalvikAnnotation {
 
-    private DalvikSignature(ProgramElement programElement) {
-        super(programElement, TypeKey.DALVIK_Signature);
+    private DalvikSignature(AnnotatedProgram annotatedProgram) {
+        super(annotatedProgram, TypeKey.DALVIK_Signature);
     }
 
     public String[] values() {
@@ -60,21 +60,21 @@ public class DalvikSignature extends DalvikAnnotation {
         return getString();
     }
 
-    public static DalvikSignature of(ProgramElement programElement) {
-        if (programElement.hasAnnotation(TypeKey.DALVIK_Signature)) {
-            return new DalvikSignature(programElement);
+    public static DalvikSignature of(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram.hasAnnotation(TypeKey.DALVIK_Signature)) {
+            return new DalvikSignature(annotatedProgram);
         }
         return null;
     }
-    public static DalvikSignature getOrCreate(ProgramElement programElement) {
-        if (!programElement.hasAnnotation(TypeKey.DALVIK_Signature)) {
-            programElement.addAnnotation(AnnotationItemKey.create(
+    public static DalvikSignature getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_Signature)) {
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_Signature,
                     AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.EMPTY)
                     )
             );
         }
-        return of(programElement);
+        return of(annotatedProgram);
     }
 }

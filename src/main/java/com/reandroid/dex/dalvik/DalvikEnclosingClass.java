@@ -17,31 +17,36 @@ package com.reandroid.dex.dalvik;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.AnnotatedProgram;
+import com.reandroid.dex.program.ClassProgram;
 
 public class DalvikEnclosingClass extends DalvikEnclosing<TypeKey> {
 
-    private DalvikEnclosingClass(ProgramElement programElement) {
-        super(programElement, TypeKey.DALVIK_EnclosingClass);
+    private DalvikEnclosingClass(AnnotatedProgram annotatedProgram) {
+        super(annotatedProgram, TypeKey.DALVIK_EnclosingClass);
     }
 
-    public static DalvikEnclosingClass of(ProgramElement programElement) {
-        if (programElement.hasAnnotation(TypeKey.DALVIK_EnclosingClass)) {
-            return new DalvikEnclosingClass(programElement);
+    public static DalvikEnclosingClass of(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram.hasAnnotation(TypeKey.DALVIK_EnclosingClass)) {
+            return new DalvikEnclosingClass(annotatedProgram);
         }
         return null;
     }
-    public static DalvikEnclosingClass getOrCreate(ProgramElement programElement) {
-        if (!programElement.hasAnnotation(TypeKey.DALVIK_EnclosingClass)) {
-            TypeKey typeKey = (TypeKey) programElement.getKey();
-            typeKey = typeKey.getEnclosingClass();
-            programElement.addAnnotation(AnnotationItemKey.create(
+    public static DalvikEnclosingClass getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_EnclosingClass)) {
+            Key key;
+            if (annotatedProgram instanceof ClassProgram) {
+                key = ((ClassProgram) annotatedProgram).getKey();
+            } else {
+                key = NullValueKey.INSTANCE;
+            }
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_EnclosingClass,
-                    AnnotationElementKey.create(Key.DALVIK_value, typeKey)
+                    AnnotationElementKey.create(Key.DALVIK_value, key)
                     )
             );
         }
-        return of(programElement);
+        return of(annotatedProgram);
     }
 }
