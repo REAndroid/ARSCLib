@@ -188,10 +188,9 @@ public class CombiningIterator<T, E extends T> implements Iterator<T> {
         iterator.mCurrentItem = item;
         return iterator;
     }
-    @SuppressWarnings("unchecked")
     public static<T1> Iterator<T1> singleTwo(T1 item, Iterator<? extends T1> iterator1, Iterator<? extends T1> iterator2){
-        if(item == null){
-            return (Iterator<T1>) iterator1;
+        if (item == null) {
+            return two(iterator1, iterator2);
         }
         CombiningIterator<T1, T1> iterator = new CombiningIterator<>(iterator1, iterator2);
         iterator.mCurrentItem = item;
