@@ -70,21 +70,22 @@ public class SmaliParseException extends IOException {
         throw exception;
     }
     public static void expect(SmaliReader reader, char ch) throws IOException{
-        if(reader.readASCII() == ch){
+        if (reader.skipIfChar(ch)) {
             return;
         }
-        reader.skip(-1);
         String message = "expecting '" + ch + "'";
         SmaliParseException exception = new SmaliParseException(message, reader);
         sanitizeStackTrace(exception);
         throw exception;
     }
-    public static char expect(SmaliReader reader, char ch1, char ch2) throws IOException{
-        char ch = reader.readASCII();
-        if(ch == ch1 || ch == ch2){
-            return ch;
+    public static char expect(SmaliReader reader, char ch1, char ch2) throws IOException {
+        if (!reader.finished()) {
+            char ch = reader.readASCII();
+            if (ch == ch1 || ch == ch2) {
+                return ch;
+            }
+            reader.skip(-1);
         }
-        reader.skip(-1);
         String message = "expecting '" + ch1 + "', or '" + ch2 + "'";
         SmaliParseException exception = new SmaliParseException(message, reader);
         sanitizeStackTrace(exception);

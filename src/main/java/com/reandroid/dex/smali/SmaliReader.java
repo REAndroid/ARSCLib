@@ -361,6 +361,14 @@ public class SmaliReader {
         }
         return false;
     }
+    public boolean skipIfChar(char c) {
+        int position = position();
+        if (!finished() && getASCII(position) == c) {
+            position(position + 1);
+            return true;
+        }
+        return false;
+    }
     public void nextLine(){
         int i = indexOf('\n');
         if(i < 0){
