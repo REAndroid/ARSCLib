@@ -15,6 +15,8 @@
  */
 package com.reandroid.utils.collection;
 
+import com.reandroid.utils.ObjectsUtil;
+
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -198,6 +200,16 @@ public class CollectionUtil {
         }
         List<T> results = toList(iterator);
         return results.iterator();
+    }
+    public static<T> Iterator<T> uniqueOf(Iterator<? extends T> iterator){
+        boolean hasNext = iterator.hasNext();
+        if(!hasNext){
+            return EmptyIterator.of();
+        }
+        return new UniqueIterator<T>(ObjectsUtil.cast(iterator));
+    }
+    public static<T> Iterator<T> copyOfUniqueOf(Iterator<? extends T> iterator){
+        return copyOf(uniqueOf(iterator));
     }
     public static<T> Iterator<T> reversedOf(Iterator<? extends T> iterator){
         boolean hasNext = iterator.hasNext();
