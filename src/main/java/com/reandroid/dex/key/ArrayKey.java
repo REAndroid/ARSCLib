@@ -121,6 +121,11 @@ public class ArrayKey extends KeyList<Key> {
     }
 
     @Override
+    public ArrayKey replaceKey(Key search, Key replace) {
+        return (ArrayKey) super.replaceKey(search, replace);
+    }
+
+    @Override
     public int compareTo(Object obj) {
         if (obj == this) {
             return 0;

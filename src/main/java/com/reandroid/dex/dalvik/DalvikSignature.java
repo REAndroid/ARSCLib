@@ -18,6 +18,9 @@ package com.reandroid.dex.dalvik;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.program.AnnotatedProgram;
+import com.reandroid.utils.StringsUtil;
+
+import java.util.Iterator;
 
 public class DalvikSignature extends DalvikAnnotation {
 
@@ -25,16 +28,10 @@ public class DalvikSignature extends DalvikAnnotation {
         super(annotatedProgram, TypeKey.DALVIK_Signature);
     }
 
-    public String[] values() {
-        String[] values = getArrayKey().getStringValues();
-        if (values == null) {
-            values = new String[0];
-        }
-        return values;
+    public Iterator<String> values() {
+        return getArrayKey().stringValuesIterator();
     }
-    public void values(String[] values) {
-        setArrayKey(ArrayValueKey.of(values));
-    }
+
     public ArrayValueKey getArrayKey() {
         ArrayValueKey key = (ArrayValueKey) getKey().getValue(Key.DALVIK_value);
         if (key == null) {
@@ -47,12 +44,20 @@ public class DalvikSignature extends DalvikAnnotation {
     }
 
     public String getString() {
-        String[] values = values();
-        StringBuilder builder = new StringBuilder();
-        for (String value : values) {
-            builder.append(value);
+        return StringsUtil.join(values(), "");
+    }
+    public DalvikSignatureKey getSignature() {
+        return DalvikSignatureKey.parse(getString());
+    }
+    public void setSignature(DalvikSignatureKey key) {
+        setArrayKey(key.toStringValues());
+    }
+
+    public void replace(TypeKey search, TypeKey replace) {
+        DalvikSignatureKey signatureKey = getSignature();
+        if (signatureKey != null) {
+            setSignature(signatureKey.replaceKey(search, replace));
         }
-        return builder.toString();
     }
 
     @Override

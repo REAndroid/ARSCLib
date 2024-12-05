@@ -18,9 +18,11 @@ package com.reandroid.dex.key;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class ArrayValueKey extends ArrayKey {
@@ -33,6 +35,10 @@ public class ArrayValueKey extends ArrayKey {
 
     private ArrayValueKey(Key[] elements) {
         super(elements);
+    }
+
+    public Iterator<String> stringValuesIterator() {
+        return ComputeIterator.of(iterator(StringKey.class), StringKey::getString);
     }
 
     public boolean isStrings() {
