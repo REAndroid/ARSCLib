@@ -135,9 +135,9 @@ public class ParameterisedTypeKey implements Key {
     }
 
     public Iterator<TypeKey> getTypes() {
-        return CombiningIterator.singleTwo(getNameTypeKey(),
+        return CombiningIterator.singleTwo(getInnerClassKey(),
                 getProtoKey().getTypes(),
-                SingleIterator.of(getInnerClassKey()));
+                SingleIterator.of(getNameTypeKey()));
     }
 
     void buildSignature(SignatureStringsBuilder builder) {

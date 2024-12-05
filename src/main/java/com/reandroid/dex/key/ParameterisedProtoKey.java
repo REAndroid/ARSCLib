@@ -83,7 +83,12 @@ public class ParameterisedProtoKey extends KeyList<ParameterisedTypeKey> {
 
     @Override
     public ParameterisedProtoKey replaceKey(Key search, Key replace) {
-        return (ParameterisedProtoKey) super.replaceKey(search, replace);
+        ParameterisedProtoKey result = (ParameterisedProtoKey) super.replaceKey(search, replace);
+        ParameterisedTypeKey returnType = result.getReturnType();
+        if (returnType != null) {
+            result = result.changeReturnType(returnType.replaceKey(search, replace));
+        }
+        return result;
     }
 
     @Override
