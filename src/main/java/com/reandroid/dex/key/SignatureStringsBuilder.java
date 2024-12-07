@@ -30,7 +30,7 @@ public class SignatureStringsBuilder {
 
     public ArrayValueKey build() {
         ArrayCollection<StringKey> results = this.results;
-        return ArrayValueKey.create(results.toArrayFill(new Key[results.size()]));
+        return ArrayValueKey.of(results.toArrayFill(new Key[results.size()]));
     }
     public void append(char c) {
         this.stringBuilder.append(c);

@@ -28,26 +28,26 @@ import java.util.Iterator;
 
 public class DalvikSignatureKey implements Key {
 
-    private final ArrayKey elements;
+    private final ArrayKey<ParameterisedTypeKey> elements;
 
-    private DalvikSignatureKey(ArrayKey elements) {
+    private DalvikSignatureKey(ArrayKey<ParameterisedTypeKey> elements) {
         this.elements = elements;
     }
 
     public Iterator<ParameterisedTypeKey> iterator() {
-        return ObjectsUtil.cast(getElements().iterator());
+        return getElements().iterator();
     }
     public int size() {
         return getElements().size();
     }
     public ParameterisedTypeKey get(int i) {
-        return (ParameterisedTypeKey) getElements().get(i);
+        return getElements().get(i);
     }
 
-    private ArrayKey getElements() {
+    private ArrayKey<ParameterisedTypeKey> getElements() {
         return elements;
     }
-    private DalvikSignatureKey changeElements(ArrayKey elements) {
+    private DalvikSignatureKey changeElements(ArrayKey<ParameterisedTypeKey> elements) {
         if (getElements().equals(elements)) {
             return this;
         }
@@ -65,10 +65,10 @@ public class DalvikSignatureKey implements Key {
 
     public ArrayValueKey toStringValues() {
         SignatureStringsBuilder builder = new SignatureStringsBuilder();
-        ArrayKey elements = getElements();
+        ArrayKey<ParameterisedTypeKey> elements = getElements();
         int size  = elements.size();
         for (int i = 0; i < size; i++) {
-            ParameterisedTypeKey key = (ParameterisedTypeKey) elements.get(i);
+            ParameterisedTypeKey key = elements.get(i);
             key.buildSignature(builder);
         }
         builder.flush();
@@ -80,7 +80,7 @@ public class DalvikSignatureKey implements Key {
         if (search.equals(this)) {
             return (DalvikSignatureKey) replace;
         }
-        ArrayKey arrayKey = getElements();
+        ArrayKey<ParameterisedTypeKey> arrayKey = getElements();
         arrayKey = arrayKey.replaceKey(search, replace);
         return changeElements(arrayKey);
     }
@@ -127,7 +127,7 @@ public class DalvikSignatureKey implements Key {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        ArrayKey elements = getElements();
+        ArrayKey<?> elements = getElements();
         int size = elements.size();
         for (int i = 0; i < size; i ++) {
             ((ParameterisedTypeKey) elements.get(i)).appendString(builder);

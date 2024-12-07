@@ -116,9 +116,7 @@ public class TypeKey implements ProgramKey {
     public int getArrayDimension(){
         return DexUtils.countArrayPrefix(getTypeName());
     }
-    public boolean isTypeSignature(){
-        return DexUtils.isTypeSignature(getTypeName());
-    }
+
     public boolean isTypeArray(){
         String name = getTypeName();
         return name.length() > 1 && name.charAt(0) == '[';
@@ -143,11 +141,16 @@ public class TypeKey implements ProgramKey {
         }
         return simpleName;
     }
-    public String getSimpleInnerName(){
-        return DexUtils.getSimpleInnerName(getTypeName());
+    public String getSimpleInnerName() {
+        String simple = getSimpleName();
+        int i = simple.lastIndexOf('$');
+        if (i > 0 && i < simple.length() - 1) {
+            return simple.substring(i + 1);
+        }
+        return null;
     }
-    public boolean isInnerName(){
-        return !getSimpleName().equals(getSimpleInnerName());
+    public boolean isInnerName() {
+        return getSimpleInnerName() != null;
     }
     public String getPackageName() {
         return DexUtils.getPackageName(getTypeName());
@@ -241,7 +244,12 @@ public class TypeKey implements ProgramKey {
             String name = packageName;
             @Override
             public boolean hasNext() {
-                return name.charAt(name.length() - 1) == '/';
+                String name = this.name;
+                int i = name.length();
+                if (i == 0) {
+                    return false;
+                }
+                return name.charAt(i - 1) == '/';
             }
             @Override
             public String next() {
@@ -280,7 +288,10 @@ public class TypeKey implements ProgramKey {
         return CompareUtil.compare(name1, name2);
     }
     public boolean equalsPackage(TypeKey typeKey) {
-        if(typeKey == null) {
+        if (typeKey == this) {
+            return true;
+        }
+        if (typeKey == null) {
             return false;
         }
         String name1 = StringsUtil.trimStart(getTypeName(), '[');
@@ -288,7 +299,7 @@ public class TypeKey implements ProgramKey {
         if(name1.charAt(0) != 'L' || name2.charAt(0) != 'L') {
             return false;
         }
-        if(typeKey == this || name1.equals(name2)) {
+        if (name1.equals(name2)) {
             return true;
         }
         int start = StringsUtil.diffStart(name1, name2);
@@ -314,7 +325,7 @@ public class TypeKey implements ProgramKey {
         if (this == obj) {
             return true;
         }
-        if(!(obj instanceof TypeKey)) {
+        if (!(obj instanceof TypeKey)) {
             return false;
         }
         TypeKey key = (TypeKey) obj;
@@ -558,10 +569,6 @@ public class TypeKey implements ProgramKey {
         }
         @Override
         public boolean isInnerName() {
-            return false;
-        }
-        @Override
-        public boolean isTypeSignature() {
             return false;
         }
     }

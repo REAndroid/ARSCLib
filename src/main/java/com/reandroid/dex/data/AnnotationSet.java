@@ -64,7 +64,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     public AnnotationSetKey getKey() {
         AnnotationItemKey[] elements = new AnnotationItemKey[size()];
         getItemKeys(elements);
-        return checkKey(AnnotationSetKey.create(elements));
+        return checkKey(AnnotationSetKey.of(elements));
     }
     @Override
     public void setKey(Key key) {
@@ -166,10 +166,10 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
     }
     @Override
-    public void refreshFull(){
+    public void refreshFull() {
         sort();
     }
-    public boolean sort(){
+    public boolean sort() {
         return super.sort(CollectionUtil.getComparator());
     }
 

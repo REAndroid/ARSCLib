@@ -25,22 +25,17 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class ParameterisedProtoKey extends KeyList<ParameterisedTypeKey> {
+public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
 
-    private static final ParameterisedTypeKey[] EMPTY_ARRAY;
-    public static final ParameterisedProtoKey EMPTY;
+    public static final ParameterisedProtoKey EMPTY = new ParameterisedProtoKey(
+            false, null, EMPTY_ARRAY);
 
-    static {
-        ParameterisedTypeKey[] emptyArray = new ParameterisedTypeKey[0];
-        EMPTY_ARRAY = emptyArray;
-        EMPTY = new ParameterisedProtoKey(false,null, emptyArray);
-    }
 
     private final boolean method;
     private final ParameterisedTypeKey returnType;
 
     private ParameterisedProtoKey(boolean method, ParameterisedTypeKey returnType,
-                                 ParameterisedTypeKey[] elements) {
+                                 Key[] elements) {
         super(elements);
         this.method = method;
         this.returnType = returnType;
@@ -175,7 +170,7 @@ public class ParameterisedProtoKey extends KeyList<ParameterisedTypeKey> {
     }
 
     @Override
-    ParameterisedProtoKey newInstance(ParameterisedTypeKey[] elements) {
+    ParameterisedProtoKey newInstance(Key[] elements) {
         boolean method = isMethod();
         ParameterisedTypeKey returnType = getReturnType();
         if (elements.length == 0) {
@@ -187,15 +182,7 @@ public class ParameterisedProtoKey extends KeyList<ParameterisedTypeKey> {
         return new ParameterisedProtoKey(method, returnType, elements);
     }
 
-    @Override
-    ParameterisedTypeKey[] newArray(int length) {
-        if (length == 0) {
-            return EMPTY_ARRAY;
-        }
-        return new ParameterisedTypeKey[length];
-    }
-
-    public static ParameterisedProtoKey create(boolean method, ParameterisedTypeKey returnType, ParameterisedTypeKey[] elements) {
+    public static ParameterisedProtoKey create(boolean method, ParameterisedTypeKey returnType, Key[] elements) {
         if (elements == null || elements.length == 0) {
             if (returnType == null) {
                 return EMPTY;
@@ -226,9 +213,9 @@ public class ParameterisedProtoKey extends KeyList<ParameterisedTypeKey> {
         } else {
             returnType = null;
         }
-        ParameterisedTypeKey[] elements;
+        Key[] elements;
         if (results != null) {
-            elements = results.toArrayFill(new ParameterisedTypeKey[results.size()]);
+            elements = results.toArrayFill(new Key[results.size()]);
         } else {
             elements = null;
         }

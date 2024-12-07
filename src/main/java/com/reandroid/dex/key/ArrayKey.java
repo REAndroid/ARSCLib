@@ -28,57 +28,50 @@ import java.io.StringWriter;
 import java.util.Comparator;
 import java.util.function.Predicate;
 
-public class ArrayKey extends KeyList<Key> {
+public class ArrayKey<T extends Key> extends KeyList<T> {
 
-    public static final ArrayKey EMPTY;
-    static final Key[] EMPTY_ARRAY;
+    private static final ArrayKey<?> EMPTY = new ArrayKey<>(EMPTY_ARRAY);
 
-    static {
-        Key[] emptyArray = new Key[0];
-        EMPTY_ARRAY = emptyArray;
-        EMPTY = new ArrayKey(emptyArray);
-    }
-
-    ArrayKey(Key[] elements) {
+    protected ArrayKey(Key[] elements) {
         super(elements);
     }
 
+    @Override
+    public ArrayKey<T> add(T item) {
+        return (ArrayKey<T>) super.add(item);
+    }
+    @Override
+    public ArrayKey<T> remove(T itemKey) {
+        return (ArrayKey<T>) super.remove(itemKey);
+    }
+    @Override
+    public ArrayKey<T> remove(int index) {
+        return (ArrayKey<T>) super.remove(index);
+    }
+    @Override
+    public ArrayKey<T> removeIf(Predicate<? super T> predicate) {
+        return (ArrayKey<T>) super.removeIf(predicate);
+    }
+    @Override
+    public ArrayKey<T> set(int i, T item) {
+        return (ArrayKey<T>) super.set(i, item);
+    }
+    @Override
+    public ArrayKey<T> sort(Comparator<? super T> comparator) {
+        return (ArrayKey<T>) super.sort(comparator);
+    }
+    @Override
+    public ArrayKey<T> clearDuplicates() {
+        return (ArrayKey<T>) super.clearDuplicates();
+    }
+    @Override
+    public ArrayKey<T> clearDuplicates(Comparator<? super T> comparator) {
+        return (ArrayKey<T>) super.clearDuplicates(comparator);
+    }
 
     @Override
-    public ArrayKey add(Key item) {
-        return (ArrayKey) super.add(item);
-    }
-    @Override
-    public ArrayKey remove(Key itemKey) {
-        return (ArrayKey) super.remove(itemKey);
-    }
-    @Override
-    public ArrayKey remove(int index) {
-        return (ArrayKey) super.remove(index);
-    }
-    @Override
-    public ArrayKey removeIf(Predicate<? super Key> predicate) {
-        return (ArrayKey) super.removeIf(predicate);
-    }
-    @Override
-    public ArrayKey set(int i, Key item) {
-        return (ArrayKey) super.set(i, item);
-    }
-    @Override
-    public ArrayKey sort(Comparator<? super Key> comparator) {
-        return (ArrayKey) super.sort(comparator);
-    }
-
-    @Override
-    ArrayKey newInstance(Key[] elements) {
+    ArrayKey<T> newInstance(Key[] elements) {
         return create(elements);
-    }
-    @Override
-    Key[] newArray(int length) {
-        if (length == 0) {
-            return EMPTY_ARRAY;
-        }
-        return new Key[length];
     }
 
     @Override
@@ -121,8 +114,8 @@ public class ArrayKey extends KeyList<Key> {
     }
 
     @Override
-    public ArrayKey replaceKey(Key search, Key replace) {
-        return (ArrayKey) super.replaceKey(search, replace);
+    public ArrayKey<T> replaceKey(Key search, Key replace) {
+        return (ArrayKey<T>) super.replaceKey(search, replace);
     }
 
     @Override
@@ -133,7 +126,7 @@ public class ArrayKey extends KeyList<Key> {
         if (!(obj instanceof ArrayKey)) {
             return StringsUtil.compareToString(this, obj);
         }
-        return compareElements((ArrayKey) obj);
+        return compareElements((ArrayKey<?>) obj);
     }
 
     @Override
@@ -149,16 +142,20 @@ public class ArrayKey extends KeyList<Key> {
         if (!(obj instanceof ArrayKey)) {
             return false;
         }
-        return equalsElements((ArrayKey) obj);
+        return equalsElements((ArrayKey<?>) obj);
     }
 
-    public static ArrayKey create(Key ... elements) {
-        if (elements == null || elements.length == 0) {
-            return EMPTY;
-        }
-        return new ArrayKey(elements);
+    @SuppressWarnings("unchecked")
+    public static<E extends Key> ArrayKey<E> empty() {
+        return (ArrayKey<E>) EMPTY;
     }
-    public static ArrayKey read(SmaliReader reader, char end) throws IOException {
+    public static<E extends Key> ArrayKey<E> create(Key ... elements) {
+        if (elements == null || elements.length == 0) {
+            return empty();
+        }
+        return new ArrayKey<>(elements);
+    }
+    public static<E extends Key> ArrayKey<E> read(SmaliReader reader, char end) throws IOException {
         return create(readElements(reader, end));
     }
     public static Key[] readElements(SmaliReader reader, char end) throws IOException {
@@ -240,7 +237,7 @@ public class ArrayKey extends KeyList<Key> {
         throw new SmaliParseException("Unexpected value ", reader);
     }
 
-    public static ArrayKey parse(String text) {
+    public static<E extends Key> ArrayKey<E> parse(String text) {
         //FIXME
         throw new RuntimeException("ArrayKey.parse not implemented");
     }

@@ -25,9 +25,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class ArrayValueKey extends ArrayKey {
+public class ArrayValueKey extends ArrayKey<Key> {
 
-    public static final ArrayValueKey EMPTY;
+    private static final ArrayValueKey EMPTY;
 
     static {
         EMPTY = new ArrayValueKey(EMPTY_ARRAY);
@@ -131,17 +131,23 @@ public class ArrayValueKey extends ArrayKey {
     public ArrayValueKey sort(Comparator<? super Key> comparator) {
         return (ArrayValueKey) super.sort(comparator);
     }
+    @Override
+    public ArrayValueKey clearDuplicates() {
+        return (ArrayValueKey) super.clearDuplicates();
+    }
+    @Override
+    public ArrayValueKey clearDuplicates(Comparator<? super Key> comparator) {
+        return (ArrayValueKey) super.clearDuplicates(comparator);
+    }
+
+    @Override
+    public ArrayValueKey replaceKey(Key search, Key replace) {
+        return (ArrayValueKey) super.replaceKey(search, replace);
+    }
 
     @Override
     ArrayValueKey newInstance(Key[] elements) {
-        return create(elements);
-    }
-    @Override
-    Key[] newArray(int length) {
-        if (length == 0) {
-            return EMPTY_ARRAY;
-        }
-        return new Key[length];
+        return of(elements);
     }
 
     @Override
@@ -170,25 +176,28 @@ public class ArrayValueKey extends ArrayKey {
     }
 
 
-    public static ArrayValueKey create(Key ... elements) {
+    public static ArrayValueKey empty() {
+        return EMPTY;
+    }
+    public static ArrayValueKey of(Key ... elements) {
         if (elements == null || elements.length == 0) {
-            return EMPTY;
+            return empty();
         }
         return new ArrayValueKey(elements);
     }
-    public static ArrayValueKey create(ArrayKey arrayKey) {
+    public static ArrayValueKey create(ArrayKey<?> arrayKey) {
         if (arrayKey instanceof ArrayValueKey) {
             return (ArrayValueKey) arrayKey;
         }
         if (arrayKey.isEmpty()) {
-            return EMPTY;
+            return empty();
         }
-        return create(arrayKey.getElements());
+        return of(arrayKey.getElements());
     }
 
     public static ArrayValueKey read(SmaliReader reader) throws IOException {
         SmaliParseException.expect(reader, '{');
-        return create(readElements(reader, '}'));
+        return of(readElements(reader, '}'));
     }
 
     public static ArrayValueKey parse(String text) {
@@ -197,30 +206,30 @@ public class ArrayValueKey extends ArrayKey {
     }
 
     public static ArrayValueKey of(String[] values) {
-        return create(ArrayKeyHelper.toStringKeys(values));
+        return of(ArrayKeyHelper.toStringKeys(values));
     }
     public static ArrayValueKey of(byte[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(short[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(int[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(long[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(float[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(double[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(char[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
     public static ArrayValueKey of(boolean[] values) {
-        return create(ArrayKeyHelper.toPrimitiveKeys(values));
+        return of(ArrayKeyHelper.toPrimitiveKeys(values));
     }
 }

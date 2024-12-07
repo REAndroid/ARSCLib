@@ -69,7 +69,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     @Override
     public void clearAnnotations() {
-        writeAnnotation(AnnotationSetKey.EMPTY);
+        writeAnnotation(AnnotationSetKey.empty());
     }
     private boolean hasAnnotationSetBlocks() {
         return getAnnotationItemBlocks().hasNext();

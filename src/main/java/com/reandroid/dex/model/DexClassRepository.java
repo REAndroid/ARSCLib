@@ -76,13 +76,6 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         }
         return result;
     }
-    /**
-     * Use getDexClass(TypeKey)
-     * */
-    @Deprecated
-    default DexClass getDexClass(String name) {
-        return getDexClass(TypeKey.create(name));
-    }
 
     default DexClass getDexClass(TypeKey typeKey) {
         return searchClass(modules(), typeKey);

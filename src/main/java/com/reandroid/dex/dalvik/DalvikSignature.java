@@ -35,7 +35,7 @@ public class DalvikSignature extends DalvikAnnotation {
     public ArrayValueKey getArrayKey() {
         ArrayValueKey key = (ArrayValueKey) getKey().getValue(Key.DALVIK_value);
         if (key == null) {
-            key = ArrayValueKey.EMPTY;
+            key = ArrayValueKey.empty();
         }
         return key;
     }
@@ -76,7 +76,7 @@ public class DalvikSignature extends DalvikAnnotation {
             annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_Signature,
-                    AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.EMPTY)
+                    AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.empty())
                     )
             );
         }

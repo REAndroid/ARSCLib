@@ -30,9 +30,9 @@ public class CallSiteKey implements Key {
     private final MethodHandleKey methodHandle;
     private final StringKey name;
     private final ProtoKey proto;
-    private final ArrayKey arguments;
+    private final ArrayKey<?> arguments;
 
-    public CallSiteKey(MethodHandleKey methodHandle, StringKey name, ProtoKey proto, ArrayKey arguments) {
+    public CallSiteKey(MethodHandleKey methodHandle, StringKey name, ProtoKey proto, ArrayKey<?> arguments) {
         this.methodHandle = methodHandle;
         this.name = name;
         this.proto = proto;
@@ -48,11 +48,11 @@ public class CallSiteKey implements Key {
     public ProtoKey getProto() {
         return proto;
     }
-    public ArrayKey getArguments() {
+    public ArrayKey<?> getArguments() {
         return arguments;
     }
-    public ArrayKey toArrayKey() {
-        ArrayKey arguments = getArguments();
+    public ArrayKey<?> toArrayKey() {
+        ArrayKey<?> arguments = getArguments();
         int argumentsLength = arguments.size();
         Key[] elements = new Key[3 + arguments.size()];
         elements[0] = getMethodHandle();
@@ -81,7 +81,7 @@ public class CallSiteKey implements Key {
         }
         return new CallSiteKey(getMethodHandle(), getName(), proto, getArguments());
     }
-    public CallSiteKey changeArguments(ArrayValueKey arguments) {
+    public CallSiteKey changeArguments(ArrayKey<?> arguments) {
         if (arguments.equals(getArguments())) {
             return this;
         }
@@ -94,7 +94,7 @@ public class CallSiteKey implements Key {
         getName().append(writer);
         writer.append(", ");
         getProto().append(writer);
-        ArrayKey arguments = getArguments();
+        ArrayKey<?> arguments = getArguments();
         int size = arguments.size();
         for (int i = 0; i < size; i++) {
             if (i != 0) {
@@ -156,7 +156,7 @@ public class CallSiteKey implements Key {
         builder.append(getName());
         builder.append(", ");
         builder.append(getProto());
-        ArrayKey arguments = getArguments();
+        ArrayKey<?> arguments = getArguments();
         if (!arguments.isEmpty()) {
             builder.append(", ");
             builder.append(arguments.toString(", "));
@@ -182,7 +182,7 @@ public class CallSiteKey implements Key {
         ProtoKey protoKey = ProtoKey.read(reader);
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, ',');
-        ArrayKey arguments = ArrayKey.read(reader, ')');
+        ArrayKey<?> arguments = ArrayKey.read(reader, ')');
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, '@');
         MethodHandleKey methodHandleKey = MethodHandleKey.read(MethodHandleType.INVOKE_STATIC, reader);

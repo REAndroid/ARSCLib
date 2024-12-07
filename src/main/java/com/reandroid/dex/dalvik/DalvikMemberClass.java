@@ -89,13 +89,13 @@ public class DalvikMemberClass extends DalvikAnnotation {
     public ArrayValueKey getArray() {
         ArrayValueKey arrayValueKey = (ArrayValueKey) readValue(Key.DALVIK_value);
         if (arrayValueKey == null) {
-            arrayValueKey = ArrayValueKey.EMPTY;
+            arrayValueKey = ArrayValueKey.empty();
         }
         return arrayValueKey;
     }
     public void setArray(ArrayValueKey array) {
         if (array == null) {
-            array = ArrayValueKey.EMPTY;
+            array = ArrayValueKey.empty();
         }
         writeValue(Key.DALVIK_value, array);
     }
@@ -116,7 +116,7 @@ public class DalvikMemberClass extends DalvikAnnotation {
             annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_MemberClass,
-                    AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.EMPTY)
+                    AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.empty())
                     )
             );
         }

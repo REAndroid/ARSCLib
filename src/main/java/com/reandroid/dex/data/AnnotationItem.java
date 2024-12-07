@@ -227,9 +227,11 @@ public class AnnotationItem extends DataItem
         typeId.setKey(typeKey);
     }
 
-    public void replaceKeys(Key search, Key replace){
-        for(AnnotationElement element : this){
-            element.replaceKeys(search, replace);
+    public void replaceKeys(Key search, Key replace) {
+        AnnotationItemKey itemKey = getKey();
+        AnnotationItemKey update = itemKey.replaceKey(search, replace);
+        if (itemKey != update) {
+            setKey(update);
         }
     }
     public Iterator<IdItem> usedIds(){
@@ -373,9 +375,9 @@ public class AnnotationItem extends DataItem
         public AnnotationSetKey getAnnotation() {
             AnnotationItemKey key = getItemKey();
             if (key != null) {
-                return AnnotationSetKey.create(new AnnotationItemKey[]{key});
+                return AnnotationSetKey.of(key);
             }
-            return AnnotationSetKey.EMPTY;
+            return AnnotationSetKey.empty();
         }
         @Override
         public void setAnnotation(AnnotationSetKey annotationSet) {

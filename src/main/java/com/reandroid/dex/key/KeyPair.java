@@ -16,13 +16,13 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 public class KeyPair<T1 extends Key, T2 extends Key> implements Comparable<KeyPair<Key, Key>>{
 
@@ -90,6 +90,14 @@ public class KeyPair<T1 extends Key, T2 extends Key> implements Comparable<KeyPa
         }
         return i;
     }
+
+    public boolean equalsBoth(KeyPair<?, ?> keyPair) {
+        if (this == keyPair) {
+            return true;
+        }
+        return ObjectsUtil.equals(getFirst(), keyPair.getFirst()) &&
+                ObjectsUtil.equals(getSecond(), keyPair.getSecond());
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -99,16 +107,12 @@ public class KeyPair<T1 extends Key, T2 extends Key> implements Comparable<KeyPa
             return false;
         }
         KeyPair<?, ?> keyPair = (KeyPair<?, ?>) obj;
-        return Objects.equals(getFirst(), keyPair.getFirst());
+        return ObjectsUtil.equals(getFirst(), keyPair.getFirst());
     }
 
     @Override
     public int hashCode() {
-        T1 first = getFirst();
-        if(first != null){
-            return first.hashCode();
-        }
-        return 0;
+        return ObjectsUtil.hash(getFirst());
     }
     @Override
     public String toString() {

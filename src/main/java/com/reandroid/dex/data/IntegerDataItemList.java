@@ -140,7 +140,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         return referenceList.removeIf(reference -> filter.test(reference.getItem()));
     }
     void removeNulls() {
-        removeIf(item -> item == null);
+        referenceList.removeIf(reference -> reference.getItem() == null);
     }
     @Override
     public Iterator<T> iterator() {
@@ -157,6 +157,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         return !iterator().hasNext();
     }
     public boolean sort(Comparator<? super T> comparator) {
+        removeNulls();
         return referenceList.sort((ref1, ref2) -> comparator.compare(ref1.getItem(), ref2.getItem()));
     }
 

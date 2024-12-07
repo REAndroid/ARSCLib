@@ -22,6 +22,7 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
@@ -135,9 +136,15 @@ public class ParameterisedTypeKey implements Key {
     }
 
     public Iterator<TypeKey> getTypes() {
-        return CombiningIterator.singleTwo(getInnerClassKey(),
+        Iterator<TypeKey> iterator = CombiningIterator.singleTwo(getInnerClassKey(),
                 getProtoKey().getTypes(),
                 SingleIterator.of(getNameTypeKey()));
+        return new IterableIterator<TypeKey, TypeKey>(iterator) {
+            @Override
+            public Iterator<TypeKey> iterator(TypeKey element) {
+                return element.mentionedKeys();
+            }
+        };
     }
 
     void buildSignature(SignatureStringsBuilder builder) {

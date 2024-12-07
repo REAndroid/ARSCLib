@@ -39,11 +39,14 @@ public class DalvikInnerClass extends DalvikAnnotation {
         writeValue(Key.DALVIK_accessFlags, PrimitiveKey.of(flags));
     }
     public String getName() {
-        Key key = getKey().getValue(Key.DALVIK_name);
+        Key key = readValue(Key.DALVIK_name);
         if (key instanceof StringKey) {
             return ((StringKey) key).getString();
         }
         return null;
+    }
+    public boolean hasName() {
+        return readValue(Key.DALVIK_name) instanceof StringKey;
     }
     public void setName(String name) {
         Key key = name == null? NullValueKey.INSTANCE : StringKey.create(name);

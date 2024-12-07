@@ -19,6 +19,7 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
@@ -26,13 +27,13 @@ import java.util.*;
 
 public abstract class Rename<T extends Key, R extends Key> {
 
-    private final Set<KeyPair<T, R>> keyPairSet;
-    private final Set<KeyPair<R, T>> flippedSet;
+    private final Map<KeyPair<?, ?>, KeyPair<T, R>> keyPairMap;
+    private final Map<KeyPair<?, ?>, KeyPair<T, R>> flippedKeyMap;
     private final Set<KeyPair<?, ?>> badKeys;
 
-    public Rename(){
-        this.keyPairSet = new HashSet<>();
-        this.flippedSet = new HashSet<>();
+    public Rename() {
+        this.keyPairMap = new HashMap<>();
+        this.flippedKeyMap = new HashMap<>();
         this.badKeys = new HashSet<>();
     }
 
@@ -51,37 +52,81 @@ public abstract class Rename<T extends Key, R extends Key> {
         }
     }
     private void addToSet(KeyPair<T, R> keyPair) {
-        if(keyPair != null && keyPair.isValid() && !this.badKeys.contains(keyPair)){
-            KeyPair<R, T> flip = keyPair.flip();
-            if (flippedSet.contains(flip) || keyPairSet.contains(flip)
-                    || keyPairSet.contains(keyPair) || flippedSet.contains(keyPair)) {
-                badKeys.add(keyPair);
-                badKeys.add(flip);
-                keyPairSet.remove(keyPair);
-                keyPairSet.remove(flip);
+        if (keyPair == null || !keyPair.isValid()) {
+            return;
+        }
+        boolean bad = false;
+        if (badKeys.contains(keyPair)) {
+            bad = true;
+        }
+        KeyPair<R, T> flip = keyPair.flip();
+        if (badKeys.contains(flip)) {
+            if (bad) {
                 return;
             }
-            this.keyPairSet.add(keyPair);
-            flippedSet.add(flip);
+            bad = true;
+        }
+        if (!bad) {
+            KeyPair<T, R> exist = keyPairMap.get(keyPair);
+            if (exist == null) {
+                exist = flippedKeyMap.get(flip);
+                if (exist != null) {
+                    bad = true;
+                }
+            } else {
+                if (keyPair.equalsBoth(exist)) {
+                    return;
+                }
+                bad = true;
+            }
+        }
+        if (bad) {
+            addBadKey(keyPair, flip);
+        } else {
+            keyPairMap.put(keyPair, keyPair);
+            flippedKeyMap.put(flip, keyPair);
         }
     }
-    public int size(){
-        return keyPairSet.size();
+    private void addBadKey(KeyPair<T, R> keyPair, KeyPair<R, T> flip) {
+        badKeys.add(keyPair);
+        badKeys.add(flip);
+        KeyPair<T, R> p1 = keyPairMap.remove(keyPair);
+        if (p1 == null) {
+            p1 = keyPairMap.remove(flip);
+        }
+        KeyPair<T, R> p2 = flippedKeyMap.remove(flip);
+        if (p2 == null) {
+            p2 = flippedKeyMap.remove(keyPair);
+        }
+        if (p1 != null && !p1.equalsBoth(keyPair)) {
+            addBadKey(p1, p1.flip());
+        }
+        if (p2 != null && !p2.equalsBoth(keyPair)) {
+            addBadKey(p2, p2.flip());
+        }
     }
-    public List<KeyPair<T, R>> sortedList(){
-        List<KeyPair<T, R>> results = new ArrayCollection<>(keyPairSet);
-        results.sort(CompareUtil.getComparableComparator());
+    public int size() {
+        return keyPairMap.size();
+    }
+    public List<KeyPair<T, R>> toList() {
+        return toList(CompareUtil.getComparableComparator());
+    }
+    public List<KeyPair<T, R>> toList(Comparator<KeyPair<? super T, ? super R>> comparator) {
+        List<KeyPair<T, R>> results = new ArrayCollection<>(getKeyPairSet());
+        if (comparator != null) {
+            results.sort(comparator);
+        }
         return results;
     }
 
     public abstract int apply(DexClassRepository classRepository);
 
     public Set<KeyPair<T, R>> getKeyPairSet() {
-        return keyPairSet;
+        return ObjectsUtil.cast(keyPairMap.keySet());
     }
 
     @Override
     public String toString() {
-        return StringsUtil.join(sortedList(), '\n');
+        return StringsUtil.join(toList(), '\n');
     }
 }

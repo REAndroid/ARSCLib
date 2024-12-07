@@ -27,17 +27,23 @@ import java.util.function.Predicate;
 
 public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
 
-    private final T[] elements;
-    private final T[] sortedElements;
+    static final Key[] EMPTY_ARRAY = new Key[0];
+
+    private final Key[] elements;
+    private final Key[] sortedElements;
     private int mHash;
 
-    public KeyList(T[] elements) {
+    public KeyList(Key[] elements, boolean sorted) {
         this.elements = elements;
-        this.sortedElements = initializeSortedElements(elements);
+        this.sortedElements = sorted ? sortElements(elements) : null;
+    }
+    public KeyList(Key[] elements) {
+        this(elements, false);
     }
 
+    @SuppressWarnings("unchecked")
     public T get(int i) {
-        return elements[i];
+        return (T) elements[i];
     }
     public int size() {
         return elements.length;
@@ -57,7 +63,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
     }
 
     public int indexOf(Object key) {
-        T[] elements = this.elements;
+        Key[] elements = this.elements;
         int length = elements.length;
         for (int i = 0; i < length; i++) {
             if (ObjectsUtil.equals(elements[i], key)) {
@@ -67,7 +73,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return -1;
     }
     public boolean contains(Object item) {
-        T[] elements = this.elements;
+        Key[] elements = this.elements;
         int length = elements.length;
         for (int i = 0; i < length; i++) {
             if (ObjectsUtil.equals(elements[i], item)) {
@@ -80,14 +86,14 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         if (ObjectsUtil.equals(item, get(i))) {
             return this;
         }
-        T[] elements = this.elements.clone();
+        Key[] elements = this.elements.clone();
         elements[i] = item;
         return newInstance(elements);
     }
     public KeyList<T> add(T item) {
-        T[] elements = this.elements;
+        Key[] elements = this.elements;
         int length = elements.length;
-        T[] result = newArray(length + 1);
+        Key[] result = newArray(length + 1);
         for (int i = 0; i < length; i++) {
             result[i] = elements[i];
         }
@@ -101,7 +107,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         if (index < 0) {
             return this;
         }
-        T[] elements = this.elements;
+        Key[] elements = this.elements;
         int length = elements.length;
         if (index >= length) {
             return this;
@@ -109,7 +115,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         if (length == 1) {
             return newInstance(newArray(0));
         }
-        T[] result = newArray(length - 1);
+        Key[] result = newArray(length - 1);
         int j = 0;
         for (int i = 0; i < length; i++) {
             if (i != index) {
@@ -119,16 +125,17 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         }
         return newInstance(result);
     }
+    @SuppressWarnings("unchecked")
     public KeyList<T> removeIf(Predicate<? super T> predicate) {
-        T[] elements = this.elements;
+        Key[] elements = this.elements;
         int length = elements.length;
         if (length == 0) {
             return this;
         }
-        T[] filtered = null;
+        Key[] filtered = null;
         int j = 0;
         for (int i = 0; i < length; i++) {
-            T item = elements[i];
+            T item = (T) elements[i];
             if (predicate.test(item)) {
                 if (filtered == null) {
                     filtered = elements.clone();
@@ -142,7 +149,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         if (filtered == null) {
             return this;
         }
-        T[] result = newArray(j);
+        Key[] result = newArray(j);
         length = result.length;
         for (int i = 0; i < length; i++) {
             result[i] = filtered[i];
@@ -150,39 +157,73 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return newInstance(result);
     }
 
+    @SuppressWarnings("unchecked")
     public T getDuplicate() {
-        T[] elements = getSortedElements();
+        Key[] elements = getSortedElements();
         int length = elements.length;
         if (length < 2) {
             return null;
         }
-        T last = elements[0];
+        Key last = elements[0];
         for (int i = 1; i < length; i++) {
-            T element = elements[i];
+            Key element = elements[i];
             if (ObjectsUtil.equals(last, element)) {
-                return element;
+                return (T) element;
             }
             last = element;
         }
         return null;
     }
+    public KeyList<T> clearDuplicates() {
+        return clearDuplicates(CompareUtil.getComparableComparator());
+    }
+    public KeyList<T> clearDuplicates(Comparator<? super T> comparator) {
+        Key[] elements = getSortedElements();
+        if (elements.length < 2) {
+            return this;
+        }
+        elements = sortElements(elements, comparator);
+        if (elements == null) {
+            elements = getSortedElements();
+        }
+        Comparator<Key> c = ObjectsUtil.cast(comparator);
+        int length = elements.length;
+        Key previous = elements[0];
+        Key[] results = null;
+        for (int i = 1; i < length; i++) {
+            Key element = elements[i];
+            if (c.compare(previous, element) == 0) {
+                if (results == null) {
+                    results = elements.clone();
+                }
+                results[i] = null;
+            }
+            previous = element;
+        }
+        if (results == null) {
+            return this;
+        }
+        results = removeNulls(results);
+        return newInstance(results);
+    }
     public KeyList<T> sorted() {
-        T[] elements = this.sortedElements;
+        Key[] elements = this.sortedElements;
         if (elements == null) {
             return this;
         }
         return newInstance(elements);
     }
+    @SuppressWarnings("unchecked")
     public KeyList<T> sort(Comparator<? super T> comparator) {
-        T[] elements = this.elements;
+        Key[] elements = this.elements;
         int length = elements.length;
         if (length < 2) {
             return this;
         }
         boolean sortRequired = false;
-        T previous = elements[0];
+        T previous = (T) elements[0];
         for (int i = 1; i < length; i++) {
-            T item = elements[i];
+            T item = (T) elements[i];
             if (comparator.compare(previous, item) > 0) {
                 sortRequired = true;
                 break;
@@ -196,22 +237,24 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         ArraySort.sort(elements, comparator);
         return newInstance(elements);
     }
-    private T[] getSortedElements() {
-        T[] elements = this.sortedElements;
+    private Key[] getSortedElements() {
+        Key[] elements = this.sortedElements;
         if (elements == null) {
             elements = this.elements;
         }
         return elements;
     }
-    T[] initializeSortedElements(T[] elements) {
-        return null;
-    }
 
-    T[] getElements() {
+    Key[] getElements() {
         return elements;
     }
-    abstract KeyList<T> newInstance(T[] elements);
-    abstract T[] newArray(int length);
+    abstract KeyList<T> newInstance(Key[] elements);
+    private Key[] newArray(int length) {
+        if (length == 0) {
+            return EMPTY_ARRAY;
+        }
+        return new Key[length];
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -254,10 +297,10 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
     }
 
 
-    int compareElements(KeyList<T> keyList) {
+    int compareElements(KeyList<?> keyList) {
         return CompareUtil.compare(getSortedElements(), keyList.getSortedElements());
     }
-    boolean equalsElements(KeyList<T> keyList) {
+    boolean equalsElements(KeyList<?> keyList) {
         return ObjectsUtil.equalsArray(this.getSortedElements(), keyList.getSortedElements());
     }
     int getHashCode() {
@@ -292,5 +335,63 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
             return key1.isEmpty();
         }
         return key1.equalsElements(key2);
+    }
+
+    private static<T extends Key> T[] sortElements(T[] elements) {
+        return sortElements(elements, CompareUtil.getComparableComparator());
+    }
+
+    private static<T extends Key, E extends Key> T[] sortElements(T[] elements, Comparator<? super E> comparator) {
+        if (elements == null || elements.length < 2) {
+            return null;
+        }
+        boolean needsSort = false;
+        int length = elements.length;
+        Key previous  = elements[0];
+        Comparator<Key> c = ObjectsUtil.cast(comparator);
+        for (int i = 1; i < length; i ++) {
+            Key next = elements[i];
+            if (c.compare(previous, next) > 0) {
+                needsSort = true;
+                break;
+            }
+            previous = next;
+        }
+        if (!needsSort) {
+            return null;
+        }
+        elements = elements.clone();
+        ArraySort.sort(elements, c);
+        return elements;
+    }
+
+    static Key[] removeNulls(Key[] elements) {
+        if (elements == null || elements.length == 0) {
+            return EMPTY_ARRAY;
+        }
+        int length = elements.length;
+        int size = 0;
+        for (int i = 0; i < length; i ++) {
+            Key key = elements[i];
+            if (key != null) {
+                size ++;
+            }
+        }
+        if (size == length) {
+            return elements;
+        }
+        if (size == 0) {
+            return EMPTY_ARRAY;
+        }
+        Key[] results = new Key[size];
+        int j = 0;
+        for (int i = 0; i < length; i ++) {
+            Key key = elements[i];
+            if (key != null) {
+                results[j] = key;
+                j ++;
+            }
+        }
+        return results;
     }
 }

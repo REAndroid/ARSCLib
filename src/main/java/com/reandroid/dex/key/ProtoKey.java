@@ -206,12 +206,12 @@ public class ProtoKey implements Key {
             return null;
         }
         if (typeListKey == null) {
-            typeListKey = TypeListKey.EMPTY;
+            typeListKey = TypeListKey.empty();
         }
         return new ProtoKey(typeListKey, returnType);
     }
     public static ProtoKey emptyParameters(TypeKey returnType) {
-        return create(TypeListKey.EMPTY, returnType);
+        return create(TypeListKey.empty(), returnType);
     }
 
     public static ProtoKey parse(String text) {

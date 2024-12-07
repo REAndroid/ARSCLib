@@ -90,7 +90,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public AnnotationSetKey getClassAnnotation() {
         AnnotationSetKey key = (AnnotationSetKey) header.classAnnotation.getKey();
         if (key == null) {
-            key = AnnotationSetKey.EMPTY;
+            key = AnnotationSetKey.empty();
         }
         return key;
     }

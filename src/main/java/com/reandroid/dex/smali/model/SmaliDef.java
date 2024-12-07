@@ -58,7 +58,7 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
         if (annotationSet != null) {
             return annotationSet.getKey();
         }
-        return AnnotationSetKey.EMPTY;
+        return AnnotationSetKey.empty();
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotation) {

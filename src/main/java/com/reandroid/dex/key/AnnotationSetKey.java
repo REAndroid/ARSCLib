@@ -17,29 +17,21 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.ArraySort;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key {
+public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
 
-    private static final AnnotationItemKey[] EMPTY_ARRAY;
-    public static final AnnotationSetKey EMPTY;
+    private static final AnnotationSetKey EMPTY = new AnnotationSetKey(EMPTY_ARRAY);
 
-    static {
-        AnnotationItemKey[] emptyArray = new AnnotationItemKey[0];
-        EMPTY_ARRAY = emptyArray;
-        EMPTY = new AnnotationSetKey(emptyArray);
-    }
-
-    private AnnotationSetKey(AnnotationItemKey[] elements) {
-        super(elements);
+    private AnnotationSetKey(Key[] elements) {
+        super(elements, true);
     }
 
     public Iterator<TypeKey> getTypes() {
@@ -188,39 +180,18 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
     public AnnotationSetKey sorted() {
         return (AnnotationSetKey) super.sorted();
     }
+    @Override
+    public AnnotationSetKey clearDuplicates() {
+        return (AnnotationSetKey) super.clearDuplicates();
+    }
+    @Override
+    public AnnotationSetKey clearDuplicates(Comparator<? super AnnotationItemKey> comparator) {
+        return (AnnotationSetKey) super.clearDuplicates(comparator);
+    }
 
     @Override
-    AnnotationSetKey newInstance(AnnotationItemKey[] elements) {
-        return create(elements);
-    }
-    @Override
-    AnnotationItemKey[] newArray(int length) {
-        if (length == 0) {
-            return EMPTY_ARRAY;
-        }
-        return new AnnotationItemKey[length];
-    }
-    @Override
-    AnnotationItemKey[] initializeSortedElements(AnnotationItemKey[] elements) {
-        if (elements == null || elements.length < 2) {
-            return null;
-        }
-        boolean needsSort = false;
-        int length = elements.length;
-        AnnotationItemKey previous  = elements[0];
-        for (int i = 1; i < length; i ++) {
-            AnnotationItemKey next = elements[i];
-            if (CompareUtil.compare(previous, next) > 0) {
-                needsSort = true;
-                break;
-            }
-        }
-        if (!needsSort) {
-            return null;
-        }
-        elements = elements.clone();
-        ArraySort.sort(elements, CompareUtil.getComparableComparator());
-        return elements;
+    AnnotationSetKey newInstance(Key[] elements) {
+        return createKey(elements);
     }
 
     @Override
@@ -262,13 +233,19 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
         return getHashCode();
     }
 
-    public static AnnotationSetKey create(AnnotationItemKey[] elements) {
+    public static AnnotationSetKey empty() {
+        return EMPTY;
+    }
+    public static AnnotationSetKey of(AnnotationItemKey ... elements) {
+        return createKey(elements);
+    }
+    private static AnnotationSetKey createKey(Key[]  elements) {
         if (elements == null || elements.length == 0) {
-            return EMPTY;
+            return empty();
         }
         elements = removeNulls(elements);
         if (elements.length == 0) {
-            return EMPTY;
+            return empty();
         }
         return new AnnotationSetKey(elements);
     }
@@ -282,9 +259,9 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
             elements.add(key);
         }
         if (elements == null) {
-            return create((AnnotationItemKey[]) null);
+            return empty();
         }
-        return create(elements.toArrayFill(new AnnotationItemKey[elements.size()]));
+        return createKey(elements.toArrayFill(new Key[elements.size()]));
     }
     public static AnnotationSetKey combined(Iterator<AnnotationSetKey> iterator) {
         ArrayCollection<AnnotationItemKey> elements = null;
@@ -292,43 +269,17 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> implements Key 
             AnnotationSetKey key = iterator.next();
             if (!key.isEmpty()) {
                 if (elements == null) {
+                    if (!iterator.hasNext()) {
+                        return key;
+                    }
                     elements = new ArrayCollection<>();
                 }
                 elements.addAll(key.iterator());
             }
         }
         if (elements == null) {
-            return create((AnnotationItemKey[]) null);
+            return empty();
         }
-        return create(elements.toArrayFill(new AnnotationItemKey[elements.size()]));
-    }
-    private static AnnotationItemKey[] removeNulls(AnnotationItemKey[] elements) {
-        if (elements == null || elements.length == 0) {
-            return EMPTY_ARRAY;
-        }
-        int length = elements.length;
-        int size = 0;
-        for (int i = 0; i < length; i ++) {
-            AnnotationItemKey key = elements[i];
-            if (key != null) {
-                size ++;
-            }
-        }
-        if (size == length) {
-            return elements;
-        }
-        if (size == 0) {
-            return EMPTY_ARRAY;
-        }
-        AnnotationItemKey[] results = new AnnotationItemKey[size];
-        int j = 0;
-        for (int i = 0; i < length; i ++) {
-            AnnotationItemKey key = elements[i];
-            if (key != null) {
-                results[j] = key;
-                j ++;
-            }
-        }
-        return results;
+        return createKey(elements.toArrayFill(new Key[elements.size()]));
     }
 }

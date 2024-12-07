@@ -24,18 +24,17 @@ import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements Key, Iterable<AnnotationElementKey> {
 
-    private static final AnnotationElementKey[] EMPTY_ARRAY = new AnnotationElementKey[0];
-
     private final AnnotationVisibility visibility;
     private final TypeKey type;
 
-    private AnnotationItemKey(AnnotationVisibility visibility, TypeKey type, AnnotationElementKey[] elements) {
-        super(elements);
+    private AnnotationItemKey(AnnotationVisibility visibility, TypeKey type, Key[] elements) {
+        super(elements, true);
         this.visibility = visibility;
         this.type = type;
     }
@@ -53,7 +52,7 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         if (typeKey.equals(getType())) {
             return this;
         }
-        return create(getVisibility(), typeKey, getElements());
+        return createKey(getVisibility(), typeKey, getElements());
     }
     public AnnotationItemKey remove(String name) {
         return removeIf(elementKey -> ObjectsUtil.equals(elementKey.getName(), name));
@@ -87,7 +86,7 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         if (ObjectsUtil.equals(getVisibility(), visibility)) {
             return this;
         }
-        return create(visibility, getType(), getElements());
+        return createKey(visibility, getType(), getElements());
     }
     public AnnotationElementKey get(String name) {
         int size = size();
@@ -152,39 +151,18 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     public AnnotationItemKey sorted() {
         return (AnnotationItemKey) super.sorted();
     }
+    @Override
+    public AnnotationItemKey clearDuplicates() {
+        return (AnnotationItemKey) super.clearDuplicates();
+    }
+    @Override
+    public AnnotationItemKey clearDuplicates(Comparator<? super AnnotationElementKey> comparator) {
+        return (AnnotationItemKey) super.clearDuplicates(comparator);
+    }
 
     @Override
-    AnnotationItemKey newInstance(AnnotationElementKey[] elements) {
-        return create(getVisibility(), getType(), elements);
-    }
-    @Override
-    AnnotationElementKey[] newArray(int length) {
-        if (length == 0) {
-            return EMPTY_ARRAY;
-        }
-        return new AnnotationElementKey[length];
-    }
-    @Override
-    AnnotationElementKey[] initializeSortedElements(AnnotationElementKey[] elements) {
-        if (elements == null || elements.length < 2) {
-            return null;
-        }
-        boolean needsSort = false;
-        int length = elements.length;
-        AnnotationElementKey previous  = elements[0];
-        for (int i = 1; i < length; i ++) {
-            AnnotationElementKey next = elements[i];
-            if (CompareUtil.compare(previous, next) > 0) {
-                needsSort = true;
-                break;
-            }
-        }
-        if (!needsSort) {
-            return null;
-        }
-        elements = elements.clone();
-        ArraySort.sort(elements, CompareUtil.getComparableComparator());
-        return elements;
+    AnnotationItemKey newInstance(Key[] elements) {
+        return createKey(getVisibility(), getType(), elements);
     }
 
     public SmaliDirective getSmaliDirective() {
@@ -265,11 +243,13 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     }
 
     public static AnnotationItemKey create(AnnotationVisibility visibility, TypeKey typeKey, AnnotationElementKey ... elements) {
+        return createKey(visibility, typeKey, elements);
+    }
+    public static AnnotationItemKey createKey(AnnotationVisibility visibility, TypeKey typeKey, Key[] elements) {
         if (typeKey == null) {
             return null;
         }
-        elements = removeNulls(elements);
-        return new AnnotationItemKey(visibility, typeKey, elements);
+        return new AnnotationItemKey(visibility, typeKey, removeNulls(elements));
     }
 
     public static AnnotationItemKey read(SmaliReader reader) throws IOException {
@@ -279,35 +259,5 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     public static AnnotationItemKey parse(String text) {
         //FIXME
         throw new RuntimeException("AnnotationItemKey.parse not implemented");
-    }
-
-    private static AnnotationElementKey[] removeNulls(AnnotationElementKey[] elements) {
-        if (elements == null || elements.length == 0) {
-            return EMPTY_ARRAY;
-        }
-        int length = elements.length;
-        int size = 0;
-        for (int i = 0; i < length; i ++) {
-            AnnotationElementKey key = elements[i];
-            if (key != null) {
-                size ++;
-            }
-        }
-        if (size == length) {
-            return elements;
-        }
-        if (size == 0) {
-            return EMPTY_ARRAY;
-        }
-        AnnotationElementKey[] results = new AnnotationElementKey[size];
-        int j = 0;
-        for (int i = 0; i < length; i ++) {
-            AnnotationElementKey key = elements[i];
-            if (key != null) {
-                results[j] = key;
-                j ++;
-            }
-        }
-        return results;
     }
 }

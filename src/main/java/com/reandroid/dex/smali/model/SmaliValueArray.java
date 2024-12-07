@@ -42,7 +42,7 @@ public class SmaliValueArray extends SmaliValue implements Iterable<SmaliValue>{
         for (int i = 0; i < size; i++) {
             elements[i] = get(i).getKey();
         }
-        return ArrayValueKey.create(elements);
+        return ArrayValueKey.of(elements);
     }
     @Override
     public void setKey(Key key) {

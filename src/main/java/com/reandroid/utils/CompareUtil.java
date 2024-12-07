@@ -15,8 +15,6 @@
  */
 package com.reandroid.utils;
 
-import com.reandroid.utils.collection.ArraySort;
-
 import java.util.Comparator;
 import java.util.function.Function;
 
@@ -24,13 +22,6 @@ public class CompareUtil {
 
     public static<T, E extends Comparable<E>> Comparator<T> computeComparator(Function<? super T, E> function) {
         return (t1, t2) -> compare(function.apply(t1), function.apply(t2));
-    }
-    @Deprecated
-    public static<T extends Comparable<T>> void sort(T[] items) {
-        if(items == null || items.length < 2){
-            return;
-        }
-        ArraySort.sort(items, getComparableComparator());
     }
     public static<T extends Comparable<? super T>> int compare(T[] items1, T[] items2) {
         if(items1 == items2){
@@ -118,6 +109,10 @@ public class CompareUtil {
     }
 
     @SuppressWarnings("unchecked")
+    public static <E, T extends Comparable<E>> Comparator<T> getInverseComparator(){
+        return (Comparator<T>) INVERSE_COMPARATOR;
+    }
+    @SuppressWarnings("unchecked")
     public static <E, T extends Comparable<E>> Comparator<T> getComparableComparator(){
         return (Comparator<T>) COMPARATOR;
     }
@@ -134,6 +129,13 @@ public class CompareUtil {
         @Override
         public int compare(Comparable comparable1, Comparable comparable2) {
             return CompareUtil.compare(comparable1, comparable2);
+        }
+    };
+    @SuppressWarnings("unchecked")
+    private static final Comparator<Comparable<?>> INVERSE_COMPARATOR = new Comparator<Comparable<?>>() {
+        @Override
+        public int compare(Comparable comparable1, Comparable comparable2) {
+            return CompareUtil.compare(comparable2, comparable1);
         }
     };
 }

@@ -94,7 +94,7 @@ public class SmaliMethodParameter extends SmaliDebug implements MethodParameterP
         if (annotationSet != null) {
             return annotationSet.getKey();
         }
-        return AnnotationSetKey.EMPTY;
+        return AnnotationSetKey.empty();
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotation) {

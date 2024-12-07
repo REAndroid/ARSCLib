@@ -145,7 +145,7 @@ public class StaticFieldDefArray extends FieldDefArray {
             elements[i] = key;
             fieldDef.cachedStaticValue(null);
         }
-        return ArrayValueKey.create(elements);
+        return ArrayValueKey.of(elements);
     }
     private int lastCachedKeyIndex() {
         int result = -1;

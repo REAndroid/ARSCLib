@@ -436,7 +436,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         getId().setInterfaces(typeListKey);
     }
     public void clearInterfaces() {
-        getId().setInterfaces(TypeListKey.EMPTY);
+        getId().setInterfaces(TypeListKey.empty());
     }
     public void clearDebug(){
         Iterator<DexMethod> iterator = getDeclaredMethods();
@@ -446,14 +446,11 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     }
     public void fixDalvikInnerClassName() {
         DalvikInnerClass dalvikInnerClass = DalvikInnerClass.of(this);
-        if (dalvikInnerClass == null || dalvikInnerClass.getName() == null) {
-            return;
-        }
-        TypeKey typeKey = getKey();
-        if (!typeKey.isInnerName()) {
-            dalvikInnerClass.setName(null);
-        } else {
-            dalvikInnerClass.setName(typeKey.getSimpleInnerName());
+        if (dalvikInnerClass != null && dalvikInnerClass.hasName()) {
+            String inner = getKey().getSimpleInnerName();
+            if (inner != null) {
+                dalvikInnerClass.setName(inner);
+            }
         }
     }
     public Set<Key> fixAccessibility(){

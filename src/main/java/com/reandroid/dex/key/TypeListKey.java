@@ -25,16 +25,9 @@ import java.io.IOException;
 
 public class TypeListKey extends KeyList<TypeKey> {
 
-    public static final TypeListKey EMPTY;
-    private static final TypeKey[] EMPTY_ARRAY;
+    private static final TypeListKey EMPTY = new TypeListKey(EMPTY_ARRAY);
 
-    static {
-        TypeKey[] emptyArray = new TypeKey[0];
-        EMPTY_ARRAY = emptyArray;
-        EMPTY = new TypeListKey(emptyArray);
-    }
-
-    private TypeListKey(TypeKey[] keys) {
+    private TypeListKey(Key[] keys) {
         super(keys);
     }
 
@@ -52,15 +45,8 @@ public class TypeListKey extends KeyList<TypeKey> {
     }
 
     @Override
-    TypeListKey newInstance(TypeKey[] elements) {
+    TypeListKey newInstance(Key[] elements) {
         return TypeListKey.create(elements);
-    }
-    @Override
-    TypeKey[] newArray(int length) {
-        if (length == 0) {
-            return EMPTY_ARRAY;
-        }
-        return new TypeKey[length];
     }
 
     @Override
@@ -117,10 +103,13 @@ public class TypeListKey extends KeyList<TypeKey> {
         return '(' + StringsUtil.join(iterator(), null) + ')';
     }
 
-    public static TypeListKey create(TypeKey ... keys) {
+    public static TypeListKey empty() {
+        return EMPTY;
+    }
+    public static TypeListKey create(Key ... keys) {
         keys = removeNulls(keys);
         if (keys == EMPTY_ARRAY) {
-            return EMPTY;
+            return empty();
         }
         return new TypeListKey(keys);
     }
@@ -140,7 +129,7 @@ public class TypeListKey extends KeyList<TypeKey> {
         }
         SmaliParseException.expect(reader, ')');
         if (keys == null) {
-            return EMPTY;
+            return empty();
         }
         return create(keys.toArrayFill(new TypeKey[keys.size()]));
     }
@@ -150,7 +139,7 @@ public class TypeListKey extends KeyList<TypeKey> {
     }
     public static TypeListKey parseParameters(String text, int start, int end) {
         if (end == start) {
-            return EMPTY;
+            return empty();
         }
         if (start > end) {
             return null;
@@ -165,34 +154,5 @@ public class TypeListKey extends KeyList<TypeKey> {
             start = start + typeKey.getTypeName().length();
         }
         return create(results.toArrayFill(new TypeKey[results.size()]));
-    }
-    private static TypeKey[] removeNulls(TypeKey[] elements) {
-        if (elements == null || elements.length == 0) {
-            return EMPTY_ARRAY;
-        }
-        int length = elements.length;
-        int size = 0;
-        for (int i = 0; i < length; i ++) {
-            TypeKey key = elements[i];
-            if (key != null) {
-                size ++;
-            }
-        }
-        if (size == length) {
-            return elements;
-        }
-        if (size == 0) {
-            return EMPTY_ARRAY;
-        }
-        TypeKey[] results = new TypeKey[size];
-        int j = 0;
-        for (int i = 0; i < length; i ++) {
-            TypeKey key = elements[i];
-            if (key != null) {
-                results[j] = key;
-                j ++;
-            }
-        }
-        return results;
     }
 }

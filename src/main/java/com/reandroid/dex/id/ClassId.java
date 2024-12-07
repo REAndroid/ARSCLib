@@ -101,7 +101,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         if (directory != null) {
             return directory.getClassAnnotation();
         }
-        return AnnotationSetKey.EMPTY;
+        return AnnotationSetKey.empty();
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotationSet) {
@@ -110,7 +110,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     }
     @Override
     public void clearAnnotations() {
-        writeAnnotation(AnnotationSetKey.EMPTY);
+        writeAnnotation(AnnotationSetKey.empty());
     }
     @Override
     public boolean hasAnnotations() {
@@ -189,7 +189,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     public TypeListKey getInterfacesKey() {
         TypeListKey typeListKey = interfaces.getKey();
         if (typeListKey == null) {
-            typeListKey = TypeListKey.EMPTY;
+            typeListKey = TypeListKey.empty();
         }
         return typeListKey;
     }

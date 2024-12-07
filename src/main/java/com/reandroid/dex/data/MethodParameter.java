@@ -55,7 +55,7 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
     }
     @Override
     public void clearAnnotations() {
-        writeAnnotation(AnnotationSetKey.EMPTY);
+        writeAnnotation(AnnotationSetKey.empty());
     }
 
     public void onRemoved() {
