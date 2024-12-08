@@ -17,13 +17,13 @@ package com.reandroid.dex.key;
 
 import com.reandroid.utils.collection.ArrayCollection;
 
-public class SignatureStringsBuilder {
+public class DalvikSignatureBuilder {
 
     private final ArrayCollection<StringKey> results;
     private final StringBuilder stringBuilder;
     private boolean flushMarked;
 
-    public SignatureStringsBuilder() {
+    public DalvikSignatureBuilder() {
         this.results = new ArrayCollection<>();
         this.stringBuilder = new StringBuilder();
     }
@@ -37,11 +37,6 @@ public class SignatureStringsBuilder {
     }
     public void append(String text) {
         this.stringBuilder.append(text);
-    }
-    public void append(Object obj) {
-        if (obj != null) {
-            this.stringBuilder.append(obj);
-        }
     }
 
     public StringBuilder getStringBuilder() {

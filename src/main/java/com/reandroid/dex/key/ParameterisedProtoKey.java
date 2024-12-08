@@ -91,7 +91,7 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
         return super.mentionedKeys();
     }
 
-    void buildSignature(SignatureStringsBuilder builder) {
+    void buildSignature(DalvikSignatureBuilder builder) {
         ParameterisedTypeKey returnType = getReturnType();
         if (isBlank()) {
             return;

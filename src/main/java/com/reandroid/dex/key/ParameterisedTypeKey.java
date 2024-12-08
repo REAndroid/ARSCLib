@@ -147,7 +147,7 @@ public class ParameterisedTypeKey implements Key {
         };
     }
 
-    void buildSignature(SignatureStringsBuilder builder) {
+    void buildSignature(DalvikSignatureBuilder builder) {
         ParameterName name = getParameterName();
         boolean needSemicolon = false;
         if (name != null) {
@@ -322,9 +322,7 @@ public class ParameterisedTypeKey implements Key {
         boolean isTypeUse() {
             return false;
         }
-        boolean isClassType() {
-            return false;
-        }
+
         boolean isInnerName() {
             return false;
         }
@@ -333,7 +331,7 @@ public class ParameterisedTypeKey implements Key {
             return null;
         }
 
-        public void buildSignature(SignatureStringsBuilder builder) {
+        public void buildSignature(DalvikSignatureBuilder builder) {
             appendString(builder.getStringBuilder());
         }
 
@@ -610,8 +608,7 @@ public class ParameterisedTypeKey implements Key {
             return true;
         }
 
-        @Override
-        boolean isClassType() {
+        private boolean isClassType() {
             String name = getName();
             int length = name.length();
             int i = 0;
@@ -633,7 +630,7 @@ public class ParameterisedTypeKey implements Key {
         }
 
         @Override
-        public void buildSignature(SignatureStringsBuilder builder) {
+        public void buildSignature(DalvikSignatureBuilder builder) {
             boolean flushed = false;
             if (isClassType()) {
                 builder.flush();
