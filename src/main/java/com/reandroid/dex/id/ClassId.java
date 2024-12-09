@@ -456,24 +456,12 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         getClassTypeId().append(writer);
         getSuperClassId().append(writer);
         getSourceFileReference().append(writer);
-        writer.newLine();
-        TypeList interfaces = getInterfaceTypeList();
-        if(interfaces != null){
-            interfaces.appendInterfaces(writer);
-        }
-        AnnotationSetKey annotation = getAnnotation();
-        if(!annotation.isEmpty()){
-            writer.newLine();
-            writer.newLine();
-            writer.appendComment("annotations");
-            writer.appendAllWithDoubleNewLine(annotation.iterator());
-            writer.newLine();
-        }
+        getInterfacesKey().appendInterfaces(writer);
+        getAnnotation().appendClass(writer);
         ClassData classData = getClassData();
-        if(classData != null){
+        if (classData != null) {
+            writer.newLine();
             classData.append(writer);
-        }else {
-            writer.appendComment("Null class data: " + this.classData.get());
         }
     }
     @Override

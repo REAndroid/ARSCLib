@@ -34,7 +34,6 @@ import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.dex.smali.model.SmaliMethod;
@@ -45,8 +44,8 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class CodeItem extends DataItem implements RegistersTable, PositionAlignedItem, KeyReference,
-        SmaliFormat {
+public class CodeItem extends DataItem implements RegistersTable,
+        PositionAlignedItem, KeyReference {
 
     private final Header header;
     private final InstructionList instructionList;
@@ -326,10 +325,9 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         registersCount.setValue(getLocalRegistersCount());
         getInstructionList().toSmali(smaliMethod);
     }
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
+
+    public void appendRegistersCount(SmaliWriter writer) throws IOException {
         writer.setCurrentRegistersTable(this);
-        MethodDef methodDef = getMethodDef();
         writer.newLine();
         if (writer.isLocalRegistersCount()) {
             SmaliDirective.LOCALS.append(writer);
@@ -338,10 +336,6 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             SmaliDirective.REGISTERS.append(writer);
             writer.appendInteger(getRegistersCount());
         }
-        writer.appendAllWithDoubleNewLine(methodDef.getParameters(true));
-        writer.appendAllWithDoubleNewLine(methodDef.getAnnotationSets(true));
-        getInstructionList().append(writer);
-        writer.setCurrentRegistersTable(null);
     }
 
     @Override
@@ -425,7 +419,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         }
 
         public void onRemove(){
-            debugInfoOffset.setItem((DebugInfo) null);
+            debugInfoOffset.setItem(null);
         }
 
         @Override

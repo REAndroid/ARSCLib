@@ -146,7 +146,7 @@ public class ArrayValueKey extends ArrayKey<Key> {
     }
 
     @Override
-    ArrayValueKey newInstance(Key[] elements) {
+    protected ArrayValueKey newInstance(Key[] elements) {
         return of(elements);
     }
 

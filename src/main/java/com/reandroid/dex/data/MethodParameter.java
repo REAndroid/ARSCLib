@@ -15,10 +15,13 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.dalvik.DalvikSignature;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.DalvikSignatureKey;
+import com.reandroid.dex.key.ParameterisedTypeKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.MethodParameterProgram;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -195,12 +198,18 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         setDebugName(smaliMethodParameter.getDebugName());
     }
 
-    public boolean isEmpty() {
-        DebugParameter debugParameter = getDebugParameter();
-        if (debugParameter != null && debugParameter.getNameId() != null) {
-            return false;
+    public ParameterisedTypeKey getParameterisedTypeKey() {
+        DalvikSignature dalvikSignature = DalvikSignature.of(getMethodDef());
+        if (dalvikSignature != null) {
+            DalvikSignatureKey signatureKey = dalvikSignature.getSignature();
+            if (signatureKey != null) {
+                ParameterisedTypeKey typeKey = signatureKey.getProtoParameter(getDefinitionIndex());
+                if (typeKey != null && typeKey.isParametrisedType()) {
+                    return typeKey;
+                }
+            }
         }
-        return !hasAnnotations();
+        return null;
     }
 
     @Override
@@ -213,13 +222,19 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         if (!has_debug && !has_annotation) {
             return;
         }
+        writer.newLine();
         getSmaliDirective().append(writer);
         writer.append('p');
         writer.appendInteger(getRegister());
         if (has_debug) {
             debugParameter.append(writer);
         }
-        writer.appendComment(getTypeId().getName());
+        ParameterisedTypeKey typeKey = getParameterisedTypeKey();
+        if (typeKey != null) {
+            writer.appendComment(typeKey.getComment());
+        } else {
+            writer.appendComment(getType().getTypeName());
+        }
         if (!has_annotation) {
             return;
         }

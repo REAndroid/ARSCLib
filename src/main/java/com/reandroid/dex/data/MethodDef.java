@@ -51,6 +51,15 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
 
     @Override
+    public MethodKey getKey(){
+        MethodId id = getId();
+        if (id != null) {
+            return id.getKey();
+        }
+        return null;
+    }
+
+    @Override
     public ElementType getElementType() {
         return ElementType.METHOD;
     }
@@ -92,36 +101,17 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         }
         return new MethodParameter(this, index);
     }
-    public Iterator<MethodParameter> getParameters(){
-        return getParameters(false);
-    }
-    public Iterator<MethodParameter> getParameters(boolean skipEmpty){
-        if(getParametersCount() == 0){
-            return EmptyIterator.of();
-        }
-        Iterator<MethodParameter> iterator = ArraySupplierIterator.of(new ArraySupplier<MethodParameter>() {
+    public Iterator<MethodParameter> getParameters() {
+        return ArraySupplierIterator.of(new ArraySupplier<MethodParameter>() {
             @Override
             public MethodParameter get(int i) {
                 return MethodDef.this.getParameter(i);
             }
-
             @Override
             public int getCount() {
                 return MethodDef.this.getParametersCount();
             }
         });
-        if(!skipEmpty) {
-            return iterator;
-        }
-        return FilterIterator.of(iterator, parameter -> !parameter.isEmpty());
-    }
-    @Override
-    public MethodKey getKey(){
-        MethodId id = getId();
-        if (id != null) {
-            return id.getKey();
-        }
-        return null;
     }
 
     @Override
@@ -160,13 +150,6 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         }
         return null;
     }
-    public DebugInfo getUniqueDebugInfo(){
-        CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
-            return codeItem.getDebugInfo();
-        }
-        return null;
-    }
     public DebugInfo getOrCreateDebugInfo(){
         return getOrCreateCodeItem().getOrCreateDebugInfo();
     }
@@ -178,16 +161,11 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         return null;
     }
     public Iterator<Ins> getInstructions() {
-        return new ArraySupplierIterator<>(new ArraySupplier<Ins>() {
-            @Override
-            public Ins get(int i) {
-                return getInstruction(i);
-            }
-            @Override
-            public int getCount() {
-                return getInstructionsCount();
-            }
-        });
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null) {
+            return instructionList.iterator();
+        }
+        return EmptyIterator.of();
     }
     public Ins getInstruction(int i) {
         InstructionList instructionList = getInstructionList();
@@ -274,20 +252,31 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.onWriteMethod(getKey());
+        MethodKey methodKey = getKey();
+        if (methodKey == null) {
+            throw new IOException("Null MethodKey");
+        }
+        writer.onWriteMethod(methodKey);
+
         writer.newLine();
         getSmaliDirective().append(writer);
-
         writer.appendModifiers(getModifiers());
+        methodKey.appendDefinition(writer);
 
-        getId().append(writer, false);
         writer.indentPlus();
-        if(!writer.appendOptional(getCodeItem())) {
-            writer.appendAllWithDoubleNewLine(this.getParameters(true));
-            writer.appendAllWithDoubleNewLine(this.getAnnotationSets(true));
+        CodeItem codeItem = getCodeItem();
+        if (codeItem != null) {
+            codeItem.appendRegistersCount(writer);
+        }
+        writer.appendAll(getParameters(), false);
+        getAnnotation().append(writer);
+        if (codeItem != null) {
+            codeItem.getInstructionList()
+                    .append(writer);
         }
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
+        writer.setCurrentRegistersTable(null);
     }
     @Override
     public void replaceKeys(Key search, Key replace){

@@ -43,7 +43,11 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
 
     @SuppressWarnings("unchecked")
     public T get(int i) {
-        return (T) elements[i];
+        Key[] elements = this.elements;
+        if (i >= 0 && i < elements.length) {
+            return (T) elements[i];
+        }
+        return null;
     }
     public int size() {
         return elements.length;
@@ -280,9 +284,8 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
     }
     @Override
     public Iterator<? extends Key> mentionedKeys() {
-        return CombiningIterator.singleTwo(
+        return CombiningIterator.singleOne(
                 this,
-                iterator(),
                 new IterableIterator<T, Key>(iterator()) {
                     @Override
                     public Iterator<Key> iterator(T element) {

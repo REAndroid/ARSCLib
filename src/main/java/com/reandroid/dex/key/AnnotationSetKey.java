@@ -199,11 +199,30 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
         return (AnnotationSetKey) super.replaceKey(search, replace);
     }
 
+    public void appendClass(SmaliWriter writer) throws IOException {
+        int size = size();
+        if (size == 0) {
+            return;
+        }
+        writer.newLine();
+        writer.newLine();
+        writer.newLine();
+        writer.appendComment("annotations");
+        for (int i = 0; i < size; i ++) {
+            if (i != 0) {
+                writer.newLine();
+            }
+            writer.newLine();
+            get(i).append(writer);
+        }
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.indentPlus();
-        super.append(writer);
-        writer.indentMinus();
+        int size = size();
+        for (int i = 0; i < size; i ++) {
+            writer.newLine();
+            get(i).append(writer);
+        }
     }
 
     @Override

@@ -170,6 +170,9 @@ public class MethodKey implements ProgramKey {
     public void append(SmaliWriter writer) throws IOException {
         getDeclaring().append(writer);
         writer.append("->");
+        appendDefinition(writer);
+    }
+    public void appendDefinition(SmaliWriter writer) throws IOException {
         getNameKey().appendSimpleName(writer);
         getProto().append(writer);
     }

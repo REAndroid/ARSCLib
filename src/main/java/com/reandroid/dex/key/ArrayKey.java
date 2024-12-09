@@ -70,7 +70,10 @@ public class ArrayKey<T extends Key> extends KeyList<T> {
     }
 
     @Override
-    ArrayKey<T> newInstance(Key[] elements) {
+    protected ArrayKey<T> newInstance(Key[] elements) {
+        if (getClass() != ArrayKey.class) {
+            throw new RuntimeException("Method not implemented");
+        }
         return create(elements);
     }
 

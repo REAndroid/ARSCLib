@@ -115,6 +115,9 @@ public class FieldKey implements ProgramKey {
         getDeclaring().append(writer);
         writer.append('-');
         writer.append('>');
+        appendDefinition(writer);
+    }
+    public void appendDefinition(SmaliWriter writer) throws IOException {
         getNameKey().appendSimpleName(writer);
         writer.append(':');
         getType().append(writer);

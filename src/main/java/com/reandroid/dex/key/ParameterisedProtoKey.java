@@ -109,7 +109,7 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
         }
     }
 
-    void appendString(StringBuilder builder) {
+    void appendString(StringBuilder builder, boolean comment) {
         ParameterisedTypeKey returnType = getReturnType();
         if (isBlank()) {
             return;
@@ -118,11 +118,11 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
         builder.append(method? '(' : '<');
         int size = size();
         for (int i = 0; i < size; i++) {
-            get(i).appendString(builder);
+            get(i).appendString(builder, comment);
         }
         builder.append(method? ')' : '>');
         if (returnType != null) {
-            returnType.appendString(builder);
+            returnType.appendString(builder, comment);
         }
     }
 
@@ -165,12 +165,12 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        appendString(builder);
+        appendString(builder, false);
         return builder.toString();
     }
 
     @Override
-    ParameterisedProtoKey newInstance(Key[] elements) {
+    protected ParameterisedProtoKey newInstance(Key[] elements) {
         boolean method = isMethod();
         ParameterisedTypeKey returnType = getReturnType();
         if (elements.length == 0) {

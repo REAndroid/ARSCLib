@@ -15,8 +15,10 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
@@ -29,14 +31,6 @@ public class TypeListKey extends KeyList<TypeKey> {
 
     private TypeListKey(Key[] keys) {
         super(keys);
-    }
-
-    @Override
-    public TypeKey get(int i) {
-        if (i >= 0 && i < size()) {
-            return super.get(i);
-        }
-        return null;
     }
 
     @Override
@@ -74,6 +68,22 @@ public class TypeListKey extends KeyList<TypeKey> {
     @Override
     public TypeListKey replaceKey(Key search, Key replace) {
         return (TypeListKey) super.replaceKey(search, replace);
+    }
+
+    public void appendInterfaces(SmaliWriter writer) throws IOException {
+        int size = size();
+        if (size == 0) {
+            return;
+        }
+        writer.newLine();
+        writer.newLine();
+        writer.appendComment("interfaces");
+        SmaliDirective directive = SmaliDirective.IMPLEMENTS;
+        for (int i = 0; i < size; i ++) {
+            writer.newLine();
+            directive.append(writer);
+            get(i).append(writer);
+        }
     }
 
     @Override

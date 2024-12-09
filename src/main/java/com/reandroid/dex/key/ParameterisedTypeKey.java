@@ -48,6 +48,13 @@ public class ParameterisedTypeKey implements Key {
     public ParameterisedProtoKey getProtoKey() {
         return protoKey;
     }
+    public boolean isTypeVariableDefinition() {
+        return getParameterName() instanceof Definition;
+    }
+    public boolean isParametrisedType() {
+        ParameterisedProtoKey protoKey = getProtoKey();
+        return !protoKey.isMethod() && !protoKey.isEmpty();
+    }
     public ParameterisedTypeKey changeProtoKey(ParameterisedProtoKey protoKey) {
         if (ObjectsUtil.equals(getProtoKey(), protoKey)) {
             return this;
@@ -223,20 +230,25 @@ public class ParameterisedTypeKey implements Key {
         return ObjectsUtil.hash(getParameterName(), getProtoKey());
     }
 
+    public String getComment() {
+        StringBuilder builder = new StringBuilder();
+        appendString(builder, true);
+        return builder.toString();
+    }
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        appendString(builder);
+        appendString(builder, false);
         return builder.toString();
     }
-    void appendString(StringBuilder builder) {
+    void appendString(StringBuilder builder, boolean comment) {
         ParameterName name = getParameterName();
         boolean needSemicolon = false;
         if (name != null) {
-            name.appendString(builder);
+            name.appendString(builder, comment);
             needSemicolon = name.isTypeUse();
         }
-        getProtoKey().appendString(builder);
+        getProtoKey().appendString(builder, comment);
         if (needSemicolon) {
             builder.append(';');
         }
@@ -286,6 +298,9 @@ public class ParameterisedTypeKey implements Key {
             name = TypeUsePrimitive.readTypeUsePrimitive(reader);
         }
         if (name == null) {
+            name = TypeUseVariable.readTypeUseVariable(reader);
+        }
+        if (name == null) {
             name = TypeUse.readTypeUse(reader);
         }
         return name;
@@ -322,6 +337,9 @@ public class ParameterisedTypeKey implements Key {
         boolean isTypeUse() {
             return false;
         }
+        public boolean isClassType(){
+            return false;
+        }
 
         boolean isInnerName() {
             return false;
@@ -332,14 +350,14 @@ public class ParameterisedTypeKey implements Key {
         }
 
         public void buildSignature(DalvikSignatureBuilder builder) {
-            appendString(builder.getStringBuilder());
+            appendString(builder.getStringBuilder(), false);
         }
 
         @Override
         public void append(SmaliWriter writer) throws IOException {
             writer.append(getName());
         }
-        public void appendString(StringBuilder builder) {
+        public void appendString(StringBuilder builder, boolean comment) {
             builder.append(getName());
         }
 
@@ -383,12 +401,28 @@ public class ParameterisedTypeKey implements Key {
 
     static class Wild extends ParameterName {
 
-        static final Wild SUPER = new Wild("-");
-        static final Wild EXTENDS = new Wild("+");
-        static final Wild ANY = new Wild("*");
+        static final Wild SUPER = new Wild("-", "? super ");
+        static final Wild EXTENDS = new Wild("+", "? extends ");
+        static final Wild ANY = new Wild("*", "?;");
 
-        Wild(String name) {
+        private final String comment;
+
+        Wild(String name, String comment) {
             super(name);
+            this.comment = comment;
+        }
+
+        public String getComment() {
+            return comment;
+        }
+
+        @Override
+        public void appendString(StringBuilder builder, boolean comment) {
+            if (comment) {
+                builder.append(getComment());
+            } else {
+                builder.append(getName());
+            }
         }
 
         @Override
@@ -443,7 +477,7 @@ public class ParameterisedTypeKey implements Key {
         }
 
         @Override
-        public void appendString(StringBuilder builder) {
+        public void appendString(StringBuilder builder, boolean comment) {
             builder.append(getName());
             int colons = this.colons;
             for (int i = 0; i < colons; i++) {
@@ -461,7 +495,7 @@ public class ParameterisedTypeKey implements Key {
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            appendString(builder);
+            appendString(builder, false);
             return builder.toString();
         }
 
@@ -504,6 +538,15 @@ public class ParameterisedTypeKey implements Key {
         @Override
         boolean isInnerName() {
             return true;
+        }
+
+        @Override
+        public void appendString(StringBuilder builder, boolean comment) {
+            String name = getName();
+            if (comment) {
+                name = name.replace('.', '$');
+            }
+            builder.append(name);
         }
 
         @Override
@@ -608,7 +651,7 @@ public class ParameterisedTypeKey implements Key {
             return true;
         }
 
-        private boolean isClassType() {
+        public boolean isClassType() {
             String name = getName();
             int length = name.length();
             int i = 0;
@@ -656,7 +699,7 @@ public class ParameterisedTypeKey implements Key {
                     i ++;
                     continue;
                 }
-                if (isNameStop(c) || isWild(c)) {
+                if (isTypeUseStop(c)) {
                     break;
                 }
                 first = false;
@@ -667,6 +710,75 @@ public class ParameterisedTypeKey implements Key {
             }
             String name = reader.readString(i - start);
             return new TypeUse(name);
+        }
+        private static boolean isTypeUseStop(char c) {
+            return ParameterisedTypeKey.isNameStop(c) ||
+                    ParameterisedTypeKey.isWild(c);
+        }
+    }
+
+    static class TypeUseVariable extends TypeUse {
+
+        TypeUseVariable(String name) {
+            super(name);
+        }
+
+        public String getVariableName() {
+            String name = getName();
+            int i = 0;
+            while (name.charAt(i) == '[') {
+                i ++;
+            }
+            return name.substring(0, i)  + name.substring(i + 1);
+        }
+
+        @Override
+        public boolean isClassType() {
+            return false;
+        }
+
+        @Override
+        public void appendString(StringBuilder builder, boolean comment) {
+            if (comment) {
+                builder.append(getVariableName());
+            } else {
+                builder.append(getName());
+            }
+        }
+
+        static TypeUseVariable readTypeUseVariable(SmaliReader reader) {
+            int start = reader.position();
+            int end = start + reader.available();
+            int i = start;
+            boolean first = true;
+            char c = 0;
+            while (i < end) {
+                c = reader.getASCII(i);
+                if (c == '[') {
+                    if (!first) {
+                        break;
+                    }
+                    i ++;
+                    continue;
+                }
+                if (first && c != 'T') {
+                    return null;
+                } else if (isTypeUseVariableStop(c)) {
+                    break;
+                }
+                first = false;
+                i ++;
+            }
+            if (i == start || (c != ';' && c != '<')) {
+                return null;
+            }
+            String name = reader.readString(i - start);
+            return new TypeUseVariable(name);
+        }
+        private static boolean isTypeUseVariableStop(char c) {
+            return ParameterisedTypeKey.isNameStop(c)
+                    || ParameterisedTypeKey.isWild(c)
+                    || c == '/' || c == '.';
         }
     }
     static class TypeUsePrimitive extends ParameterName {

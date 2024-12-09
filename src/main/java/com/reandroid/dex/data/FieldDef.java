@@ -78,11 +78,16 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
+        FieldKey key = getKey();
+        if (key == null) {
+            throw new IOException("Null FieldKey");
+        }
+
         writer.newLine();
 
         getSmaliDirective().append(writer);
         writer.appendModifiers(getModifiers());
-        getId().append(writer, false);
+        key.appendDefinition(writer);
 
         appendStaticValue(writer);
 
@@ -90,8 +95,10 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
         if (annotations.isEmpty()) {
             return;
         }
-        writer.newLine();
+        writer.indentPlus();
         annotations.append(writer);
+        writer.indentMinus();
+
         getSmaliDirective().appendEnd(writer);
     }
     private void appendStaticValue(SmaliWriter writer) throws IOException {
