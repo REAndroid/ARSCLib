@@ -63,6 +63,15 @@ public class KeyUtil {
         if (first == '(') {
             return ProtoKey.read(reader);
         }
+        if (first == 'n') {
+            reader.readASCII();
+            if (reader.readASCII() == 'u' &&
+                    reader.readASCII() == 'l' &&
+                    reader.readASCII() == 'l') {
+                return NullValueKey.INSTANCE;
+            }
+            throw new SmaliParseException("Unrecognised value", reader);
+        }
         if (first == 'L' || first == '[') {
             TypeKey typeKey = TypeKey.read(reader);
             if (reader.skipWhitespacesOrComment() || reader.finished()) {
