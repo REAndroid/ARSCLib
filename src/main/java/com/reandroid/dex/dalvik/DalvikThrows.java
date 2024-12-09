@@ -17,22 +17,45 @@ package com.reandroid.dex.dalvik;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.program.MethodProgram;
+import com.reandroid.utils.StringsUtil;
 
 public class DalvikThrows extends DalvikAnnotation {
 
-    private DalvikThrows(MethodProgram methodProgram) {
-        super(methodProgram, TypeKey.DALVIK_Throws);
+    private DalvikThrows(AnnotatedProgram annotatedProgram) {
+        super(annotatedProgram, TypeKey.DALVIK_Throws);
     }
-    public TypeKey getThrow() {
-        Key key = readValue(Key.DALVIK_value);
-        if (key == null || (key instanceof NullValueKey)) {
-            return null;
+
+    public void add(TypeKey typeKey) {
+        ArrayKey<TypeKey> arrayKey = getThrows();
+        if (!arrayKey.contains(typeKey)) {
+            arrayKey = arrayKey.add(typeKey);
+            setThrows(arrayKey);
         }
-        return (TypeKey) key;
     }
-    public void setThrow(TypeKey typeKey) {
-        writeValue(Key.DALVIK_value, typeKey);
+    public boolean contains(TypeKey typeKey) {
+        return getThrows().contains(typeKey);
+    }
+    public boolean remove(TypeKey typeKey) {
+        ArrayKey<TypeKey> arrayKey = getThrows();
+        if (arrayKey.contains(typeKey)) {
+            arrayKey = arrayKey.remove(typeKey);
+            setThrows(arrayKey);
+            return true;
+        }
+        return false;
+    }
+    @SuppressWarnings("unchecked")
+    public ArrayKey<TypeKey> getThrows() {
+        Key key = readValue(Key.DALVIK_value);
+        if (!(key instanceof ArrayKey)) {
+            return ArrayKey.empty();
+        }
+        return (ArrayKey<TypeKey>) key;
+    }
+    public void setThrows(ArrayKey<TypeKey> typeKeys) {
+        writeValue(Key.DALVIK_value, typeKeys);
     }
 
     @Override
@@ -42,24 +65,24 @@ public class DalvikThrows extends DalvikAnnotation {
 
     @Override
     public String toString() {
-        return String.valueOf(getThrow());
+        return StringsUtil.join(getThrows().iterator(), ", ");
     }
 
-    public static DalvikThrows of(MethodProgram methodProgram) {
-        if (methodProgram.hasAnnotation(TypeKey.DALVIK_MemberClass)) {
-            return new DalvikThrows(methodProgram);
+    public static DalvikThrows of(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram.hasAnnotation(TypeKey.DALVIK_Throws)) {
+            return new DalvikThrows(annotatedProgram);
         }
         return null;
     }
-    public static DalvikThrows getOrCreate(MethodProgram methodProgram) {
-        if (!methodProgram.hasAnnotation(TypeKey.DALVIK_Throws)) {
-            methodProgram.addAnnotation(AnnotationItemKey.create(
+    public static DalvikThrows getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_Throws)) {
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_Throws,
-                    AnnotationElementKey.create(Key.DALVIK_value, TypeKey.EXCEPTION)
+                    AnnotationElementKey.create(Key.DALVIK_value, ArrayKey.empty())
                     )
             );
         }
-        return of(methodProgram);
+        return of(annotatedProgram);
     }
 }
