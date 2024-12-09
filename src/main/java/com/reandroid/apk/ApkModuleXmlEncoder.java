@@ -82,7 +82,7 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         if(packageId != null){
             packageBlock = tableBlock.pickOne(packageId);
         }else {
-            packageBlock = tableBlock.pickOne();
+            packageBlock = tableBlock.pickOrEmptyPackage();
         }
         if(packageBlock != null){
             tableBlock.setCurrentPackage(packageBlock);
