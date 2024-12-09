@@ -21,7 +21,6 @@ import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -131,14 +130,6 @@ public class ClassData extends DataItem implements SmaliFormat {
     public MethodDef getOrCreateVirtual(MethodKey methodKey){
         return initVirtualMethodsArray().getOrCreate(methodKey);
     }
-    public Iterator<Ins> getInstructions(){
-        return new IterableIterator<MethodDef, Ins>(getMethods()){
-            @Override
-            public Iterator<Ins> iterator(MethodDef element) {
-                return element.getInstructions();
-            }
-        };
-    }
     public Iterator<FieldDef> getFields(){
         return new CombiningIterator<>(getStaticFields(), getInstanceFields());
     }
@@ -151,9 +142,6 @@ public class ClassData extends DataItem implements SmaliFormat {
             return EmptyIterator.of();
         }
         return methodDefArray.arrayIterator();
-    }
-    public Iterator<MethodDef> getConstructors(){
-        return FilterIterator.of(getDirectMethods(), MethodDef::isConstructor);
     }
 
     public Iterator<MethodDef> getVirtualMethods(){
@@ -176,34 +164,6 @@ public class ClassData extends DataItem implements SmaliFormat {
             return EmptyIterator.of();
         }
         return fieldDefArray.arrayIterator();
-    }
-    public int getStaticFieldsCount() {
-        FieldDefArray fieldDefArray = this.staticFields;
-        if(fieldDefArray == null){
-            return 0;
-        }
-        return fieldDefArray.getCount();
-    }
-    public int getInstanceFieldsCount() {
-        FieldDefArray fieldDefArray = this.instanceFields;
-        if(fieldDefArray == null){
-            return 0;
-        }
-        return fieldDefArray.getCount();
-    }
-    public int getDirectMethodsCount() {
-        MethodDefArray methodDefArray = this.directMethods;
-        if(methodDefArray == null){
-            return 0;
-        }
-        return methodDefArray.getCount();
-    }
-    public int getVirtualMethodsCount() {
-        MethodDefArray methodDefArray = this.virtualMethods;
-        if(methodDefArray == null){
-            return 0;
-        }
-        return methodDefArray.getCount();
     }
     public StaticFieldDefArray getStaticFieldsArray(){
         return staticFields;
@@ -297,8 +257,11 @@ public class ClassData extends DataItem implements SmaliFormat {
     }
 
     @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
+    public boolean isBlank() {
+        return isNullOrEmpty(staticFields) &&
+                isNullOrEmpty(instanceFields) &&
+                isNullOrEmpty(directMethods) &&
+                isNullOrEmpty(virtualMethods);
     }
 
     @Override
@@ -344,22 +307,22 @@ public class ClassData extends DataItem implements SmaliFormat {
     }
     public void merge(ClassData classData) {
         ClassId classId = this.getClassId();
-        if (classData.getStaticFieldsCount() != 0) {
+        if (!isNullOrEmpty(classData.staticFields)) {
             FieldDefArray defArray = initStaticFieldsArray();
             defArray.setClassId(classId);
             defArray.merge(classData.staticFields);
         }
-        if (classData.getInstanceFieldsCount() != 0) {
+        if (!isNullOrEmpty(classData.instanceFields)) {
             FieldDefArray defArray = initInstanceFieldsArray();
             defArray.setClassId(classId);
             defArray.merge(classData.instanceFields);
         }
-        if (classData.getDirectMethodsCount() != 0) {
+        if (!isNullOrEmpty(classData.directMethods)) {
             MethodDefArray methodsArray = initDirectMethodsArray();
             methodsArray.setClassId(classId);
             methodsArray.merge(classData.directMethods);
         }
-        if (classData.getVirtualMethodsCount() != 0) {
+        if (!isNullOrEmpty(classData.virtualMethods)) {
             MethodDefArray methodsArray = initVirtualMethodsArray();
             methodsArray.setClassId(classId);
             methodsArray.merge(classData.virtualMethods);
@@ -418,4 +381,7 @@ public class ClassData extends DataItem implements SmaliFormat {
                 ", virtualMethodCount=" + virtualMethodCount;
     }
 
+    private static boolean isNullOrEmpty(DefArray<?> defArray) {
+        return defArray == null || defArray.size() == 0;
+    }
 }
