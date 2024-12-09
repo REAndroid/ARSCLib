@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
@@ -59,6 +61,11 @@ public class AnnotationElementKey implements Key {
             return this;
         }
         return create(getName(), value);
+    }
+
+    public MethodKey toMethod(TypeKey declaring) {
+        return MethodKey.create(declaring, getNameKey(),
+                ProtoKey.create(KeyUtil.getReturnTypeForValue(getValue())));
     }
 
     @Override
@@ -149,5 +156,23 @@ public class AnnotationElementKey implements Key {
             value = NullValueKey.INSTANCE;
         }
         return new AnnotationElementKey(name, value);
+    }
+
+    public static AnnotationElementKey read(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        int i1 = reader.indexOfWhiteSpace();
+        int i2 = reader.indexOf('=');
+        int i;
+        if (i1 >= 0 && i1 < i2) {
+            i = i1;
+        } else {
+            i = i2;
+        }
+        int length = i - reader.position();
+        String name = reader.readString(length);
+        reader.skipWhitespaces();
+        SmaliParseException.expect(reader, '=');
+        Key value = KeyUtil.readValue(reader);
+        return create(name, value);
     }
 }

@@ -17,6 +17,7 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -172,23 +173,51 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         return SmaliDirective.SUB_ANNOTATION;
     }
 
+    public Iterator<MethodKey> getMethods() {
+        TypeKey typeKey = getType();
+        return ComputeIterator.of(iterator(), elementKey -> elementKey.toMethod(typeKey));
+    }
     @Override
     public AnnotationItemKey replaceKey(Key search, Key replace) {
         if (this.equals(search)) {
             return (AnnotationItemKey) replace;
         }
         AnnotationItemKey result = this;
-        if(search.equals(getType())) {
+        if (search instanceof MethodKey) {
+            result = result.replaceMethodKeys((MethodKey) search, (MethodKey) replace);
+        } else if (search.equals(getType())) {
             result = result.changeType((TypeKey) replace);
         }
         return (AnnotationItemKey) result.replaceElements(search, replace);
     }
+    private AnnotationItemKey replaceMethodKeys(MethodKey search, MethodKey replace) {
+        AnnotationItemKey result = this;
+        TypeKey declaring = result.getType();
+        if (!declaring.equals(search.getDeclaring())) {
+            return result;
+        }
+        TypeKey replaceType = replace.getDeclaring();
+        if (!declaring.equals(replaceType)) {
+            result = result.changeType(replaceType);
+        }
+        String name = search.getName();
+        String replaceName = replace.getName();
+        if (!name.equals(replaceName) && !containsElement(replaceName)) {
+            AnnotationElementKey element = result.get(name);
+            if (element != null) {
+                result = result.set(
+                        indexOf(element), element.changeName(replaceName));
+            }
+        }
+        return result;
+    }
 
     @Override
     public Iterator<? extends Key> mentionedKeys() {
-        return CombiningIterator.singleOne(
+        return CombiningIterator.singleTwo(
                 getType(),
-                super.mentionedKeys());
+                super.mentionedKeys(),
+                getMethods());
     }
 
     @Override
@@ -222,6 +251,13 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     public boolean equalsType(TypeKey typeKey) {
         return ObjectsUtil.equals(getType(), typeKey);
     }
+
+    public boolean equalsMethod(MethodKey methodKey) {
+        return methodKey != null &&
+                ObjectsUtil.equals(getType(), methodKey.getDeclaring()) &&
+                containsElement(methodKey.getName());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -253,8 +289,39 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     }
 
     public static AnnotationItemKey read(SmaliReader reader) throws IOException {
-        //FIXME
-        throw new RuntimeException("AnnotationItemKey.read not implemented");
+        reader.skipWhitespacesOrComment();
+        SmaliDirective directive = SmaliDirective.parse(reader);
+        if (directive != SmaliDirective.ANNOTATION && directive != SmaliDirective.SUB_ANNOTATION) {
+            throw new SmaliParseException("Expecting annotation directive", reader);
+        }
+        AnnotationVisibility visibility = null;
+        if(directive == SmaliDirective.ANNOTATION) {
+            visibility = AnnotationVisibility.parse(reader);
+            if(visibility == null) {
+                throw new SmaliParseException("Unrecognized annotation visibility", reader);
+            }
+        }
+        reader.skipWhitespacesOrComment();
+        TypeKey typeKey = TypeKey.read(reader);
+        reader.skipWhitespacesOrComment();
+        ArrayCollection<AnnotationElementKey> elementList = null;
+        while (!directive.isEnd(reader)) {
+            AnnotationElementKey element = AnnotationElementKey.read(reader);
+            if (elementList == null) {
+                elementList = new ArrayCollection<>();
+            }
+            elementList.add(element);
+            reader.skipWhitespacesOrComment();
+        }
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, directive, true);
+        Key[] elements;
+        if (elementList != null) {
+            elements = elementList.toArrayFill(new Key[elementList.size()]);
+        } else {
+            elements = null;
+        }
+        return createKey(visibility, typeKey, elements);
     }
     public static AnnotationItemKey parse(String text) {
         //FIXME

@@ -36,7 +36,7 @@ public class EnumKey extends FieldKey {
 
     @Override
     public String toString() {
-        return SmaliDirective.ENUM.getName() + " " + super.toString();
+        return SmaliDirective.ENUM + " " + super.toString();
     }
 
     public static EnumKey create(FieldKey fieldKey) {
