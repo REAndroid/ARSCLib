@@ -54,14 +54,19 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
     public String getName(){
         return nameReference.getString();
     }
-    public void setName(String name){
-        nameReference.setString(name);
+    public void setName(String name) {
+        setName(StringKey.create(name));
     }
     public StringKey getNameKey() {
         return nameReference.getKey();
     }
-    public void setName(StringKey key){
-        nameReference.setKey(key);
+    public void setName(StringKey key) {
+        MethodKey methodKey = getKey();
+        if (methodKey == null) {
+            nameReference.setKey(key);
+        } else {
+            setKey(methodKey.changeName(key));
+        }
     }
 
     IndirectStringReference getNameReference(){
@@ -71,14 +76,8 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
     public TypeKey getDefining(){
         return (TypeKey) defining.getKey();
     }
-    public void setDefining(TypeKey typeKey){
-        defining.setKey(typeKey);
-    }
     public TypeId getDefiningId(){
         return defining.getItem();
-    }
-    public void setDefining(TypeId typeId){
-        defining.setItem(typeId);
     }
     public int getParametersCount() {
         ProtoId protoId = getProtoId();
@@ -111,14 +110,8 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
     public ProtoId getProtoId(){
         return proto.getItem();
     }
-    public void setProto(ProtoId protoId) {
-        proto.setItem(protoId);
-    }
     public ProtoKey getProto() {
         return (ProtoKey) proto.getKey();
-    }
-    public void setProto(ProtoKey protoKey) {
-        proto.setKey(protoKey);
     }
 
     public TypeKey getReturnType() {
