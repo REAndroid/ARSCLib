@@ -147,7 +147,7 @@ public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> imp
     protected void onPreRefresh() {
         super.onPreRefresh();
         linkAnnotation();
-        if (!sort()) {
+        if (sort()) {
             resetIndex();
         }
     }
