@@ -184,7 +184,8 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         if(stringId == this){
             return 0;
         }
-        return SectionTool.compareIdx(getStringData(), stringId.getStringData());
+        // compare only index (not offset=idx) bc StringData is already sorted
+        return SectionTool.compareIndex(getStringData(), stringId.getStringData());
     }
 
     @Override
