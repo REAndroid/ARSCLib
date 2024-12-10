@@ -29,12 +29,14 @@ public abstract class Rename<T extends Key, R extends Key> {
 
     private final Map<KeyPair<?, ?>, KeyPair<T, R>> keyPairMap;
     private final Map<KeyPair<?, ?>, KeyPair<T, R>> flippedKeyMap;
-    private final Set<KeyPair<?, ?>> badKeys;
+    private final Set<KeyPair<?, ?>> lockedKeys;
+    private final Set<KeyPair<?, ?>> lockedFlippedKeys;
 
     public Rename() {
         this.keyPairMap = new HashMap<>();
         this.flippedKeyMap = new HashMap<>();
-        this.badKeys = new HashSet<>();
+        this.lockedKeys = new HashSet<>();
+        this.lockedFlippedKeys = new HashSet<>();
     }
 
     public void add(T search, R replace) {
@@ -48,7 +50,7 @@ public abstract class Rename<T extends Key, R extends Key> {
     }
     public void addAll(Iterator<KeyPair<T, R>> iterator){
         while (iterator.hasNext()){
-            addToSet(iterator.next());
+            add(iterator.next());
         }
     }
     private void addToSet(KeyPair<T, R> keyPair) {
@@ -56,11 +58,11 @@ public abstract class Rename<T extends Key, R extends Key> {
             return;
         }
         boolean bad = false;
-        if (badKeys.contains(keyPair)) {
+        if (lockedKeys.contains(keyPair) || lockedFlippedKeys.contains(keyPair)) {
             bad = true;
         }
         KeyPair<R, T> flip = keyPair.flip();
-        if (badKeys.contains(flip)) {
+        if (lockedFlippedKeys.contains(flip) || lockedKeys.contains(flip)) {
             if (bad) {
                 return;
             }
@@ -81,15 +83,15 @@ public abstract class Rename<T extends Key, R extends Key> {
             }
         }
         if (bad) {
-            addBadKey(keyPair, flip);
+            lockKey(keyPair, flip);
         } else {
             keyPairMap.put(keyPair, keyPair);
             flippedKeyMap.put(flip, keyPair);
         }
     }
-    private void addBadKey(KeyPair<T, R> keyPair, KeyPair<R, T> flip) {
-        badKeys.add(keyPair);
-        badKeys.add(flip);
+    private void lockKey(KeyPair<T, R> keyPair, KeyPair<R, T> flip) {
+        lockedKeys.add(keyPair);
+        lockedFlippedKeys.add(flip);
         KeyPair<T, R> p1 = keyPairMap.remove(keyPair);
         if (p1 == null) {
             p1 = keyPairMap.remove(flip);
@@ -99,10 +101,40 @@ public abstract class Rename<T extends Key, R extends Key> {
             p2 = flippedKeyMap.remove(keyPair);
         }
         if (p1 != null && !p1.equalsBoth(keyPair)) {
-            addBadKey(p1, p1.flip());
+            lockKey(p1, p1.flip());
         }
         if (p2 != null && !p2.equalsBoth(keyPair)) {
-            addBadKey(p2, p2.flip());
+            lockKey(p2, p2.flip());
+        }
+    }
+    public boolean isLocked(KeyPair<T, R> keyPair) {
+        if (keyPair != null) {
+            KeyPair<R, T> flip = keyPair.flip();
+            return lockedKeys.contains(keyPair) ||
+                    lockedFlippedKeys.contains(keyPair) ||
+                    lockedKeys.contains(flip) ||
+                    lockedFlippedKeys.contains(flip);
+        }
+        return false;
+    }
+    public void lock(KeyPair<T, R> keyPair) {
+        if (keyPair != null && keyPair.isValid()) {
+            lockKey(keyPair, keyPair.flip());
+        }
+    }
+    public void lockAll(Iterable<? extends KeyPair<T, R>> iterable) {
+        if (iterable != null) {
+            for (KeyPair<T, R> keyPair : iterable) {
+                lock(keyPair);
+            }
+        }
+    }
+    public void unlock(KeyPair<T, R> keyPair) {
+        if (keyPair != null) {
+            KeyPair<R, T> flip = keyPair.flip();
+            lockedKeys.remove(keyPair);
+            lockedFlippedKeys.remove(flip);
+            add(keyPair);
         }
     }
     public int size() {
@@ -117,6 +149,9 @@ public abstract class Rename<T extends Key, R extends Key> {
             results.sort(comparator);
         }
         return results;
+    }
+    public List<KeyPair<T, R>> listLocked() {
+        return ObjectsUtil.cast(new ArrayCollection<>(lockedKeys));
     }
 
     public abstract int apply(DexClassRepository classRepository);
