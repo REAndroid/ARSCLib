@@ -217,8 +217,8 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         interfaceMap.clear();
         getSectionList().clearPoolMap();
     }
-    public void sortStrings(){
-        getSectionList().sortStrings();
+    public boolean sortStrings(){
+        return getSectionList().sortStrings();
     }
 
     public <T1 extends SectionItem> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){

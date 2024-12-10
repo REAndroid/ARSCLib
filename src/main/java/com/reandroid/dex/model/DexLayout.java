@@ -63,6 +63,11 @@ public class DexLayout implements DexClassModule, Closeable,
     public int getOffset() {
         return getDexLayoutBlock().getHeader().getOffset();
     }
+    @Override
+    public boolean sort() {
+        return getDexLayoutBlock().sortStrings();
+    }
+
     public String getName() {
         return "layout" + getIndex();
     }

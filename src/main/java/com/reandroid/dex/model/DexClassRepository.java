@@ -255,6 +255,17 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         }
     }
 
+    default boolean sort() {
+        boolean sorted = false;
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            if (iterator.next().sort()) {
+                sorted = true;
+            }
+        }
+        return sorted;
+    }
+
     default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
         return FilterIterator.of(getClonedItems(sectionType), filter);
     }

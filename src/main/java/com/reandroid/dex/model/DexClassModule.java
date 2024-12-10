@@ -37,6 +37,9 @@ public interface DexClassModule extends DexClassRepository {
     Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
 
     @Override
+    boolean sort();
+
+    @Override
     default <T extends SectionItem> Iterator<Section<T>> getSections(SectionType<T> sectionType) {
         return SingleIterator.of(getSection(sectionType));
     }
