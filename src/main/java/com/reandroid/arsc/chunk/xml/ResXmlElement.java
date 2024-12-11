@@ -358,6 +358,9 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
         return getStartElement().getStyleAttribute();
     }
 
+    public void computePositionalAttributes() {
+        getAttributeArray().computePositionsAndSort();
+    }
     private ResXmlAttributeArray getAttributeArray() {
         return getStartElement().getResXmlAttributeArray();
     }
