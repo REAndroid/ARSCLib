@@ -88,6 +88,7 @@ public abstract class Rename<T extends Key, R extends Key> {
             keyPairMap.put(keyPair, keyPair);
             flippedKeyMap.put(flip, keyPair);
         }
+        onChanged();
     }
     private void lockKey(KeyPair<T, R> keyPair, KeyPair<R, T> flip) {
         lockedKeys.add(keyPair);
@@ -137,8 +138,48 @@ public abstract class Rename<T extends Key, R extends Key> {
             add(keyPair);
         }
     }
+
+    protected void onChanged() {
+    }
+    public void close() {
+        keyPairMap.clear();
+        flippedKeyMap.clear();
+        lockedKeys.clear();
+        lockedFlippedKeys.clear();
+    }
+
     public int size() {
         return keyPairMap.size();
+    }
+
+    public KeyPair<T, R> get(Key search) {
+        return keyPairMap.get(new KeyPair<>(search, null));
+    }
+    public R getReplace(Key search) {
+        KeyPair<T, R> keyPair = get(search);
+        if (keyPair != null) {
+            return keyPair.getSecond();
+        }
+        return null;
+    }
+    public<E extends Key> E replaceInKey(E key) {
+        Key replace = getReplace(key);
+        if (replace != null) {
+            if (key.getClass() == replace.getClass()) {
+                key = ObjectsUtil.cast(replace);
+            }
+            return key;
+        }
+        Key result = key;
+        Iterator<? extends Key> iterator = key.mentionedKeys();
+        while (iterator.hasNext()) {
+            Key search = iterator.next();
+            replace = getReplace(search);
+            if (replace != null) {
+                result = result.replaceKey(search, replace);
+            }
+        }
+        return ObjectsUtil.cast(result);
     }
     public List<KeyPair<T, R>> toList() {
         return toList(CompareUtil.getComparableComparator());

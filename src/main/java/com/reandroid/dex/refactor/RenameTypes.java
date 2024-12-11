@@ -18,6 +18,7 @@ package com.reandroid.dex.refactor;
 import com.reandroid.dex.dalvik.DalvikSignature;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.DalvikSignatureKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeKeyReference;
@@ -26,47 +27,58 @@ import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.*;
 
 public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
+    private final Set<String> renamedStrings;
+    private final Map<String, String> stringMap;
+
     private int arrayDepth;
     private boolean renameSource;
     private boolean skipSourceRenameRootPackageClass;
     private boolean fixAccessibility;
     private boolean fixInnerSimpleName;
-    private Set<String> renamedStrings;
+
+    private boolean mChanged;
 
     public RenameTypes() {
         super();
+        this.renamedStrings = new HashSet<>();
+        this.stringMap = new HashMap<>();
         this.arrayDepth = DEFAULT_ARRAY_DEPTH;
         this.renameSource = true;
         this.skipSourceRenameRootPackageClass = true;
         this.fixAccessibility = true;
         this.fixInnerSimpleName = true;
-        this.renamedStrings = new HashSet<>();
+
+        this.mChanged = true;
     }
 
     @Override
     public int apply(DexClassRepository classRepository) {
-        Map<String, String> map = buildRenameMap();
-        this.renamedStrings = new HashSet<>(map.size());
-        renameStringIds(classRepository, map);
-        renameAnnotationSignatures(classRepository, map);
-        renameExternalTypeKeyReferences(classRepository, map);
+        this.renamedStrings.clear();
+        buildRenameMap();
+        if (stringMap.isEmpty()) {
+            return 0;
+        }
+        renameStringIds(classRepository);
+        renameAnnotationSignatures(classRepository);
+        renameExternalTypeKeyReferences(classRepository);
         int size = renamedStrings.size();
         if(size != 0) {
             classRepository.clearPoolMap();
         }
         applyFix(classRepository);
-        renamedStrings.clear();
-        renamedStrings = null;
         return size;
     }
-    private void renameStringIds(DexClassRepository classRepository, Map<String, String> map) {
+    private void renameStringIds(DexClassRepository classRepository) {
+        Map<String, String> map = this.stringMap;
+        if (map.isEmpty()) {
+            return;
+        }
         Iterator<StringId> iterator = classRepository.getClonedItems(SectionType.STRING_ID);
         while (iterator.hasNext()){
             StringId stringId = iterator.next();
@@ -76,8 +88,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
             }
         }
     }
-    private void renameAnnotationSignatures(DexClassRepository classRepository, Map<String, String> map) {
-        Set<String> renamedStrings = this.renamedStrings;
+    private void renameAnnotationSignatures(DexClassRepository classRepository) {
 
         Iterator<DalvikSignature> iterator = ComputeIterator.of(
                 classRepository.getItems(SectionType.ANNOTATION_ITEM),
@@ -90,34 +101,25 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
                 // unlikely
                 continue;
             }
-            DalvikSignatureKey update = signatureKey;
-            Iterator<TypeKey> types = CollectionUtil.copyOfUniqueOf(signatureKey.getTypes());
-            while (types.hasNext()) {
-                TypeKey search = types.next();
-                String replace = map.get(search.getTypeName());
-                if (replace == null) {
-                    continue;
-                }
-                update = update.replaceKey(search, TypeKey.create(replace));
-                renamedStrings.add(replace);
-            }
+            DalvikSignatureKey update = replaceInKey(signatureKey);
             if (signatureKey != update) {
                 dalvikSignature.setSignature(update);
             }
         }
     }
 
-    private void renameExternalTypeKeyReferences(DexClassRepository classRepository, Map<String, String> map) {
+    private void renameExternalTypeKeyReferences(DexClassRepository classRepository) {
         List<TypeKeyReference> referenceList = classRepository.getExternalTypeKeyReferenceList();
         for(TypeKeyReference reference : referenceList) {
-            renameExternalTypeKeyReference(reference, map);
+            renameExternalTypeKeyReference(reference);
         }
     }
-    private void renameExternalTypeKeyReference(TypeKeyReference reference, Map<String, String> map) {
+    private void renameExternalTypeKeyReference(TypeKeyReference reference) {
         TypeKey typeKey = reference.getTypeKey();
-        if(typeKey == null) {
+        if (typeKey == null) {
             return;
         }
+        Map<String, String> map = this.stringMap;
         String replace = map.get(typeKey.getTypeName());
         if(replace == null) {
             replace = map.get(typeKey.getSourceName());
@@ -130,7 +132,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
     }
     private void applyFix(DexClassRepository classRepository) {
         Set<String> renamedSet = this.renamedStrings;
-        if (renamedSet == null || renamedSet.isEmpty()) {
+        if (renamedSet.isEmpty()) {
             return;
         }
 
@@ -160,7 +162,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
     }
 
     public void setArrayDepth(int arrayDepth) {
-        if(arrayDepth < 0){
+        if (arrayDepth < 0) {
             arrayDepth = DEFAULT_ARRAY_DEPTH;
         }
         this.arrayDepth = arrayDepth;
@@ -178,23 +180,18 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         this.fixInnerSimpleName = fixInnerSimpleName;
     }
 
-    private Map<String, String> buildRenameMap() {
+    private void buildRenameMap() {
+        if (!mChanged) {
+            return;
+        }
+        mChanged = false;
         List<KeyPair<TypeKey, TypeKey>> list = toList();
         boolean renameSource = this.renameSource;
-        boolean skipSourceFileForRootPackageClass = this.skipSourceRenameRootPackageClass;
+        boolean skipSourceRenameRootPackageClass = this.skipSourceRenameRootPackageClass;
 
-        int estimatedSize = 1;
-        if(renameSource) {
-            estimatedSize = estimatedSize + 1;
-        }
-        if(arrayDepth > 0){
-            estimatedSize = estimatedSize + arrayDepth + 1;
-        }
         int size = list.size();
 
-        estimatedSize = size * estimatedSize;
-
-        Map<String, String> map = new HashMap<>(estimatedSize);
+        Map<String, String> map = this.stringMap;
 
         int arrayDepth = this.arrayDepth + 1;
 
@@ -215,14 +212,41 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
             }
             if(renameSource){
                 name1 = first.getTypeName();
-                if(!skipSourceFileForRootPackageClass || name1.indexOf('/') > 0){
+                if(!skipSourceRenameRootPackageClass || name1.indexOf('/') > 0){
                     name1 = first.getSourceName();
                     name2 = second.getSourceName();
                     map.put(name1, name2);
                 }
             }
         }
-        return map;
+    }
+
+    @Override
+    public TypeKey getReplace(Key search) {
+        TypeKey result = null;
+        if (search instanceof TypeKey) {
+            result = super.getReplace(search);
+            if (result == null) {
+                String replace = stringMap.get(search.toString());
+                if (replace != null) {
+                    result = TypeKey.create(replace);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        stringMap.clear();
+        renamedStrings.clear();
+        mChanged = true;
+    }
+    @Override
+    protected void onChanged() {
+        super.onChanged();
+        mChanged = true;
     }
 
     @Override
