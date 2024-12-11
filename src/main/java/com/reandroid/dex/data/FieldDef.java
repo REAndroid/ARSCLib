@@ -182,7 +182,10 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
     public void merge(Def<?> def) {
         super.merge(def);
         FieldDef comingField = (FieldDef) def;
-        setStaticValue(comingField.getStaticValue());
+        Key staticValue = comingField.getStaticValue();
+        if (staticValue != null) {
+            setStaticValue(staticValue);
+        }
     }
 
     @Override
