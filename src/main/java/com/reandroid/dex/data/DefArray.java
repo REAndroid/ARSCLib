@@ -220,14 +220,19 @@ public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> imp
         super.onReadBytes(reader);
     }
 
-    public void merge(DefArray<?> defArray) {
+    public void merge(DefArray<T> defArray) {
         int size = defArray.size();
         setSize(size);
         for (int i = 0; i < size; i++) {
-            get(i).merge(defArray.get(i));
+            T def = this.get(i);
+            T source = defArray.get(i);
+            def.merge(source);
+            onMerged(def, (T) source);
         }
         updateCountReference();
         linkAnnotation();
+    }
+    void onMerged(T def, T source) {
     }
 
     public void fromSmali(Iterator<? extends Smali> iterator){

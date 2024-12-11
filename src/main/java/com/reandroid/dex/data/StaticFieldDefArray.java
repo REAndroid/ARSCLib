@@ -197,6 +197,21 @@ public class StaticFieldDefArray extends FieldDefArray {
     }
 
     @Override
+    public void merge(DefArray<FieldDef> defArray) {
+        Object lock = cacheStaticValues();
+        super.merge(defArray);
+        releaseStaticValues(lock);
+    }
+
+    @Override
+    void onMerged(FieldDef def, FieldDef source) {
+        Key value = source.getStaticValue();
+        if (value != null) {
+            setStaticValue(def, value);
+        }
+    }
+
+    @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.setStateWritingFields(true);
         super.append(writer);
