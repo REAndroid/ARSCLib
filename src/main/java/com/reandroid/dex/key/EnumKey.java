@@ -24,8 +24,30 @@ import java.io.IOException;
 
 public class EnumKey extends FieldKey {
 
-    EnumKey(FieldKey fieldKey) {
+    private EnumKey(FieldKey fieldKey) {
         super(fieldKey.getDeclaring(), fieldKey.getNameKey(), fieldKey.getType());
+    }
+
+    @Override
+    public EnumKey changeDeclaring(TypeKey typeKey) {
+        return create(super.changeDeclaring(typeKey));
+    }
+    @Override
+    public EnumKey changeName(String name) {
+        return create(super.changeName(name));
+    }
+    @Override
+    public EnumKey changeName(StringKey name) {
+        return create(super.changeName(name));
+    }
+    @Override
+    public EnumKey changeType(TypeKey typeKey) {
+        return create(super.changeType(typeKey));
+    }
+
+    @Override
+    public EnumKey replaceKey(Key search, Key replace) {
+        return create(super.replaceKey(search, replace));
     }
 
     @Override
