@@ -57,6 +57,21 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         this.mChanged = true;
     }
 
+    public void add(DexClassRepository classRepository, TypeKey search, TypeKey replace) {
+        add(classRepository, new KeyPair<>(search, replace));
+    }
+    public void add(DexClassRepository classRepository, KeyPair<TypeKey, TypeKey> keyPair) {
+        if (keyPair == null || !keyPair.isValid()) {
+            return;
+        }
+        if (classRepository.containsClass(keyPair.getSecond())) {
+            lock(keyPair);
+        } else {
+            add(keyPair);
+        }
+    }
+
+
     @Override
     public int apply(DexClassRepository classRepository) {
         this.renamedStrings.clear();
