@@ -161,6 +161,9 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     }
     default <T extends SectionItem> Iterator<T> getClonedItemsIfKey(
             SectionType<T> sectionType, Predicate<? super Key> predicate) {
+        if (predicate == null) {
+            return getClonedItems(sectionType);
+        }
         return getClonedItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
     default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType, Key key) {
@@ -182,6 +185,9 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     }
     default <T extends SectionItem> Iterator<T> getItemsIfKey(
             SectionType<T> sectionType, Predicate<? super Key> predicate) {
+        if (predicate == null) {
+            return getItems(sectionType);
+        }
         return getItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
     default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key) {
