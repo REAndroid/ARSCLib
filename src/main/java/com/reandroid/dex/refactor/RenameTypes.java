@@ -17,6 +17,7 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.dex.dalvik.DalvikSignature;
 import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.DalvikSignatureKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyPair;
@@ -27,6 +28,8 @@ import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.*;
@@ -57,6 +60,45 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         this.mChanged = true;
     }
 
+    public void addPackage(DexClassRepository classRepository, String search, String replace, boolean includeSubPackages) {
+        if (ObjectsUtil.equals(search, replace)) {
+            return;
+        }
+        validatePackageName(search);
+        validatePackageName(replace);
+        Iterator<TypeId> iterator = classRepository.getItemsIfKey(SectionType.TYPE_ID,
+                key -> ((TypeKey) key).isPackage(search, includeSubPackages));
+
+        List<KeyPair<TypeKey, TypeKey>> keyPairList = new ArrayCollection<>();
+
+        while (iterator.hasNext()) {
+            TypeKey typeSearch = iterator.next().getKey();
+            TypeKey typeReplace = typeSearch.renamePackage(search, replace);
+            KeyPair<TypeKey, TypeKey> keyPair = new KeyPair<>(typeSearch, typeReplace);
+            keyPairList.add(keyPair);
+            if (classRepository.containsClass(typeReplace)) {
+                lockAll(keyPairList);
+                keyPairList.clear();
+                break;
+            }
+        }
+
+        addAll(keyPairList);
+    }
+    private void validatePackageName(String packageName) {
+        if (StringsUtil.isEmpty(packageName)) {
+            throw new IllegalArgumentException("Empty package name: " + packageName);
+        }
+        if (packageName.charAt(0) != 'L') {
+            throw new IllegalArgumentException(
+                    "Package name should start with 'L': " + packageName);
+        }
+        int i = packageName.length() - 1;
+        if (i != 0 && packageName.charAt(i) != '/') {
+            throw new IllegalArgumentException(
+                    "Non root package name should end with '/': " + packageName);
+        }
+    }
     public void add(DexClassRepository classRepository, TypeKey search, TypeKey replace) {
         add(classRepository, new KeyPair<>(search, replace));
     }
