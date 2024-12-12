@@ -213,15 +213,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return null;
     }
-    @Override
-    public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
-        return new IterableIterator<DexFile, T1>(clonedIterator()) {
-            @Override
-            public Iterator<T1> iterator(DexFile element) {
-                return element.getClonedItems(sectionType);
-            }
-        };
-    }
     public Iterator<DexInstruction> getDexInstructions() {
         return new IterableIterator<DexFile, DexInstruction>(iterator()) {
             @Override

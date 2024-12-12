@@ -19,8 +19,6 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.data.AnnotationElement;
-import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.ClassId;
@@ -149,13 +147,21 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType){
+    default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType) {
         return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
             @Override
             public Iterator<T> iterator(Section<T> element) {
                 return element.clonedIterator();
             }
         };
+    }
+    default <T extends SectionItem> Iterator<T> getClonedItemsIf(
+            SectionType<T> sectionType, Predicate<? super T> predicate) {
+        return FilterIterator.of(getClonedItems(sectionType), predicate);
+    }
+    default <T extends SectionItem> Iterator<T> getClonedItemsIfKey(
+            SectionType<T> sectionType, Predicate<? super Key> predicate) {
+        return getClonedItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
     default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType, Key key) {
         return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
@@ -164,6 +170,19 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
                 return element.getAll(key);
             }
         };
+    }
+    default <T extends SectionItem> Iterator<T> getItemsIf(
+            SectionType<T> sectionType, Predicate<? super T> predicate) {
+        return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
+            @Override
+            public Iterator<T> iterator(Section<T> element) {
+                return element.iterator(predicate);
+            }
+        };
+    }
+    default <T extends SectionItem> Iterator<T> getItemsIfKey(
+            SectionType<T> sectionType, Predicate<? super Key> predicate) {
+        return getItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
     default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key) {
         Iterator<DexClassModule> iterator = modules();
@@ -266,10 +285,6 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return sorted;
     }
 
-    default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
-        return FilterIterator.of(getClonedItems(sectionType), filter);
-    }
-
     default Iterator<DexClass> findUserClasses(Key key){
         return new UniqueIterator<>(getDexClasses(),
                 dexClass -> dexClass.uses(key));
@@ -364,26 +379,6 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     default boolean removeAnnotations(TypeKey typeKey) {
         return removeEntries(SectionType.ANNOTATION_ITEM,
                 annotationItem -> typeKey.equals(annotationItem.getType()));
-    }
-    default int removeAnnotationElements(MethodKey methodKey) {
-        int removeCount = 0;
-
-        TypeKey typeKey = methodKey.getDeclaring();
-        Predicate<AnnotationElement> elementFilter = element -> element.is(methodKey);
-
-        Iterator<AnnotationItem> iterator = getClonedItems(SectionType.ANNOTATION_ITEM);
-        while (iterator.hasNext()) {
-            AnnotationItem annotationItem = iterator.next();
-            if(typeKey.equals(methodKey.getDeclaring())) {
-                if(annotationItem.removeIf(elementFilter)){
-                    if(annotationItem.isEmpty()) {
-                        annotationItem.removeSelf();
-                    }
-                    removeCount ++;
-                }
-            }
-        }
-        return removeCount;
     }
     default void clearDebug() {
         Iterator<Section<DebugInfo>> iterator = getSections(SectionType.DEBUG_INFO);

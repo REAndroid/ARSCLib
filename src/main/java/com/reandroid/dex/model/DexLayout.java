@@ -22,13 +22,13 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliClass;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileByteSource;
 import com.reandroid.utils.io.FileIterator;
@@ -169,11 +169,13 @@ public class DexLayout implements DexClassModule, Closeable,
     }
     @Override
     public Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
-        return ComputeIterator.of(getClassIds(filter), this::create);
+        return ComputeIterator.of(getItemsIfKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter)), this::create);
     }
     @Override
     public Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
-        return ComputeIterator.of(getClassIdsCloned(filter), this::create);
+        return ComputeIterator.of(
+                getClonedItemsIfKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter)),
+                this::create);
     }
 
     @Override
@@ -262,17 +264,6 @@ public class DexLayout implements DexClassModule, Closeable,
                 return element.getDexInstructions();
             }
         };
-    }
-    public Iterator<ClassId> getClassIds(Predicate<? super TypeKey> filter) {
-        return FilterIterator.of(getItems(SectionType.CLASS_ID),
-                classId -> filter == null || filter.test(classId.getKey()));
-    }
-    public Iterator<ClassId> getClassIdsCloned(Predicate<? super TypeKey> filter) {
-        return FilterIterator.of(getClonedItems(SectionType.CLASS_ID),
-                classId -> filter == null || filter.test(classId.getKey()));
-    }
-    public Iterator<TypeId> getTypes() {
-        return getItems(SectionType.TYPE_ID);
     }
     @Override
     public <T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType) {
