@@ -51,7 +51,7 @@ public class RenameMethods extends Rename<MethodKey, MethodKey> {
         while (iterator.hasNext()) {
             MethodKey equivalent = iterator.next();
             KeyPair<MethodKey, MethodKey> pair = new KeyPair<>(equivalent,
-                    replace.changeDeclaring(equivalent.getDeclaring()));
+                    equivalent.changeName(replace.getName()));
             if (isLocked(pair)) {
                 lockAll(list);
                 list.clear();
