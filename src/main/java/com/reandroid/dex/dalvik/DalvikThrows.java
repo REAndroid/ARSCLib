@@ -55,7 +55,7 @@ public class DalvikThrows extends DalvikAnnotation {
         return (ArrayKey<TypeKey>) key;
     }
     public void setThrows(ArrayKey<TypeKey> typeKeys) {
-        writeValue(Key.DALVIK_value, typeKeys);
+        writeValue(Key.DALVIK_value, ArrayValueKey.create(typeKeys));
     }
 
     @Override
@@ -79,7 +79,7 @@ public class DalvikThrows extends DalvikAnnotation {
             annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_Throws,
-                    AnnotationElementKey.create(Key.DALVIK_value, ArrayKey.empty())
+                    AnnotationElementKey.create(Key.DALVIK_value, ArrayValueKey.empty())
                     )
             );
         }
