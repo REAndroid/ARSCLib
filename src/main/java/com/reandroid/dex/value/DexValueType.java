@@ -217,7 +217,10 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         if(key instanceof StringKey) {
             return STRING;
         }
-        if(key instanceof ArrayValueKey) {
+        if (key instanceof AnnotationItemKey) {
+            return ANNOTATION;
+        }
+        if(key instanceof ArrayKey) {
             return ARRAY;
         }
         if(key instanceof NullValueKey) {
@@ -248,12 +251,6 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
             }
             if(primitiveKey.isLong()) {
                 return LONG;
-            }
-        }
-        if (key instanceof AnnotationItemKey) {
-            AnnotationItemKey itemKey = (AnnotationItemKey) key;
-            if (!itemKey.hasVisibility()) {
-                return ANNOTATION;
             }
         }
         if (key instanceof MethodHandleKey) {
