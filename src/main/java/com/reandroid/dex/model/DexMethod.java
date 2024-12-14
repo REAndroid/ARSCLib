@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.data.*;
@@ -66,6 +65,9 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         return this;
     }
 
+    public DexMethod getSuperMethod() {
+        return CollectionUtil.getFirst(getSuperMethods());
+    }
     public Iterator<DexMethod> getSuperMethods() {
         MethodKey key = getKey();
         return ComputeIterator.of(getDexClass().getSuperTypes(),

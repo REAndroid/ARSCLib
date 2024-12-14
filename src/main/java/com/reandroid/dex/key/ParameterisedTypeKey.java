@@ -45,6 +45,12 @@ public class ParameterisedTypeKey implements Key {
         }
         return null;
     }
+    public ParameterisedTypeKey getParameter(int i) {
+        return getProtoKey().get(i);
+    }
+    public int getParametersCount() {
+        return getProtoKey().size();
+    }
     public ParameterisedProtoKey getProtoKey() {
         return protoKey;
     }
