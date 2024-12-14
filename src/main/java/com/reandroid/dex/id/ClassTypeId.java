@@ -44,6 +44,7 @@ public class ClassTypeId extends IdItemIndirectReference<TypeId> implements Smal
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.onWriteClass(getKey());
+        writer.newLine();
         getSmaliDirective().append(writer);
         writer.appendModifiers(getBlockItem().getAccessFlags());
         getItem().append(writer);
