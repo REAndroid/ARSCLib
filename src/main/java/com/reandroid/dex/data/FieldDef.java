@@ -27,6 +27,7 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
@@ -126,14 +127,18 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
         }
         return false;
     }
-    @Override
-    public Iterator<IdItem> usedIds(){
-        return SingleIterator.of(getId());
-    }
 
     @Override
-    void onRemove() {
-        super.onRemove();
+    public Iterator<IdItem> usedIds() {
+        return SingleIterator.of(getId());
+    }
+    @Override
+    public boolean uses(Key key) {
+        return key.equals(getStaticValue());
+    }
+    @Override
+    public Iterator<Key> usedKeys() {
+        return CombiningIterator.singleOne(getKey(), SingleIterator.of(getStaticValue()));
     }
 
     @Override

@@ -32,7 +32,7 @@ public abstract class DexDeclaration extends Dex implements AccessibleDex {
         if(getKey().equals(key)){
             return false;
         }
-        return getId().uses(key);
+        return getDefinition().uses(key);
     }
     public boolean isAccessibleTo(TypeKey typeKey) {
         if(this.getDefining().equals(typeKey)){

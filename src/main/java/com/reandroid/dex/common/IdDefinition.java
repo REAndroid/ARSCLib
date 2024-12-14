@@ -17,10 +17,25 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.program.AccessibleProgram;
 
-public interface IdDefinition<T extends IdItem> extends AccessibleProgram {
+import java.util.Iterator;
+
+public interface IdDefinition<T extends IdItem> extends AccessibleProgram, IdUsageIterator {
 
     T getId();
 
+    @Override
+    default boolean uses(Key key) {
+        IdItem id = getId();
+        Iterator<IdItem> iterator = usedIds();
+        while (iterator.hasNext()) {
+            IdItem idItem = iterator.next();
+            if (!id.equals(idItem) && key.equals(idItem.getKey())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
