@@ -19,13 +19,9 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface ClassComment extends SmaliComment {
 
@@ -41,17 +37,11 @@ public interface ClassComment extends SmaliComment {
         @Override
         public void writeComment(SmaliWriter writer, TypeKey typeKey) throws IOException {
             DexClass dexClass = classRepository.getDexClass(typeKey);
-            if(dexClass == null || dexClass.isFinal()) {
-                return;
-            }
-            List<TypeKey> extendingList = CollectionUtil.toList(
-                    ComputeIterator.of(dexClass.getExtending(), DexClass::getKey));
-            extendingList.sort(CompareUtil.getComparableComparator());
-
-            for (TypeKey extending : extendingList) {
-                writer.appendComment("extended-by: ");
-                writer.appendComment(extending.getTypeName());
-                writer.newLine();
+            if (dexClass != null && !dexClass.isFinal()) {
+                SmaliComment.writeDeclarationComment(
+                        writer,
+                        "extended-by:",
+                        dexClass.getExtending());
             }
         }
         @Override
@@ -80,18 +70,11 @@ public interface ClassComment extends SmaliComment {
         @Override
         public void writeComment(SmaliWriter writer, TypeKey typeKey) throws IOException {
             DexClass dexClass = classRepository.getDexClass(typeKey);
-            if(dexClass == null || !dexClass.isInterface()) {
-                return;
-            }
-            List<TypeKey> implementList = CollectionUtil.toList(
-                    ComputeIterator.of(dexClass.getExtending(), DexClass::getKey));
-
-            implementList.sort(CompareUtil.getComparableComparator());
-
-            for (TypeKey impl : implementList) {
-                writer.appendComment("implemented-by: ");
-                writer.appendComment(impl.getTypeName());
-                writer.newLine();
+            if (dexClass != null && dexClass.isInterface()) {
+                SmaliComment.writeDeclarationComment(
+                        writer,
+                        "implemented-by:",
+                        dexClass.getExtending());
             }
         }
         @Override

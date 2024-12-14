@@ -15,5 +15,52 @@
  */
 package com.reandroid.dex.smali.formatters;
 
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.model.DexDeclaration;
+import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriterSetting;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
 public interface SmaliComment {
+
+    static void writeDeclarationComment(SmaliWriter writer,
+                                        String label,
+                                        Iterator<? extends DexDeclaration> iterator) throws IOException {
+
+        List<TypeKey> typeKeyList = CollectionUtil.toList(
+                ComputeIterator.of(iterator, DexDeclaration::getDefining));
+
+        typeKeyList.sort(CompareUtil.getComparableComparator());
+
+        int size = typeKeyList.size();
+        int remaining = 0;
+        SmaliWriterSetting setting = writer.getWriterSetting();
+        if (setting != null) {
+            int max = setting.getMaximumCommentLines();
+            if (max >= 0 && max < size) {
+                if (max != 0) {
+                    remaining = size - max;
+                }
+                size = max;
+            }
+        }
+
+        for (int i = 0; i < size; i++) {
+            writer.newLine();
+            TypeKey typeKey = typeKeyList.get(i);
+            writer.appendComment(label);
+            writer.appendComment(typeKey.getTypeName());
+        }
+
+        if (remaining != 0) {
+            writer.newLine();
+            writer.appendComment(label + " +" + remaining + " more");
+        }
+    }
 }

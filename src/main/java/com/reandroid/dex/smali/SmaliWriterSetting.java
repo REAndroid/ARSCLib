@@ -35,11 +35,13 @@ public class SmaliWriterSetting {
     private boolean sequentialLabel;
     private boolean commentUnicodeStrings;
     private boolean localRegistersCount;
+    private int maximumCommentLines;
 
     public SmaliWriterSetting() {
         this.sequentialLabel = true;
         this.commentUnicodeStrings = false;
         this.localRegistersCount = true;
+        this.maximumCommentLines = 500;
     }
 
     public boolean isSequentialLabel() {
@@ -61,6 +63,19 @@ public class SmaliWriterSetting {
     }
     public void setLocalRegistersCount(boolean localRegistersCount) {
         this.localRegistersCount = localRegistersCount;
+    }
+
+    public int getMaximumCommentLines() {
+        return maximumCommentLines;
+    }
+
+    /**
+     * Sets maximum allowed number of lines for comment.
+     *  default = 500
+     *  unlimited if maximumCommentLines less than zero
+     * */
+    public void setMaximumCommentLines(int maximumCommentLines) {
+        this.maximumCommentLines = maximumCommentLines;
     }
 
     public void writeResourceIdComment(SmaliWriter writer, long l) throws IOException {

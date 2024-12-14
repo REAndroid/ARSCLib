@@ -16,17 +16,13 @@
 package com.reandroid.dex.smali.formatters;
 
 import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.model.DexMethod;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface MethodComment extends SmaliComment{
 
@@ -43,14 +39,14 @@ public interface MethodComment extends SmaliComment{
         @Override
         public void writeComment(SmaliWriter writer, MethodKey methodKey) throws IOException {
             DexMethod dexMethod = classRepository.getDeclaredMethod(methodKey);
-            if(dexMethod == null || dexMethod.isDirect()){
-                return;
-            }
-            DexMethod superMethod = CollectionUtil.getFirst(dexMethod.getSuperMethods());
-            if(superMethod != null){
-                writer.newLine();
-                writer.appendComment("overrides: ");
-                writer.appendComment(superMethod.getKey().getDeclaring().getTypeName());
+            if (dexMethod != null && !dexMethod.isDirect()) {
+                DexMethod superMethod = dexMethod.getSuperMethod();
+                if (superMethod != null) {
+                    SmaliComment.writeDeclarationComment(
+                            writer,
+                            "overrides:",
+                            SingleIterator.of(superMethod));
+                }
             }
         }
 
@@ -81,19 +77,11 @@ public interface MethodComment extends SmaliComment{
         @Override
         public void writeComment(SmaliWriter writer, MethodKey methodKey) throws IOException {
             DexMethod dexMethod = classRepository.getDeclaredMethod(methodKey);
-            if(dexMethod == null || dexMethod.isDirect() || dexMethod.getDexClass().isFinal()){
-                return;
-            }
-
-            List<TypeKey> implementList = CollectionUtil.toList(ComputeIterator.of(
-                    dexMethod.getOverriding(), method -> method.getKey().getDeclaring()));
-
-            implementList.sort(CompareUtil.getComparableComparator());
-
-            for (TypeKey key : implementList) {
-                writer.newLine();
-                writer.appendComment("implemented-by: ");
-                writer.appendComment(key.getTypeName());
+            if (dexMethod != null && !dexMethod.isDirect() && !dexMethod.getDexClass().isFinal()) {
+                SmaliComment.writeDeclarationComment(
+                        writer,
+                        "implemented-by:",
+                        dexMethod.getOverriding());
             }
         }
         @Override
