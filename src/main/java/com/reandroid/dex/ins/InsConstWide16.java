@@ -26,11 +26,11 @@ public class InsConstWide16 extends Ins21s implements ConstNumberLong{
     @Override
     public void set(long value) {
         InsConstWide insConstWide = mReplaced;
-        if(insConstWide != null){
+        if (insConstWide != null) {
             insConstWide.set(value);
-        }else if(value <= 0x7fff && value >= -0x7fff){
+        } else if(value <= 0x7fff && value >= -0x8000) {
             setData((int) value);
-        }else {
+        } else {
             replaceIns(value);
         }
     }
@@ -73,11 +73,11 @@ public class InsConstWide16 extends Ins21s implements ConstNumberLong{
     @Override
     public void setData(int data) {
         InsConstWide insConstWide = mReplaced;
-        if(insConstWide != null){
+        if (insConstWide != null) {
             insConstWide.set(data);
-        }else if(data <= 0x7fff && data >= -0x7fff){
+        } else if (data <= 0x7fff && data >= -0x8000) {
             super.setData(data);
-        }else {
+        } else {
             replaceIns(data);
         }
     }
