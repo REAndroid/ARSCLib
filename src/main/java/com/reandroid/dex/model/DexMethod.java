@@ -76,34 +76,81 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     public Iterator<DexMethod> getOverriding() {
         return CombiningIterator.two(getExtending(), getImplementations());
     }
-    public DexMethod getBridged(){
-        if(!isBridge()){
-            return null;
+    public DexMethod getBridgingMethod() {
+        MethodKey bridging = getBridging();
+        if (bridging != null) {
+            return getDexClass().getDeclaredMethod(bridging);
         }
-        MethodKey bridgedKey = null;
-        Iterator<DexInstruction> iterator = getInstructions();
-        while (iterator.hasNext()){
-            DexInstruction instruction = iterator.next();
-            Key key = instruction.getKey();
-            if(!(key instanceof MethodKey)){
-                continue;
+        return null;
+    }
+    public MethodKey getBridging() {
+        if (isBridge()) {
+            DexInstruction instruction = CollectionUtil.getSingle(
+                    FilterIterator.of(getInstructions(),
+                            ins -> ins.is(Opcode.INVOKE_VIRTUAL) ||
+                                    ins.is(Opcode.INVOKE_VIRTUAL_RANGE)));
+            if (instruction != null) {
+                MethodKey key = getKey();
+                MethodKey methodKey = (MethodKey) instruction.getKey();
+                if (equalsForBridging(key, methodKey)) {
+                    return methodKey;
+                }
             }
-            MethodKey methodKey = (MethodKey) key;
-            if(bridgedKey != null){
-                return null;
+        }
+        return null;
+    }
+    public MethodKey getBridge() {
+        DexMethod bridge = getBridgeMethod();
+        if (bridge != null) {
+            return bridge.getKey();
+        }
+        return null;
+    }
+    public DexMethod getBridgeMethod() {
+        if (!isBridge() && isVirtual()) {
+            MethodKey methodKey = getKey();
+            return CollectionUtil.getSingle(
+                    FilterIterator.of(getDexClass().getVirtualMethods(), dexMethod -> {
+                                DexMethod bridging = dexMethod.getBridgingMethod();
+                                if (bridging != null) {
+                                    return methodKey.equals(bridging.getKey());
+                                }
+                                return false;
+                            }
+                    )
+            );
+        }
+        return null;
+    }
+    private boolean equalsForBridging(MethodKey key1, MethodKey key2) {
+        if (!key1.getDeclaring().equals(key2.getDeclaring()) || key1.equals(key2)) {
+            return false;
+        }
+        int count = key1.getParametersCount();
+        if (count != key2.getParametersCount()) {
+            return false;
+        }
+        TypeKey typeKey = key1.getReturnType();
+        if (differentPrimitiveForBridging(typeKey, key2.getReturnType())) {
+            return false;
+        }
+        boolean allPrimitive = typeKey.isPrimitive();
+        for (int i = 0; i < count; i++) {
+            typeKey = key1.getParameter(i);
+            if (differentPrimitiveForBridging(key1.getParameter(i), key2.getParameter(i))) {
+                return false;
             }
-            bridgedKey = methodKey;
+            if (allPrimitive) {
+                allPrimitive = typeKey.isPrimitive();
+            }
         }
-        if(bridgedKey == null){
-            return null;
+        return !allPrimitive;
+    }
+    private boolean differentPrimitiveForBridging(TypeKey key1, TypeKey key2) {
+        if (key1.isPrimitive()) {
+            return !key1.equals(key2);
         }
-        if(!getDefining().equals(bridgedKey.getDeclaring())){
-            return null;
-        }
-        if(!getName().equals(bridgedKey.getName())){
-            return null;
-        }
-        return getDexClass().getDeclaredMethod(bridgedKey, false);
+        return key2.isPrimitive();
     }
     public Iterator<DexMethod> getExtending() {
         return new MergingIterator<>(ComputeIterator.of(getDexClass().getExtending(),
@@ -241,6 +288,13 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         RegistersTable registersTable = getRegistersTable();
         if(registersTable != null){
             return registersTable.getLocalRegistersCount();
+        }
+        return 0;
+    }
+    public int getRegistersCount() {
+        RegistersTable registersTable = getRegistersTable();
+        if (registersTable != null) {
+            return registersTable.getRegistersCount();
         }
         return 0;
     }
