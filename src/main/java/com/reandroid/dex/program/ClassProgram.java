@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.program;
 
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
 
@@ -39,5 +40,15 @@ public interface ClassProgram extends AccessibleProgram {
     @Override
     default ElementType getElementType() {
         return ElementType.TYPE;
+    }
+
+    default boolean isInterface() {
+        return AccessFlag.INTERFACE.isSet(getAccessFlagsValue());
+    }
+    default boolean isEnum() {
+        return AccessFlag.ENUM.isSet(getAccessFlagsValue());
+    }
+    default boolean isAnnotation() {
+        return AccessFlag.ANNOTATION.isSet(getAccessFlagsValue());
     }
 }

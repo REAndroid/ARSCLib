@@ -41,4 +41,7 @@ public interface MethodProgram extends AccessibleProgram {
     default boolean isVirtual(){
         return !isDirect();
     }
+    default boolean isVarArgs() {
+        return AccessFlag.VARARGS.isSet(getAccessFlagsValue());
+    }
 }
