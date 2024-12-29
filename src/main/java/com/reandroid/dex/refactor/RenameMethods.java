@@ -41,7 +41,7 @@ public class RenameMethods extends Rename<MethodKey, MethodKey> {
         if (!start.isValid() || isLocked(start)) {
             return;
         }
-        if (classRepository.getMethods(replace).hasNext()) {
+        if (containsDeclaration(classRepository, replace)) {
             lock(start);
             return;
         }
@@ -133,5 +133,10 @@ public class RenameMethods extends Rename<MethodKey, MethodKey> {
             set.add(pair);
         }
         return map;
+    }
+
+    @Override
+    protected boolean containsDeclaration(DexClassRepository classRepository, MethodKey replaceKey) {
+        return classRepository.getDeclaredMethod(replaceKey, false) != null;
     }
 }

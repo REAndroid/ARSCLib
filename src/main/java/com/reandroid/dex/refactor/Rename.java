@@ -195,6 +195,18 @@ public abstract class Rename<T extends Key, R extends Key> {
         return ObjectsUtil.cast(new ArrayCollection<>(lockedKeys));
     }
 
+    public void validate(DexClassRepository classRepository) {
+        List<KeyPair<T, R>> list = toList();
+        for (KeyPair<T, R> keyPair : list) {
+            if (containsDeclaration(classRepository, keyPair.getSecond())) {
+                lock(keyPair);
+            }
+        }
+    }
+    protected boolean containsDeclaration(DexClassRepository classRepository, R replaceKey) {
+        return classRepository.getDexDeclaration(replaceKey) != null;
+    }
+
     public abstract int apply(DexClassRepository classRepository);
 
     public Set<KeyPair<T, R>> getKeyPairSet() {
