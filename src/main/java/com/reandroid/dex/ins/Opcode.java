@@ -937,7 +937,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         }
         return getName().charAt(0) == 's';
     }
-    public boolean isFieldAccessVirtual(){
+    public boolean isFieldAccessInstance(){
         if(getSectionType() != SectionType.FIELD_ID){
             return false;
         }
@@ -957,14 +957,14 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         String name = getName();
         return name.charAt(0) == 's' && name.charAt(1) == 'p';
     }
-    public boolean isFieldVirtualGet(){
+    public boolean isFieldInstanceGet(){
         if(getSectionType() != SectionType.FIELD_ID){
             return false;
         }
         String name = getName();
         return name.charAt(0) == 'i' && name.charAt(1) == 'g';
     }
-    public boolean isFieldVirtualPut(){
+    public boolean isFieldInstancePut(){
         if(getSectionType() != SectionType.FIELD_ID){
             return false;
         }
