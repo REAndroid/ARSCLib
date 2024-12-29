@@ -397,6 +397,39 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return ArrayCollection.empty();
     }
 
+    default Iterator<FieldKey> findEquivalentFields(FieldKey fieldKey){
+        DexClass defining = getDexClass(fieldKey.getDeclaring());
+        if(defining == null){
+            return EmptyIterator.of();
+        }
+        DexField dexField = defining.getField(fieldKey);
+        if(dexField == null){
+            return EmptyIterator.of();
+        }
+        defining = dexField.getDexClass();
+
+        FieldKey definingKey = dexField.getKey();
+
+        Iterator<FieldKey> subKeys = ComputeIterator.of(getSuccessorClasses(defining.getKey()),
+                dexClass -> {
+                    FieldKey key = definingKey.changeDeclaring(dexClass.getKey());
+                    DexField field = dexClass.getField(key);
+                    if(definingKey.equals(field.getKey())){
+                        return key;
+                    }
+                    return null;
+                }
+        );
+        return CombiningIterator.two(SingleIterator.of(definingKey), subKeys);
+    }
+    default Iterator<DexClass> getSuccessorClasses(TypeKey typeKey){
+        return new IterableIterator<DexClassModule, DexClass>(modules()) {
+            @Override
+            public Iterator<DexClass> iterator(DexClassModule element) {
+                return element.getSuccessorClasses(typeKey);
+            }
+        };
+    }
     default Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey){
         DexClass defining = getDexClass(methodKey.getDeclaring());
         if(defining == null){

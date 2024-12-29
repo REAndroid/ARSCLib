@@ -17,7 +17,6 @@ package com.reandroid.dex.model;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.id.ClassId;
-import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -133,14 +132,6 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
         for (DexLayout dexLayout : this) {
             dexLayout.clearEmptySections();
         }
-    }
-    public Iterator<DexClass> getSubTypes(TypeKey typeKey){
-        return new IterableIterator<DexLayout, DexClass>(iterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexLayout element) {
-                return element.getExtendingOrImplementing(typeKey);
-            }
-        };
     }
     public Iterator<DexInstruction> getDexInstructions() {
         return new IterableIterator<DexLayout, DexInstruction>(iterator()) {

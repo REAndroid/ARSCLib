@@ -7,6 +7,7 @@ import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -38,6 +39,13 @@ public interface DexClassModule extends DexClassRepository {
 
     @Override
     boolean sort();
+
+    @Override
+    default Iterator<DexClass> getSuccessorClasses(TypeKey typeKey){
+        return CombiningIterator.two(
+                getExtendingClasses(typeKey),
+                getImplementClasses(typeKey));
+    }
 
     @Override
     default <T extends SectionItem> Iterator<Section<T>> getSections(SectionType<T> sectionType) {

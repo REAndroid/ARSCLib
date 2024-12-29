@@ -105,9 +105,6 @@ public class DexLayout implements DexClassModule, Closeable,
         return this.dexFile;
     }
 
-    public Iterator<DexClass> getExtendingOrImplementing(TypeKey typeKey) {
-        return ComputeIterator.of(getDexLayoutBlock().getExtendingOrImplementing(typeKey), this::create);
-    }
     @Override
     public Iterator<DexClass> getExtendingClasses(TypeKey typeKey) {
         return ComputeIterator.of(getDexLayoutBlock().getExtendingClassIds(typeKey), this::create);
@@ -115,13 +112,6 @@ public class DexLayout implements DexClassModule, Closeable,
     @Override
     public Iterator<DexClass> getImplementClasses(TypeKey typeKey) {
         return ComputeIterator.of(getDexLayoutBlock().getImplementationIds(typeKey), this::create);
-    }
-    /**
-     * Use getOrCreateClass(TypeKey)
-     * */
-    @Deprecated
-    public DexClass getOrCreateClass(String type) {
-        return getOrCreateClass(new TypeKey(type));
     }
     @Override
     public DexClass getOrCreateClass(TypeKey key) {

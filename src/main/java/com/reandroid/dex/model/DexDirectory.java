@@ -161,40 +161,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return result;
     }
-
-    public Iterator<FieldKey> findEquivalentFields(FieldKey fieldKey){
-        DexClass defining = getDexClass(fieldKey.getDeclaring());
-        if(defining == null){
-            return EmptyIterator.of();
-        }
-        DexField dexField = defining.getField(fieldKey);
-        if(dexField == null){
-            return EmptyIterator.of();
-        }
-        defining = dexField.getDexClass();
-
-        FieldKey definingKey = dexField.getKey();
-
-        Iterator<FieldKey> subKeys = ComputeIterator.of(getSubTypes(defining.getKey()),
-                dexClass -> {
-                    FieldKey key = definingKey.changeDeclaring(dexClass.getKey());
-                    DexField field = dexClass.getField(key);
-                    if(definingKey.equals(field.getKey())){
-                        return key;
-                    }
-                    return null;
-                }
-        );
-        return CombiningIterator.two(SingleIterator.of(definingKey), subKeys);
-    }
-    public Iterator<DexClass> getSubTypes(TypeKey typeKey){
-        return new IterableIterator<DexFile, DexClass>(iterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexFile element) {
-                return element.getSubTypes(typeKey);
-            }
-        };
-    }
     public void save() throws IOException {
         dexSourceSet.saveAll();
     }
