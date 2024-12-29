@@ -281,7 +281,7 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     public static AnnotationItemKey create(AnnotationVisibility visibility, TypeKey typeKey, AnnotationElementKey ... elements) {
         return createKey(visibility, typeKey, elements);
     }
-    public static AnnotationItemKey createKey(AnnotationVisibility visibility, TypeKey typeKey, Key[] elements) {
+    private static AnnotationItemKey createKey(AnnotationVisibility visibility, TypeKey typeKey, Key[] elements) {
         if (typeKey == null) {
             return null;
         }
