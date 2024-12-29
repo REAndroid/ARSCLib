@@ -1000,6 +1000,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
                 opcode == MOVE_FROM16 ||
                 opcode == MOVE_OBJECT ||
                 opcode == MOVE_OBJECT_16 ||
+                opcode == MOVE_OBJECT_FROM16 ||
                 opcode == MOVE_WIDE ||
                 opcode == MOVE_WIDE_16 ||
                 opcode == MOVE_WIDE_FROM16;
