@@ -608,12 +608,15 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
                 ANNOTATION_SET,
                 ANNOTATION_ITEM,
                 ENCODED_ARRAY,
+                CALL_SITE_ID,
+                METHOD_HANDLE,
                 METHOD_ID,
                 FIELD_ID,
                 PROTO_ID,
                 TYPE_LIST,
                 TYPE_ID,
-                STRING_ID
+                STRING_ID,
+                STRING_DATA
         };
 
         R8_ORDER = new SectionType[]{
