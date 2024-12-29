@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.common.ReflectionUtil;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.dalvik.DalvikInnerClass;
 import com.reandroid.dex.data.*;
@@ -200,21 +201,17 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         MethodKey key = methodKey.changeDeclaring(getKey());
         return CombiningIterator.of(CombiningIterator.singleOne(
                 key,
-                SingleIterator.of(getBridgedMethod(methodKey))
+                SingleIterator.of(getBridging(methodKey))
                 ),
                 ComputeIterator.of(getOverriding(),
                         dexClass -> dexClass.getOverridingKeys(key)));
     }
-    private MethodKey getBridgedMethod(MethodKey methodKey){
+    private MethodKey getBridging(MethodKey methodKey){
         DexMethod dexMethod = getDeclaredMethod(methodKey, false);
-        if(dexMethod == null){
-            return null;
+        if (dexMethod != null) {
+            return dexMethod.getBridging();
         }
-        dexMethod = dexMethod.getBridged();
-        if(dexMethod == null){
-            return null;
-        }
-        return dexMethod.getKey();
+        return null;
     }
     public boolean containsDeclaredMethod(MethodKey methodKey) {
         if(methodKey == null) {
@@ -275,6 +272,42 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     }
     public DexClass getSuperClass() {
         return search(getSuperClassKey());
+    }
+    public boolean isInstance(TypeKey typeKey) {
+        if (typeKey == null) {
+            return false;
+        }
+        if (typeKey.equals(TypeKey.OBJECT)) {
+            return true;
+        }
+        TypeKey superType = getSuperClassKey();
+        if (typeKey.equals(getKey()) || typeKey.equals(superType)) {
+            return true;
+        }
+        DexClass superClass = search(superType);
+        if (superClass != null && superClass.isInstance(typeKey)) {
+            if (superClass.isInstance(typeKey)) {
+                return true;
+            }
+        }
+        TypeListKey typeListKey = getInterfacesKey();
+        if (typeListKey.contains(typeKey)) {
+            return true;
+        }
+        if (superClass == null && ReflectionUtil.isInstanceReflection(superType, typeKey)) {
+            return true;
+        }
+        for (TypeKey key : typeListKey) {
+            DexClass dexClass = search(key);
+            if (dexClass != null) {
+                if (dexClass.isInstance(typeKey)) {
+                    return true;
+                }
+            } else if (ReflectionUtil.isInstanceReflection(key, typeKey)) {
+                return true;
+            }
+        }
+        return false;
     }
     public Iterator<DexField> getDeclaredFields() {
         return CombiningIterator.two(getStaticFields(), getInstanceFields());
@@ -337,15 +370,6 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return new DexMethod(this, methodDef);
     }
 
-    public boolean isInterface() {
-        return AccessFlag.INTERFACE.isSet(getAccessFlagsValue());
-    }
-    public boolean isEnum() {
-        return AccessFlag.ENUM.isSet(getAccessFlagsValue());
-    }
-    public boolean isAnnotation() {
-        return AccessFlag.ANNOTATION.isSet(getAccessFlagsValue());
-    }
     public Iterator<DexInstruction> getDexInstructions(){
         return getDexInstructions(null);
     }
