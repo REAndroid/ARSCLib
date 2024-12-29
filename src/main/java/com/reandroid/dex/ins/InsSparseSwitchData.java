@@ -91,6 +91,20 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
         }
         return new SparseSwitchEntry(this, elements.get(i), keys.get(i));
     }
+    public boolean remove(SwitchEntry entry) {
+        if (!(entry instanceof SparseSwitchEntry)) {
+            return false;
+        }
+        SparseSwitchEntry switchEntry = (SparseSwitchEntry) entry;
+        InsBlockList insBlockList = getInsBlockList();
+        insBlockList.link();
+        boolean removed = this.elements.remove((IntegerItem) switchEntry.element);
+        if (removed) {
+            this.keys.remove(switchEntry.key);
+        }
+        insBlockList.unlink();
+        return removed;
+    }
     @Override
     public int getCount(){
         return elements.size();
@@ -310,6 +324,9 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
             writer.appendComment(HexUtil.toSignedHex(get()));
         }
 
+        public void removeSelf() {
+            payload.remove(this);
+        }
         public void fromPackedSwitch(PackedSwitchDataList.PackedSwitchEntry packedSwitchEntry) {
             this.set(packedSwitchEntry.get());
             Ins ins = packedSwitchEntry.getTargetIns();
