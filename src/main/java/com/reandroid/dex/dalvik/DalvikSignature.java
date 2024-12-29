@@ -50,7 +50,9 @@ public class DalvikSignature extends DalvikAnnotation {
         return DalvikSignatureKey.parse(getString());
     }
     public void setSignature(DalvikSignatureKey key) {
-        setArrayKey(key.toStringValues());
+        if (key != null) {
+            setArrayKey(key.toStringValues());
+        }
     }
 
     public void replace(TypeKey search, TypeKey replace) {
