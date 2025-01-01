@@ -46,7 +46,7 @@ public class DexSectionPool<T extends SectionItem> extends MultiMap<Key, T> {
         T item = get(key);
         if(item == null) {
             item = createNext(key);
-            put(key, item);
+            put(item.getKey(), item);
         }
         return item;
     }

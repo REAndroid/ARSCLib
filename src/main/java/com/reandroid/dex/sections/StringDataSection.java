@@ -16,13 +16,25 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.StringDataPool;
 
 public class StringDataSection extends DataSection<StringData> {
 
     public StringDataSection(IntegerPair countAndOffset, SectionType<StringData> sectionType) {
         super(sectionType, new StringDataArray(countAndOffset, sectionType.getCreator()));
+    }
+
+    @Override
+    boolean keyChanged(SectionItem block, Key key) {
+        return super.keyChanged(block, key);
+    }
+
+    @Override
+    public StringDataArray getItemArray() {
+        return (StringDataArray) super.getItemArray();
     }
 
     @Override

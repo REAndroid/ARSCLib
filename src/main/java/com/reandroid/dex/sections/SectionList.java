@@ -147,7 +147,8 @@ public class SectionList extends FixedBlockContainer
         int result = 0;
         List<Section<?>> sections = CollectionUtil.toList(getSections());
         for (Section<?> section : sections) {
-            if(section.removeIfEmpty()){
+            if (section.isEmpty()) {
+                remove(section);
                 result ++;
             }
         }
@@ -245,9 +246,6 @@ public class SectionList extends FixedBlockContainer
     }
     public MapList getMapList() {
         return mapList;
-    }
-    public MapItem getMapItem(SectionType<?> sectionType) {
-        return getMapList().get(sectionType);
     }
 
     public void remove(Section<?> section){
@@ -369,8 +367,10 @@ public class SectionList extends FixedBlockContainer
         MapItem mapItem = mapList.getOrCreate(sectionType);
         section = mapItem.createNewSection();
         add(section);
-        sortSection(SectionType.getR8Order());
-        mapItem.link(getHeader());
+        if (!isReading()) {
+            sortSection(SectionType.getR8Order());
+            mapItem.link(getHeader());
+        }
         return section;
     }
 
@@ -567,7 +567,6 @@ public class SectionList extends FixedBlockContainer
             dexLayoutBlock.clear();
         }
         if(mergedOnce){
-            refresh();
             sortStrings();
             refresh();
         }

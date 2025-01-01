@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
@@ -64,22 +63,7 @@ public class IdSection<T extends IdItem> extends Section<T> {
         }
         return result;
     }
-    @Override
-    public T[] getSectionItems(int[] indexes){
-        if(indexes == null || indexes.length == 0){
-            return null;
-        }
-        BlockListArray<T> itemArray = getItemArray();
-        int length = indexes.length;
-        T[] results = itemArray.newArrayInstance(indexes.length);
-        for(int i = 0; i < length; i++){
-            results[i] = itemArray.get(indexes[i]);
-            if(results[i] == null){
-                throw new NullPointerException("Null id: " + i);
-            }
-        }
-        return results;
-    }
+
     public T createItem() {
         return getItemArray().createNext();
     }

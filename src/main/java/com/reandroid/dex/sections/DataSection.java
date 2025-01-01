@@ -15,11 +15,9 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.data.DataItem;
 import com.reandroid.dex.pool.DexSectionPool;
-
 
 public class DataSection<T extends DataItem> extends Section<T> {
 
@@ -38,10 +36,7 @@ public class DataSection<T extends DataItem> extends Section<T> {
     public T getSectionItem(int offset){
         return getItemArray().getAt(offset);
     }
-    @Override
-    public T[] getSectionItems(int[] offsets){
-        return getItemArray().getAt(offsets);
-    }
+
     public T createItem() {
         int position = estimateLastOffset();
         T item = getItemArray().createNext();
@@ -65,13 +60,11 @@ public class DataSection<T extends DataItem> extends Section<T> {
     private int estimateLastOffset() {
         int offset;
         T last = getItemArray().getLast();
-        if(last != null) {
-            IntegerReference supplier = last.getOffsetReference();
-            offset = supplier.get();
-            offset += last.countBytes();
-        }else {
+        if (last != null) {
+            offset = last.getOffset() + last.countBytes();
+        } else {
             offset = getOffset() + countBytes();
-            if(offset == 0){
+            if (offset == 0) {
                 offset = estimateMainOffset();
             }
         }

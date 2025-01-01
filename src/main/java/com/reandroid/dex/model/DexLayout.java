@@ -236,9 +236,6 @@ public class DexLayout implements DexClassModule, Closeable,
     public void clearPoolMap() {
         getDexLayoutBlock().clearPoolMap();
     }
-    public void sortStrings() {
-        getDexLayoutBlock().sortStrings();
-    }
     public Iterator<DexInstruction> getDexInstructions() {
         return new IterableIterator<DexClass, DexInstruction>(getDexClasses()) {
             @Override
@@ -310,6 +307,7 @@ public class DexLayout implements DexClassModule, Closeable,
             smaliClass.parse(reader);
             layout.fromSmali(smaliClass);
         }
+        sort();
         shrink();
     }
 

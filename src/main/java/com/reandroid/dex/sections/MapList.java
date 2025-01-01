@@ -140,7 +140,7 @@ public class MapList extends SpecialItem
     public MapItem getOrCreate(SectionType<?> type){
         MapItem mapItem = get(type);
         if(mapItem != null){
-            return null;
+            return mapItem;
         }
         mapItem = itemArray.createNext();
         mapItem.setType(type);

@@ -63,6 +63,9 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
     public boolean isRemoved(){
         return getParent() == null;
     }
+    public void onRemovedInternal() {
+    }
+
     @SuppressWarnings("unchecked")
     protected <T1 extends Key> T1 checkKey(T1 newKey){
         Key lastKey = this.mLastKey;

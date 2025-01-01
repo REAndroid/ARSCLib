@@ -83,6 +83,7 @@ public class SectionArray<T extends SectionItem> extends BlockListArray<T> imple
         if(section != null){
             section.onRemoving(item);
         }
+        item.onRemovedInternal();
     }
     @SuppressWarnings("unchecked")
     Section<T> getParentSection(){

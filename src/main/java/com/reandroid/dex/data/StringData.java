@@ -20,21 +20,18 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.base.OffsetReceiver;
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
-import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -43,77 +40,86 @@ public class StringData extends DataItem
         implements SmaliFormat, BlockRefresh,
         OffsetSupplier, OffsetReceiver, Comparable<StringData> {
 
-    private static final String EMPTY_STRING = StringsUtil.EMPTY;
-
     private final StringDataContainer mDataContainer;
-    private String mCache;
     private StringKey mKey;
 
     public StringData() {
         super(1);
         this.mDataContainer = new StringDataContainer(this);
         addChildBlock(0, mDataContainer);
-        this.mCache = EMPTY_STRING;
     }
 
     public void removeSelf(){
         throw new DexException("Remove STRING_ID first before STRING_DATA");
     }
-    public void removeSelf(StringId request){
-        if(request != null && request.getParent() != null){
+    public void removeSelf(StringId request) {
+        if (request == getOffsetReference()) {
             super.removeSelf();
         }
+        throw new DexException("Invalid remove request");
     }
 
     @Override
-    public StringKey getKey(){
+    public StringKey getKey() {
         return mKey;
     }
-    public void setKey(Key key){
-        StringKey stringKey = (StringKey) key;
-        String text = null;
-        if(stringKey != null) {
-            text = stringKey.getString();
+    public StringKey updateString(StringKey stringKey) {
+        if (stringKey == null) {
+            stringKey = StringKey.EMPTY;
         }
-        setString(text);
+        return writeKey(stringKey);
     }
+
+    @Override
+    public void setOffsetReference(IntegerReference reference) {
+        StringId stringId = (StringId) reference;
+        StringId current = getOffsetReference();
+        if (stringId == current) {
+            return;
+        }
+        if (stringId != null && current != null) {
+            throw new IllegalArgumentException("String data already linked: " + getString());
+        }
+        super.setOffsetReference(reference);
+    }
+    @Override
+    public StringId getOffsetReference() {
+        return (StringId) super.getOffsetReference();
+    }
+    @Override
+    public void setPosition(int position) {
+        StringId stringId = getOffsetReference();
+        if (stringId != null) {
+            stringId.set(position);
+        }
+    }
+
     @Override
     public SectionType<StringData> getSectionType() {
         return SectionType.STRING_DATA;
     }
-    public String getString(){
-        return mCache;
+    public String getString() {
+        StringKey key = getKey();
+        if (key != null) {
+            return key.getString();
+        }
+        return null;
     }
-    public void setString(String value){
-        if(mCache.equals(value) && mKey != null){
-            return;
-        }
-        if(value == null || value.length() == 0){
-            value = EMPTY_STRING;
-        }
-        mCache = value;
-        encodeString(value);
-        StringKey key;
-        if(value.length() == 0){
-            key = StringKey.EMPTY;
-        }else {
-            key = new StringKey(value);
-        }
-        this.mKey = key;
+    public void setString(String value) {
+        updateString(StringKey.create(value));
     }
-    public String getQuotedString() {
-        return DexUtils.quoteString(getString());
+    private StringKey writeKey(StringKey stringKey) {
+        StringKey oldKey = getKey();
+        if (stringKey.equals(oldKey)) {
+            return oldKey;
+        }
+        encodeString(stringKey.getString());
+        this.mKey = stringKey;
+        return stringKey;
     }
 
     void onStringBytesChanged() {
-        String cache = decodeString();
-        StringKey key;
-        if(cache.length() == 0){
-            key = StringKey.EMPTY;
-        }else {
-            key = new StringKey(cache);
-        }
-        this.mKey = key;
+        this.mKey = StringKey.create(decodeString());
     }
 
     @Override
@@ -140,27 +146,17 @@ public class StringData extends DataItem
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        if(reader.available() < 4){
-            return;
-        }
-        int position = reader.getPosition();
+        int start = reader.getPosition();
+        int position = getOffset();
+        reader.seek(position);
         String text = decodeString(StreamUtil.createByteReader(reader));
-        if(text.length() == 0){
-            text = EMPTY_STRING;
-        }
         int length = reader.getPosition() - position;
         reader.seek(position);
-        mDataContainer.setLength(length + 1);
-        byte[] bytes = mDataContainer.getBytesInternal();
-        reader.readFully(bytes);
-        mCache = text;
-        StringKey key;
-        if(text.length() == 0){
-            key = StringKey.EMPTY;
-        }else {
-            key = new StringKey(text);
-        }
-        this.mKey = key;
+        StringDataContainer container = this.mDataContainer;
+        container.setLength(length + 1);
+        reader.readFully(container.getBytesInternal());
+        reader.seek(start);
+        this.mKey = StringKey.create(text);
     }
 
     @Override
@@ -169,13 +165,37 @@ public class StringData extends DataItem
     }
 
     @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.append('"');
-        boolean unicodeDetected = DexUtils.encodeString(writer, getString());
-        writer.append('"');
-        if(unicodeDetected && writer.isCommentUnicodeStrings()) {
-            DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
+    public void onRemovedInternal() {
+        super.onRemovedInternal();
+        setOffsetReference(null);
+        this.mKey = null;
+        this.mDataContainer.setLength(0);
+    }
+
+    @Override
+    public int getUsageType() {
+        StringId stringId = getOffsetReference();
+        if (stringId != null) {
+            return stringId.getUsageType();
         }
+        return 0;
+    }
+
+    @Override
+    public boolean isBlank() {
+        return getOffsetReference() == null;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        if (isRemoved()) {
+            throw new IOException("REMOVED string data");
+        }
+        StringKey key = getKey();
+        if (key == null) {
+            throw new IOException("Null string key: " + this.toString());
+        }
+        key.append(writer, writer.isCommentUnicodeStrings());
     }
     @Override
     public int compareTo(StringData stringData) {
@@ -302,9 +322,6 @@ public class StringData extends DataItem
                 + " at offset " + offset);
     }
 
-    public static boolean equals(StringData stringData1, StringData stringData2) {
-        return CompareUtil.compare(stringData1, stringData2) == 0;
-    }
     static class StringDataContainer extends BlockItem {
         private final StringData stringData;
 

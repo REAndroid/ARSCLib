@@ -15,14 +15,15 @@
  */
 package com.reandroid.dex.id;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -45,36 +46,31 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         return SectionType.STRING_ID;
     }
     @Override
-    public StringKey getKey(){
+    public StringKey getKey() {
         StringData stringData = getStringData();
-        if(stringData != null){
+        if (stringData != null) {
             return stringData.getKey();
         }
         return null;
     }
     @Override
-    public void setKey(Key key){
-        StringKey old = getKey();
-        StringData stringData = ensureStringData();
-        stringData.setKey(key);
-        if(old != null && !old.equals(getKey())){
-            keyChanged(old);
+    public void setKey(Key key) {
+        requireStringData();
+        StringKey oldKey = getKey();
+        StringData stringData = getStringData();
+        StringKey update = stringData.updateString((StringKey) key);
+        if (oldKey != update) {
+            keyChanged(oldKey);
         }
     }
+
     @Override
-    public void removeSelf() {
+    public void onRemovedInternal() {
         StringData stringData = this.stringData;
-        if(stringData != null){
-            int usage = stringData.getUsageType();
-            usage = usage - 1;
-            stringData.clearUsageType();
-            stringData.addUsageType(usage);
-            if(usage == 0){
-                stringData.removeSelf(this);
-            }
+        if (stringData != null) {
+            stringData.removeSelf(this);
+            this.stringData = null;
         }
-        super.removeSelf();
-        this.stringData = null;
     }
 
     public StringData getStringData() {
@@ -88,16 +84,7 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
             throw new IllegalArgumentException("String data already linked");
         }
         this.stringData = stringData;
-        int usage = stringData.getUsageType();
-        stringData.addUsageType(usage + 1);
-    }
-    private StringData ensureStringData(){
-        StringData stringData = getStringData();
-        if(stringData == null){
-            stringData = getOrCreateSection(SectionType.STRING_DATA).createItem();
-            linkStringData(stringData);
-        }
-        return stringData;
+        stringData.setOffsetReference(this);
     }
 
     @Override
@@ -110,22 +97,21 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
     }
     @Override
     public void refresh() {
-        StringData stringData = this.stringData;
-        set(stringData.getOffset());
-        int usage = stringData.getUsageType();
-        stringData.clearUsageType();
-        stringData.addUsageType(usage + 1);
+        set(this.stringData.getOffset());
     }
     @Override
     void cacheItems() {
-        // No the right time to request StringData
     }
-    public String getQuotedString(){
+    private void requireStringData() {
         StringData stringData = getStringData();
-        if(stringData != null){
-            return stringData.getQuotedString();
+        if (stringData == null) {
+            if (isRemoved()) {
+                throw new IllegalArgumentException("Removed string id, index = " +
+                        getIndex() + ", offset = " + get());
+            }
+            throw new IllegalArgumentException("Unlinked string id, index = " +
+                    getIndex() + ", offset = " + get());
         }
-        return null;
     }
     public String getString() {
         StringData stringData = getStringData();
@@ -134,45 +120,20 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         }
         return null;
     }
-    public void setString(String text){
-        StringKey old = getKey();
-        StringData stringData = ensureStringData();
-        stringData.setString(text);
-        if(old != null && !old.equals(getKey())){
-            keyChanged(old);
-        }
+    public void setString(String text) {
+        setKey(StringKey.create(text));
     }
 
     @Override
-    protected void keyChanged(Key oldKey) {
-        super.keyChanged(oldKey);
-        StringKey current = getKey();
-        if(current != null){
-            current.setSignature(containsUsage(UsageMarker.USAGE_SIGNATURE_TYPE));
-        }
-    }
-
-    @Override
-    public void addUsageType(int usage) {
-        super.addUsageType(usage);
-        if(usage == UsageMarker.USAGE_SIGNATURE_TYPE){
-            getKey().setSignature(true);
-        }
-    }
-
-    @Override
-    public void clearUsageType() {
-        super.clearUsageType();
-        StringKey key = getKey();
-        if(key != null){
-            key.setSignature(false);
-        }
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        getStringData().onReadBytes(reader);
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         StringData stringData = getStringData();
-        if(stringData != null){
+        if (stringData != null) {
             stringData.append(writer);
         }
     }
@@ -181,7 +142,7 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         if(stringId == null){
             return -1;
         }
-        if(stringId == this){
+        if (stringId == this) {
             return 0;
         }
         // compare only index (not offset=idx) bc StringData is already sorted
@@ -190,20 +151,23 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
 
     @Override
     public String toString() {
-        StringData stringData = this.stringData;
-        if(stringData != null){
+        StringData stringData = this.getStringData();
+        if (stringData != null) {
             return stringData.toString();
         }
-        return Integer.toString(get());
+        if (isRemoved()) {
+            return "REMOVED";
+        }
+        return "Unlinked index = " + getIndex() + ", offset = " + get();
     }
 
     public static boolean equals(StringId stringId1, StringId stringId2) {
-        if(stringId1 == stringId2) {
+        if (stringId1 == stringId2) {
             return true;
         }
-        if(stringId1 == null) {
+        if (stringId1 == null) {
             return false;
         }
-        return StringData.equals(stringId1.getStringData(), stringId2.getStringData());
+        return ObjectsUtil.equals(stringId1.getStringData(), stringId2.getStringData());
     }
 }

@@ -81,13 +81,6 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public boolean isEmpty(){
         return getCount() == 0;
     }
-    public boolean removeIfEmpty(){
-        if(isEmpty()){
-            removeSelf();
-            return true;
-        }
-        return false;
-    }
     public void removeSelf(){
         SectionList sectionList = getSectionList();
         if(sectionList != null){
@@ -162,9 +155,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public T getSectionItem(int idx){
         return null;
     }
-    public T[] getSectionItems(int[] indexes){
-        return null;
-    }
+
     public T getOrCreate(Key key) {
         return getPool().getOrCreate(key);
     }

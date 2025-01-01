@@ -19,8 +19,11 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.data.StringData;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.Swappable;
 
 import java.io.IOException;
+import java.util.Comparator;
 
 public class StringDataArray extends DataSectionArray<StringData> {
 
@@ -29,10 +32,37 @@ public class StringDataArray extends DataSectionArray<StringData> {
     }
 
     @Override
+    public boolean sort(Comparator<? super StringData> comparator) {
+        return this.sort(comparator, null);
+    }
+
+    @Override
+    public boolean sort(Comparator<? super StringData> comparator, Swappable swappable) {
+        StringIdArray stringIdArray = getStringIdArray();
+        if (stringIdArray != null) {
+            return super.sort(comparator, stringIdArray);
+        }
+        return false;
+    }
+
+    @Override
+    public void moveTo(StringData item, int index) {
+        super.moveTo(item, index);
+        getStringIdArray().moveTo(item.getOffsetReference(), index);
+    }
+
+    @Override
+    public boolean swap(StringData item1, StringData item2) {
+        boolean swapped = super.swap(item1, item2);
+        getStringIdArray().swap(item1.getOffsetReference(), item2.getOffsetReference());
+        return swapped;
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+    }
+    @Override
     public void readChildes(BlockReader reader) throws IOException {
-        super.readChildes(reader);
-        StringIdArray idArray = getStringIdArray();
-        idArray.link(this);
     }
 
 
@@ -44,6 +74,6 @@ public class StringDataArray extends DataSectionArray<StringData> {
                 return section.getItemArray();
             }
         }
-        return null;
+        return ObjectsUtil.getNull();
     }
 }
