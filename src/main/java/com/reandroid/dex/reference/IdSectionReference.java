@@ -75,7 +75,13 @@ public abstract class IdSectionReference<T extends IdItem> implements
     public void setKey(Key key) {
         T item = getSectionTool().getOrCreateSection(getSectionType())
                 .getOrCreate(key);
-        setItem(item);
+        this.item = item;
+        int idx = onSetKey(item.getIdx());
+        set(idx);
+        updateUsage();
+    }
+    protected int onSetKey(int idx) {
+        return idx;
     }
 
     @Override
@@ -89,7 +95,8 @@ public abstract class IdSectionReference<T extends IdItem> implements
 
     @Override
     public void pullItem() {
-        setItem(getSectionTool().getSectionItem(getSectionType(), get()));
+        this.item = getSectionTool().getSectionItem(getSectionType(), get());
+        updateUsage();
     }
 
     private void updateUsage(){

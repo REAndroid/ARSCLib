@@ -43,6 +43,17 @@ public class InsIdSectionReference extends IdSectionReference<IdItem> {
     public void set(int value) {
         getSectionTool().setData(value);
     }
+
+    @Override
+    protected int onSetKey(int idx) {
+        if (idx > 0xffff) {
+            if (getSectionTool().is(Opcode.CONST_STRING)) {
+                idx = 0;
+            }
+        }
+        return idx;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public SectionType<IdItem> getSectionType() {
