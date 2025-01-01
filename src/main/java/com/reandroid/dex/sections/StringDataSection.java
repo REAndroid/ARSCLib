@@ -28,6 +28,11 @@ public class StringDataSection extends DataSection<StringData> {
     }
 
     @Override
+    int clearUnused() {
+        return 0;
+    }
+
+    @Override
     boolean keyChanged(SectionItem block, Key key) {
         return super.keyChanged(block, key);
     }

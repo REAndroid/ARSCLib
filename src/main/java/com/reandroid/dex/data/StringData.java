@@ -55,8 +55,9 @@ public class StringData extends DataItem
     public void removeSelf(StringId request) {
         if (request == getOffsetReference()) {
             super.removeSelf();
+        } else {
+            throw new DexException("Invalid remove request");
         }
-        throw new DexException("Invalid remove request");
     }
 
     @Override
