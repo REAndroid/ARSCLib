@@ -75,8 +75,8 @@ public class SectionArray<T extends SectionItem> extends BlockListArray<T> imple
     }
     @Override
     public void onPreRemove(T item) {
-        super.onPreRemove(item);
         notifyBeforeRemoved(item);
+        super.onPreRemove(item);
     }
     private void notifyBeforeRemoved(T item){
         Section<T> section = getParentSection();
