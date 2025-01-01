@@ -31,7 +31,15 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
     }
 
     public Origin getOrigin() {
-        return origin;
+        Origin origin = this.origin;
+        if (origin != null) {
+            return origin;
+        }
+        Smali parent = getParent();
+        if (parent != null) {
+            return parent.getOrigin();
+        }
+        return null;
     }
     public void setOrigin(Origin origin) {
         this.origin = origin;

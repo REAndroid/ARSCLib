@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.common.Origin;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.smali.SmaliReader;
 
 import java.io.IOException;
@@ -31,5 +33,23 @@ public class SmaliCode extends Smali {
     @Override
     public void parse(SmaliReader reader) throws IOException {
 
+    }
+    public String buildOrigin() {
+        StringBuilder builder = new StringBuilder();
+        Origin origin = getOrigin();
+        if (origin != null) {
+            builder.append('\n');
+            builder.append(origin);
+        } else {
+            SmaliMethod method = getParentInstance(SmaliMethod.class);
+            if (method != null) {
+                MethodKey key = method.getKey();
+                if (key != null) {
+                    builder.append(" on method: ");
+                    builder.append(key);
+                }
+            }
+        }
+        return builder.toString();
     }
 }

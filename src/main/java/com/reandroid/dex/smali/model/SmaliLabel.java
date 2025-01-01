@@ -49,8 +49,8 @@ public class SmaliLabel extends SmaliCode {
 
     public int getIntegerData() {
         int address = getAddress();
-        if(address == -1){
-            throw new DexException("Missing target label '" + getLabelName() + "'");
+        if (address == -1) {
+            throw new DexException("Missing target label '" + getLabelName() + "'" + buildOrigin());
         }
         return address;
     }
