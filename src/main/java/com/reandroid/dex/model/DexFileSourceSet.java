@@ -279,7 +279,7 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
         }
         dexFile = DexFile.read(dexSource.openStream(), getReadFilter());
         dexSource.set(dexFile);
-        dexFile.setSimpleName(dexSource.toString());
+        dexFile.setSimpleName(dexSource.getSimpleName());
     }
 
     @Override

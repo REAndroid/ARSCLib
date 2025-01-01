@@ -347,12 +347,12 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
         return FileUtil.getFileName(simpleName);
     }
     public String buildSmaliDirectoryName() {
+        String name = getSimpleName();
+        if(name != null && name.endsWith(".dex")) {
+            return name.substring(0, name.length() - 4);
+        }
         DexDirectory dexDirectory = getDexDirectory();
         if(dexDirectory == null) {
-            String name = getSimpleName();
-            if(name != null && name.endsWith(".dex")) {
-                return name.substring(0, name.length() - 4);
-            }
             return "classes";
         }
         int i = 0;
