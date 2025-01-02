@@ -14,7 +14,7 @@ import java.util.AbstractList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResXmlNode> {
 
@@ -45,7 +45,7 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
     public<T extends ResXmlNode> Iterator<T> recursive(Class<T> instance) {
         return InstanceIterator.of(recursive(), instance);
     }
-    public<T extends ResXmlNode> Iterator<T> recursive(Class<T> instance, Predicate<? super T> predicate) {
+    public<T extends ResXmlNode> Iterator<T> recursive(Class<T> instance, org.apache.commons.collections4.Predicate<? super T> predicate) {
         return InstanceIterator.of(recursive(), instance, predicate);
     }
     public Iterator<ResXmlNode> recursive() {
@@ -101,10 +101,10 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
         return getNodeList().remove(i);
     }
     @Override
-    public boolean removeIf(Predicate<? super ResXmlNode> predicate) {
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super ResXmlNode> predicate) {
         return getNodeList().removeIf(predicate);
     }
-    public int countIf(Predicate<? super ResXmlNode> predicate) {
+    public int countIf(org.apache.commons.collections4.Predicate<? super ResXmlNode> predicate) {
         return getNodeList().countIf(predicate);
     }
     @Override

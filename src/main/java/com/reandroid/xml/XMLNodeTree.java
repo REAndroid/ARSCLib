@@ -22,7 +22,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public abstract class XMLNodeTree extends XMLNode implements
         NodeTree<XMLNode>, Iterable<XMLNode>, SizedSupplier<XMLNode> {
@@ -54,7 +54,7 @@ public abstract class XMLNodeTree extends XMLNode implements
             lastTrimSize = 0;
         }
     }
-    public Iterator<XMLNode> iterator(Predicate<? super XMLNode> filter){
+    public Iterator<XMLNode> iterator(org.apache.commons.collections4.Predicate<? super XMLNode> filter){
         return new IndexIterator<>(this, filter);
     }
     @Override
@@ -75,9 +75,8 @@ public abstract class XMLNodeTree extends XMLNode implements
         }
     }
     public void addAll(Iterable<? extends XMLNode> iterable){
-        Iterator<? extends XMLNode> itr = iterable.iterator();
-        while (itr.hasNext()){
-            add(itr.next());
+        for (XMLNode xmlNode : iterable) {
+            add(xmlNode);
         }
     }
     public boolean add(XMLNode xmlNode) {
@@ -144,11 +143,11 @@ public abstract class XMLNodeTree extends XMLNode implements
      * Use removeIf
      * */
     @Deprecated
-    public boolean remove(Predicate<? super XMLNode> filter) {
+    public boolean remove(org.apache.commons.collections4.Predicate<? super XMLNode> filter) {
         throw new RuntimeException("Depreciated method");
     }
     @Override
-    public boolean removeIf(Predicate<? super XMLNode> filter) {
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super XMLNode> filter) {
         synchronized (this){
             return mNodeList.removeIf(filter);
         }

@@ -19,7 +19,7 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.NumbersUtil;
 
 import java.util.*;
-import java.util.function.Predicate;
+
 
 @SuppressWarnings("unchecked")
 public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Swappable {
@@ -86,7 +86,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public ArrayCollection<T> copy(){
         return new ArrayCollection<>(toArray().clone());
     }
-    public ArrayCollection<T> filter(Predicate<? super T> filter){
+    public ArrayCollection<T> filter(org.apache.commons.collections4.Predicate<? super T> filter){
         int count = count(filter);
         if(count == size()){
             return this;
@@ -104,17 +104,17 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         collection.addAll(this.iterator(instance));
         return collection;
     }
-    public int count(Predicate<? super T> filter){
+    public int count(org.apache.commons.collections4.Predicate<? super T> filter){
         return count(filter, size());
     }
-    public int count(Predicate<? super T> filter, int limit){
+    public int count(org.apache.commons.collections4.Predicate<? super T> filter, int limit){
         int result = 0;
         int size = size();
         for(int i = 0; i < size; i++){
             if(result >= limit){
                 break;
             }
-            if(filter.test(get(i))){
+            if(filter.evaluate(get(i))){
                 result ++;
             }
         }
@@ -138,10 +138,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         return result;
     }
-    public int countFromLast(Predicate<? super T> predicate){
+    public int countFromLast(org.apache.commons.collections4.Predicate<? super T> predicate){
         int result = 0;
         int i = this.size() - 1;
-        while (i >= 0 && predicate.test(get(i))) {
+        while (i >= 0 && predicate.evaluate(get(i))) {
             result ++;
             i --;
         }
@@ -218,10 +218,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         return containsExact(obj) || containsEquals(obj);
     }
-    public boolean containsIf(Predicate<? super T> predicate) {
+    public boolean containsIf(org.apache.commons.collections4.Predicate<? super T> predicate) {
         return containsIf(0, predicate);
     }
-    public boolean containsIf(int start, Predicate<? super T> predicate) {
+    public boolean containsIf(int start, org.apache.commons.collections4.Predicate<? super T> predicate) {
         if(start < 0) {
             start = 0;
         }
@@ -231,7 +231,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         Object[] elements = this.mElements;
         for(int i = start; i < size; i++){
-            if(predicate.test((T)elements[i])){
+            if(predicate.evaluate((T)elements[i])){
                 return true;
             }
         }
@@ -346,7 +346,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public<T1> Iterator<T1> iterator(Class<T1> instance){
         return InstanceIterator.of(iterator(), instance);
     }
-    public Iterator<T> iterator(Predicate<? super T> filter){
+    public Iterator<T> iterator(org.apache.commons.collections4.Predicate<? super T> filter){
         return FilterIterator.of(iterator(), filter);
     }
     @Override
@@ -424,7 +424,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             arrayCopy(elements, out, length);
             return out;
         }
-        return (T1[]) Arrays.copyOf(elements, size, out.getClass());
+        T1[] newArray = (T1[]) java.lang.reflect.Array.newInstance(out.getClass().getComponentType(), size);
+        for (int i = 0; i < size; i++) {
+            newArray[i] = (T1) elements[i];
+        }
+        return newArray;
     }
     public <T1> T1[] toArrayFill(T1[] out) {
         Object[] elements = this.mElements;
@@ -444,7 +448,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return result;
     }
 
-    public ArrayCollection<T> subListIf(Predicate<? super T> predicate) {
+    public ArrayCollection<T> subListIf(org.apache.commons.collections4.Predicate<? super T> predicate) {
         ArrayCollection<T> results = new ArrayCollection<>();
         results.addAll(this.iterator(predicate));
         return results;
@@ -585,10 +589,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return result;
     }
 
-    public int indexOfIf(Predicate<? super T> predicate) {
+    public int indexOfIf(org.apache.commons.collections4.Predicate<? super T> predicate) {
         return indexOfIf(0, predicate);
     }
-    public int indexOfIf(int start, Predicate<? super T> predicate) {
+    public int indexOfIf(int start, org.apache.commons.collections4.Predicate<? super T> predicate) {
         if(start < 0) {
             start = 0;
         }
@@ -598,7 +602,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         Object[] elements = this.mElements;
         for(int i = start; i < size; i++){
-            if(predicate.test((T)elements[i])){
+            if(predicate.evaluate((T)elements[i])){
                 return i;
             }
         }
@@ -730,8 +734,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mElements = update;
         return true;
     }
-    @Override
-    public boolean removeIf(Predicate<? super T> filter){
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super T> filter){
         Object[] elements = this.mElements;
         if(elements == null){
             return false;
@@ -743,7 +746,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         int result = 0;
         for(int i = 0; i < length; i++){
             T item = (T)elements[i];
-            if(filter.test(item)) {
+            if(filter.evaluate(item)) {
                 elements[i] = null;
                 notifyRemoved(i, item);
                 result ++;
@@ -1036,9 +1039,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return update;
     }
     private void arrayCopy(Object[] source, Object[] destination, int length){
-        for(int i = 0; i < length; i++){
-            destination[i] = source[i];
-        }
+        if (length >= 0) System.arraycopy(source, 0, destination, 0, length);
     }
     private Object[] getNewArray(Object[] source, int length){
         Object[] result = getNewArray(length);

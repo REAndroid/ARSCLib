@@ -23,7 +23,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class ArrayValueKey extends ArrayKey<Key> {
 
@@ -120,7 +120,7 @@ public class ArrayValueKey extends ArrayKey<Key> {
         return (ArrayValueKey) super.remove(index);
     }
     @Override
-    public ArrayValueKey removeIf(Predicate<? super Key> predicate) {
+    public ArrayValueKey removeIf(org.apache.commons.collections4.Predicate<? super Key> predicate) {
         return (ArrayValueKey) super.removeIf(predicate);
     }
     @Override

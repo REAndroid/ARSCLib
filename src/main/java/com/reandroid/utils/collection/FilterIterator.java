@@ -17,16 +17,16 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 
-public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
+
+public class FilterIterator<T> implements Iterator<T>, org.apache.commons.collections4.Predicate<T> {
 
     private final Iterator<? extends T> iterator;
     private T mNext;
-    private final Predicate<? super T> mFilter;
+    private final org.apache.commons.collections4.Predicate<? super T> mFilter;
     private boolean mFinished;
 
-    public FilterIterator(Iterator<? extends T> iterator, Predicate<? super T> filter){
+    public FilterIterator(Iterator<? extends T> iterator, org.apache.commons.collections4.Predicate<? super T> filter){
         this.iterator = iterator;
         this.mFilter = filter;
     }
@@ -35,7 +35,7 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
     }
 
     @Override
-    public boolean test(T item){
+    public boolean evaluate(T item){
         return item != null;
     }
 
@@ -75,11 +75,11 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         return mNext;
     }
     private boolean testAll(T item){
-        if(item == null || !test(item)){
+        if(item == null || !evaluate(item)){
             return false;
         }
         return mFilter == null
-                || mFilter.test(item);
+                || mFilter.evaluate(item);
     }
 
     public static final class Except<T1> extends FilterIterator<T1>{
@@ -96,7 +96,7 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         }
 
         @Override
-        public boolean test(T1 item){
+        public boolean evaluate(T1 item){
             if(item == null || item == excludeItem){
                 return false;
             }
@@ -106,7 +106,7 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
             return item.equals(excludeItem);
         }
     }
-    public static<T1> Iterator<T1> of(Iterator<? extends T1> iterator,  Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(Iterator<? extends T1> iterator,  org.apache.commons.collections4.Predicate<? super T1> filter){
         if(iterator == null || !iterator.hasNext()){
             return EmptyIterator.of();
         }

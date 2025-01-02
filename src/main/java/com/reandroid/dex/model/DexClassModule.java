@@ -12,7 +12,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public interface DexClassModule extends DexClassRepository {
 
@@ -32,10 +32,10 @@ public interface DexClassModule extends DexClassRepository {
     DexClass getOrCreateClass(TypeKey key);
 
     @Override
-    Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter);
+    Iterator<DexClass> getDexClasses(org.apache.commons.collections4.Predicate<? super TypeKey> filter);
 
     @Override
-    Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
+    Iterator<DexClass> getDexClassesCloned(org.apache.commons.collections4.Predicate<? super TypeKey> filter);
 
     @Override
     boolean sort();
@@ -99,16 +99,16 @@ public interface DexClassModule extends DexClassRepository {
     }
 
     @Override
-    <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
+    <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<T1> filter);
 
     @Override
-    <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter);
+    <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<? super Key> filter);
 
     @Override
     <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key);
 
     @Override
-    boolean removeClasses(Predicate<? super DexClass> filter);
+    boolean removeClasses(org.apache.commons.collections4.Predicate<? super DexClass> filter);
 
     @Override
     void clearPoolMap();

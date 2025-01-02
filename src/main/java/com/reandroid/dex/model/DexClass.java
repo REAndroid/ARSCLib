@@ -34,7 +34,7 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class DexClass extends DexDeclaration implements ClassProgram, Comparable<DexClass> {
 
@@ -72,19 +72,19 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     public Set<DexClass> getRequired(){
         return getRequired(null);
     }
-    public Set<DexClass> getRequired(Predicate<TypeKey> exclude){
+    public Set<DexClass> getRequired(org.apache.commons.collections4.Predicate<TypeKey> exclude){
         Set<DexClass> results = new HashSet<>();
         results.add(this);
         searchRequired(exclude, results);
         return results;
     }
-    private void searchRequired(Predicate<TypeKey> exclude, Set<DexClass> results){
+    private void searchRequired(org.apache.commons.collections4.Predicate<TypeKey> exclude, Set<DexClass> results){
         DexClassRepository dexClassRepository = getClassRepository();
         Iterator<TypeKey> iterator = usedTypes();
         while (iterator.hasNext()){
             TypeKey typeKey = iterator.next();
             typeKey = typeKey.getDeclaring();
-            if(exclude != null && !exclude.test(typeKey)){
+            if(exclude != null && !exclude.evaluate(typeKey)){
                 continue;
             }
             DexClass dexClass = dexClassRepository.getDexClass(typeKey);
@@ -333,7 +333,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     public FieldDef getOrCreateInstance(FieldKey fieldKey){
         return getOrCreateClassData().getOrCreateInstance(fieldKey);
     }
-    public Iterator<DexMethod> getDeclaredMethods(Predicate<DexMethod> filter) {
+    public Iterator<DexMethod> getDeclaredMethods(org.apache.commons.collections4.Predicate<DexMethod> filter) {
         Iterator<DexMethod> iterator = getDeclaredMethods();
         if(filter == null){
             return iterator;
@@ -373,7 +373,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     public Iterator<DexInstruction> getDexInstructions(){
         return getDexInstructions(null);
     }
-    public Iterator<DexInstruction> getDexInstructions(Predicate<DexMethod> filter){
+    public Iterator<DexInstruction> getDexInstructions(org.apache.commons.collections4.Predicate<DexMethod> filter){
         return new IterableIterator<DexMethod, DexInstruction>(getDeclaredMethods(filter)) {
             @Override
             public Iterator<DexInstruction> iterator(DexMethod element) {

@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.function.Predicate;
+
 
 public class RField extends DexField implements Comparable<RField> {
 
@@ -199,7 +199,7 @@ public class RField extends DexField implements Comparable<RField> {
             return EmptyIterator.of();
         }
         @Override
-        public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
+        public Iterator<Entry> iterator(org.apache.commons.collections4.Predicate<? super Entry> filter) {
             return EmptyIterator.of();
         }
         public RField getRField() {

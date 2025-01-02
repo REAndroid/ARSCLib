@@ -5,6 +5,8 @@
 */
 package com.reandroid.json;
 
+import com.reandroid.utils.StringsUtil;
+
 import java.io.Reader;
 
 public class XMLTokener extends JSONTokener {
@@ -95,7 +97,7 @@ public class XMLTokener extends JSONTokener {
 
     static String unescapeEntity(String e) {
         // validate
-        if (e == null || e.isEmpty()) {
+        if (StringsUtil.isEmpty(e)) {
             return "";
         }
         // if our entity is an encoded unicode point, parse it.

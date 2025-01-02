@@ -157,7 +157,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
     }
     public void writePublicXml(OutputStream outputStream) throws IOException {
         XmlSerializer serializer = XMLFactory.newSerializer(outputStream);
-        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        serializer.setOutput(outputStream, com.reandroid.utils.StringsUtil.UTF_8.name());
         write(serializer);
     }
     public void write(XmlSerializer serializer) throws IOException {

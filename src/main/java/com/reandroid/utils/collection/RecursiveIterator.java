@@ -17,26 +17,26 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import org.apache.commons.collections4.Transformer;
+
 
 public class RecursiveIterator<T> implements Iterator<T> {
 
     private T item;
-    private final Function<T, Iterator<? extends T>> function;
-    private final Predicate<? super T> filter;
+    private final Transformer<T, Iterator<? extends T>> function;
+    private final org.apache.commons.collections4.Predicate<? super T> filter;
 
     private boolean firstProcessed;
     private T current;
     private Iterator<? extends T> currentIterator;
     private RecursiveIterator<T> currentRecursiveIterator;
 
-    public RecursiveIterator(T item, Function<T, Iterator<? extends T>> function, Predicate<? super T> filter){
+    public RecursiveIterator(T item, Transformer<T, Iterator<? extends T>> function, org.apache.commons.collections4.Predicate<? super T> filter){
         this.item = item;
         this.function = function;
         this.filter = filter;
     }
-    public RecursiveIterator(T item, Function<T, Iterator<? extends T>> function){
+    public RecursiveIterator(T item, Transformer<T, Iterator<? extends T>> function){
         this(item, function, null);
     }
 
@@ -109,7 +109,7 @@ public class RecursiveIterator<T> implements Iterator<T> {
         if(element == null){
             iterator = null;
         }else {
-            iterator = function.apply(element);
+            iterator = function.transformer(element);
         }
         this.currentIterator = iterator;
     }
@@ -118,26 +118,26 @@ public class RecursiveIterator<T> implements Iterator<T> {
         if(element == null){
             return false;
         }
-        Predicate<? super T> filter = this.filter;
-        return filter == null || filter.test(element);
+        org.apache.commons.collections4.Predicate<? super T> filter = this.filter;
+        return filter == null || filter.evaluate(element);
     }
 
-    public static<T1> Iterator<T1> of(T1 item, Function<T1, Iterator<? extends T1>> function, Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(T1 item, Transformer<T1, Iterator<? extends T1>> function, org.apache.commons.collections4.Predicate<? super T1> filter){
         return new RecursiveIterator<>(item, function, filter);
     }
-    public static<T1> Iterator<T1> of(T1 item, Function<T1, Iterator<? extends T1>> function){
+    public static<T1> Iterator<T1> of(T1 item, Transformer<T1, Iterator<? extends T1>> function){
         return new RecursiveIterator<>(item, function);
     }
 
-    public static<T1, E> Iterator<E> compute(T1 item, Function<T1, Iterator<? extends T1>> function, Function<T1, Iterator<? extends E>> computer){
+    public static<T1, E> Iterator<E> compute(T1 item, Transformer<T1, Iterator<? extends T1>> function, Transformer<T1, Iterator<? extends E>> computer){
         return compute(item, function, null, computer);
     }
     @SuppressWarnings("unchecked")
-    public static<T1, E> Iterator<E> compute(T1 item, Function<T1, Iterator<? extends T1>> function, Predicate<? super T1> filter, Function<T1, Iterator<? extends E>> computer){
+    public static<T1, E> Iterator<E> compute(T1 item, Transformer<T1, Iterator<? extends T1>> function, org.apache.commons.collections4.Predicate<? super T1> filter, Transformer<T1, Iterator<? extends E>> computer){
         return new IterableIterator<T1, E>(new RecursiveIterator<>(item, function, filter)) {
             @Override
             public Iterator<E> iterator(T1 element) {
-                return (Iterator<E>) computer.apply(element);
+                return (Iterator<E>) computer.transformer(element);
             }
         };
     }

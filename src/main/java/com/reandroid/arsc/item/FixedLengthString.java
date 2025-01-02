@@ -74,7 +74,7 @@ public class FixedLengthString  extends StringItem {
             return null;
         }
         int length = getEndNullPosition(bytes);
-        return new String(bytes,0, length, StandardCharsets.UTF_16LE);
+        return new String(bytes,0, length, com.reandroid.utils.StringsUtil.UTF_16LE);
     }
     private static int getEndNullPosition(byte[] bytes){
         int length = bytes.length;

@@ -30,7 +30,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class IntegerDataItemList<T extends DataItem> extends DataItem implements Iterable<T> {
 
@@ -136,8 +136,8 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     public void remove(T item) {
         removeIf(t -> t == item);
     }
-    public boolean removeIf(Predicate<? super T> filter) {
-        return referenceList.removeIf(reference -> filter.test(reference.getItem()));
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super T> filter) {
+        return referenceList.removeIf(reference -> filter.evaluate(reference.getItem()));
     }
     void removeNulls() {
         referenceList.removeIf(reference -> reference.getItem() == null);

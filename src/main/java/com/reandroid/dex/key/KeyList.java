@@ -23,7 +23,7 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
 
@@ -59,7 +59,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
     public Iterator<T> iterator() {
         return ArrayIterator.of(this.elements);
     }
-    public Iterator<T> iterator(Predicate<? super T> predicate) {
+    public Iterator<T> iterator(org.apache.commons.collections4.Predicate<? super T> predicate) {
         return ArrayIterator.of(this.elements, predicate);
     }
     public<T1 extends Key> Iterator<T1> iterator(Class<T1> instance) {
@@ -130,7 +130,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return newInstance(result);
     }
     @SuppressWarnings("unchecked")
-    public KeyList<T> removeIf(Predicate<? super T> predicate) {
+    public KeyList<T> removeIf(org.apache.commons.collections4.Predicate<? super T> predicate) {
         Key[] elements = this.elements;
         int length = elements.length;
         if (length == 0) {
@@ -140,7 +140,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         int j = 0;
         for (int i = 0; i < length; i++) {
             T item = (T) elements[i];
-            if (predicate.test(item)) {
+            if (predicate.evaluate(item)) {
                 if (filtered == null) {
                     filtered = elements.clone();
                     j = i;

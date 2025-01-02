@@ -19,7 +19,7 @@ import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.TypeKey;
 
-import java.util.function.Predicate;
+
 
 public interface AnnotatedProgram {
 
@@ -32,7 +32,7 @@ public interface AnnotatedProgram {
                 .add(annotation);
         setAnnotation(key);
     }
-    default boolean removeAnnotationIf(Predicate<? super AnnotationItemKey> predicate) {
+    default boolean removeAnnotationIf(org.apache.commons.collections4.Predicate<? super AnnotationItemKey> predicate) {
         AnnotationSetKey key = getAnnotation();
         AnnotationSetKey update = key.removeIf(predicate);
         if (key.equals(update)) {

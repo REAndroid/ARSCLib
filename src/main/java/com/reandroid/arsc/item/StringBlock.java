@@ -71,5 +71,5 @@ public abstract class StringBlock extends BlockItem implements StringReference {
         return get();
     }
 
-    public static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
+    public static final CharsetDecoder UTF8_DECODER = com.reandroid.utils.StringsUtil.UTF_8.newDecoder();
 }

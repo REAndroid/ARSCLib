@@ -22,9 +22,10 @@ import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.*;
-import java.util.function.Predicate;
+
 
 public class ReferenceResolver{
     private final TableBlock entryStore;
@@ -40,7 +41,7 @@ public class ReferenceResolver{
     public Entry resolve(int referenceId){
         return resolve(referenceId, null);
     }
-    public synchronized Entry resolve(int referenceId, Predicate<Entry> filter){
+    public synchronized Entry resolve(int referenceId, org.apache.commons.collections4.Predicate<Entry> filter){
         resolveReference(referenceId, filter);
         List<Entry> results = new ArrayCollection<>(this.results);
         reset();
@@ -53,19 +54,19 @@ public class ReferenceResolver{
     public List<Entry> resolveWithConfig(int referenceId, ResConfig resConfig){
         ConfigFilter configFilter = new ConfigFilter(resConfig);
         List<Entry> results = resolveAll(referenceId, configFilter);
-        results.sort(configFilter);
+        java.util.Collections.sort(results, configFilter);
         return results;
     }
     public List<Entry> resolveAll(int referenceId){
-        return resolveAll(referenceId, (Predicate<Entry>)null);
+        return resolveAll(referenceId, null);
     }
-    public synchronized List<Entry> resolveAll(int referenceId, Predicate<Entry> filter){
+    public synchronized List<Entry> resolveAll(int referenceId, org.apache.commons.collections4.Predicate<Entry> filter){
         resolveReference(referenceId, filter);
         List<Entry> results = new ArrayCollection<>(this.results);
         reset();
         return results;
     }
-    private void resolveReference(int referenceId, Predicate<Entry> filter){
+    private void resolveReference(int referenceId, org.apache.commons.collections4.Predicate<Entry> filter){
         if(referenceId == 0 || isFinished() || this.resolvedIds.contains(referenceId)){
             return;
         }
@@ -99,8 +100,8 @@ public class ReferenceResolver{
     private boolean isFinished(){
         return this.limit >= this.results.size();
     }
-    private void addResult(Predicate<Entry> filter, Entry entry){
-        if(filter == null || filter.test(entry)){
+    private void addResult(org.apache.commons.collections4.Predicate<Entry> filter, Entry entry){
+        if(filter == null || filter.evaluate(entry)){
             this.results.add(entry);
         }
     }
@@ -117,13 +118,13 @@ public class ReferenceResolver{
         return results;
     }
 
-    public static class ConfigFilter implements Predicate<Entry>, Comparator<Entry>{
+    public static class ConfigFilter implements org.apache.commons.collections4.Predicate<Entry>, Comparator<Entry>{
         private final ResConfig config;
         public ConfigFilter(ResConfig config){
             this.config = config;
         }
         @Override
-        public boolean test(Entry entry) {
+        public boolean evaluate(Entry entry) {
             ResConfig resConfig = entry.getResConfig();
             if(resConfig == null){
                 return false;

@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public class InstructionList extends FixedBlockContainer implements
         Iterable<Ins>, SmaliFormat {
@@ -160,7 +160,7 @@ public class InstructionList extends FixedBlockContainer implements
             return registerValue < count && isFreeRegister(registerValue, startIndex);
         });
         List<Register> list = CollectionUtil.toUniqueList(iterator);
-        list.sort(CompareUtil.getComparableComparator());
+        java.util.Collections.sort(list, CompareUtil.getComparableComparator());
         return list;
     }
     public boolean isFreeRegister(int registerValue, int startIndex){
@@ -191,12 +191,12 @@ public class InstructionList extends FixedBlockContainer implements
         return iterator(opcode, null);
     }
     @SuppressWarnings("unchecked")
-    public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode, Predicate<? super T1> filter){
+    public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode, org.apache.commons.collections4.Predicate<? super T1> filter){
         return ComputeIterator.of(iterator(), ins -> {
             T1 result = null;
             if(ins != null && ins.getOpcode() == opcode){
                 result = (T1) ins;
-                if(filter != null && !filter.test(result)){
+                if(filter != null && !filter.evaluate(result)){
                     result = null;
                 }
             }

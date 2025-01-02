@@ -35,7 +35,7 @@ import com.reandroid.utils.io.FileIterator;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class DexLayout implements DexClassModule, Closeable,
         Iterable<DexClass> {
@@ -133,16 +133,16 @@ public class DexLayout implements DexClassModule, Closeable,
         return getDexClasses();
     }
     @Override
-    public boolean removeClasses(Predicate<? super DexClass> filter) {
-        Predicate<ClassId> classIdFilter = classId -> filter.test(DexLayout.this.create(classId));
+    public boolean removeClasses(org.apache.commons.collections4.Predicate<? super DexClass> filter) {
+        org.apache.commons.collections4.Predicate<ClassId> classIdFilter = classId -> filter.evaluate(DexLayout.this.create(classId));
         return getDexLayoutBlock().removeEntries(SectionType.CLASS_ID, classIdFilter);
     }
     @Override
-    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter) {
+    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<T1> filter) {
         return getDexLayoutBlock().removeEntries(sectionType, filter);
     }
     @Override
-    public <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
+    public <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<? super Key> filter) {
         return getDexLayoutBlock().removeWithKeys(sectionType, filter);
     }
     @Override
@@ -158,11 +158,11 @@ public class DexLayout implements DexClassModule, Closeable,
         return create(classId);
     }
     @Override
-    public Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
+    public Iterator<DexClass> getDexClasses(org.apache.commons.collections4.Predicate<? super TypeKey> filter) {
         return ComputeIterator.of(getItemsIfKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter)), this::create);
     }
     @Override
-    public Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
+    public Iterator<DexClass> getDexClassesCloned(org.apache.commons.collections4.Predicate<? super TypeKey> filter) {
         return ComputeIterator.of(
                 getClonedItemsIfKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter)),
                 this::create);

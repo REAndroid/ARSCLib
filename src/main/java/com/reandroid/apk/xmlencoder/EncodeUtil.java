@@ -15,18 +15,19 @@
  */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.utils.collection.CollectionUtil;
+
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
 
 public class EncodeUtil {
     public static void sortValuesXml(List<File> fileList){
-        Comparator<File> cmp= (f1, f2) -> {
+        java.util.Collections.sort(fileList, (Comparator<File>) (f1, f2) -> {
             String n1=getValuesXmlCompare(f1);
             String n2=getValuesXmlCompare(f2);
             return n1.compareTo(n2);
-        };
-        fileList.sort(cmp);
+        });
     }
     private static String getValuesXmlCompare(File file){
         String name=file.getName().toLowerCase();

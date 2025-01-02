@@ -28,7 +28,7 @@ import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class DebugSequence extends FixedDexContainer implements Iterable<DebugElement> {
 
@@ -94,10 +94,10 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
                 element -> (!(element instanceof DebugAdvance)));
     }
     public void fixDebugLineNumbers(){
-        Predicate<DebugElement> filter = new Predicate<DebugElement>() {
+        org.apache.commons.collections4.Predicate<DebugElement> filter = new org.apache.commons.collections4.Predicate<DebugElement>() {
             DebugElement previous = null;
             @Override
-            public boolean test(DebugElement element) {
+            public boolean evaluate(DebugElement element) {
                 if (element.getElementType() != DebugElementType.LINE_NUMBER) {
                     return false;
                 }
@@ -115,7 +115,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         return removeAll(element -> element.getElementType() == DebugElementType.LINE_NUMBER &&
                        instructionList.getAtAddress(element.getTargetAddress()) == null);
     }
-    public boolean removeAll(Predicate<? super DebugElement> filter) {
+    public boolean removeAll(org.apache.commons.collections4.Predicate<? super DebugElement> filter) {
         boolean removedOnce = false;
         Iterator<DebugElement> iterator = FilterIterator.of(clonedIterator(), filter);
         while (iterator.hasNext()){

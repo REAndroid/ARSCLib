@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public class ResFile implements Iterable<Entry> {
 
@@ -53,7 +53,7 @@ public class ResFile implements Iterable<Entry> {
     public Iterator<Entry> iterator() {
         return getEntries().iterator();
     }
-    public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
+    public Iterator<Entry> iterator(org.apache.commons.collections4.Predicate<? super Entry> filter) {
         return FilterIterator.of(iterator(), filter);
     }
     public int size() {

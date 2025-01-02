@@ -43,7 +43,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Predicate;
+
 
 public class SpecTypePair extends BlockContainer<Block>
         implements Iterable<TypeBlock>, JSONConvert<JSONObject>, Comparable<SpecTypePair>{
@@ -159,7 +159,7 @@ public class SpecTypePair extends BlockContainer<Block>
     public Iterator<TypeBlock> getTypeBlocks(){
         return getTypeBlockArray().iterator();
     }
-    public Iterator<TypeBlock> getTypeBlocks(Predicate<TypeBlock> filter){
+    public Iterator<TypeBlock> getTypeBlocks(org.apache.commons.collections4.Predicate<TypeBlock> filter){
         return getTypeBlockArray().iterator(filter);
     }
     public Iterator<TypeBlock> getTypeBlocks(ResConfig resConfig){

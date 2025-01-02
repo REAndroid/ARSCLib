@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 public class ThreeByteCharsetDecoder extends CharsetDecoder {
     public static final ThreeByteCharsetDecoder INSTANCE = new ThreeByteCharsetDecoder();
     public ThreeByteCharsetDecoder() {
-        super(StandardCharsets.UTF_8, 1.0F, 1.0F);
+        super(com.reandroid.utils.StringsUtil.UTF_8, 1.0F, 1.0F);
     }
     @Override
     protected CoderResult decodeLoop(ByteBuffer src, CharBuffer dst) {
@@ -150,7 +150,7 @@ public class ThreeByteCharsetDecoder extends CharsetDecoder {
         return xFlow(src, mark, 0);
     }
 
-    private static void updatePositions(Buffer src, int sourcePosition, Buffer dst, int dstPosition) {
+    private static void updatePositions(ByteBuffer src, int sourcePosition, CharBuffer dst, int dstPosition) {
         src.position(sourcePosition - src.arrayOffset());
         dst.position(dstPosition - dst.arrayOffset());
     }
@@ -211,7 +211,7 @@ public class ThreeByteCharsetDecoder extends CharsetDecoder {
         src.position(mark);
         return CoderResult.malformedForLength(1);
     }
-    private static CoderResult xFlow(Buffer src, int sourcePosition, int sourceLimit, Buffer dst, int dstPosition, int numBytes) {
+    private static CoderResult xFlow(ByteBuffer src, int sourcePosition, int sourceLimit, CharBuffer dst, int dstPosition, int numBytes) {
         updatePositions(src, sourcePosition, dst, dstPosition);
         return numBytes != 0 && sourceLimit - sourcePosition >= numBytes ? CoderResult.OVERFLOW : CoderResult.UNDERFLOW;
     }

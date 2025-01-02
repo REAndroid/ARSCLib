@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader>
         implements BlockLoad, Iterable<T>, JSONConvert<JSONArray> {
@@ -167,7 +167,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         return ComputeIterator.of(iterator(), T::getXml);
     }
     public void addStrings(Collection<String> stringList){
-        if(stringList == null || stringList.size() == 0){
+        if(stringList == null || stringList.isEmpty()){
             return;
         }
         for(String str : stringList) {
@@ -197,7 +197,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public List<T> listUnusedStrings(){
         return getStringsArray().subListIf(getUnusedStringsFilter());
     }
-    private Predicate<T> getUnusedStringsFilter() {
+    private org.apache.commons.collections4.Predicate<T> getUnusedStringsFilter() {
         return item -> !item.hasReference();
     }
     public StyleArray getStyleArray(){
@@ -245,7 +245,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         ensureStringLinkUnlockedInternal();
         return poolMap.getAll(str);
     }
-    public final T get(String str, Predicate<? super T> predicate){
+    public final T get(String str, org.apache.commons.collections4.Predicate<? super T> predicate){
         ensureStringLinkUnlockedInternal();
         return poolMap.get(str, predicate);
     }

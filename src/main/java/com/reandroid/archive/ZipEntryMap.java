@@ -20,7 +20,7 @@ import com.reandroid.utils.collection.ArraySort;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.*;
-import java.util.function.Predicate;
+
 import java.util.regex.Pattern;
 
 public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSource>{
@@ -47,11 +47,11 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         this.moduleName = moduleName;
     }
 
-    public Iterator<InputSource> iterator(Predicate<? super InputSource> filter){
+    public Iterator<InputSource> iterator(org.apache.commons.collections4.Predicate<? super InputSource> filter){
         return ArrayIterator.of(toArray(), filter);
     }
-    public Iterator<InputSource> iteratorWithPath(Predicate<? super String> filter){
-        return iterator(inputSource -> filter.test(inputSource.getAlias()));
+    public Iterator<InputSource> iteratorWithPath(org.apache.commons.collections4.Predicate<? super String> filter){
+        return iterator(inputSource -> filter.evaluate(inputSource.getAlias()));
     }
     public Iterator<InputSource> withinDirectory(String directory) {
         return withinDirectory(directory, true);
@@ -107,7 +107,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             return sources;
         }
     }
-    public InputSource[] toArray(Predicate<? super InputSource> filter){
+    public InputSource[] toArray(org.apache.commons.collections4.Predicate<? super InputSource> filter){
         return CollectionUtil.toList(iterator(filter)).toArray(new InputSource[0]);
     }
     private void onChanged(boolean changed){
@@ -137,7 +137,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             onChanged(changed);
         }
     }
-    public void removeIf(Predicate<? super InputSource> filter){
+    public void removeIf(org.apache.commons.collections4.Predicate<? super InputSource> filter){
         Iterator<InputSource> iterator = iterator(filter);
         while (iterator.hasNext()){
             remove(iterator.next());

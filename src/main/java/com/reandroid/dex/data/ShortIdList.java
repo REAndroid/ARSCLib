@@ -33,7 +33,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class ShortIdList<T extends IdItem> extends DataItem
         implements Comparable<ShortIdList<T>> {
@@ -137,8 +137,8 @@ public class ShortIdList<T extends IdItem> extends DataItem
     public boolean remove(T item) {
         return removeIf(t -> t == item);
     }
-    public boolean removeIf(Predicate<? super T> filter) {
-        return referenceList.removeIf(reference -> filter.test(reference.getItem()));
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super T> filter) {
+        return referenceList.removeIf(reference -> filter.evaluate(reference.getItem()));
     }
     void removeNulls() {
         removeIf(item -> item == null);

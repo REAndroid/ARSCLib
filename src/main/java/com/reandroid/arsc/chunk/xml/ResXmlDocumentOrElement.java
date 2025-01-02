@@ -23,7 +23,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
 
@@ -89,9 +89,9 @@ abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
             }
         };
     }
-    public boolean removeElementsIf(Predicate<? super ResXmlElement> predicate) {
+    public boolean removeElementsIf(org.apache.commons.collections4.Predicate<? super ResXmlElement> predicate) {
         return removeIf(xmlNode -> (xmlNode instanceof ResXmlElement)
-                && predicate.test((ResXmlElement) xmlNode));
+                && predicate.evaluate((ResXmlElement) xmlNode));
     }
     public void setAttributesUnitSize(int size, boolean recursive) {
         Iterator<ResXmlElement> iterator = getElements();
@@ -112,16 +112,16 @@ abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
     public List<ResXmlElement> listElements(String name) {
         return CollectionUtil.toList(getElements(name));
     }
-    public Iterator<ResXmlElement> getElements(Predicate<? super ResXmlElement> predicate) {
+    public Iterator<ResXmlElement> getElements(org.apache.commons.collections4.Predicate<? super ResXmlElement> predicate) {
         return iterator(ResXmlElement.class, predicate);
     }
     public Iterator<ResXmlElement> recursiveElements() {
         return recursive(ResXmlElement.class);
     }
-    public Iterator<ResXmlElement> recursiveElements(Predicate<? super ResXmlElement> predicate) {
+    public Iterator<ResXmlElement> recursiveElements(org.apache.commons.collections4.Predicate<? super ResXmlElement> predicate) {
         return recursive(ResXmlElement.class, predicate);
     }
-    public Iterator<ResXmlAttribute> recursiveAttributes(Predicate<? super ResXmlAttribute> predicate) {
+    public Iterator<ResXmlAttribute> recursiveAttributes(org.apache.commons.collections4.Predicate<? super ResXmlAttribute> predicate) {
         return FilterIterator.of(recursiveAttributes(), predicate);
     }
     public Iterator<ResXmlAttribute> recursiveAttributes() {

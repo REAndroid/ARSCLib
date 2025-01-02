@@ -31,7 +31,7 @@ import com.reandroid.utils.collection.FilterIterator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class RequiredEntriesScanner extends BaseApkModuleProcessor{
 
@@ -67,7 +67,7 @@ public class RequiredEntriesScanner extends BaseApkModuleProcessor{
     }
 
     private void scanUserConfigs() {
-        Predicate<? super ResourceName> filter = buildOption.getResourceMergeOption()
+        org.apache.commons.collections4.Predicate<? super ResourceName> filter = buildOption.getResourceMergeOption()
                 .getKeepResourceName();
         if(filter == null) {
             return;
@@ -75,7 +75,7 @@ public class RequiredEntriesScanner extends BaseApkModuleProcessor{
         Iterator<ResourceEntry> iterator = FilterIterator.of(getTableBlock().getResources(),
                 resourceEntry -> {
                     ResourceName resourceName = resourceEntry.toResourceName();
-                    return resourceName != null && filter.test(resourceName);
+                    return resourceName != null && filter.evaluate(resourceName);
                 });
         while (iterator.hasNext()) {
             add(iterator.next());

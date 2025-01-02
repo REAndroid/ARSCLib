@@ -42,7 +42,7 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
+
 
 public class TableBlock extends Chunk<TableHeader>
         implements MainChunk, Iterable<PackageBlock>, JSONConvert<JSONObject> {
@@ -340,7 +340,7 @@ public class TableBlock extends Chunk<TableHeader>
     public Iterator<PackageBlock> getPackages(String packageName){
         return new  FilterIterator<PackageBlock>(getPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean evaluate(PackageBlock packageBlock){
                 if(packageName != null && packageName.length() > 0){
                     return packageBlock.packageNameMatches(packageName);
                 }
@@ -354,7 +354,7 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return new FilterIterator<PackageBlock>(getPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean evaluate(PackageBlock packageBlock){
                 return packageId == packageBlock.getId();
             }
         };
@@ -387,7 +387,7 @@ public class TableBlock extends Chunk<TableHeader>
     public Iterator<PackageBlock> getAllPackages(PackageBlock context, String packageName){
         return new  FilterIterator<PackageBlock>(getAllPackages(context)) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean evaluate(PackageBlock packageBlock){
                 if(packageName != null){
                     return packageBlock.packageNameMatches(packageName);
                 }
@@ -407,7 +407,7 @@ public class TableBlock extends Chunk<TableHeader>
     public Iterator<PackageBlock> getAllPackages(int packageId){
         return new  FilterIterator<PackageBlock>(getAllPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean evaluate(PackageBlock packageBlock){
                 return packageId == packageBlock.getId();
             }
         };
@@ -415,7 +415,7 @@ public class TableBlock extends Chunk<TableHeader>
     public Iterator<PackageBlock> getAllPackages(String packageName){
         return new  FilterIterator<PackageBlock>(getAllPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean evaluate(PackageBlock packageBlock){
                 if(packageName != null){
                     return packageBlock.packageNameMatches(packageName);
                 }
@@ -494,7 +494,7 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return resolver.resolveWithConfig(referenceId, resConfig);
     }
-    public List<Entry> resolveReference(int referenceId, Predicate<Entry> filter){
+    public List<Entry> resolveReference(int referenceId, org.apache.commons.collections4.Predicate<Entry> filter){
         ReferenceResolver resolver = this.referenceResolver;
         if(resolver == null){
             resolver = new ReferenceResolver(this);

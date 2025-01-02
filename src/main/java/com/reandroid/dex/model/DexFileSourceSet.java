@@ -26,13 +26,13 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable {
 
     private final ArrayCollection<DexSource<DexFile>> sourceList;
     private ZipEntryMap zipEntryMap;
-    private Predicate<SectionType<?>> readFilter;
+    private org.apache.commons.collections4.Predicate<SectionType<?>> readFilter;
 
     public DexFileSourceSet(){
         this.sourceList = new ArrayCollection<>();
@@ -45,10 +45,10 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
         this.zipEntryMap = zipEntryMap;
     }
 
-    public Predicate<SectionType<?>> getReadFilter() {
+    public org.apache.commons.collections4.Predicate<SectionType<?>> getReadFilter() {
         return readFilter;
     }
-    public void setReadFilter(Predicate<SectionType<?>> readFilter) {
+    public void setReadFilter(org.apache.commons.collections4.Predicate<SectionType<?>> readFilter) {
         this.readFilter = readFilter;
     }
 
@@ -139,14 +139,14 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
             path = path + "/";
         }
         final String pathPrefix = path + "classes";
-        Predicate<InputSource> filter = inputSource -> {
+        org.apache.commons.collections4.Predicate<InputSource> filter = inputSource -> {
             String name = inputSource.getAlias();
 
             return name.startsWith(pathPrefix) && DexFile.getDexFileNumber(name) >= 0;
         };
         addAll(zipEntryMap, filter);
     }
-    public void addAll(ZipEntryMap zipEntryMap, Predicate<InputSource> filter) throws IOException {
+    public void addAll(ZipEntryMap zipEntryMap, org.apache.commons.collections4.Predicate<InputSource> filter) throws IOException {
         addAll(zipEntryMap, zipEntryMap.iterator(filter));
     }
     public void addAll(ZipEntryMap zipEntryMap, Iterator<InputSource> iterator) throws IOException {

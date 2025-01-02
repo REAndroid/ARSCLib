@@ -20,7 +20,7 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.utils.CompareUtil;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class SpecString extends StringItem {
     public SpecString(boolean utf8) {
@@ -35,30 +35,30 @@ public class SpecString extends StringItem {
         return 0;
     }
 
-    public Iterator<Entry> getEntries(Predicate<Entry> filter){
+    public Iterator<Entry> getEntries(org.apache.commons.collections4.Predicate<Entry> filter){
         return getUsers(Entry.class, filter);
     }
     public Iterator<Entry> getEntries(final int typeId){
-        return getUsers(Entry.class, new Predicate<Entry>() {
+        return getUsers(Entry.class, new org.apache.commons.collections4.Predicate<Entry>() {
             @Override
-            public boolean test(Entry item) {
+            public boolean evaluate(Entry item) {
                 return typeId == item.getTypeId();
             }
         });
     }
     public Iterator<Entry> getEntries(final String typeName){
-        return getUsers(Entry.class, new Predicate<Entry>() {
+        return getUsers(Entry.class, new org.apache.commons.collections4.Predicate<Entry>() {
             @Override
-            public boolean test(Entry item) {
+            public boolean evaluate(Entry item) {
                 return typeName == null
                         || typeName.equals(item.getTypeName());
             }
         });
     }
     public Iterator<Entry> getEntries(final Block parentContext){
-        return getUsers(Entry.class, new Predicate<Entry>() {
+        return getUsers(Entry.class, new org.apache.commons.collections4.Predicate<Entry>() {
             @Override
-            public boolean test(Entry item) {
+            public boolean evaluate(Entry item) {
                 return item.getParentInstance(parentContext.getClass())
                         == parentContext;
             }

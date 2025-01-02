@@ -6,6 +6,8 @@
 package com.reandroid.json;
 
 import com.reandroid.common.FileChannelInputStream;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.*;
 
@@ -183,7 +185,7 @@ public class JSONObject extends JSONItem {
         LinkedHashMap<String, Object> copy = new LinkedHashMap<>(map);
         map.clear();
         List<String> sortedKeys = new ArrayList<>(copy.keySet());
-        sortedKeys.sort(keyComparator);
+        java.util.Collections.sort(sortedKeys, keyComparator);
         for(String key : sortedKeys){
             map.put(key, copy.get(key));
         }
@@ -704,7 +706,7 @@ public class JSONObject extends JSONItem {
                     && method.getReturnType() != Void.TYPE
                     && isValidMethodName(method.getName())) {
                 final String key = getKeyNameFromMethod(method);
-                if (key != null && !key.isEmpty()) {
+                if (!StringsUtil.isEmpty(key)) {
                     try {
                         final Object result = method.invoke(bean);
                         if (result != null) {
@@ -743,7 +745,7 @@ public class JSONObject extends JSONItem {
             }
         }
         JSONPropertyName annotation = getAnnotation(method, JSONPropertyName.class);
-        if (annotation != null && annotation.value() != null && !annotation.value().isEmpty()) {
+        if (annotation != null && !StringsUtil.isEmpty(annotation.value())) {
             return annotation.value();
         }
         String key;
@@ -762,9 +764,9 @@ public class JSONObject extends JSONItem {
             return null;
         }
         if (key.length() == 1) {
-            key = key.toLowerCase(Locale.ROOT);
+            key = StringsUtil.toLowerCaseWithLocale(key);
         } else if (!Character.isUpperCase(key.charAt(1))) {
-            key = key.substring(0, 1).toLowerCase(Locale.ROOT) + key.substring(1);
+            key =  StringsUtil.toLowerCaseWithLocale(key.substring(0, 1)) + key.substring(1);
         }
         return key;
     }

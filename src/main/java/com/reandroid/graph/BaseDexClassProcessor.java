@@ -20,7 +20,7 @@ import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public abstract class BaseDexClassProcessor extends GraphTask {
 
@@ -30,7 +30,7 @@ public abstract class BaseDexClassProcessor extends GraphTask {
         this.classRepository = classRepository;
     }
 
-    public Iterator<DexClass> getDexClasses(Predicate<? super DexClass> filter) {
+    public Iterator<DexClass> getDexClasses(org.apache.commons.collections4.Predicate<? super DexClass> filter) {
         return FilterIterator.of(getClassRepository().getDexClasses(), filter);
     }
     public DexClassRepository getClassRepository() {

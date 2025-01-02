@@ -28,7 +28,7 @@ import com.reandroid.utils.CompareUtil;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class Section<T extends SectionItem>  extends FixedDexContainer
         implements DexArraySupplier<T>, OffsetSupplier,
@@ -69,10 +69,10 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public boolean remove(Key key){
         return false;
     }
-    public boolean removeWithKeys(Predicate<? super Key> filter){
+    public boolean removeWithKeys(org.apache.commons.collections4.Predicate<? super Key> filter){
         return false;
     }
-    public boolean removeEntries(Predicate<? super T> filter){
+    public boolean removeEntries(org.apache.commons.collections4.Predicate<? super T> filter){
         return getItemArray().removeIf(filter);
     }
     void clearUsageTypes(){
@@ -202,7 +202,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public Iterator<T> iterator() {
         return getItemArray().iterator();
     }
-    public Iterator<T> iterator(Predicate<? super T> filter) {
+    public Iterator<T> iterator(org.apache.commons.collections4.Predicate<? super T> filter) {
         return getItemArray().iterator(filter);
     }
     public Iterator<T> arrayIterator() {

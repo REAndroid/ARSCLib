@@ -17,6 +17,8 @@ package com.reandroid.apk;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,7 +28,7 @@ public class ApkUtil {
     public static String replaceRootDir(String path, String dirName){
         int i=path.indexOf('/')+1;
         path=path.substring(i);
-        if(dirName != null && dirName.length()>0){
+        if(!StringsUtil.isEmpty(dirName)){
             if(!dirName.endsWith("/")){
                 dirName=dirName+"/";
             }
@@ -103,7 +105,7 @@ public class ApkUtil {
                 results.add(dir);
             }
         }
-        results.sort(CompareUtil.getComparableComparator());
+        java.util.Collections.sort(results, CompareUtil.getComparableComparator());
         return results;
     }
     public static List<File> listPublicXmlFiles(File resourcesDirectory){
@@ -121,7 +123,7 @@ public class ApkUtil {
                 }
             }
         }
-        results.sort(CompareUtil.getComparableComparator());
+        java.util.Collections.sort(results, CompareUtil.getComparableComparator());
         return results;
     }
     private static File getPublicXmlFile(File resDir){
@@ -158,7 +160,7 @@ public class ApkUtil {
                 results.add(dir);
             }
         }
-        results.sort(CompareUtil.getComparableComparator());
+        java.util.Collections.sort(results, CompareUtil.getComparableComparator());
         return results;
     }
     public static boolean isValuesDirectoryName(String name, boolean checkVariant){

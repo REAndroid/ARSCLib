@@ -24,7 +24,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
 
@@ -37,7 +37,7 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
     public Iterator<TypeKey> getTypes() {
         return ComputeIterator.of(iterator(), AnnotationItemKey::getType);
     }
-    public AnnotationSetKey removeElementIf(TypeKey typeKey, Predicate<? super AnnotationElementKey> predicate) {
+    public AnnotationSetKey removeElementIf(TypeKey typeKey, org.apache.commons.collections4.Predicate<? super AnnotationElementKey> predicate) {
         AnnotationSetKey result = this;
         AnnotationItemKey itemKey = result.get(typeKey);
         if (itemKey == null) {
@@ -166,7 +166,7 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
         return (AnnotationSetKey) super.remove(index);
     }
     @Override
-    public AnnotationSetKey removeIf(Predicate<? super AnnotationItemKey> predicate) {
+    public AnnotationSetKey removeIf(org.apache.commons.collections4.Predicate<? super AnnotationItemKey> predicate) {
         return (AnnotationSetKey) super.removeIf(predicate);
     }
     public AnnotationSetKey remove(TypeKey typeKey) {

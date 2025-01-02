@@ -17,14 +17,14 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Predicate;
+
 
 public class IndexIterator<T> implements Iterator<T> {
-    private final Predicate<? super T> mFilter;
+    private final org.apache.commons.collections4.Predicate<? super T> mFilter;
     private final SizedSupplier<? extends T> mSupplier;
     private int mIndex;
     private T mNext;
-    public IndexIterator(SizedSupplier<? extends T> supplier, Predicate<? super T> filter){
+    public IndexIterator(SizedSupplier<? extends T> supplier, org.apache.commons.collections4.Predicate<? super T> filter){
         this.mSupplier = supplier;
         this.mFilter = filter;
     }
@@ -63,13 +63,13 @@ public class IndexIterator<T> implements Iterator<T> {
             return false;
         }
         return mFilter == null
-                || mFilter.test(item);
+                || mFilter.evaluate(item);
     }
 
     public static<T1> Iterator<T1> of(SizedSupplier<T1> supplier){
         return of(supplier, null);
     }
-    public static<T1> Iterator<T1> of(SizedSupplier<T1> supplier, Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(SizedSupplier<T1> supplier, org.apache.commons.collections4.Predicate<? super T1> filter){
         if(supplier == null || supplier.size() == 0){
             return EmptyIterator.of();
         }

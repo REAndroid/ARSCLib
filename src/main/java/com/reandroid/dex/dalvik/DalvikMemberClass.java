@@ -25,7 +25,7 @@ import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class DalvikMemberClass extends DalvikAnnotation {
 
@@ -52,7 +52,7 @@ public class DalvikMemberClass extends DalvikAnnotation {
                 .add(typeKey);
         setArray(array);
     }
-    public void removeIf(Predicate<? super TypeKey> predicate) {
+    public void removeIf(org.apache.commons.collections4.Predicate<? super TypeKey> predicate) {
         ArrayValueKey array = getArray()
                 .removeIf(ObjectsUtil.cast(predicate));
         setArray(array);

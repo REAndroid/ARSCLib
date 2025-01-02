@@ -36,13 +36,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class ResourceMergeOption {
 
-    private Predicate<? super ResourceEntry> keepEntries;
-    private Predicate<? super ResourceName> keepResourceNameFilter;
-    private Predicate<? super ResConfig> keepConfigs;
+    private org.apache.commons.collections4.Predicate<? super ResourceEntry> keepEntries;
+    private org.apache.commons.collections4.Predicate<? super ResourceName> keepResourceNameFilter;
+    private org.apache.commons.collections4.Predicate<? super ResConfig> keepConfigs;
 
     private final Set<ResourceName> keepResourceNameList;
 
@@ -50,69 +50,69 @@ public class ResourceMergeOption {
         this.keepResourceNameList = new HashSet<>();
     }
 
-    public Predicate<? super Entry> getKeepEntryConfigs() {
-        Predicate<? super ResConfig> keepConfigs = this.getKeepConfigs();
-        return (Predicate<Entry>) entry -> keepConfigs.test(entry.getResConfig());
+    public org.apache.commons.collections4.Predicate<? super Entry> getKeepEntryConfigs() {
+        org.apache.commons.collections4.Predicate<? super ResConfig> keepConfigs = this.getKeepConfigs();
+        return (org.apache.commons.collections4.Predicate<Entry>) entry -> keepConfigs.evaluate(entry.getResConfig());
     }
-    public Predicate<? super ResConfig> getKeepConfigs() {
-        Predicate<? super ResConfig> keepConfigs = this.keepConfigs;
+    public org.apache.commons.collections4.Predicate<? super ResConfig> getKeepConfigs() {
+        org.apache.commons.collections4.Predicate<? super ResConfig> keepConfigs = this.keepConfigs;
         if(keepConfigs == null) {
             keepConfigs = CollectionUtil.getAcceptAll();
         }
         return keepConfigs;
     }
-    public void setKeepConfigs(Predicate<? super ResConfig> keepConfigs) {
+    public void setKeepConfigs(org.apache.commons.collections4.Predicate<? super ResConfig> keepConfigs) {
         this.keepConfigs = keepConfigs;
     }
-    public Predicate<? super ResourceEntry> getKeepEntries() {
-        Predicate<? super ResourceEntry> keepEntries = this.getKeepEntriesInternal();
-        Predicate<? super ResourceName> keepResourceNames = this.getKeepResourceName();
-        Predicate<? super ResourceEntry> result = keepEntries;
+    public org.apache.commons.collections4.Predicate<? super ResourceEntry> getKeepEntries() {
+        org.apache.commons.collections4.Predicate<? super ResourceEntry> keepEntries = this.getKeepEntriesInternal();
+        org.apache.commons.collections4.Predicate<? super ResourceName> keepResourceNames = this.getKeepResourceName();
+        org.apache.commons.collections4.Predicate<? super ResourceEntry> result = keepEntries;
         if(keepResourceNames != null) {
-            result = (Predicate<ResourceEntry>) resourceEntry -> {
-                if(keepEntries.test(resourceEntry)) {
+            result = (org.apache.commons.collections4.Predicate<ResourceEntry>) resourceEntry -> {
+                if(keepEntries.evaluate(resourceEntry)) {
                     return true;
                 }
                 ResourceName resourceName = resourceEntry.toResourceName();
                 if(resourceName != null) {
-                    return keepResourceNames.test(resourceName);
+                    return keepResourceNames.evaluate(resourceName);
                 }
                 return false;
             };
         }
         return result;
     }
-    private Predicate<? super ResourceEntry> getKeepEntriesInternal() {
-        Predicate<? super ResourceEntry> keepEntries = this.keepEntries;
+    private org.apache.commons.collections4.Predicate<? super ResourceEntry> getKeepEntriesInternal() {
+        org.apache.commons.collections4.Predicate<? super ResourceEntry> keepEntries = this.keepEntries;
         if(keepEntries == null) {
             keepEntries = resourceEntry -> !resourceEntry.isEmpty();
             this.keepEntries = keepEntries;
         }
         return CollectionUtil.orFilter(keepEntries, getKeepStyleEntries());
     }
-    private Predicate<? super ResourceEntry> getKeepStyleEntries() {
-        return (Predicate<ResourceEntry>) resourceEntry ->
+    private org.apache.commons.collections4.Predicate<? super ResourceEntry> getKeepStyleEntries() {
+        return (org.apache.commons.collections4.Predicate<ResourceEntry>) resourceEntry ->
                 TypeString.isTypeStyle(resourceEntry.getType()) &&
                 resourceEntry.getName().indexOf('.') > 0;
     }
-    public void setKeepEntries(Predicate<? super ResourceEntry> keepEntries) {
+    public void setKeepEntries(org.apache.commons.collections4.Predicate<? super ResourceEntry> keepEntries) {
         this.keepEntries = keepEntries;
     }
 
-    public Predicate<? super ResourceName> getKeepResourceName() {
+    public org.apache.commons.collections4.Predicate<? super ResourceName> getKeepResourceName() {
         return CollectionUtil.orFilter(getKeepResourceNameFilter(),
                 getKeepResourceNameListFilter());
     }
-    public void setKeepResourceNameFilter(Predicate<? super ResourceName> keepResourceNameFilter) {
+    public void setKeepResourceNameFilter(org.apache.commons.collections4.Predicate<? super ResourceName> keepResourceNameFilter) {
         this.keepResourceNameFilter = keepResourceNameFilter;
     }
-    private Predicate<? super ResourceName> getKeepResourceNameFilter() {
+    private org.apache.commons.collections4.Predicate<? super ResourceName> getKeepResourceNameFilter() {
         return keepResourceNameFilter;
     }
-    private Predicate<? super ResourceName> getKeepResourceNameListFilter() {
+    private org.apache.commons.collections4.Predicate<? super ResourceName> getKeepResourceNameListFilter() {
         Set<ResourceName> keepResourceNameList = this.keepResourceNameList;
         if(!keepResourceNameList.isEmpty()) {
-            return (Predicate<ResourceName>) keepResourceNameList::contains;
+            return (org.apache.commons.collections4.Predicate<ResourceName>) keepResourceNameList::contains;
         }
         return null;
     }

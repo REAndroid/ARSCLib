@@ -25,6 +25,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
@@ -36,12 +37,11 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
 
@@ -66,15 +66,15 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return getUsers(parentClass, null);
     }
     public<T extends Block> Iterator<T> getUsers(Class<T> parentClass,
-                                                 Predicate<T> resultFilter){
+                                                 org.apache.commons.collections4.Predicate<T> resultFilter){
 
         Collection<ReferenceItem> referencedList = getReferencedList();
-        if(referencedList.size() == 0){
+        if(referencedList.isEmpty()){
             return EmptyIterator.of();
         }
         return new ComputeIterator<>(referencedList.iterator(), referenceItem -> {
             T result = referenceItem.getReferredParent(parentClass);
-            if (result == null || resultFilter != null && !resultFilter.test(result)) {
+            if (result == null || resultFilter != null && !resultFilter.evaluate(result)) {
                 result = null;
             }
             return result;
@@ -90,7 +90,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     public boolean hasReference(){
         ensureStringLinkUnlocked();
-        if(mReferencedList.size() == 0) {
+        if(mReferencedList.isEmpty()) {
             return false;
         }
         return FilterIterator.of(mReferencedList.iterator(),
@@ -316,7 +316,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             if(isUtf8){
                 return tryThreeByteDecoder(allStringBytes, offLen[0], offLen[1]);
             }
-            return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
+            return new String(allStringBytes, offLen[0], offLen[1], com.reandroid.utils.StringsUtil.UTF_16LE);
         }
     }
     private String tryThreeByteDecoder(byte[] bytes, int offset, int length){
@@ -325,7 +325,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             CharBuffer charBuffer = DECODER_3B.decode(byteBuffer);
             return charBuffer.toString();
         } catch (CharacterCodingException e) {
-            return new String(bytes, offset, length, StandardCharsets.UTF_8);
+            return new String(bytes, offset, length, com.reandroid.utils.StringsUtil.UTF_8);
         }
     }
     public boolean hasStyle(){
@@ -333,7 +333,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         if(styleItem==null){
             return false;
         }
-        return styleItem.size()>0;
+        return !styleItem.isEmpty();
     }
     public StyleItem getStyle(){
         return mStyleItem;
@@ -521,7 +521,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         byte[] bts;
         byte[] lenBytes=new byte[2];
         if(str!=null){
-            bts=str.getBytes(StandardCharsets.UTF_8);
+            bts= StringsUtil.getBytesOfString(str, "UTF-8");
             int strLen=bts.length;
             if((strLen & 0xff80)!=0){
                 lenBytes=new byte[4];
@@ -569,7 +569,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return addBytes(lenBytes, bts, new byte[2]);
     }
     static byte[] getUtf16Bytes(String str){
-        return str.getBytes(StandardCharsets.UTF_16LE);
+        return StringsUtil.getBytesOfString(str, "UTF-16LE");
     }
 
     private static byte[] addBytes(byte[] bts1, byte[] bts2, byte[] bts3){
@@ -602,7 +602,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return result;
     }
 
-    private static final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
+    private static final CharsetDecoder UTF16LE_DECODER = com.reandroid.utils.StringsUtil.UTF_16LE.newDecoder();
     private static final CharsetDecoder DECODER_3B = ThreeByteCharsetDecoder.INSTANCE;
 
     public static final String NAME_string = ObjectsUtil.of("string");

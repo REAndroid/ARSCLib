@@ -29,7 +29,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.function.Predicate;
+
 
 public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
 
@@ -232,7 +232,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
     public Iterator<? extends XMLElement> getElements(){
         return iterator(XMLElement.class);
     }
-    public Iterator<XMLElement> getElements(Predicate<XMLElement> filter){
+    public Iterator<XMLElement> getElements(org.apache.commons.collections4.Predicate<XMLElement> filter){
         return iterator(XMLElement.class, filter);
     }
     public Iterator<XMLElement> getElements(String name){

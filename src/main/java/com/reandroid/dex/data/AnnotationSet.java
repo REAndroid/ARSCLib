@@ -36,7 +36,7 @@ import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         implements KeyReference, SmaliFormat, PositionAlignedItem,
@@ -52,8 +52,8 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     public boolean remove(AnnotationItemKey itemKey) {
         return removeIf(item -> ObjectsUtil.equals(itemKey, item.getKey()));
     }
-    public boolean removeAnnotationIf(Predicate<? super AnnotationItemKey> predicate) {
-        return removeIf(item -> predicate.test(item.getKey()));
+    public boolean removeAnnotationIf(org.apache.commons.collections4.Predicate<? super AnnotationItemKey> predicate) {
+        return removeIf(item -> predicate.evaluate(item.getKey()));
     }
     @Override
     public boolean isBlank() {

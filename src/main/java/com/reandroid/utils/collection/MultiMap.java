@@ -16,9 +16,10 @@
 package com.reandroid.utils.collection;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+
+import org.apache.commons.collections4.Closure;
+import org.apache.commons.collections4.Transformer;
+
 
 @SuppressWarnings("unchecked")
 public class MultiMap<K, V> {
@@ -31,7 +32,7 @@ public class MultiMap<K, V> {
     public MultiMap() {
     }
 
-    public void findDuplicates(Comparator<? super V> comparator, Consumer<List<V>> consumer) {
+    public void findDuplicates(Comparator<? super V> comparator, Closure<List<V>> consumer) {
         synchronized (mLock) {
             Map<K, Object> map = this.map;
             if(map == null || map.isEmpty()) {
@@ -54,7 +55,7 @@ public class MultiMap<K, V> {
             }
         }
     }
-    private void processDuplicateValues(Comparator<? super V> comparator, Consumer<List<V>> consumer, EntryList<V> entryList) {
+    private void processDuplicateValues(Comparator<? super V> comparator, Closure<List<V>> consumer, EntryList<V> entryList) {
         int size = entryList.size();
         if(size < 2) {
             return;
@@ -68,7 +69,7 @@ public class MultiMap<K, V> {
 
         V previous = sortedList.get(0);
         if(comparator.compare(previous, sortedList.get(size - 1)) == 0) {
-            consumer.accept(sortedList);
+            consumer.execute(sortedList);
             return;
         }
 
@@ -79,7 +80,7 @@ public class MultiMap<K, V> {
             int compare = comparator.compare(previous, value);
             if(compare != 0) {
                 if(result.size() > 1) {
-                    consumer.accept(result);
+                    consumer.execute(result);
                 }
                 result.clearTemporarily();
             }
@@ -87,14 +88,14 @@ public class MultiMap<K, V> {
             previous = value;
         }
         if(result.size() > 1) {
-            consumer.accept(result);
+            consumer.execute(result);
         }
     }
-    public void putAll(Function<? super V, K> function, Iterator<? extends V> iterator) {
+    public void putAll(Transformer<? super V, K> function, Iterator<? extends V> iterator) {
         synchronized (mLock) {
             while (iterator.hasNext()) {
                 V value = iterator.next();
-                putUnlocked(function.apply(value), value);
+                putUnlocked(function.transformer(value), value);
             }
         }
     }
@@ -180,7 +181,7 @@ public class MultiMap<K, V> {
         }
     }
     @SuppressWarnings("all")
-    public V removeIf(Object key, Predicate<? super V> predicate) {
+    public V removeIf(Object key, org.apache.commons.collections4.Predicate<? super V> predicate) {
         synchronized (mLock) {
             if(key == null) {
                 return null;
@@ -209,7 +210,7 @@ public class MultiMap<K, V> {
                 }
                 return (V) obj;
             }
-            if(predicate.test((V) obj)) {
+            if(predicate.evaluate((V) obj)) {
                 return (V) map.remove(key);
             }
             return null;
@@ -229,7 +230,7 @@ public class MultiMap<K, V> {
         }
     }
     @SuppressWarnings("all")
-    public boolean containsValue(Object key, Predicate<? super V> predicate) {
+    public boolean containsValue(Object key, org.apache.commons.collections4.Predicate<? super V> predicate) {
         synchronized (mLock) {
             if(key == null) {
                 return false;
@@ -246,7 +247,7 @@ public class MultiMap<K, V> {
                 EntryList<V> entryList = (EntryList<V>) obj;
                 return entryList.containsIf(predicate);
             }
-            return predicate.test((V) obj);
+            return predicate.evaluate((V) obj);
         }
     }
 
@@ -331,7 +332,7 @@ public class MultiMap<K, V> {
     public V get(K key) {
         return get(key, null);
     }
-    public V get(K key, Predicate<? super V> predicate) {
+    public V get(K key, org.apache.commons.collections4.Predicate<? super V> predicate) {
         synchronized (mLock) {
             if(key == null) {
                 return null;
@@ -348,7 +349,7 @@ public class MultiMap<K, V> {
                 return getFromEntryList(key, (EntryList<?>) obj, predicate);
             }
             V value = (V) obj;
-            if(predicate != null && !predicate.test(value)) {
+            if(predicate != null && !predicate.evaluate(value)) {
                 value = null;
             }
             return value;
@@ -397,7 +398,7 @@ public class MultiMap<K, V> {
         if(entryList == null || entryList.size() < 2) {
             return false;
         }
-        entryList.sort((Comparator<? super Object>) comparator);
+        Collections.sort(entryList, (Comparator<? super Object>) comparator);
         return true;
     }
     public void setFavouriteObjectsSorter(Comparator<? super V> favouriteObjectsSorter) {
@@ -415,7 +416,7 @@ public class MultiMap<K, V> {
             }
         }
     }
-    private V getFromEntryList(K key, EntryList<?> entryList, Predicate<? super V> predicate) {
+    private V getFromEntryList(K key, EntryList<?> entryList, org.apache.commons.collections4.Predicate<? super V> predicate) {
         if(entryList.isEmpty()) {
             this.map.remove(key);
             return null;

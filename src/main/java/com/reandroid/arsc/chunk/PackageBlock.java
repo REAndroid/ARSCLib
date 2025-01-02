@@ -63,7 +63,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 
 public class PackageBlock extends Chunk<PackageHeader>
@@ -573,9 +573,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
 
     private Iterator<SpecTypePair> getAttrSpecs(){
-        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
+        return getSpecTypePairArray().iterator(new org.apache.commons.collections4.Predicate<SpecTypePair>() {
             @Override
-            public boolean test(SpecTypePair specTypePair) {
+            public boolean evaluate(SpecTypePair specTypePair) {
                 return specTypePair != null && specTypePair.isTypeAttr();
             }
         });

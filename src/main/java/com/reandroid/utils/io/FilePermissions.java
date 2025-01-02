@@ -25,26 +25,30 @@ public class FilePermissions {
     }
 
     public boolean apply(File file) {
+        try {
+            File.class.getMethod("setExecutable", boolean.class);
+            Permission owner = owner();
+            Permission group = group();
+            Permission others = others();
+            boolean result;
 
-        Permission owner = owner();
-        Permission group = group();
-        Permission others = others();
-        boolean result;
+            boolean applied = file.setExecutable(owner.execute(),
+                    owner.execute() && !group.execute() && !others.execute());
+            result = applied;
 
-        boolean applied = file.setExecutable(owner.execute(),
-                owner.execute() && !group.execute() && !others.execute());
-        result = applied;
+            applied = file.setWritable(owner.write(),
+                    owner.write() && !group.write() && !others.write());
 
-        applied = file.setWritable(owner.write(),
-                owner.write() && !group.write() && !others.write());
+            result |= applied;
+            applied = file.setReadable(owner.read(),
+                    owner.read() && !group.read() && !others.read());
 
-        result |= applied;
-        applied = file.setReadable(owner.read(),
-                owner.read() && !group.read() && !others.read());
+            result |= applied;
 
-        result |= applied;
-
-        return result;
+            return result;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
     }
     public int get() {
         return value;

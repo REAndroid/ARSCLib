@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public class BlockList<T extends Block> extends Block implements BlockRefresh, Swappable {
     private ArrayCollection<T> mItems;
@@ -144,7 +144,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     public Iterator<T> iterator(int start, int length){
         return mItems.iterator(start, length);
     }
-    public Iterator<T> iterator(Predicate<? super T> filter){
+    public Iterator<T> iterator(org.apache.commons.collections4.Predicate<? super T> filter){
         return mItems.iterator(filter);
     }
     public<T1> Iterator<T1> iterator(Class<T1> instance){
@@ -158,13 +158,13 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return mItems.lastIndexOf(item);
     }
 
-    public int countIf(Predicate<? super T> predicate){
+    public int countIf(org.apache.commons.collections4.Predicate<? super T> predicate){
         return mItems.count(predicate);
     }
-    public int countFromLast(Predicate<? super T> predicate){
+    public int countFromLast(org.apache.commons.collections4.Predicate<? super T> predicate){
         return mItems.countFromLast(predicate);
     }
-    public ArrayCollection<T> subListIf(Predicate<? super T> predicate) {
+    public ArrayCollection<T> subListIf(org.apache.commons.collections4.Predicate<? super T> predicate) {
         return mItems.subListIf(predicate);
     }
     public void clearChildes(){
@@ -265,7 +265,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         onRemoveRequestCompleted(lock);
         return true;
     }
-    public boolean removeIf(Predicate<? super T> filter){
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super T> filter){
         Object lock = onRemoveRequestStarted();
         boolean removed = mItems.removeIf(filter);
         if(removed) {
@@ -511,14 +511,14 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     public <T1> T1[] toArray(T1[] ts) {
         return mItems.toArray(ts);
     }
-    public T[] toArrayIf(Predicate<? super T> predicate, BlockArrayCreator<? extends T> creator) {
+    public T[] toArrayIf(org.apache.commons.collections4.Predicate<? super T> predicate, BlockArrayCreator<? extends T> creator) {
         int length = countIf(predicate);
         int size = size();
         T[] results = creator.newArrayInstance(length);
         int j = 0;
         for (int i = 0; i < size; i++) {
             T item = get(i);
-            if (predicate.test(item)) {
+            if (predicate.evaluate(item)) {
                 results[j] = item;
                 j ++;
             }

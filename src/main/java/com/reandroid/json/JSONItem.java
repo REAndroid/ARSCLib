@@ -15,11 +15,11 @@
  */
 package com.reandroid.json;
 
+import com.reandroid.utils.StringsUtil;
+
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public abstract class JSONItem {
         write(outputStream, INDENT_FACTOR);
     }
     public void write(OutputStream outputStream, int indentFactor) throws IOException {
-        Writer writer=new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+        Writer writer=new OutputStreamWriter(outputStream, com.reandroid.utils.StringsUtil.UTF_8);
         writer= write(writer, indentFactor, 0);
         writer.flush();
         writer.close();
@@ -121,7 +121,7 @@ public abstract class JSONItem {
     }
 
     public static Writer quote(String string, Writer w) throws IOException {
-        if (string == null || string.isEmpty()) {
+        if (StringsUtil.isEmpty(string)) {
             w.write("\"\"");
             return w;
         }
@@ -252,8 +252,7 @@ public abstract class JSONItem {
         writer.write("\"");
         writer.write(MIME_BIN_BASE64);
         try{
-            Base64.Encoder encoder = Base64.getUrlEncoder();
-            String base64 = encoder.encodeToString(bytes);
+            String base64 = android.Base64.encodeToString(bytes, 0);
             writer.write(base64);
         }catch (IOException exception){
             throw exception;

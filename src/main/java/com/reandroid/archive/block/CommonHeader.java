@@ -18,13 +18,11 @@ package com.reandroid.archive.block;
 import com.reandroid.archive.Archive;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 public abstract class CommonHeader extends ZipHeader {
     private final int offsetFileName;
@@ -293,7 +291,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(fileName==null){
             fileName="";
         }
-        byte[] nameBytes = fileName.getBytes(StandardCharsets.UTF_8);
+        byte[] nameBytes = StringsUtil.getBytesOfString(fileName, "UTF-8");
         getGeneralPurposeFlag().setUtf8(true, false);
         int length = nameBytes.length;
         setFileNameLength(length);
@@ -325,7 +323,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(length>max){
             length = max;
         }
-        return new String(bytes, offset, length, StandardCharsets.UTF_8);
+        return new String(bytes, offset, length, com.reandroid.utils.StringsUtil.UTF_8);
     }
     public String decodeComment(){
         int length = getExtraLength();
@@ -338,7 +336,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(length>max){
             length = max;
         }
-        return new String(bytes, offset, length, StandardCharsets.UTF_8);
+        return new String(bytes, offset, length, com.reandroid.utils.StringsUtil.UTF_8);
     }
     void onUtf8Changed(boolean oldValue){
         String str = mFileName;

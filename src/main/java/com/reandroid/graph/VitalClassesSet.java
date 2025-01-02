@@ -40,9 +40,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
-public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate<TypeKey> {
+
+public class VitalClassesSet extends BaseApkModuleProcessor implements org.apache.commons.collections4.Predicate<TypeKey> {
 
     private final ApkBuildOption buildOption;
     private final Set<TypeKey> mainClasses;
@@ -66,7 +66,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         return sourceStringClasses.iterator();
     }
     @Override
-    public boolean test(TypeKey typeKey) {
+    public boolean evaluate(TypeKey typeKey) {
         return mainClasses.contains(typeKey);
     }
     public boolean containsSourceString(TypeKey typeKey) {
@@ -233,7 +233,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
     private void scanRequiredByUser() {
         keepClasses(getBuildOption().getKeepClasses());
     }
-    public void keepClasses(Predicate<? super TypeKey> filter) {
+    public void keepClasses(org.apache.commons.collections4.Predicate<? super TypeKey> filter) {
         if(filter == null) {
             return;
         }

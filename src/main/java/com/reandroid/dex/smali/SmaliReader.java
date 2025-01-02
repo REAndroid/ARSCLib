@@ -20,6 +20,7 @@ import com.reandroid.common.Origin;
 import com.reandroid.common.TextPosition;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.NumbersUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.io.IOUtil;
 
 import java.io.File;
@@ -79,10 +80,10 @@ public class SmaliReader {
         return this.byteSource.read(i);
     }
     public String getString(int length){
-        return new String(getBytes(length), StandardCharsets.UTF_8);
+        return new String(getBytes(length), com.reandroid.utils.StringsUtil.UTF_8);
     }
     public String readString(int length){
-        return new String(readBytes(length), StandardCharsets.UTF_8);
+        return new String(readBytes(length), com.reandroid.utils.StringsUtil.UTF_8);
     }
     public String readEscapedString(char stopChar) throws IOException{
         int position = position();
@@ -539,7 +540,7 @@ public class SmaliReader {
         return (char) i;
     }
     public static SmaliReader of(String text){
-        SmaliReader reader = new SmaliReader(text.getBytes(StandardCharsets.UTF_8));
+        SmaliReader reader = new SmaliReader(StringsUtil.getBytesOfString(text, "UTF-8"));
         reader.setOrigin(Origin.createNew("<text-source>"));
         return reader;
     }

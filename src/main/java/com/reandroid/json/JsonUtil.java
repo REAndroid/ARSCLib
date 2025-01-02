@@ -6,8 +6,6 @@
 package com.reandroid.json;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 public class JsonUtil {
 
@@ -17,7 +15,7 @@ public class JsonUtil {
         }
         text = text.substring(JSONItem.MIME_BIN_BASE64.length());
         try{
-            return Base64.getUrlDecoder().decode(text);
+            return android.Base64.decode(text, 0);
         }catch (Throwable throwable){
             throw new JSONException(throwable);
         }
@@ -28,7 +26,7 @@ public class JsonUtil {
         inputStream.close();
     }
     public static void readJSONObject(InputStream inputStream, JSONConvert<JSONObject> jsonConvert){
-        InputStreamReader reader=new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+        InputStreamReader reader=new InputStreamReader(inputStream, com.reandroid.utils.StringsUtil.UTF_8);
         readJSONObject(reader, jsonConvert);
     }
     public static void readJSONObject(Reader reader, JSONConvert<JSONObject> jsonConvert){
@@ -42,7 +40,7 @@ public class JsonUtil {
         inputStream.close();
     }
     public static void readJSONArray(InputStream inputStream, JSONConvert<JSONArray> jsonConvert){
-        InputStreamReader reader=new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+        InputStreamReader reader=new InputStreamReader(inputStream, com.reandroid.utils.StringsUtil.UTF_8);
         readJSONArray(reader, jsonConvert);
     }
     public static void readJSONArray(Reader reader, JSONConvert<JSONArray> jsonConvert){

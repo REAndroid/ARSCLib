@@ -37,7 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class XmlCoder {
 
@@ -102,7 +102,7 @@ public class XmlCoder {
 
         public void decodeTable(File resourcesDir,
                                 TableBlock tableBlock,
-                                Predicate<Entry> decodedEntries) throws IOException {
+                                org.apache.commons.collections4.Predicate<Entry> decodedEntries) throws IOException {
             logMessage("Resource table ...");
             ValuesDirectorySerializer directorySerializer =
                     new ValuesDirectorySerializer(resourcesDir);
@@ -111,14 +111,14 @@ public class XmlCoder {
         }
         public void decodeTable(ValuesSerializerFactory serializerFactory,
                                   TableBlock tableBlock,
-                                  Predicate<Entry> decodedEntries) throws IOException {
+                                  org.apache.commons.collections4.Predicate<Entry> decodedEntries) throws IOException {
             for (PackageBlock packageBlock : tableBlock.listPackages()){
                 decodePackage(serializerFactory, packageBlock, decodedEntries);
             }
         }
         public void decodePackage(ValuesSerializerFactory serializerFactory,
                            PackageBlock packageBlock,
-                           Predicate<Entry> decodedEntries) throws IOException {
+                           org.apache.commons.collections4.Predicate<Entry> decodedEntries) throws IOException {
 
             packageBlock.sortTypes();
 
@@ -142,14 +142,14 @@ public class XmlCoder {
         public int decode(XmlSerializer serializer,
                            SpecTypePair specTypePair,
                            ResConfig resConfig,
-                           Predicate<Entry> decodedEntries) throws IOException {
+                           org.apache.commons.collections4.Predicate<Entry> decodedEntries) throws IOException {
             Iterator<ResourceEntry> resources = specTypePair.getResources();
             return decode(serializer, resources, resConfig, decodedEntries);
         }
         public int decode(XmlSerializer serializer,
                            Iterator<ResourceEntry> resources,
                            ResConfig resConfig,
-                           Predicate<Entry> decodedEntries) throws IOException {
+                           org.apache.commons.collections4.Predicate<Entry> decodedEntries) throws IOException {
             int entriesCount = 0;
             while (resources.hasNext()){
                 ResourceEntry resourceEntry = resources.next();
@@ -166,9 +166,9 @@ public class XmlCoder {
         public boolean decode(XmlSerializer serializer,
                            ResourceEntry resourceEntry,
                            ResConfig resConfig,
-                           Predicate<Entry> decodedEntries) throws IOException {
+                           org.apache.commons.collections4.Predicate<Entry> decodedEntries) throws IOException {
             Entry entry = resourceEntry.get(resConfig);
-            if(entry == null || decodedEntries.test(entry)){
+            if(entry == null || decodedEntries.evaluate(entry)){
                 return false;
             }
             if(entry.isComplex()){

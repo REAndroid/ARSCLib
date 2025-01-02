@@ -29,6 +29,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.common.FileChannelInputStream;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.File;
@@ -97,7 +98,7 @@ public class FrameworkTable extends TableBlock {
             PackageBlock packageBlock = pickOne();
             if(packageBlock!=null){
                 String name = packageBlock.getName();
-                if(name!=null && !name.trim().isEmpty()){
+                if(!StringsUtil.isBlank(name)){
                     frameworkName = name;
                 }
             }

@@ -22,6 +22,7 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -88,7 +89,7 @@ class DexFileLayoutController implements DexContainerBlock.LayoutBlockChangedLis
                 i --;
             }
         }
-        dexLayoutList.sort((layout1, layout2) -> CompareUtil.compare(layout1.getIndex(),
+        Collections.sort(dexLayoutList, (layout1, layout2) -> CompareUtil.compare(layout1.getIndex(),
                 layout2.getIndex()));
     }
 

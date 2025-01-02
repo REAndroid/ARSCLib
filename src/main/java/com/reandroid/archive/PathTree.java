@@ -75,7 +75,7 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
     @SuppressWarnings("unchecked")
     public void sort(Comparator<? super PathTree<?>> comparator, boolean recursive){
         LinkedHashMap<String, PathTree<T>> elementsMap = this.elementsMap;
-        if(elementsMap.size() == 0){
+        if(elementsMap.isEmpty()){
             return;
         }
         PathTree<?>[] elements = elementsMap.values().toArray(new PathTree<?>[0]);

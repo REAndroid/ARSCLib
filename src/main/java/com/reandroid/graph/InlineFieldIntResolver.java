@@ -25,14 +25,14 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.*;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class InlineFieldIntResolver extends BaseDexClassProcessor {
 
-    private final Predicate<Integer> resourceIdChecker;
+    private final org.apache.commons.collections4.Predicate<Integer> resourceIdChecker;
     private int mResolvedCount;
 
-    public InlineFieldIntResolver(DexClassRepository classRepository, Predicate<Integer> resourceIdChecker) {
+    public InlineFieldIntResolver(DexClassRepository classRepository, org.apache.commons.collections4.Predicate<Integer> resourceIdChecker) {
         super(classRepository);
         this.resourceIdChecker = resourceIdChecker;
     }
@@ -94,7 +94,7 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
             return;
         }
         int id = ((PrimitiveKey.IntegerKey) value).value();
-        if(!resourceIdChecker.test(id)) {
+        if(!resourceIdChecker.evaluate(id)) {
             return;
         }
         Key key = instruction.getKey();
@@ -112,14 +112,14 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
         this.mResolvedCount = 0;
     }
 
-    private static Predicate<Integer> createChecker(TableBlock tableBlock) {
+    private static org.apache.commons.collections4.Predicate<Integer> createChecker(TableBlock tableBlock) {
         return id -> {
             int i = id;
             return PackageBlock.isResourceId(i) &&
                     tableBlock.getResource(i) != null;
         };
     }
-    private static Predicate<Integer> createDefaultChecker() {
+    private static org.apache.commons.collections4.Predicate<Integer> createDefaultChecker() {
         return PackageBlock::isResourceId;
     }
 }

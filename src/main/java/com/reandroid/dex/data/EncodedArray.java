@@ -35,7 +35,7 @@ import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class EncodedArray extends DataItem implements KeyReference, Iterable<DexValueBlock<?>> {
 
@@ -117,7 +117,7 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
     public boolean remove(DexValueBlock<?> value){
         return getValueList().remove(value);
     }
-    public boolean removeIf(Predicate<? super DexValueBlock<?>> filter){
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super DexValueBlock<?>> filter){
         return getValueList().removeIf(filter);
     }
     public void set(int i, DexValueBlock<?> value){
@@ -164,7 +164,7 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
     public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance){
         return InstanceIterator.of(iterator(), instance);
     }
-    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
+    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, org.apache.commons.collections4.Predicate<? super T1> filter){
         return InstanceIterator.of(iterator(), instance, filter);
     }
     public Iterator<DexValueBlock<?>> iterator(int start, int length) {

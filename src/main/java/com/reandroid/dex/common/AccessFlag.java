@@ -24,7 +24,7 @@ import java.lang.annotation.ElementType;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public class AccessFlag extends Modifier{
 
@@ -168,7 +168,7 @@ public class AccessFlag extends Modifier{
     public static Iterator<AccessFlag> getValues(){
         return getValues(null);
     }
-    public static Iterator<AccessFlag> getValues(Predicate<AccessFlag> filter){
+    public static Iterator<AccessFlag> getValues(org.apache.commons.collections4.Predicate<AccessFlag> filter){
         return new ArrayIterator<>(VALUES, filter);
     }
     public static AccessFlag[] parse(SmaliReader reader){

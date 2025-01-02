@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerReference;
@@ -25,7 +24,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         extends CountedBlockList<DirectoryEntry<DEFINITION, VALUE>>
@@ -81,8 +80,8 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
     public void remove(DEFINITION definition) {
         super.removeIf(entry -> entry.equalsDefIndex(definition));
     }
-    public void remove(DEFINITION definition, Predicate<VALUE> filter) {
-        super.removeIf(entry -> entry.equalsDefIndex(definition) && filter.test(entry.getValue()));
+    public void remove(DEFINITION definition, org.apache.commons.collections4.Predicate<VALUE> filter) {
+        super.removeIf(entry -> entry.equalsDefIndex(definition) && filter.evaluate(entry.getValue()));
     }
     public void link(DEFINITION definition){
         for(DirectoryEntry<DEFINITION, VALUE> entry : this){

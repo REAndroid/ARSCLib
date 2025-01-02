@@ -22,7 +22,7 @@ import com.reandroid.dex.key.Key;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class IdSection<T extends IdItem> extends Section<T> {
 
@@ -52,8 +52,8 @@ public class IdSection<T extends IdItem> extends Section<T> {
         return false;
     }
     @Override
-    public boolean removeWithKeys(Predicate<? super Key> filter){
-        return getItemArray().removeIf(item -> filter.test(item.getKey()));
+    public boolean removeWithKeys(org.apache.commons.collections4.Predicate<? super Key> filter){
+        return getItemArray().removeIf(item -> filter.evaluate(item.getKey()));
     }
     @Override
     public T getSectionItem(int i){

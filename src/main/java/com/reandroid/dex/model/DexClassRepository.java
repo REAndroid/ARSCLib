@@ -33,7 +33,7 @@ import com.reandroid.utils.collection.*;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public interface DexClassRepository extends FullRefresh, BlockRefresh {
 
@@ -92,7 +92,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return null;
     }
 
-    default Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
+    default Iterator<DexClass> getDexClasses(org.apache.commons.collections4.Predicate<? super TypeKey> filter) {
         return new IterableIterator<DexClassModule, DexClass>(modules()) {
             @Override
             public Iterator<DexClass> iterator(DexClassModule element) {
@@ -100,7 +100,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
+    default Iterator<DexClass> getDexClassesCloned(org.apache.commons.collections4.Predicate<? super TypeKey> filter) {
         return new IterableIterator<DexClassModule, DexClass>(modules()) {
             @Override
             public Iterator<DexClass> iterator(DexClassModule element) {
@@ -156,15 +156,15 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         };
     }
     default <T extends SectionItem> Iterator<T> getClonedItemsIf(
-            SectionType<T> sectionType, Predicate<? super T> predicate) {
+            SectionType<T> sectionType, org.apache.commons.collections4.Predicate<? super T> predicate) {
         return FilterIterator.of(getClonedItems(sectionType), predicate);
     }
     default <T extends SectionItem> Iterator<T> getClonedItemsIfKey(
-            SectionType<T> sectionType, Predicate<? super Key> predicate) {
+            SectionType<T> sectionType, org.apache.commons.collections4.Predicate<? super Key> predicate) {
         if (predicate == null) {
             return getClonedItems(sectionType);
         }
-        return getClonedItemsIf(sectionType, item -> predicate.test(item.getKey()));
+        return getClonedItemsIf(sectionType, item -> predicate.evaluate(item.getKey()));
     }
     default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType, Key key) {
         return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
@@ -175,7 +175,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         };
     }
     default <T extends SectionItem> Iterator<T> getItemsIf(
-            SectionType<T> sectionType, Predicate<? super T> predicate) {
+            SectionType<T> sectionType, org.apache.commons.collections4.Predicate<? super T> predicate) {
         return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
             @Override
             public Iterator<T> iterator(Section<T> element) {
@@ -184,11 +184,11 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         };
     }
     default <T extends SectionItem> Iterator<T> getItemsIfKey(
-            SectionType<T> sectionType, Predicate<? super Key> predicate) {
+            SectionType<T> sectionType, org.apache.commons.collections4.Predicate<? super Key> predicate) {
         if (predicate == null) {
             return getItems(sectionType);
         }
-        return getItemsIf(sectionType, item -> predicate.test(item.getKey()));
+        return getItemsIf(sectionType, item -> predicate.evaluate(item.getKey()));
     }
     default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key) {
         Iterator<DexClassModule> iterator = modules();
@@ -237,7 +237,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return contains(SectionType.CLASS_ID, key);
     }
 
-    default <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter) {
+    default <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<T1> filter) {
         Iterator<DexClassModule> iterator = modules();
         boolean result = false;
         while (iterator.hasNext()) {
@@ -249,7 +249,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return result;
     }
 
-    default <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
+    default <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<? super Key> filter) {
         Iterator<DexClassModule> iterator = modules();
         boolean result = false;
         while (iterator.hasNext()) {
@@ -368,7 +368,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return removeEntry(SectionType.CLASS_ID, typeKey);
     }
 
-    default boolean removeClasses(Predicate<? super DexClass> filter) {
+    default boolean removeClasses(org.apache.commons.collections4.Predicate<? super DexClass> filter) {
         Iterator<DexClassModule> iterator = modules();
         boolean result = false;
         while (iterator.hasNext()) {
@@ -379,7 +379,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         }
         return result;
     }
-    default boolean removeClassesWithKeys(Predicate<? super TypeKey> filter) {
+    default boolean removeClassesWithKeys(org.apache.commons.collections4.Predicate<? super TypeKey> filter) {
         return removeEntriesWithKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter));
     }
     default boolean removeAnnotations(TypeKey typeKey) {

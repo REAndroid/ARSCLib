@@ -16,11 +16,11 @@
 package com.reandroid.utils.collection;
 
 import java.util.*;
-import java.util.function.Function;
+import org.apache.commons.collections4.Transformer;
 
 public class ComputeList<T, E> extends ComputeCollection<T, E> implements List<T>{
 
-    public ComputeList(List<? extends E> list, Function<? super E, T> function) {
+    public ComputeList(List<? extends E> list, Transformer<? super E, T> function) {
         super(list, function);
     }
 

@@ -17,6 +17,8 @@ package com.reandroid.xml;
 
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
+
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -48,7 +50,7 @@ public class StyleSpanEventSet {
     }
     private List<StyleSpanEvent> getEventList() {
         List<StyleSpanEvent> eventList = this.eventList;
-        eventList.sort(CompareUtil.getComparableComparator());
+        java.util.Collections.sort(eventList, CompareUtil.getComparableComparator());
         return eventList;
     }
 

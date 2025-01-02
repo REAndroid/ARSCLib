@@ -32,7 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public class DexDirectory implements Iterable<DexFile>, Closeable,
         DexClassRepository, FullRefresh {
@@ -666,7 +666,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     public static DexDirectory fromZip(ZipEntryMap zipEntryMap) throws IOException {
         return fromZip(zipEntryMap, null);
     }
-    public static DexDirectory fromZip(ZipEntryMap zipEntryMap, Predicate<SectionType<?>> readFilter) throws IOException {
+    public static DexDirectory fromZip(ZipEntryMap zipEntryMap, org.apache.commons.collections4.Predicate<SectionType<?>> readFilter) throws IOException {
         DexDirectory dexDirectory = new DexDirectory();
         DexFileSourceSet sourceSet = dexDirectory.getDexSourceSet();
         sourceSet.setReadFilter(readFilter);
@@ -674,7 +674,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         dexDirectory.updateDexFileList();
         return dexDirectory;
     }
-    public static DexDirectory fromDexFilesDirectory(File dir, Predicate<SectionType<?>> readFilter) throws IOException {
+    public static DexDirectory fromDexFilesDirectory(File dir, org.apache.commons.collections4.Predicate<SectionType<?>> readFilter) throws IOException {
         DexDirectory dexDirectory = new DexDirectory();
         DexFileSourceSet sourceSet = dexDirectory.getDexSourceSet();
         sourceSet.setReadFilter(readFilter);

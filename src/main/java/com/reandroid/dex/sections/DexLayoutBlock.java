@@ -35,7 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
 
@@ -228,14 +228,14 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         }
         return EmptyIterator.of();
     }
-    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<T1> filter){
         Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.removeEntries(filter);
         }
         return false;
     }
-    public <T1 extends SectionItem> boolean removeWithKeys(SectionType<T1> sectionType, Predicate<? super Key> filter){
+    public <T1 extends SectionItem> boolean removeWithKeys(SectionType<T1> sectionType, org.apache.commons.collections4.Predicate<? super Key> filter){
         Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.removeWithKeys(filter);
@@ -311,7 +311,7 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         return outputStream.toByteArray();
     }
 
-    public void readBytes(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+    public void readBytes(BlockReader reader, org.apache.commons.collections4.Predicate<SectionType<?>> filter) throws IOException {
         getSectionList().readSections(reader, filter);
     }
     public void write(File file) throws IOException {

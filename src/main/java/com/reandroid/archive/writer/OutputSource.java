@@ -49,8 +49,15 @@ class OutputSource {
         CountingOutputStream<DeflaterOutputStream> deflateCounter = null;
 
         if(inputSource.getMethod() != Archive.STORED){
-            DeflaterOutputStream deflaterInputStream =
-                    new DeflaterOutputStream(rawCounter, new Deflater(Deflater.DEFAULT_COMPRESSION, true), true);
+            DeflaterOutputStream deflaterInputStream;
+            try {
+                //Hack way to do this without checking Build.VERSION.SDK_INT
+                deflaterInputStream = new DeflaterOutputStream(
+                        rawCounter, new Deflater(Deflater.DEFAULT_COMPRESSION, true), true);
+            } catch (Exception e) {
+                deflaterInputStream =  new DeflaterOutputStream(
+                        rawCounter, new Deflater(Deflater.DEFAULT_COMPRESSION, true));
+            }
             deflateCounter = new CountingOutputStream<>(deflaterInputStream, false);
         }
         if(deflateCounter != null){

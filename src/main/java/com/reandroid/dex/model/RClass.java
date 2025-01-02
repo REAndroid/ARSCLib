@@ -30,6 +30,7 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.io.IOUtil;
@@ -179,7 +180,7 @@ public class RClass extends DexClass {
 
         List<RField> fieldList = new ArrayCollection<>();
         fieldList.addAll(rFields);
-        fieldList.sort(CompareUtil.getComparableComparator());
+        java.util.Collections.sort(fieldList, CompareUtil.getComparableComparator());
         for(RField rField : fieldList) {
             rField.serializePublicXml(serializer);
         }

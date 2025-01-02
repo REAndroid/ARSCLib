@@ -21,7 +21,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class TableString extends StringItem {
 
@@ -46,7 +46,7 @@ public class TableString extends StringItem {
             return item.isScalar();
         });
     }
-    public Iterator<Entry> getEntries(Predicate<Entry> tester) {
+    public Iterator<Entry> getEntries(org.apache.commons.collections4.Predicate<Entry> tester) {
         return super.getUsers(Entry.class, tester);
     }
 }

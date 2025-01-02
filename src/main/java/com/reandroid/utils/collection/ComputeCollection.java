@@ -18,20 +18,20 @@ package com.reandroid.utils.collection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.function.Function;
+import org.apache.commons.collections4.Transformer;
 
 public class ComputeCollection<T, E> implements Collection<T> {
 
     private final Collection<? extends E> source;
-    private final Function<? super E, T> function;
+    private final Transformer<? super E, T> function;
 
-    public ComputeCollection(Collection<? extends E> collection, Function<? super E, T> function){
+    public ComputeCollection(Collection<? extends E> collection, Transformer<? super E, T> function){
         this.source = collection;
         this.function = function;
     }
 
     public T apply(E input){
-        return function.apply(input);
+        return function.transformer(input);
     }
     public Collection<? extends E> getSource() {
         return source;
@@ -67,7 +67,7 @@ public class ComputeCollection<T, E> implements Collection<T> {
         Iterator<? extends E> iterator = source.iterator();
         int i = 0;
         while (iterator.hasNext()){
-            results[i] = function.apply(iterator.next());
+            results[i] = function.transformer(iterator.next());
             i++;
         }
         return results;
@@ -89,7 +89,7 @@ public class ComputeCollection<T, E> implements Collection<T> {
         Iterator<? extends E> iterator = source.iterator();
         int i = 0;
         while (i < size && iterator.hasNext()){
-            out[i] = (T1) function.apply(iterator.next());
+            out[i] = (T1) function.transformer(iterator.next());
             i++;
         }
         return out;

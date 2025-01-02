@@ -29,7 +29,7 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Iterator;
-import java.util.function.Function;
+import org.apache.commons.collections4.Transformer;
 
 public class MethodKey implements ProgramKey {
 
@@ -129,22 +129,22 @@ public class MethodKey implements ProgramKey {
                 getProto().mentionedKeys());
     }
 
-    public MethodKey replaceTypes(Function<TypeKey, TypeKey> function) {
+    public MethodKey replaceTypes(Transformer<TypeKey, TypeKey> function) {
         MethodKey result = this;
         TypeKey typeKey = getDeclaring();
-        typeKey = typeKey.changeTypeName(function.apply(typeKey));
+        typeKey = typeKey.changeTypeName(function.transformer(typeKey));
 
         result = result.changeDeclaring(typeKey);
 
         typeKey = getReturnType();
-        typeKey = typeKey.changeTypeName(function.apply(typeKey));
+        typeKey = typeKey.changeTypeName(function.transformer(typeKey));
 
         result = result.changeReturnType(typeKey);
 
         int count = getParametersCount();
         for(int i = 0; i < count; i++){
             typeKey = getParameter(i);
-            typeKey = typeKey.changeTypeName(function.apply(typeKey));
+            typeKey = typeKey.changeTypeName(function.transformer(typeKey));
             result = result.changeParameter(i, typeKey);
         }
         return result;
@@ -392,6 +392,8 @@ public class MethodKey implements ProgramKey {
         }
         return create(defining, StringKey.create(name), protoKey);
     }
+
+    //Not currently in use
     public static MethodKey convert(Method method) {
         TypeKey declaring = TypeKey.convert(method.getDeclaringClass());
         TypeKey returnType = TypeKey.convert(method.getReturnType());

@@ -27,7 +27,7 @@ import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public class ArrayValue extends DexValueBlock<EncodedArray>
         implements Iterable<DexValueBlock<?>> {
@@ -58,7 +58,7 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public boolean remove(DexValueBlock<?> value){
         return getValueContainer().remove(value);
     }
-    public boolean removeIf(Predicate<? super DexValueBlock<?>> filter){
+    public boolean removeIf(org.apache.commons.collections4.Predicate<? super DexValueBlock<?>> filter){
         return getValueContainer().removeIf(filter);
     }
     public<T1 extends DexValueBlock<?>> T1 createNext(DexValueType<T1> valueType){
@@ -76,7 +76,7 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance) {
         return getValueContainer().iterator(instance);
     }
-    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
+    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, org.apache.commons.collections4.Predicate<? super T1> filter){
         return getValueContainer().iterator(instance, filter);
     }
     public Iterator<DexValueBlock<?>> clonedIterator() {

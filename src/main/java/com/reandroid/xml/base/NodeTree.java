@@ -20,7 +20,7 @@ import com.reandroid.utils.collection.InstanceIterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
+
 
 public interface NodeTree<T extends Node> extends Node {
 
@@ -28,7 +28,7 @@ public interface NodeTree<T extends Node> extends Node {
     void add(int i, T node);
     boolean remove(T node);
     T remove(int i);
-    boolean removeIf(Predicate<? super T> predicate);
+    boolean removeIf(org.apache.commons.collections4.Predicate<? super T> predicate);
     T get(int i);
     int size();
     Iterator<? extends T> iterator();
@@ -44,7 +44,7 @@ public interface NodeTree<T extends Node> extends Node {
     default <T1 extends Node> Iterator<T1> iterator(Class<T1> instance) {
         return iterator(instance, null);
     }
-    default <T1 extends Node> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter) {
+    default <T1 extends Node> Iterator<T1> iterator(Class<T1> instance, org.apache.commons.collections4.Predicate<? super T1> filter) {
         return new InstanceIterator<>(iterator(), instance, filter);
     }
 }

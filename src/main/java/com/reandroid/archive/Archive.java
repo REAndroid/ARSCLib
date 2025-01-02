@@ -30,7 +30,7 @@ import com.reandroid.utils.io.IOUtil;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Predicate;
+
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
@@ -60,7 +60,7 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         // TODO: make InputSource for directory entry
         return getInputSources(ArchiveEntry::isFile);
     }
-    public InputSource[] getInputSources(Predicate<? super ArchiveEntry> filter){
+    public InputSource[] getInputSources(org.apache.commons.collections4.Predicate<? super ArchiveEntry> filter){
         Iterator<InputSource> iterator = ComputeIterator.of(iterator(filter), this::createInputSource);
         List<InputSource> sourceList = CollectionUtil.toList(iterator);
         return sourceList.toArray(new InputSource[sourceList.size()]);
@@ -126,7 +126,7 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     public Iterator<ArchiveEntry> iterator() {
         return new ArrayIterator<>(entryList);
     }
-    public Iterator<ArchiveEntry> iterator(Predicate<? super ArchiveEntry> filter) {
+    public Iterator<ArchiveEntry> iterator(org.apache.commons.collections4.Predicate<? super ArchiveEntry> filter) {
         return new ArrayIterator<>(entryList, filter);
     }
     public int size(){
@@ -145,10 +145,10 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     public int extractAll(File dir, APKLogger logger) throws IOException {
         return extractAll(dir, null, logger);
     }
-    public int extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
+    public int extractAll(File dir, org.apache.commons.collections4.Predicate<ArchiveEntry> filter) throws IOException {
         return extractAll(dir, filter, null);
     }
-    public int extractAll(File dir, Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
+    public int extractAll(File dir, org.apache.commons.collections4.Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
         Iterator<ArchiveEntry> iterator = iterator(filter);
         int result = 0;
         while (iterator.hasNext()){

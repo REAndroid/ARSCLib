@@ -41,7 +41,7 @@ import com.reandroid.xml.XMLElement;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Predicate;
+
 import java.util.zip.ZipEntry;
 
 public class ApkModule implements ApkFile, Closeable {
@@ -634,7 +634,7 @@ public class ApkModule implements ApkFile, Closeable {
         if (tableBlock != null) {
             TableStringPool stringPool = tableBlock.getStringPool();
             Iterator<TableString> iterator = stringPool.getAll(path);
-            Predicate<Entry> filter = entry -> entry.isScalar() &&
+            org.apache.commons.collections4.Predicate<Entry> filter = entry -> entry.isScalar() &&
                     TypeBlock.canHaveResourceFile(entry.getTypeName());
             while (iterator.hasNext()) {
                 results.addAll(iterator.next().getEntries(filter));

@@ -36,7 +36,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Predicate;
+
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
         implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
@@ -237,9 +237,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return super.iterator(NON_EMPTY_TESTER);
     }
     public Iterator<TypeBlock> iterator(ResConfig resConfig){
-        return iterator(new Predicate<TypeBlock>() {
+        return iterator(new org.apache.commons.collections4.Predicate<TypeBlock>() {
             @Override
-            public boolean test(TypeBlock typeBlock) {
+            public boolean evaluate(TypeBlock typeBlock) {
                 return typeBlock.getResConfig().equals(resConfig);
             }
         });
@@ -404,9 +404,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return typeBlock1.compareTo(typeBlock2);
     }
 
-    private static final Predicate<TypeBlock> NON_EMPTY_TESTER = new Predicate<TypeBlock>() {
+    private static final org.apache.commons.collections4.Predicate<TypeBlock> NON_EMPTY_TESTER = new org.apache.commons.collections4.Predicate<TypeBlock>() {
         @Override
-        public boolean test(TypeBlock typeBlock) {
+        public boolean evaluate(TypeBlock typeBlock) {
             if(typeBlock == null || typeBlock.isNull()){
                 return false;
             }

@@ -38,7 +38,7 @@ import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Predicate;
+
 
 public class SectionList extends FixedBlockContainer
         implements SectionTool, OffsetSupplier, Iterable<Section<?>> ,
@@ -171,7 +171,7 @@ public class SectionList extends FixedBlockContainer
     public void onReadBytes(BlockReader reader) throws IOException {
         readSections(reader, null);
     }
-    void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+    void readSections(BlockReader reader, org.apache.commons.collections4.Predicate<SectionType<?>> filter) throws IOException {
         mReading = true;
         int position = reader.getPosition();
         DexHeader header = getHeader();
@@ -185,13 +185,13 @@ public class SectionList extends FixedBlockContainer
         getSection(SectionType.HEADER).readBytes(reader);
         getSection(SectionType.MAP_LIST).readBytes(reader);
     }
-    private void readBody(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+    private void readBody(BlockReader reader, org.apache.commons.collections4.Predicate<SectionType<?>> filter) throws IOException {
         MapItem[] mapItemList = mapList.getBodyReaderSorted();
         int length = mapItemList.length;
         for (int i = 0; i < length; i++) {
             MapItem mapItem = mapItemList[i];
             SectionType<SectionItem> sectionType = mapItem.getSectionType();
-            if (filter == null || filter.test(sectionType)) {
+            if (filter == null || filter.evaluate(sectionType)) {
                 loadSection(mapItem, reader);
             }
         }

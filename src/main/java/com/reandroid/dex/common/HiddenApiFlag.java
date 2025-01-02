@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
+
 
 public class HiddenApiFlag extends Modifier implements SmaliFormat {
 
@@ -124,7 +124,7 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
     public static Iterator<HiddenApiFlag> getValues(){
         return getValues(null);
     }
-    public static Iterator<HiddenApiFlag> getValues(Predicate<HiddenApiFlag> filter){
+    public static Iterator<HiddenApiFlag> getValues(org.apache.commons.collections4.Predicate<HiddenApiFlag> filter){
         return new ArrayIterator<>(VALUES, filter);
     }
     public static HiddenApiFlag restrictionOf(int value) {

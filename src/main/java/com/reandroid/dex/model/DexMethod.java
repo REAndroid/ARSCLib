@@ -32,7 +32,7 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+
 
 public class DexMethod extends DexDeclaration implements MethodProgram {
 
@@ -175,7 +175,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     public Iterator<DexInstruction> getInstructions(Opcode<?> opcode) {
         return getInstructions(ins -> ins.getOpcode() == opcode);
     }
-    public Iterator<DexInstruction> getInstructions(Predicate<? super Ins> filter) {
+    public Iterator<DexInstruction> getInstructions(org.apache.commons.collections4.Predicate<? super Ins> filter) {
         Iterator<Ins> iterator = FilterIterator.of(getDefinition().getInstructions(), filter);
         return ComputeIterator.of(iterator, this::create);
     }

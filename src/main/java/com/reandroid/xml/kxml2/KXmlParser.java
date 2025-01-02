@@ -22,6 +22,8 @@
 
 package com.reandroid.xml.kxml2;
 
+import com.reandroid.utils.StringsUtil;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -224,7 +226,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
                 nspStack[j] = attrName;
                 nspStack[j + 1] = attributes[i + 3];
 
-                if (attrName != null && attributes[i + 3].isEmpty()) {
+                if (attrName != null && attributes[i + 3].length() == 0) {
                     checkRelaxed("illegal empty namespace");
                 }
 
@@ -452,7 +454,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
              * reference.
              */
             int peek = peekType(false);
-            if (text != null && !text.isEmpty() && peek < TEXT) {
+            if (!StringsUtil.isEmpty(text) && peek < TEXT) {
                 type = TEXT;
                 return type;
             }

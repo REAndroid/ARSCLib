@@ -22,6 +22,7 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.*;
 
@@ -187,7 +188,7 @@ public abstract class Rename<T extends Key, R extends Key> {
     public List<KeyPair<T, R>> toList(Comparator<KeyPair<? super T, ? super R>> comparator) {
         List<KeyPair<T, R>> results = new ArrayCollection<>(getKeyPairSet());
         if (comparator != null) {
-            results.sort(comparator);
+            java.util.Collections.sort(results, comparator);
         }
         return results;
     }
