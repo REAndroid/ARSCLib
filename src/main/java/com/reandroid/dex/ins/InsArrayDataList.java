@@ -37,7 +37,7 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
     private final IntegerReference widthReference;
 
     public InsArrayDataList(IntegerReference widthReference, IntegerReference countReference) {
-        super(new EntryCreator(widthReference), countReference);
+        super(new EntryCreator(widthReference), new WidthCheckingReference(widthReference, countReference));
         this.widthReference = widthReference;
     }
 
@@ -344,6 +344,32 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         @Override
         public ArrayDataEntry newInstance() {
             return new ArrayDataEntry(this.width.get());
+        }
+    }
+    static class WidthCheckingReference implements IntegerReference {
+
+        private final IntegerReference width;
+        private final IntegerReference reference;
+
+        public WidthCheckingReference(IntegerReference width, IntegerReference reference) {
+            this.width = width;
+            this.reference = reference;
+        }
+        @Override
+        public int get() {
+            if (width.get() == 0) {
+                return 0;
+            }
+            return reference.get();
+        }
+
+        @Override
+        public void set(int value) {
+            reference.set(value);
+        }
+        @Override
+        public String toString() {
+            return Integer.toString(get());
         }
     }
 }
