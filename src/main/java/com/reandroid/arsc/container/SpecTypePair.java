@@ -217,6 +217,9 @@ public class SpecTypePair extends BlockContainer<Block>
     public Entry getEntry(ResConfig resConfig, String entryName){
         return getTypeBlockArray().getEntry(resConfig, entryName);
     }
+    public Entry getEntry(ResConfig resConfig, int entryId){
+        return getTypeBlockArray().getEntry(resConfig, entryId);
+    }
     public void sortTypes(){
         getTypeBlockArray().sort();
     }

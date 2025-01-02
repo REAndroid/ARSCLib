@@ -347,6 +347,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     public Entry getEntry(ResConfig resConfig, String type, String name){
         return getSpecTypePairArray().getEntry(resConfig, type, name);
     }
+    public Entry getEntry(ResConfig resConfig, int typeId, int entryId) {
+        return getSpecTypePairArray().getEntry(resConfig, typeId, entryId);
+    }
     public Entry getOrCreate(String qualifiers, String type, String name){
         return getOrCreate(ResConfig.parse(qualifiers), type, name);
     }

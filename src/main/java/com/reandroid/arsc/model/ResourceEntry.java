@@ -169,13 +169,10 @@ public class ResourceEntry implements Iterable<Entry>{
     public Entry get(String qualifiers){
         return get(ResConfig.parse(qualifiers));
     }
-    public Entry get(ResConfig resConfig){
-        for(Entry entry : this){
-            if(resConfig.equals(entry.getResConfig())){
-                return entry;
-            }
-        }
-        return null;
+    public Entry get(ResConfig resConfig) {
+        int id = getResourceId();
+        return getPackageBlock().getEntry(resConfig,
+                (id >> 16) & 0xff, id & 0xffff);
     }
     public int getConfigsCount(){
         return CollectionUtil.count(iterator(true));

@@ -32,16 +32,14 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
         implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
     private byte mTypeId;
     private Boolean mHasComplexEntry;
+    private Map<String, TypeBlock> mQualifiersMap;
 
     public TypeBlockArray(){
         super();
@@ -111,6 +109,13 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         return null;
     }
+    public Entry getEntry(ResConfig resConfig, int entryId){
+        TypeBlock typeBlock = getTypeBlock(resConfig);
+        if (typeBlock != null) {
+            return typeBlock.getEntry(entryId);
+        }
+        return null;
+    }
     public TypeBlock getOrCreate(ResConfig resConfig){
         return getOrCreate(resConfig, false);
     }
@@ -141,23 +146,50 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         config.parseQualifiers(qualifiers);
         return typeBlock;
     }
-    public TypeBlock getTypeBlock(String qualifiers){
+    public TypeBlock getTypeBlock(String qualifiers) {
+        if (qualifiers == null) {
+            return null;
+        }
+        TypeBlock typeBlock = getFromQualifiersMap(qualifiers);
+        if (typeBlock != null) {
+            return typeBlock;
+        }
         Iterator<TypeBlock> iterator = iterator();
         while (iterator.hasNext()){
-            TypeBlock typeBlock = iterator.next();
+            typeBlock = iterator.next();
             if(typeBlock.getResConfig().isEqualQualifiers(qualifiers)){
                 return typeBlock;
             }
         }
         return null;
     }
+    private TypeBlock getFromQualifiersMap(String qualifiers) {
+        Map<String, TypeBlock> map = this.mQualifiersMap;
+        if (map == null) {
+            buildQualifiersMap();
+            map = this.mQualifiersMap;
+            return map.get(qualifiers);
+        }
+        TypeBlock typeBlock = map.get(qualifiers);
+        if (typeBlock != null && !qualifiers.equals(typeBlock.getQualifiers()) ||
+                typeBlock != null && typeBlock.getParent() == null) {
+            buildQualifiersMap();
+            map = this.mQualifiersMap;
+            typeBlock = map.get(qualifiers);
+        }
+        return typeBlock;
+    }
     public TypeBlock getTypeBlock(ResConfig config){
         if(config == null){
             return null;
         }
+        TypeBlock typeBlock = getFromQualifiersMap(config.getQualifiers());
+        if (typeBlock != null) {
+            return typeBlock;
+        }
         Iterator<TypeBlock> iterator = iterator();
         while (iterator.hasNext()){
-            TypeBlock typeBlock = iterator.next();
+            typeBlock = iterator.next();
             if(typeBlock == null){
                 continue;
             }
@@ -166,6 +198,15 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             }
         }
         return null;
+    }
+    private void buildQualifiersMap() {
+        Map<String, TypeBlock> map = new HashMap<>(size());
+        this.mQualifiersMap = map;
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()) {
+            TypeBlock typeBlock = iterator.next();
+            map.put(typeBlock.getQualifiers(), typeBlock);
+        }
     }
     public TypeBlock getTypeBlock(ResConfig config, boolean sparse){
         if(config == null){
@@ -289,14 +330,21 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     @Override
     protected void onRefreshed() {
-
+        this.mQualifiersMap = null;
     }
+    @Override
+    public void onChanged() {
+        super.onChanged();
+        mQualifiersMap = null;
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         boolean readOk=true;
         while (readOk){
             readOk=readTypeBlockArray(reader);
         }
+        this.mQualifiersMap = null;
     }
     private boolean readTypeBlockArray(BlockReader reader) throws IOException{
         HeaderBlock headerBlock=reader.readHeaderBlock();

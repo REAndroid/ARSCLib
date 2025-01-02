@@ -87,6 +87,13 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         }
         return typeBlock.getEntry(entryId);
     }
+    public Entry getEntry(ResConfig resConfig, int typeId, int entryId){
+        SpecTypePair specTypePair = getSpecTypePair(typeId);
+        if (specTypePair != null) {
+            return specTypePair.getEntry(resConfig, entryId);
+        }
+        return null;
+    }
     public TypeBlock getOrCreateTypeBlock(byte typeId, String qualifiers){
         SpecTypePair pair=getOrCreate(typeId);
         return pair.getOrCreateTypeBlock(qualifiers);
@@ -136,18 +143,30 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return getSpecTypePair((byte) typeId);
     }
     public SpecTypePair getSpecTypePair(byte typeId){
+        SpecTypePair specTypePair = get((typeId & 0xff) - 1);
+        if (specTypePair != null && specTypePair.getTypeId() == typeId) {
+            return specTypePair;
+        }
         Iterator<SpecTypePair> iterator = iterator();
-        while (iterator.hasNext()){
-            SpecTypePair specTypePair = iterator.next();
+        while (iterator.hasNext()) {
+            specTypePair = iterator.next();
             if(specTypePair != null && specTypePair.getTypeId() == typeId){
                 return specTypePair;
             }
         }
         return null;
     }
-    public SpecTypePair getSpecTypePair(String typeName){
+    public SpecTypePair getSpecTypePair(String typeName) {
         if(typeName == null){
             return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if (packageBlock != null) {
+            SpecTypePair specTypePair = getSpecTypePair(
+                    packageBlock.typeIdOf(typeName));
+            if (specTypePair != null) {
+                return specTypePair;
+            }
         }
         Iterator<SpecTypePair> itr = iterator(true);
         while (itr.hasNext()){
