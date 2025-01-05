@@ -27,7 +27,7 @@ public class InsConstWide32 extends Ins31i implements ConstNumberLong{
     }
     @Override
     public long getLong() {
-        return super.getLong();
+        return getInteger();
     }
 
     @Override
