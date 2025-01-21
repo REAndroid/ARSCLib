@@ -43,14 +43,13 @@ public class AlignItem extends BlockItem {
         }
         return align(block.countBytes());
     }
+    public int align(long count) {
+        int size = align(getAlignment(), count);
+        setSize(size);
+        return size;
+    }
     public int align(int count) {
-        int alignment = getAlignment();
-        int size;
-        if (alignment <= 0) {
-            size = 0;
-        } else {
-            size = (alignment - (count % alignment)) % alignment;
-        }
+        int size = align(getAlignment(), count);
         setSize(size);
         return size;
     }
@@ -114,6 +113,20 @@ public class AlignItem extends BlockItem {
         builder.append("align=");
         builder.append(size);
         return builder.toString();
+    }
+
+
+    public static int align(int alignment, long value) {
+        if (alignment <= 1) {
+            return 0;
+        }
+        return (alignment - (int) (value % alignment)) % alignment;
+    }
+    public static int align(int alignment, int value) {
+        if (alignment <= 1) {
+            return 0;
+        }
+        return (alignment - (value % alignment)) % alignment;
     }
 
     private static final int ALIGNMENT = 4;
