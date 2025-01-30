@@ -18,48 +18,85 @@ package com.reandroid.utils;
 public class NumbersUtil {
 
     public static int getUInt(int value, int start, int bitCount) {
-        value = value >> (start + 1 - bitCount);
-        int mask = ~(0xffffffff << bitCount);
-        return value & mask;
+        return (value >> (start - bitCount + 1)) & ((1 << bitCount) - 1);
     }
     public static int setUInt(int out, int value, int start, int bitCount) {
-        int shift = (start - bitCount) + 1;
-        int mask = 0xffffffff >>> (32 - bitCount);
+        int mask = (1 << bitCount) - 1;
         value = value & mask;
-        mask = ~(mask << shift);
-        out = out & mask;
-        value = value << shift;
-        return out | value;
+        int shift = start - bitCount + 1;
+        return (out & ~(mask << shift)) | (value << shift);
     }
     public static int toSignedInt(int bitsCount, int unsigned) {
-        if (unsigned <= 0) {
+        if (unsigned == 0 || bitsCount <= 0) {
+            return 0;
+        }
+        if (bitsCount > 31) {
             return unsigned;
         }
-        int mask = 0xffffffff >>> (32 - bitsCount);
-        unsigned = unsigned & mask;
-        int maxValue = 1 << (bitsCount - 1);
-        if (unsigned < maxValue) {
+        int mask = 1 << bitsCount;
+        unsigned &= mask - 1;
+        int max = 1 << (bitsCount - 1);
+        if (unsigned < max) {
             return unsigned;
         }
-        return ~mask | unsigned;
+        return unsigned - mask;
     }
     public static long toSigned(int bitsCount, long unsigned) {
-        if (unsigned <= 0) {
+        if (unsigned == 0 || bitsCount <= 0) {
+            return 0;
+        }
+        if (bitsCount > 63) {
             return unsigned;
         }
-        long mask = 0xffffffffffffffffL >>> (64 - bitsCount);
-        unsigned = unsigned & mask;
-        long maxValue = 1L << (bitsCount - 1);
-        if (unsigned < maxValue) {
+        long max = 1L << (bitsCount - 1);
+        long mask = max << 1;
+        unsigned &= mask - 1;
+        if (unsigned < max) {
             return unsigned;
         }
-        return ~mask | unsigned;
+        return unsigned - mask;
+    }
+    public static int minimumBitsForSigned(long num) {
+        int bits = 0;
+        if (num < 0) {
+            num = -num;
+        } else {
+            bits = 1;
+        }
+        bits = bits + countBits(num);
+        long sign = 1L << (bits - 1);
+        if (num > sign && bits < 64) {
+            bits = bits + 1;
+        }
+        return bits;
+    }
+    public static int minimumBitsForUnSigned(long unsigned) {
+        if (unsigned == 0) {
+            return 1;
+        }
+        return countBits(unsigned);
+    }
+    public static int countBits(long num) {
+        int bits = 0;
+        while (num != 0) {
+            num = num >>> 1;
+            bits ++;
+        }
+        return bits;
+    }
+    public static int minimumBytesForSigned(long num) {
+        int bits = minimumBitsForSigned(num);
+        int i = bits / 8;
+        if ((bits & 0x7) != 0) {
+            i ++;
+        }
+        return i;
     }
     public static long maxValue(int bitsCount) {
         if (bitsCount <= 0) {
             return 0;
         }
-        return 0xffffffffffffffffL >>> (65 - bitsCount);
+        return (1L << (bitsCount - 1)) - 1;
     }
     public static long minValue(int bitsCount) {
         if (bitsCount <= 0) {
@@ -85,5 +122,17 @@ public class NumbersUtil {
             return i1;
         }
         return i2;
+    }
+    public static String toBinaryString(int i) {
+        StringBuilder builder = new StringBuilder(34);
+        builder.append("0b");
+        String b = Integer.toBinaryString(i);
+        int rem = 32 - b.length();
+        while (rem > 0) {
+            builder.append('0');
+            rem --;
+        }
+        builder.append(b);
+        return builder.toString();
     }
 }
