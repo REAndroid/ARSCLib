@@ -436,7 +436,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         if(i != 0) {
             return i;
         }
-        return CompareUtil.compare(getXml(), stringItem.getXml());
+        return CompareUtil.compare(get(), stringItem.get());
     }
     public int compareReferences(StringItem stringItem) {
         return CompareUtil.compare(stringItem.getReferencesSize(), this.getReferencesSize());
