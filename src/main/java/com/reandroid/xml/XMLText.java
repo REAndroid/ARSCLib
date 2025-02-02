@@ -15,6 +15,7 @@
   */
 package com.reandroid.xml;
 
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.base.Text;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -26,64 +27,46 @@ public class XMLText extends XMLNode implements Text {
 
     private String text;
 
-    public XMLText(String text){
+    public XMLText(String text) {
         this.text = text;
     }
-    public XMLText(){
+    public XMLText() {
         this(null);
     }
 
     @Override
-    public XMLElement getParentNode() {
-        return (XMLElement) super.getParentNode();
+    public XMLNodeTree getParentNode() {
+        return (XMLNodeTree) super.getParentNode();
     }
 
-    public String getText(){
+    public String getText() {
         return getText(false);
     }
-    public String getText(boolean escapeXmlChars){
-        if(escapeXmlChars){
+    public String getText(boolean escapeXmlChars) {
+        if (escapeXmlChars) {
             return XMLUtil.escapeXmlChars(text);
         }
         return text;
     }
-    public void setText(String text){
+    public void setText(String text) {
         this.text = text;
     }
 
     public void appendText(char ch) {
-        if(ch == 0){
+        if (ch == 0) {
             return;
         }
         appendText(String.valueOf(ch));
     }
     public void appendText(String text) {
-        if(text == null){
+        if (text == null) {
             return;
         }
-        if(this.text == null || this.text.length() == 0){
+        if (this.text == null || this.text.length() == 0) {
             this.text = text;
             return;
         }
         this.text = this.text + text;
-    }
-    private void appendEntityRef(String entityRef) {
-        if(entityRef == null){
-            return;
-        }
-        String decode;
-        if(entityRef.equals("lt")){
-            decode = "<";
-        }else if(entityRef.equals("gt")){
-            decode = ">";
-        }else if(entityRef.equals("amp")){
-            decode = "&";
-        }else if(entityRef.equals("quote")){
-            decode = "\"";
-        }else {
-            return;
-        }
-        appendText(decode);
     }
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
@@ -92,59 +75,49 @@ public class XMLText extends XMLNode implements Text {
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
         int event = parser.getEventType();
-        if(!isTextEvent(event)){
-            throw new XmlPullParserException("Not text event");
+        if (!isTextEvent(event)) {
+            throw new XmlPullParserException("Not TEXT event");
         }
-        while (isTextEvent(event)){
-            if(event == XmlPullParser.TEXT){
-                appendText(parser.getText());
-            }else if(event == XmlPullParser.ENTITY_REF){
-                appendEntityRef(parser.getName());
-            }
-            event = parser.next();
+        while (isTextEvent(event)) {
+            appendText(parser.getText());
+            event = parser.nextToken();
         }
     }
     @Override
     void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         String text = getText(escapeXmlText);
-        if(text != null){
+        if (text != null) {
             appendable.append(text);
         }
     }
-    @Override
-    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
-        if(length >= limit){
-            return length;
-        }
+
+    public boolean isIndent() {
         String text = getText();
-        if(text != null){
-            appendable.append(text);
-            length = length + text.length();
-        }
-        return length;
+        return isEmptyOrNewlineBlank(text);
+    }
+    public boolean isBlank() {
+        return StringsUtil.isBlank(getText());
     }
 
-    boolean isIndent(){
-        return isIndentText(getText());
+    @Override
+    public String toString() {
+        return getText();
     }
 
-    static boolean isTextEvent(int event){
+    static boolean isTextEvent(int event) {
         return event == XmlPullParser.TEXT
-                || event == XmlPullParser.ENTITY_REF;
+                || event == XmlPullParser.ENTITY_REF || event == XmlPullParser.IGNORABLE_WHITESPACE;
     }
-    private static boolean isIndentText(String text){
-        if(text == null || text.length() == 0){
+    private static boolean isEmptyOrNewlineBlank(String text) {
+        if (text == null) {
             return true;
         }
-        if(text.charAt(0) != '\n'){
+        if (text.length() == 0) {
             return false;
         }
-        char[] chars = text.toCharArray();
-        for(int i = 1; i < chars.length; i++){
-            if(chars[i] != ' ' && chars[i] != '\n'){
-                return false;
-            }
+        if (text.indexOf('\n') < 0) {
+            return false;
         }
-        return true;
+        return StringsUtil.isBlank(text);
     }
 }

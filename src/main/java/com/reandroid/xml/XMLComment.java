@@ -65,16 +65,9 @@ public class XMLComment extends XMLNode implements Comment {
         appendable.append(getText(escapeXmlText));
         appendable.append(" -->");
     }
+
     @Override
-    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
-        if(length >= limit){
-            return length;
-        }
-        String text = getText();
-        if(text != null){
-            appendable.append(text);
-            length = length + text.length();
-        }
-        return length;
+    public String toString() {
+        return "<!-- " + getText() + " -->";
     }
 }

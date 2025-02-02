@@ -89,23 +89,12 @@ public abstract class XMLNode implements Node {
         }
         return writer.toString();
     }
-    public String getDebugText(){
-        StringWriter writer = new StringWriter();
-        try {
-            appendDebugText(writer, DEBUG_STRING_LENGTH, 0);
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {
-        }
-        return writer.toString();
+    public String getDebugText() {
+        return XMLDebugStringBuilder.build(this);
     }
-    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
-        return 0;
-    }
+
     @Override
     public String toString(){
         return getDebugText();
     }
-
-    private static final int DEBUG_STRING_LENGTH = 250;
 }

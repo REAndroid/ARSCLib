@@ -26,31 +26,35 @@ import java.util.Iterator;
 
 public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
 
-    private String encoding;
-    private Boolean standalone;
+    private final XMLDocDeclaration declaration;
 
-    public XMLDocument(String elementName){
+    public XMLDocument(String elementName) {
         this();
         XMLElement docElem = new XMLElement(elementName);
         setDocumentElement(docElem);
     }
-    public XMLDocument(){
+    public XMLDocument() {
         super();
+        this.declaration = new XMLDocDeclaration();
     }
 
-    public XMLElement getDocumentElement(){
+    public XMLElement getDocumentElement() {
         return CollectionUtil.getFirst(iterator(XMLElement.class));
     }
-    public void setDocumentElement(XMLElement element){
+    public void setDocumentElement(XMLElement element) {
         clear();
         add(element);
     }
 
+    public XMLDocDeclaration getDeclaration() {
+        return declaration;
+    }
+
     public void setEncoding(String encoding) {
-        this.encoding = encoding;
+        getDeclaration().encoding(encoding);
     }
     public void setStandalone(Boolean standalone) {
-        this.standalone = standalone;
+        getDeclaration().standalone(standalone);
     }
 
     @Override
@@ -65,103 +69,68 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
         add(xmlText);
         return xmlText;
     }
+    @Override
     public XMLText newText(String text) {
-        return (XMLText) super.newText(text);
+        return super.newText(text);
     }
     @Override
-    public XMLComment newComment(){
+    public XMLComment newComment() {
         XMLComment comment = new XMLComment();
         add(comment);
         return comment;
     }
 
-    public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
-        encoding = null;
-        standalone = null;
-        clear();
-        int event = parser.getEventType();
-        if(event == XmlPullParser.START_DOCUMENT){
-            encoding = parser.getInputEncoding();
-            XMLUtil.ensureStartTag(parser);
-        }else if(event == XmlPullParser.END_TAG || event == XmlPullParser.START_TAG){
-            parser.next();
-        }else if(event == XmlPullParser.END_DOCUMENT){
-            return;
-        }
-        XMLUtil.ensureStartTag(parser);
-        newElement().parse(parser);
+    public XMLDocType getDocType() {
+        return CollectionUtil.getFirst(iterator(XMLDocType.class));
     }
-    public void parseInner(XmlPullParser parser) throws XmlPullParserException, IOException {
-        encoding = null;
-        standalone = null;
-        clear();
-        int event = parser.getEventType();
-        if(event == XmlPullParser.START_DOCUMENT){
-            encoding = parser.getInputEncoding();
-            event = XMLUtil.ensureStartTag(parser);
+    public XMLDocType getOrCreateDocType() {
+        XMLDocType docType = getDocType();
+        if (docType == null) {
+            docType = newDocType();
+            move(docType, 0);
         }
-        if(event == XmlPullParser.END_DOCUMENT){
-            return;
-        }
-        if(event != XmlPullParser.START_TAG){
-            throw new XmlPullParserException("Invalid document event: " + event);
-        }
-        parser.next();
-        parseAll(parser);
+        return docType;
     }
-    private void parseAll(XmlPullParser parser) throws XmlPullParserException, IOException {
+
+    @Override
+    protected void onStartParse(XmlPullParser parser) throws XmlPullParserException, IOException {
         int event = parser.getEventType();
-        while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
-            XMLNode node = createChildNode(event);
-            if (node != null) {
-                node.parse(parser);
-                event = parser.getEventType();
-            }else {
-                event = parser.nextToken();
+        if (event == XmlPullParser.START_DOCUMENT) {
+            clear();
+            getDeclaration().parse(parser);
+        } else if (!XMLUtil.hasFeatureRelaxed(parser)) {
+            throw new XmlPullParserException("Unexpected event, expecting = "
+                    + XMLUtil.toEventName(XmlPullParser.START_DOCUMENT) + ", found = "
+                    + XMLUtil.toEventName(event));
+        }
+    }
+    @Override
+    protected void onEndParse(XmlPullParser parser) throws XmlPullParserException, IOException {
+    }
+    @Override
+    void startSerialize(XmlSerializer serializer) throws IOException {
+        getDeclaration().serialize(serializer);
+    }
+    @Override
+    void endSerialize(XmlSerializer serializer) {
+        if (getDeclaration().isValid()) {
+            try {
+                serializer.endDocument();
+            } catch (IOException exception) {
+                exception.printStackTrace();
             }
         }
     }
     @Override
-    void startSerialize(XmlSerializer serializer) throws IOException {
-        if(encoding == null){
-            return;
-        }
-        serializer.startDocument(encoding, standalone);
-    }
-    @Override
-    void endSerialize(XmlSerializer serializer) {
-        if(encoding == null){
-            return;
-        }
-        try {
-            serializer.endDocument();
-        } catch (IOException exception) {
-            exception.printStackTrace();
-        }
-    }
-    void appendDocument(Appendable appendable, boolean xml) throws IOException {
-        if(encoding == null || !xml){
-            return;
-        }
-        appendable.append("<?xml version='1.0' encoding='");
-        appendable.append(encoding);
-        appendable.append("'?>");
-    }
-    @Override
-    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException{
-        appendDocument(appendable, xml);
-        getDocumentElement().write(appendable, xml, escapeXmlText);
-    }
-    @Override
-    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
-        if(length > limit){
-            return length;
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
+        XMLDocDeclaration declaration = getDeclaration();
+        if (declaration.isValid()) {
+            appendable.append(declaration.toString());
         }
         Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext() && length < limit){
-            length = iterator.next().appendDebugText(appendable, limit, length);
+        while (iterator.hasNext()) {
+            iterator.next().write(appendable, xml, escapeXmlText);
         }
-        return length;
     }
     public static XMLDocument load(String text) throws XmlPullParserException, IOException {
         XMLDocument document = new XMLDocument();
@@ -177,14 +146,5 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
         XMLDocument document = new XMLDocument();
         document.parse(XMLFactory.newPullParser(file));
         return document;
-    }
-    XMLNode createChildNode(int event){
-        if(event == XmlPullParser.START_TAG){
-            return newElement();
-        }
-        if(XMLText.isTextEvent(event)){
-            return newText();
-        }
-        return null;
     }
 }

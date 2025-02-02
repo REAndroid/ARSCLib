@@ -105,31 +105,38 @@ public class KXmlSerializer implements XmlSerializer {
         }
     }
 
-    private void check(boolean close) throws IOException {
-        if(!pending)
+    private void check(boolean close, boolean voidTag) throws IOException {
+        if (!pending) {
             return;
+        }
 
-        depth++;
+        depth ++;
         pending = false;
 
-        if(indent.length <= depth){
+        if (indent.length <= depth) {
             boolean[] hlp = new boolean[depth + 4];
             System.arraycopy(indent, 0, hlp, 0, depth);
             indent = hlp;
         }
         indent[depth] = indent[depth - 1];
 
-        for (int i = nspCounts[depth - 1]; i < nspCounts[depth]; i++){
-            append(" xmlns");
-            if(!nspStack[i * 2].isEmpty()){
-                append(':');
-                append(nspStack[i * 2]);
+        for (int i = nspCounts[depth - 1]; i < nspCounts[depth]; i++) {
+            if (!voidTag) {
+                append(" xmlns");
             }
-            else if(getNamespace().isEmpty() && !nspStack[i * 2 + 1].isEmpty())
+            if (!nspStack[i * 2].isEmpty()) {
+                if (!voidTag) {
+                    append(':');
+                    append(nspStack[i * 2]);
+                }
+            } else if(getNamespace().isEmpty() && !nspStack[i * 2 + 1].isEmpty()) {
                 throw new IllegalStateException("Cannot set default namespace for elements in no namespace");
-            append("=\"");
-            writeEscaped(nspStack[i * 2 + 1], '"');
-            append('"');
+            }
+            if (!voidTag) {
+                append("=\"");
+                writeEscaped(nspStack[i * 2 + 1], '"');
+                append('"');
+            }
         }
 
         if(nspCounts.length <= depth + 1){
@@ -139,7 +146,7 @@ public class KXmlSerializer implements XmlSerializer {
         }
 
         nspCounts[depth + 1] = nspCounts[depth];
-        if(close){
+        if (close && !voidTag) {
             append(" />");
         } else {
             append('>');
@@ -147,7 +154,8 @@ public class KXmlSerializer implements XmlSerializer {
     }
 
     private void writeEscaped(String s, int quot) throws IOException {
-        for (int i = 0; i < s.length(); i++){
+        int length = s.length();
+        for (int i = 0; i < length; i++){
             char c = s.charAt(i);
             switch (c){
                 case '\n':
@@ -179,7 +187,7 @@ public class KXmlSerializer implements XmlSerializer {
                         } else {
                             append("&#" + ((int) c) + ";");
                         }
-                    } else if(Character.isHighSurrogate(c) && i < s.length() - 1){
+                    } else if(Character.isHighSurrogate(c) && i < length - 1){
                         writeSurrogate(c, s.charAt(i + 1));
                         ++i;
                     } else {
@@ -206,7 +214,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
     @Override
     public void entityRef(String name) throws IOException {
-        check(false);
+        check(false, false);
         append('&');
         append(name);
         append(';');
@@ -300,7 +308,7 @@ public class KXmlSerializer implements XmlSerializer {
     public void setPrefix(String prefix, String namespace)
             throws IOException {
 
-        check(false);
+        check(false, false);
         if(prefix == null) {
             prefix = "";
         }
@@ -377,7 +385,7 @@ public class KXmlSerializer implements XmlSerializer {
     @Override
     public XmlSerializer startTag(String namespace, String name)
             throws IOException {
-        check(false);
+        check(false, false);
         firstAttributeWritten = false;
         indentAttributeReference = 0;
         if(indent[depth]){
@@ -450,7 +458,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
     @Override
     public void flush() throws IOException {
-        check(false);
+        check(false, false);
         flushBuffer();
     }
     @Override
@@ -467,7 +475,7 @@ public class KXmlSerializer implements XmlSerializer {
         }
 
         if(pending){
-            check(true);
+            check(true, false);
             depth--;
         }
         else {
@@ -489,6 +497,44 @@ public class KXmlSerializer implements XmlSerializer {
         nspCounts[depth + 1] = nspCounts[depth];
         return this;
     }
+    public XmlSerializer endTag(boolean voidTag, String namespace, String name)throws IOException {
+        if (!pending) {
+            depth--;
+        }
+        if ((namespace == null
+                && elementStack[depth * 3] != null)
+                || (namespace != null
+                && !namespace.equals(elementStack[depth * 3]))
+                || !elementStack[depth * 3 + 2].equals(name)) {
+            throw new IllegalArgumentException("</{"+namespace+"}"+name+"> does not match start");
+        }
+
+        if (pending) {
+            check(true, voidTag);
+            depth --;
+        } else {
+            if (indent[depth + 1]) {
+                if (!voidTag) {
+                    append('\r');
+                    append('\n');
+                    appendSpace(2 * depth);
+                }
+            }
+            if (!voidTag) {
+                append("</");
+                String prefix = elementStack[depth * 3 + 1];
+                if(!prefix.isEmpty()){
+                    append(prefix);
+                    append(':');
+                }
+                append(name);
+                append('>');
+            }
+        }
+
+        nspCounts[depth + 1] = nspCounts[depth];
+        return this;
+    }
     @Override
     public String getNamespace(){
         return getDepth() == 0 ? null : elementStack[getDepth() * 3 - 3];
@@ -503,7 +549,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
     @Override
     public XmlSerializer text(String text) throws IOException {
-        check(false);
+        check(false, false);
         indent[depth] = false;
         writeEscaped(text, -1);
         return this;
@@ -516,7 +562,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
     @Override
     public void cdsect(String data) throws IOException {
-        check(false);
+        check(false, false);
         data = data.replace("]]>", "]]]]><![CDATA[>");
         append("<![CDATA[");
         for (int i = 0; i < data.length(); ++i){
@@ -548,7 +594,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
     @Override
     public void comment(String comment) throws IOException {
-        check(false);
+        check(false, false);
         append("<!--");
         append(comment);
         append("-->");
@@ -556,7 +602,7 @@ public class KXmlSerializer implements XmlSerializer {
     @Override
     public void processingInstruction(String pi)
             throws IOException {
-        check(false);
+        check(false, false);
         append("<?");
         append(pi);
         append("?>");

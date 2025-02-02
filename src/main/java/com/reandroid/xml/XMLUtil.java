@@ -16,6 +16,7 @@
 package com.reandroid.xml;
 
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.kxml2.KXmlSerializer;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -25,52 +26,56 @@ import java.io.IOException;
 
 public class XMLUtil {
 
-    public static String decodeEntityRef(String text) {
-        if(text == null || text.length() == 0){
-            return "";
+    public static String decodeEntityRef(String entityRef) {
+        if (entityRef == null || entityRef.length() == 0) {
+            return entityRef;
         }
-        if("lt".equals(text)){
-            return "<";
-        }else if("gt".equals(text)){
-            return ">";
-        }else if("amp".equals(text)){
-            return  "&";
-        }else if("quot".equals(text)){
-            return  "\"";
-        }else if("apos".equals(text)){
-            return  "'";
-        }
-        if(text.charAt(0) == '#'){
-            try{
-                char ch = (char) Integer.parseInt(text.substring(1));
-                return String.valueOf(ch);
-            }catch (NumberFormatException ignored){
+        String decode;
+        if (entityRef.equals("lt")) {
+            decode = "<";
+        } else if (entityRef.equals("gt")) {
+            decode = ">";
+        } else if (entityRef.equals("amp")) {
+            decode = "&";
+        } else if (entityRef.equals("quote")) {
+            decode = "\"";
+        } else if (entityRef.equals("apos")) {
+            decode = "'";
+        } else if (entityRef.startsWith("#")) {
+            int code;
+            if (entityRef.startsWith("#x")) {
+                code = Integer.parseInt(entityRef.substring(2), 16);
+            } else {
+                code = Integer.parseInt(entityRef.substring(1));
             }
+            decode = new StringBuilder().appendCodePoint(code).toString();
+        } else {
+            decode = entityRef;
         }
-        return text;
+        return decode;
     }
 
-    public static String splitName(String name){
-        if(name == null){
+    public static String splitName(String name) {
+        if (name == null) {
             return null;
         }
         int i = name.lastIndexOf(':');
-        if(i >= 0){
+        if (i >= 0) {
             i++;
             name = name.substring(i);
         }
         name = name.trim();
-        if(name.length() == 0){
+        if (name.length() == 0) {
             return null;
         }
         return name;
     }
-    public static String splitPrefix(String name){
-        if(name == null){
+    public static String splitPrefix(String name) {
+        if (name == null) {
             return null;
         }
         int i = name.indexOf(':');
-        if(i > 0){
+        if (i > 0) {
             return name.substring(0, i);
         }
         return null;
@@ -79,7 +84,7 @@ public class XMLUtil {
             throws IOException, XmlPullParserException {
         int event = parser.getEventType();
         while (event != XmlPullParser.START_TAG
-                && event != XmlPullParser.END_DOCUMENT){
+                && event != XmlPullParser.END_DOCUMENT) {
             event = parser.next();
         }
         return event;
@@ -89,66 +94,102 @@ public class XMLUtil {
         int event = parser.getEventType();
         while (event != XmlPullParser.START_TAG &&
                 event != XmlPullParser.END_TAG  &&
-                event != XmlPullParser.END_DOCUMENT){
+                event != XmlPullParser.END_DOCUMENT) {
             event = parser.next();
         }
         return event;
     }
-    public static boolean isEmpty(String s){
-        if(s==null){
+    public static boolean isEmpty(String s) {
+        if (s == null) {
             return true;
         }
-        return s.length()==0;
+        return s.length() == 0;
     }
-    public static String escapeXmlChars(String str){
-        if(str==null){
+    public static String escapeXmlChars(String str) {
+        return escapeXmlChars(str, false);
+    }
+    public static String escapeXmlChars(String str, boolean attribute) {
+        if (str == null) {
             return null;
         }
-        if(str.indexOf('&')<0 && str.indexOf('<')<0 && str.indexOf('>')<0){
+        int length = str.length();
+        if (length == 0) {
             return str;
         }
-        str=str.replaceAll("&amp;", "&");
-        str=str.replaceAll("&lt;", "<");
-        str=str.replaceAll("&gt;", ">");
-        str=str.replaceAll("&", "&amp;");
-        str=str.replaceAll("<", "&lt;");
-        str=str.replaceAll(">", "&gt;");
-        return str;
+        StringBuilder builder = new StringBuilder(length + 16);
+        for (int i = 0; i < length; i++) {
+            char c = str.charAt(i);
+            if (c == '\n' || c == '\r' || c == '\t') {
+                if (attribute) {
+                    appendCodePoint(builder, c);
+                } else {
+                    builder.append(c);
+                }
+            } else if (c == '&') {
+                builder.append("&amp;");
+            } else if (c == '<') {
+                builder.append("&lt;");
+            } else if (c == '>') {
+                builder.append("&gt;");
+            } else {
+                if ((c >= 0x20 && c <= 0xd7ff) || (c >= 0xe000 && c <= 0xfffd)) {
+                    builder.append(c);
+                } else if (Character.isHighSurrogate(c) && i < length - 1) {
+                    i ++;
+                    appendCodePoint(builder, Character.toCodePoint(c, str.charAt(i)));
+                } else {
+                    appendCodePoint(builder, c);
+                }
+            }
+        }
+        return builder.toString();
     }
-    public static String toEventName(int eventType){
+    private static void appendCodePoint(StringBuilder builder, int codePoint) {
+        builder.append("&#");
+        builder.append(codePoint);
+        builder.append(";");
+    }
+    public static String toEventName(int eventType) {
         String[] types = EVENT_TYPES;
-        if(eventType < 0 || eventType >= types.length){
+        if (eventType < 0 || eventType >= types.length) {
             return String.valueOf(eventType);
         }
         return types[eventType];
     }
-    public static boolean getFeatureSafe(XmlPullParser parser, String name, boolean def){
+    public static boolean getFeatureSafe(XmlPullParser parser, String name, boolean def) {
         try {
             return parser.getFeature(name);
-        } catch (Throwable ignored){
+        } catch (Throwable ignored) {
             return def;
         }
     }
-    public static void setFeatureSafe(XmlPullParser parser, String name, boolean state){
-        try{
+    public static void setFeatureSafe(XmlPullParser parser, String name, boolean state) {
+        try {
             parser.setFeature(name, state);
-        }catch (Throwable ignored){
+        } catch (Throwable ignored) {
         }
     }
-    public static void setFeatureSafe(XmlSerializer serializer, String name, boolean state){
+    public static void setFeatureSafe(XmlSerializer serializer, String name, boolean state) {
         try {
             serializer.setFeature(name, state);
         } catch (Throwable ignored) {
         }
     }
+    public static Object getPropertySafe(XmlPullParser parser, String name) {
+        try {
+            return parser.getProperty(name);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
     public static void close(XmlSerializer serializer) {
-        if(serializer != null) {
+        if (serializer != null) {
             try {
                 serializer.flush();
             } catch (IOException ignored) {
             }
         }
-        if(serializer instanceof Closeable) {
+        if (serializer instanceof Closeable) {
             Closeable closeable = (Closeable) serializer;
             try {
                 closeable.close();
@@ -170,9 +211,34 @@ public class XMLUtil {
         } catch (Throwable ignored) {
         }
     }
+    public static boolean hasFeatureRelaxed(XmlPullParser parser) {
+        return getFeatureSafe(parser, FEATURE_RELAXED, false);
+    }
+    public static void setFeatureRelaxed(XmlPullParser parser, boolean value) {
+        setFeatureSafe(parser, FEATURE_RELAXED, value);
+    }
+    public static KXmlSerializer getKXmlSerializer(XmlSerializer serializer) {
+        if (serializer instanceof KXmlSerializer) {
+            return (KXmlSerializer) serializer;
+        }
+        if (serializer instanceof XmlSerializerWrapper) {
+            XmlSerializerWrapper wrapper = (XmlSerializerWrapper) serializer;
+            return getKXmlSerializer(wrapper.getBaseSerializer());
+        }
+        return null;
+    }
 
-    public static final String FEATURE_INDENT_OUTPUT = ObjectsUtil.of("http://xmlpull.org/v1/doc/features.html#indent-output");
-    public static final String PROPERTY_LOCATION = ObjectsUtil.of("http://xmlpull.org/v1/doc/properties.html#location");
+    public static final String PROPERTY_XMLDECL_VERSION = ObjectsUtil.of(
+            "http://xmlpull.org/v1/doc/properties.html#xmldecl-version");
+    public static final String PROPERTY_XMLDECL_STANDALONE = ObjectsUtil.of(
+            "http://xmlpull.org/v1/doc/properties.html#xmldecl-standalone");
+
+    public static final String FEATURE_INDENT_OUTPUT = ObjectsUtil.of(
+            "http://xmlpull.org/v1/doc/features.html#indent-output");
+    public static final String PROPERTY_LOCATION = ObjectsUtil.of(
+            "http://xmlpull.org/v1/doc/properties.html#location");
+    public static final String FEATURE_RELAXED = ObjectsUtil.of(
+            "http://xmlpull.org/v1/doc/features.html#relaxed");
 
     public static String [] EVENT_TYPES = {
             "START_DOCUMENT",

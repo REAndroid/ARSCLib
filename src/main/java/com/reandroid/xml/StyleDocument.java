@@ -101,20 +101,15 @@ public class StyleDocument extends XMLDocument implements
         }
     }
     public void parseString(String xmlString) throws XmlPullParserException, IOException {
-        xmlString = "<parser>" + xmlString + "</parser>";
-        XmlPullParser parser = PARSER;
-        parser.setInput(new StringReader(xmlString));
-        parseInner(parser);
-        IOUtil.close(parser);
-    }
-    @Override
-    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
-        appendDocument(appendable, xml);
-        appendChildes(iterator(), appendable, xml, escapeXmlText);
-    }
-    private void appendChildes(Iterator<XMLNode> iterator, Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
-        while (iterator.hasNext()){
-            iterator.next().write(appendable, xml, escapeXmlText);
+        synchronized (PARSER) {
+            xmlString = "<parser>" + xmlString + "</parser>";
+            XmlPullParser parser = PARSER;
+            parser.setInput(new StringReader(xmlString));
+            XMLUtil.setFeatureRelaxed(parser, true);
+            XMLUtil.ensureStartTag(parser);
+            parser.nextToken();
+            parseInner(parser);
+            IOUtil.close(parser);
         }
     }
     @Override

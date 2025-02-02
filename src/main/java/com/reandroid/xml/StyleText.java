@@ -51,7 +51,7 @@ public class StyleText extends XMLText implements StyleNode {
     }
 
     @Override
-    boolean isIndent(){
+    public boolean isIndent(){
         return false;
     }
 }
