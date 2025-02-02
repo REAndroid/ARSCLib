@@ -51,7 +51,7 @@ public class LongItem extends BlockItem implements LongReference, DirectStreamRe
     }
     @Override
     public int get() {
-        return 0;
+        return (int) getLong();
     }
     @Override
     public void set(int value) {
