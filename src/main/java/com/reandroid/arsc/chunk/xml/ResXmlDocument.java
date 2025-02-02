@@ -152,16 +152,24 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put(JSON_encoding, getEncoding());
         jsonObject.put(JSON_node_type, nodeTypeName());
         jsonObject.put(JSON_nodes, nodesToJson());
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
+        setEncoding(json.optString(JSON_encoding));
         nodesFromJson(json);
         refresh();
     }
 
+    public String getEncoding() {
+        return getStringPool().getEncoding();
+    }
+    public void setEncoding(String encoding) {
+        getStringPool().setEncoding(encoding);
+    }
     @Override
     public int getLineNumber() {
         return 1;
@@ -235,7 +243,7 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
             throw new IOException("Can not decode without package");
         }
         setIndent(serializer, true);
-        serializer.startDocument("utf-8", null);
+        serializer.startDocument(getEncoding(), null);
         fixNamespaces();
         removeUnusedNamespaces();
 
@@ -254,6 +262,7 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
         int event = parser.getEventType();
         if (event == XmlPullParser.START_DOCUMENT) {
             parser.next();
+            setEncoding(parser.getInputEncoding());
         }
         parseInnerNodes(parser);
         refreshFull();

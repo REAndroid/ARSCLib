@@ -340,6 +340,21 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public void setFlagSorted(boolean sorted){
         getHeaderBlock().setSorted(sorted);
     }
+    public String getEncoding() {
+        if (isUtf8()) {
+            return "utf-8";
+        }
+        return "utf-16";
+    }
+    public void setEncoding(String encoding) {
+        boolean utf8;
+        if (encoding != null) {
+            utf8 = !StringsUtil.toLowercase(encoding).startsWith("utf-16");
+        } else {
+            utf8 = true;
+        }
+        setUtf8(utf8);
+    }
 
     abstract StringArray<T> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
     @Override

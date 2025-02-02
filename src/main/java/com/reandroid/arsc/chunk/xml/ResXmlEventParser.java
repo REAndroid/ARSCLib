@@ -16,7 +16,6 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.coder.XmlSanitizer;
-import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.xml.XMLUtil;
@@ -223,12 +222,7 @@ public class ResXmlEventParser implements XmlPullParser {
     public String getInputEncoding() {
         ResXmlDocument document = getDocument();
         if (document != null) {
-            ResXmlStringPool stringPool = document.getStringPool();
-            if (stringPool.isUtf8()) {
-                return "utf-8";
-            } else {
-                return "utf-16";
-            }
+            return document.getEncoding();
         }
         return null;
     }

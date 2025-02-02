@@ -250,7 +250,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         if(packageBlock != null && document.getPackageBlock() == null){
             document.setPackageBlock(packageBlock);
         }
-        XmlSerializer serializer = XMLFactory.newSerializer(outFile);
+        XmlSerializer serializer = XMLFactory.newSerializer(outFile, document.getEncoding());
         document.serialize(serializer);
         IOUtil.close(serializer);
     }

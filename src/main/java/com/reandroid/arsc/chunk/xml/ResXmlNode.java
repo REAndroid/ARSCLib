@@ -198,6 +198,7 @@ public abstract class ResXmlNode extends WrappedBlock implements
 
 
 
+    public static final String JSON_encoding = ObjectsUtil.of("encoding");
     public static final String JSON_node_type = ObjectsUtil.of("node_type");
     public static final String JSON_node_type_document = ObjectsUtil.of("document");
     public static final String JSON_node_type_element = ObjectsUtil.of("element");
