@@ -615,7 +615,6 @@ public class KXmlParser implements XmlPullParser, Closeable {
         }
 
         read('>');
-        skip();
     }
 
     /**
