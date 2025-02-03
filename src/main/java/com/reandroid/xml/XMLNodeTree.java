@@ -230,6 +230,11 @@ public abstract class XMLNodeTree extends XMLNode implements
         add(node);
         return node;
     }
+    public XMLCDSect newCDSect() {
+        XMLCDSect node = new XMLCDSect();
+        add(node);
+        return node;
+    }
 
     public XMLElement getOrCreateElement(String name) {
         XMLElement element = getElement(name);
@@ -274,6 +279,9 @@ public abstract class XMLNodeTree extends XMLNode implements
         }
         if (event == XmlPullParser.PROCESSING_INSTRUCTION) {
             return newProcessingInstruction();
+        }
+        if (event == XmlPullParser.CDSECT) {
+            return newCDSect();
         }
         return null;
     }

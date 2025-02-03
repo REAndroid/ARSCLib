@@ -530,7 +530,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
             // of parser to throw exceptions.
             // it could be parsing HTML and may have feature '... doc/features.html#relaxed'
             if (equalsName(parser.getName())) {
-                parser.next();
+                parser.nextToken();
             } else if (XMLUtil.hasFeatureRelaxed(parser)) {
                 setVoidHtml(true);
             }
