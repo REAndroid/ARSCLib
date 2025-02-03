@@ -1,5 +1,6 @@
 package com.reandroid.xml;
 
+import com.reandroid.utils.collection.CollectionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -11,8 +12,10 @@ public class XMLDocumentTest {
     @Test
     public void documentParseSerializeTest() throws IOException, XmlPullParserException {
         String xmlString1 = "<?xml version='1.0' encoding='utf-8' ?>" +
+                "\n<!--Comment text1-->" +
                 "\n<doc-element>" +
-                "\n  <attributes name1=\"value1\" number=\"123456\" scape=\"&lt;tag&gt;\" empty=\"\" />" +
+                "\n  <!--Comment text2-->" +
+                "\n  <attributes name1=\"value1\" number=\"123456\" escape=\"&lt;tag&gt;\" empty=\"\" />" +
                 "\n  <open-close></open-close>" +
                 "\n  <self-close />" +
                 "\n  <new-lines>\n\n\n\n</new-lines>" +
@@ -21,12 +24,16 @@ public class XMLDocumentTest {
                 "\n  <new-line-text>\n     text1 \ntext2\n      </new-line-text>" +
                 "\n  <tab-char>\t</tab-char>" +
                 "\n  <inner-text>text1<inner>text2</inner>\ntext3\ttext4</inner-text>" +
-                "\n  <scape-lt-gt>&lt;x&gt;scape lt gt</scape-lt-gt>" +
+                "\n  <escape-lt-gt>&lt;x&gt;scape lt gt</escape-lt-gt>" +
                 "\n  <emoji-encoded>&#128077;</emoji-encoded>" +
                 "\n</doc-element>";
         XMLDocument document = XMLDocument.load(xmlString1);
         String xmlString2 = document.toXmlString(false);
         Assert.assertEquals(xmlString1, xmlString2);
+
+        XMLComment comment1 = CollectionUtil.getFirst(document.iterator(XMLComment.class));
+        Assert.assertNotNull("Null comment node", comment1);
+        Assert.assertEquals("Comment text1", comment1.getText());
 
         XMLElement docElement = document.getDocumentElement();
         Assert.assertNotNull("Null document element", docElement);
@@ -40,8 +47,8 @@ public class XMLDocumentTest {
                 attributes.getAttributeValue("name1"));
         Assert.assertEquals("attribute number", "123456",
                 attributes.getAttributeValue("number"));
-        Assert.assertEquals("attribute scape", "<tag>",
-                attributes.getAttributeValue("scape"));
+        Assert.assertEquals("attribute escape", "<tag>",
+                attributes.getAttributeValue("escape"));
         Assert.assertEquals("attribute empty", "",
                 attributes.getAttributeValue("empty"));
     }

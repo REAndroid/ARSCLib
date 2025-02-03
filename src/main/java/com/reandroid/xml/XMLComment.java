@@ -23,24 +23,26 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 
 public class XMLComment extends XMLNode implements Comment {
+
     private String text;
-    public XMLComment(String text){
+
+    public XMLComment(String text) {
         this();
         setText(text);
     }
-    public XMLComment(){
+    public XMLComment() {
         super();
     }
 
-    public void setText(String text){
+    public void setText(String text) {
         this.text = text;
     }
-    public String getText(){
+    public String getText() {
         return getText(false);
     }
-    public String getText(boolean escapeXmlText){
+    public String getText(boolean escapeXmlText) {
         String text = this.text;
-        if(escapeXmlText){
+        if (escapeXmlText) {
             return XMLUtil.escapeXmlChars(text);
         }
         return text;
@@ -52,22 +54,22 @@ public class XMLComment extends XMLNode implements Comment {
     }
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
-        if(parser.getEventType() != XmlPullParser.COMMENT){
+        if (parser.getEventType() != XmlPullParser.COMMENT) {
             throw new XmlPullParserException("Invalid event, expecting COMMENT but found "
                     + parser.getEventType());
         }
         setText(parser.getText());
-        parser.next();
+        parser.nextToken();
     }
     @Override
     void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
-        appendable.append("<!-- ");
+        appendable.append("<!--");
         appendable.append(getText(escapeXmlText));
-        appendable.append(" -->");
+        appendable.append("-->");
     }
 
     @Override
     public String toString() {
-        return "<!-- " + getText() + " -->";
+        return "<!--" + getText() + "-->";
     }
 }
