@@ -12,6 +12,7 @@ public class XMLDocumentTest {
     @Test
     public void documentParseSerializeTest() throws IOException, XmlPullParserException {
         String xmlString1 = "<?xml version='1.0' encoding='utf-8' ?>" +
+                "\n<!DOCTYPE doc-type>" +
                 "\n<!--Comment text1-->" +
                 "\n<doc-element>" +
                 "\n  <!--Comment text2-->" +
@@ -30,6 +31,9 @@ public class XMLDocumentTest {
         XMLDocument document = XMLDocument.load(xmlString1);
         String xmlString2 = document.toXmlString(false);
         Assert.assertEquals(xmlString1, xmlString2);
+
+        Assert.assertNotNull("Null DOCTYPE node", document.getDocType());
+        Assert.assertEquals("doc-type", document.getDocType().getName());
 
         XMLComment comment1 = CollectionUtil.getFirst(document.iterator(XMLComment.class));
         Assert.assertNotNull("Null comment node", comment1);
