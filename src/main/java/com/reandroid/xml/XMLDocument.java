@@ -99,9 +99,7 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
             clear();
             getDeclaration().parse(parser);
         } else if (!XMLUtil.hasFeatureRelaxed(parser)) {
-            throw new XmlPullParserException("Unexpected event, expecting = "
-                    + XMLUtil.toEventName(XmlPullParser.START_DOCUMENT) + ", found = "
-                    + XMLUtil.toEventName(event));
+            XMLUtil.expectEvent(parser, XmlPullParser.START_DOCUMENT);
         }
     }
     @Override

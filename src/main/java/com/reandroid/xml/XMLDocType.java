@@ -54,6 +54,7 @@ public class XMLDocType extends XMLNode {
 
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
+        XMLUtil.expectEvent(parser, XmlPullParser.DOCDECL);
         String type = StringsUtil.trimStart(parser.getText(), ' ');
         setName(type);
         if (type != null && type.contains("html")) {

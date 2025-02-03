@@ -76,7 +76,8 @@ public class XMLText extends XMLNode implements Text {
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
         int event = parser.getEventType();
         if (!isTextEvent(event)) {
-            throw new XmlPullParserException("Not TEXT event");
+            throw new XmlPullParserException("Not TEXT event: "
+                    + XMLUtil.toEventName(event));
         }
         while (isTextEvent(event)) {
             appendText(parser.getText());

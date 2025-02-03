@@ -54,10 +54,7 @@ public class XMLComment extends XMLNode implements Comment {
     }
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
-        if (parser.getEventType() != XmlPullParser.COMMENT) {
-            throw new XmlPullParserException("Invalid event, expecting COMMENT but found "
-                    + parser.getEventType());
-        }
+        XMLUtil.expectEvent(parser, XmlPullParser.COMMENT);
         setText(parser.getText());
         parser.nextToken();
     }

@@ -509,12 +509,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
 
     @Override
     protected void onStartParse(XmlPullParser parser) throws XmlPullParserException, IOException {
-        int event = parser.getEventType();
-        if (event != XmlPullParser.START_TAG) {
-            throw new XmlPullParserException("Unexpected event, expecting = "
-                    + XMLUtil.toEventName(XmlPullParser.START_TAG) + ", found = "
-                    + XMLUtil.toEventName(event));
-        }
+        XMLUtil.expectEvent(parser, XmlPullParser.START_TAG);
         parseNamespaces(parser);
         setName(parser.getNamespace(), parser.getPrefix(), parser.getName());
         parseAttributes(parser);

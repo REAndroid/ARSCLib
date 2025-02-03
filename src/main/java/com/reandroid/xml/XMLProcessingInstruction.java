@@ -41,10 +41,7 @@ public class XMLProcessingInstruction extends XMLNode {
 
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
-        int event = parser.getEventType();
-        if (event != XmlPullParser.PROCESSING_INSTRUCTION) {
-            throw new XmlPullParserException("Not PROCESSING_INSTRUCTION event");
-        }
+        XMLUtil.expectEvent(parser, XmlPullParser.PROCESSING_INSTRUCTION);
         setText(parser.getText());
         parser.nextToken();
     }

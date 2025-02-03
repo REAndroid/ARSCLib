@@ -26,6 +26,13 @@ import java.io.IOException;
 
 public class XMLUtil {
 
+    public static void expectEvent(XmlPullParser parser, int expect) throws XmlPullParserException {
+        int event = parser.getEventType();
+        if (event != expect) {
+            throw new XmlPullParserException("Expecting event: " + toEventName(expect) +
+                    ", but found: " + toEventName(event));
+        }
+    }
     public static String decodeEntityRef(String entityRef) {
         if (entityRef == null || entityRef.length() == 0) {
             return entityRef;

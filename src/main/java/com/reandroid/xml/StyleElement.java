@@ -214,17 +214,14 @@ public class StyleElement extends XMLElement implements StyleNode, Span {
     }
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
-        int event = parser.getEventType();
-        if (event != XmlPullParser.START_TAG) {
-            throw new XmlPullParserException("Not START_TAG event");
-        }
+        XMLUtil.expectEvent(parser, XmlPullParser.START_TAG);
         setName(parser.getName());
         int count = parser.getAttributeCount();
         for(int i = 0; i < count; i++) {
             newAttribute().set(parser.getAttributeName(i),
                     parser.getAttributeValue(i));
         }
-        event = parser.next();
+        int event = parser.next();
         while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT) {
             if (event == XmlPullParser.START_TAG) {
                 newElement().parse(parser);
