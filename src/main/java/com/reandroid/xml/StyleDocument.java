@@ -26,10 +26,12 @@ import java.io.StringWriter;
 import java.util.Iterator;
 
 public class StyleDocument extends XMLDocument implements
-        SpanSet<StyleElement>, StyleNode, Comparable<StyleDocument>{
+        SpanSet<StyleElement>, Comparable<StyleDocument> {
+
     public StyleDocument(){
         super();
     }
+
     public boolean hasElements(){
         return getElements().hasNext();
     }
@@ -44,25 +46,6 @@ public class StyleDocument extends XMLDocument implements
     // keep
     public Iterator<StyleText> getStyleTexts() {
         return InstanceIterator.of(recursiveNodes(), StyleText.class);
-    }
-
-    @Override
-    public void appendChar(char ch) {
-        if(ch == 0){
-            return;
-        }
-        XMLNode xmlNode = getLast();
-        StyleText styleText;
-        if(xmlNode instanceof StyleText){
-            styleText = (StyleText) xmlNode;
-        }else {
-            styleText = newText();
-        }
-        styleText.appendChar(ch);
-    }
-    @Override
-    public StyleNode getParentStyle() {
-        return null;
     }
 
     public String getXml(){

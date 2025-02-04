@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-public class StyleElement extends XMLElement implements StyleNode, Span {
+public class StyleElement extends XMLElement implements Span {
 
     public StyleElement() {
         super();
@@ -180,24 +180,6 @@ public class StyleElement extends XMLElement implements StyleNode, Span {
                 element.writeStyledText(appendable);
             }
         }
-    }
-    @Override
-    public void appendChar(char ch) {
-        if (ch == 0) {
-            return;
-        }
-        XMLNode xmlNode = getLast();
-        StyleText styleText;
-        if (xmlNode instanceof StyleText) {
-            styleText = (StyleText) xmlNode;
-        } else {
-            styleText = newText();
-        }
-        styleText.appendChar(ch);
-    }
-    @Override
-    public StyleNode getParentStyle() {
-        return (StyleNode) getParentNode();
     }
 
     @Override
