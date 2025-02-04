@@ -190,17 +190,16 @@ public class XMLUtil {
         }
     }
     public static void close(XmlSerializer serializer) {
-        if (serializer != null) {
+        if (serializer instanceof XmlSerializerWrapper) {
+            close(((XmlSerializerWrapper) serializer).getBaseSerializer());
+        } else if (serializer != null) {
             try {
                 serializer.flush();
-            } catch (IOException ignored) {
-            }
-        }
-        if (serializer instanceof Closeable) {
-            Closeable closeable = (Closeable) serializer;
-            try {
-                closeable.close();
-            } catch (IOException ignored) {
+            } catch (IOException ignored) {}
+            if (serializer instanceof Closeable) {
+                try {
+                    ((Closeable) serializer).close();
+                } catch (IOException ignored) {}
             }
         }
     }
