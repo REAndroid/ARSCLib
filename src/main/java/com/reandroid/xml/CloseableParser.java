@@ -25,26 +25,37 @@ import java.io.InputStream;
 import java.io.Reader;
 
 public class CloseableParser extends KXmlParser implements Closeable {
+    
     private InputStream inputStream;
     private Reader reader;
 
-    public CloseableParser(){
+    public CloseableParser() {
         super();
     }
 
     @Override
     public int next() throws XmlPullParserException, IOException {
-        int event = super.next();
-        if(event == XmlPullParser.END_DOCUMENT){
-            close();
+        int event;
+        if (isClosed()) {
+            event = XmlPullParser.END_DOCUMENT;
+        } else {
+            event = super.next();
+            if (event == XmlPullParser.END_DOCUMENT) {
+                close();
+            }
         }
         return event;
     }
     @Override
     public int nextToken() throws XmlPullParserException, IOException {
-        int event = super.nextToken();
-        if(event == XmlPullParser.END_DOCUMENT){
-            close();
+        int event;
+        if (isClosed()) {
+            event = XmlPullParser.END_DOCUMENT;
+        } else {
+            event = super.nextToken();
+            if (event == XmlPullParser.END_DOCUMENT) {
+                close();
+            }
         }
         return event;
     }
@@ -60,13 +71,16 @@ public class CloseableParser extends KXmlParser implements Closeable {
     }
     @Override
     public void close() throws IOException {
-        if(reader != null){
+        if (reader != null) {
             reader.close();
             reader = null;
         }
-        if(inputStream != null){
+        if (inputStream != null) {
             inputStream.close();
             inputStream = null;
         }
+    }
+    private boolean isClosed() {
+        return reader == null && inputStream == null;
     }
 }
