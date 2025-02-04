@@ -32,7 +32,7 @@ public class XmlParserToSerializer {
     boolean processNamespace;
     boolean reportNamespaceAttrs;
 
-    public XmlParserToSerializer(XmlPullParser parser, XmlSerializer serializer){
+    public XmlParserToSerializer(XmlPullParser parser, XmlSerializer serializer) {
         this.parser = parser;
         this.serializer = XmlIndentingSerializer.create(serializer);
         this.enableIndent = true;
@@ -41,13 +41,13 @@ public class XmlParserToSerializer {
     }
 
     public void setEnableIndent(boolean enableIndent) {
-        if(enableIndent == this.enableIndent) {
+        if (enableIndent == this.enableIndent) {
             return;
         }
         this.enableIndent = enableIndent;
         if (enableIndent) {
             this.serializer = XmlIndentingSerializer.create(this.serializer);
-        } else if(this.serializer instanceof XmlIndentingSerializer) {
+        } else if (this.serializer instanceof XmlIndentingSerializer) {
             this.serializer = ((XmlIndentingSerializer) this.serializer).getBaseSerializer();
         }
     }
@@ -61,22 +61,19 @@ public class XmlParserToSerializer {
         this.reportNamespaceAttrs = XMLUtil.getFeatureSafe(parser,
                 XmlPullParser.FEATURE_REPORT_NAMESPACE_ATTRIBUTES, false);
 
-        int event = parser.next();
-        while (nextEvent(event)){
-            event = parser.next();
+        int event = parser.nextToken();
+        while (nextEvent(event)) {
+            event = parser.nextToken();
         }
         this.serializer.flush();
         close();
     }
     private void close() throws IOException {
         XmlPullParser parser = this.parser;
-        if(parser instanceof Closeable){
+        if (parser instanceof Closeable) {
             ((Closeable)parser).close();
         }
-        XmlSerializer serializer = this.serializer;
-        if(serializer instanceof Closeable){
-            ((Closeable)serializer).close();
-        }
+        XMLUtil.close(serializer);
     }
     private boolean nextEvent(int event) throws IOException, XmlPullParserException {
         boolean hasNext = event >= 0;
@@ -101,6 +98,15 @@ public class XmlParserToSerializer {
             case XmlResourceParser.COMMENT:
                 onComment();
                 break;
+            case XmlResourceParser.IGNORABLE_WHITESPACE:
+                onIgnorableWhitespace();
+                break;
+            case XmlResourceParser.DOCDECL:
+                onDocDecl();
+                break;
+            case XmlResourceParser.PROCESSING_INSTRUCTION:
+                onProcessingInstruction();
+                break;
             case XmlResourceParser.END_TAG:
                 onEndTag();
                 depth --;
@@ -115,8 +121,9 @@ public class XmlParserToSerializer {
         return hasNext;
     }
 
-    private void onStartDocument() throws IOException{
-        serializer.startDocument(parser.getInputEncoding(), null);
+    private void onStartDocument() throws IOException {
+        serializer.startDocument(parser.getInputEncoding(), 
+                (Boolean) XMLUtil.getPropertySafe(parser, XMLUtil.PROPERTY_XMLDECL_STANDALONE));
     }
     private void onStartTag() throws IOException, XmlPullParserException {
         XmlPullParser parser = this.parser;
@@ -125,9 +132,9 @@ public class XmlParserToSerializer {
         boolean processNamespace = this.processNamespace;
         boolean countNamespaceAsAttribute = processNamespace && reportNamespaceAttrs;
 
-        if(!countNamespaceAsAttribute){
+        if (!countNamespaceAsAttribute) {
             int nsCount = parser.getNamespaceCount(parser.getDepth());
-            for(int i=0; i<nsCount; i++){
+            for (int i = 0; i < nsCount; i++) {
                 String prefix = parser.getNamespacePrefix(i);
                 String namespace = parser.getNamespaceUri(i);
                 serializer.setPrefix(prefix, namespace);
@@ -135,7 +142,7 @@ public class XmlParserToSerializer {
         }
         serializer.startTag(parser.getNamespace(), parser.getName());
         int attrCount = parser.getAttributeCount();
-        for(int i=0; i<attrCount; i++){
+        for (int i=0; i<attrCount; i++) {
             String namespace = processNamespace ?
                     parser.getAttributeNamespace(i) : null;
 
@@ -148,7 +155,7 @@ public class XmlParserToSerializer {
         serializer.text(parser.getText());
     }
     private void onEntityRef() throws IOException{
-        serializer.entityRef(parser.getText());
+        serializer.entityRef(parser.getName());
     }
     private void onCdsect() throws IOException{
         serializer.cdsect(parser.getText());
@@ -161,5 +168,14 @@ public class XmlParserToSerializer {
     }
     private void onEndDocument() throws IOException{
         serializer.endDocument();
+    }
+    private void onDocDecl() throws IOException{
+        serializer.docdecl(parser.getText());
+    }
+    private void onIgnorableWhitespace() throws IOException{
+        serializer.ignorableWhitespace(parser.getText());
+    }
+    private void onProcessingInstruction() throws IOException{
+        serializer.processingInstruction(parser.getText());
     }
 }

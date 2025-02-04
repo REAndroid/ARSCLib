@@ -36,24 +36,6 @@ public class StyleElement extends XMLElement implements Span {
     public StyleElement getParentElement() {
         return (StyleElement) super.getParentElement();
     }
-    void copyFrom(XMLElement xmlElement) {
-        setName(xmlElement.getName());
-        setVoidHtml(xmlElement.isVoidHtml());
-        Iterator<? extends XMLAttribute> attributes = xmlElement.getAttributes();
-        while (attributes.hasNext()) {
-            newAttribute().setFrom(attributes.next());
-        }
-        Iterator<XMLNode> iterator = xmlElement.iterator();
-        while (iterator.hasNext()) {
-            XMLNode xmlNode = iterator.next();
-            if (xmlNode instanceof XMLElement) {
-                newElement().copyFrom((XMLElement) xmlNode);
-            } else if (xmlNode instanceof XMLText) {
-                XMLText xmlText = (XMLText)xmlNode;
-                newText(xmlText.getText());
-            }
-        }
-    }
     @Override
     public StyleAttribute getAttributeAt(int i) {
         return (StyleAttribute) super.getAttributeAt(i);
@@ -246,6 +228,27 @@ public class StyleElement extends XMLElement implements Span {
         return attribute;
     }
 
+    void copyFrom(XMLElement xmlElement) {
+        setName(xmlElement.getName());
+        setVoidHtml(xmlElement.isVoidHtml());
+        Iterator<? extends XMLAttribute> attributes = xmlElement.getAttributes();
+        while (attributes.hasNext()) {
+            newAttribute().setFrom(attributes.next());
+        }
+        Iterator<XMLNode> iterator = xmlElement.iterator();
+        while (iterator.hasNext()) {
+            XMLNode xmlNode = iterator.next();
+            if (xmlNode instanceof XMLElement) {
+                newElement().copyFrom((XMLElement) xmlNode);
+            } else if (xmlNode instanceof XMLText) {
+                XMLText xmlText = (XMLText)xmlNode;
+                getOrCreateLastText().appendText(xmlText.getText());
+            } else if (xmlNode instanceof XMLCDSect) {
+                XMLCDSect xmlcdSect = (XMLCDSect)xmlNode;
+                getOrCreateLastText().appendText(xmlcdSect.getText());
+            }
+        }
+    }
     @Override
     public String toString() {
         return "[" + getFirstChar() + ", " + getLastChar() + "] "
