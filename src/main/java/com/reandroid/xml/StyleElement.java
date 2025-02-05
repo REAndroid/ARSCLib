@@ -23,7 +23,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Iterator;
 
 public class StyleElement extends XMLElement implements Span {
@@ -72,7 +71,12 @@ public class StyleElement extends XMLElement implements Span {
     }
 
     public String getTagString() {
-        return getTagName() + getSpanAttributes();
+        String tag = getTagName();
+        String attributes = getSpanAttributes();
+        if(attributes == null) {
+            return tag;
+        }
+        return tag + attributes;
     }
 
     @Override
@@ -97,11 +101,7 @@ public class StyleElement extends XMLElement implements Span {
 
     @Override
     public int getLastChar() {
-        int result = getFirstChar() + getLength();
-        if (result != 0) {
-            result = result - 1;
-        }
-        return result;
+        return getFirstChar() + getLength() - 1;
     }
 
     @Override
@@ -123,17 +123,7 @@ public class StyleElement extends XMLElement implements Span {
 
     @Override
     public String getSpanAttributes() {
-        if (getAttributeCount() == 0) {
-            return "";
-        }
-        StringWriter writer = new StringWriter();
-        try {
-            appendAttributes(writer, false, false);
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {
-        }
-        return writer.toString();
+        return SpanAttributesEncoder.encodeAttributes(this);
     }
     @Override
     public StyleElement toElement() {

@@ -15,6 +15,8 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.utils.ObjectsUtil;
+
 public interface Span {
 
     String getTagName();
@@ -26,97 +28,48 @@ public interface Span {
     default StyleElement toElement() {
         StyleElement element = new StyleElement();
         element.setName(getTagName());
-        parseAttributes(element, getSpanAttributes());
+        String attributes = getSpanAttributes();
+        if (attributes != null) {
+            new SpanAttributesDecoder(element, attributes).decode();
+        }
         return element;
     }
 
-    static void parseAttributes(StyleElement element, String attributes){
-        if(attributes == null || attributes.length() == 0){
-            return;
-        }
-        StyleAttribute attribute = null;
-        StringBuilder builder = new StringBuilder();
-        int length = attributes.length();
-        boolean quoted = false;
-        for (int i = 0; i < length; i++){
-            char ch = attributes.charAt(i);
-            if(ch == '=' && attribute == null){
-                if(builder != null){
-                    attribute = element.newAttribute().set(builder.toString(), "");
-                }
-                builder = null;
-                quoted = false;
-                continue;
-            }
-            if(ch == '"' && attribute != null){
-                if(quoted){
-                    attribute.setValue(builder.toString());
-                    attribute = null;
-                    builder = null;
-                }else if (builder == null){
-                    quoted = true;
-                    builder = new StringBuilder();
-                }else {
-                    builder.append(ch);
-                }
-                continue;
-            }
-            if(ch == ' ' || ch == ';'){
-                if(attribute == null || builder == null){
-                    attribute = null;
-                    builder = null;
-                    quoted = false;
-                    continue;
-                }
-                if(quoted){
-                    builder.append(ch);
-                    continue;
-                }
-                attribute.setValue(builder.toString());
-                attribute = null;
-                builder = null;
-                continue;
-            }
-            if(builder == null){
-                builder = new StringBuilder();
-            }
-            builder.append(ch);
-        }
-        if(attribute != null && builder !=  null){
-            attribute.setValue(builder.toString());
-        }
-    }
-
-    static String splitTagName(String raw){
-        if(raw == null){
+    static String splitTagName(String raw) {
+        if (raw == null) {
             return null;
         }
         int i = raw.indexOf(';');
-        if(i < 0){
+        if (i < 0) {
             i = raw.indexOf(' ');
         }
-        if(i < 0){
+        if (i < 0) {
             return raw;
         }
         return raw.substring(0, i);
     }
-    static String splitAttribute(String tagWithAttribute){
-        if(tagWithAttribute == null || tagWithAttribute.length() == 0){
-            return "";
+    static String splitAttribute(String tagWithAttribute) {
+        if (tagWithAttribute == null || tagWithAttribute.length() == 0) {
+            return null;
         }
-        if(tagWithAttribute.charAt(0) == ' '){
+        if (tagWithAttribute.charAt(0) == ' ') {
             tagWithAttribute = tagWithAttribute.trim();
         }
         int i = tagWithAttribute.indexOf(';');
         int i2 = tagWithAttribute.indexOf(' ');
-        if(i < 0){
+        if (i < 0) {
             i = i2;
-        }else if(i2 >= 0 && i2 < i){
+        } else if (i2 >= 0 && i2 < i) {
             i = i2;
         }
-        if(i < 0){
-            return "";
+        if (i < 0) {
+            return null;
         }
-        return tagWithAttribute.substring(i + 1);
+        String result = tagWithAttribute.substring(i + 1);
+        if (result.length() == 0) {
+            result = null;
+        }
+        return result;
     }
+    String RAW_STYLE_TAG_ATTRIBUTE = ObjectsUtil.of("raw_style_tag_attribute");
 }
