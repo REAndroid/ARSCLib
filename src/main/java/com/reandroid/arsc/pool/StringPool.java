@@ -344,16 +344,10 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if (isUtf8()) {
             return "utf-8";
         }
-        return "utf-16";
+        return null;
     }
     public void setEncoding(String encoding) {
-        boolean utf8;
-        if (encoding != null) {
-            utf8 = !StringsUtil.toLowercase(encoding).startsWith("utf-16");
-        } else {
-            utf8 = true;
-        }
-        setUtf8(utf8);
+        setUtf8(encoding != null && !StringsUtil.toLowercase(encoding).startsWith("utf-16"));
     }
 
     abstract StringArray<T> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);

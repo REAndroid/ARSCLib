@@ -23,7 +23,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 public class XMLFactory {
 
@@ -37,6 +36,7 @@ public class XMLFactory {
         XmlPullParser parser = newPullParser();
         try {
             parser.setInput(FileUtil.inputStream(file), null);
+            XMLUtil.setLocation(parser, file);
         } catch (IOException ex) {
             throw new XmlPullParserException(ex.getMessage());
         }
@@ -74,7 +74,7 @@ public class XMLFactory {
     }
     public static XmlSerializer newSerializer(OutputStream outputStream) throws IOException{
         XmlSerializer serializer = newSerializer();
-        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        serializer.setOutput(outputStream, "utf-8");
         return serializer;
     }
     public static XmlSerializer newSerializer(OutputStream outputStream, String encoding) throws IOException{

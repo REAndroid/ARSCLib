@@ -26,6 +26,9 @@ import java.io.IOException;
 
 public class XMLUtil {
 
+    public static final boolean KEEP_CHARSET_ENCODING = System.getProperty("com.reandroid.xml.KeepCharsetEncoding") != null;
+
+
     public static void expectEvent(XmlPullParser parser, int expect) throws XmlPullParserException {
         int event = parser.getEventType();
         if (event != expect) {

@@ -1,8 +1,10 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.apk.APKLogger;
+import com.reandroid.app.AndroidManifest;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.utils.Crc32;
 import com.reandroid.utils.io.IOUtil;
@@ -68,9 +70,15 @@ public class XMLEncodeSource extends ByteInputSource {
     }
     private ResXmlDocument encode() throws XmlPullParserException, IOException {
         XMLParserSource parserSource = this.parserSource;
-        logVerbose("Encoding: " + parserSource.getPath());
+        String path = parserSource.getPath();
+        logVerbose("Encoding: " + path);
         XmlPullParser parser = parserSource.getParser();
-        ResXmlDocument resXmlDocument = new ResXmlDocument();
+        ResXmlDocument resXmlDocument;
+        if (AndroidManifest.FILE_NAME.equals(path)) {
+            resXmlDocument = new AndroidManifestBlock();
+        } else {
+            resXmlDocument = new ResXmlDocument();
+        }
         resXmlDocument.setPackageBlock(this.packageBlock);
         resXmlDocument.parse(parser);
         IOUtil.close(parser);
