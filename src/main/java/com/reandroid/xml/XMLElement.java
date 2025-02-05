@@ -590,7 +590,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
                 appendable.append(getName());
                 appendable.append('>');
             } else {
-                appendable.append("/>");
+                appendable.append(" />");
             }
         }
     }

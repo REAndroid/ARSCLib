@@ -27,7 +27,6 @@ import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.StyleElement;
-import com.reandroid.xml.StyleText;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -131,7 +130,7 @@ public class ApkModuleTest {
 
         Entry helloEntry = packageBlock.getOrCreate(ResConfig.getDefault(), "string", "hello_world");
 
-        String text = "<hr/><br><font size=\"30\" color=\"green\">Hello World</font></br>" +
+        String text = "<hr /><br><font color=\"green\" size=\"30\">Hello World</font></br>" +
                 "<ul>" +
                 "<li><b>\nType id offset = " +
                 helloEntry.getPackageBlock().getHeaderBlock().getTypeIdOffsetItem().get() +
@@ -324,6 +323,7 @@ public class ApkModuleTest {
 
         createMoreStrings_65(packageBlock);
         createMoreStrings_62(packageBlock);
+        //createMoreStrings_99(packageBlock);
     }
     private void createMoreStrings_65(PackageBlock packageBlock){
 
@@ -339,7 +339,7 @@ public class ApkModuleTest {
         Entry entry = packageBlock
                 .getOrCreate("", "string", "test_issue_apkeditor_62");
 
-        String text = "<font size=\"30\" color=\"red\">Multi attribute styled string</font>";
+        String text = "<font color=\"red\" size=\"30\">Multi attribute styled string</font>";
         StyleDocument styleDocument = null;
         Exception exception = null;
         try {
