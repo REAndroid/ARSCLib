@@ -153,7 +153,8 @@ public abstract class ResXmlNode extends WrappedBlock implements
     static boolean isTextEvent(int event){
         return event == XmlPullParser.TEXT
                 || event == XmlPullParser.ENTITY_REF
-                || event == XmlPullParser.IGNORABLE_WHITESPACE;
+                || event == XmlPullParser.IGNORABLE_WHITESPACE
+                || event == XmlPullParser.CDSECT;
     }
 
     private static final String FEATURE_INDENT_OUTPUT = "http://xmlpull.org/v1/doc/features.html#indent-output";

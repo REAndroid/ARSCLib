@@ -22,7 +22,6 @@ import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.xml.XMLNode;
 import com.reandroid.xml.XMLText;
-import com.reandroid.xml.XMLUtil;
 import com.reandroid.xml.base.Text;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -50,21 +49,7 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     ResXmlTextChunk getChunk() {
         return (ResXmlTextChunk) super.getChunk();
     }
-    void makeIndent(int length){
-        if (!isIndent()) {
-            throw new IllegalArgumentException("Not indent text: '" + getText() + "'");
-        }
-        if (length < 2) {
-            setText("\n");
-            return;
-        }
-        char[] chars = new char[length];
-        chars[0] = '\n';
-        for(int i = 1; i < length; i++){
-            chars[i] = ' ';
-        }
-        setText(new String(chars));
-    }
+
     public boolean isIndent(){
         return isIndent(getText());
     }
@@ -189,10 +174,7 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
         setLineNumber(parser.getLineNumber());
         String text;
         int event = parser.getEventType();
-        if (event == XmlPullParser.ENTITY_REF) {
-            text = XMLUtil.decodeEntityRef(parser.getText());
-        } else if(event == XmlPullParser.TEXT ||
-                event == XmlPullParser.IGNORABLE_WHITESPACE) {
+        if (isTextEvent(event)) {
             text = parser.getText();
             text = XmlSanitizer.unEscapeUnQuote(text);
         } else {
@@ -200,7 +182,7 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
                     + event + ", " + parser.getPositionDescription());
         }
         append(text);
-        event = parser.next();
+        event = parser.nextToken();
         return isTextEvent(event);
     }
 
