@@ -16,11 +16,11 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.chunk.xml.ResXmlDocumentChunk;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlID;
 import com.reandroid.arsc.item.StringItem;
-import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
@@ -137,7 +137,8 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
             }
         }
         if(adjusted) {
-            getParentInstance(ResXmlStringPool.class).linkResXmlIDMapInternal();
+            getParentInstance(ResXmlDocumentChunk.class)
+                    .getStringPool().linkResXmlIDMapInternal();
         }
     }
 }
