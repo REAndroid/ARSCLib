@@ -508,9 +508,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     @Override
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
 
-        if (parser.getEventType() != XmlPullParser.START_TAG) {
-            throw new XmlPullParserException("Not START_TAG event", parser, null);
-        }
+        XMLUtil.expectEvent(parser, XmlPullParser.START_TAG);
 
         setStartLineNumber(parser.getLineNumber());
         getNamespaceList().parse(parser);
@@ -518,10 +516,10 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
         setNamespace(parser.getNamespace(), parser.getPrefix());
         getAttributeArray().parse(parser);
 
-        parser.next();
+        parser.nextToken();
         parseInnerNodes(parser);
 
-        parser.next();
+        parser.nextToken();
     }
 
     @Override

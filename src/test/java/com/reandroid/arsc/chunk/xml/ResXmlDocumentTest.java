@@ -123,7 +123,7 @@ public class ResXmlDocumentTest {
 
         ResXmlElement root = document.getDocumentElement();
         Assert.assertNotNull(root);
-        Assert.assertEquals(3, root.size());
+        Assert.assertEquals(4, root.size());
         Assert.assertEquals(2, root.getNamespaceCount());
         Assert.assertEquals(12, root.getAttributeCount());
 
@@ -168,6 +168,7 @@ public class ResXmlDocumentTest {
             "          style=\"@android:style/Widget\"" +
             "          xmlns:app=\"http://schemas.android.com/apk/res-auto\""+
             "          xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+            "  <!--Comment Text1-->\n" +
             "  <uses-sdk android:minSdkVersion=\"21\"\n" +
             "            android:targetSdkVersion=\"32\" />\n" +
             "  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"\n" +

@@ -179,6 +179,23 @@ abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
         add(xmlNode);
         return xmlNode;
     }
+    public ResXmlTextNode getOrCreateLastText() {
+        ResXmlTextNode textNode = null;
+        int size = size();
+        if (size != 0) {
+            ResXmlNode node = get(size - 1);
+            if (node instanceof ResXmlTextNode) {
+                textNode = (ResXmlTextNode) node;
+                if (textNode.isComment()) {
+                    textNode = null;
+                }
+            }
+        }
+        if (textNode == null) {
+            textNode = newText();
+        }
+        return textNode;
+    }
 
     public void removeUnusedNamespaces() {
         Iterator<ResXmlElement> iterator = getElements();
@@ -252,6 +269,8 @@ abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
         if (event == XmlPullParser.START_TAG) {
             return newElement();
         } else if (isTextEvent(event)) {
+            return getOrCreateLastText();
+        } else if (event == XmlPullParser.COMMENT) {
             return newText();
         } else if (event == XmlPullParser.START_DOCUMENT) {
             return newDocument();

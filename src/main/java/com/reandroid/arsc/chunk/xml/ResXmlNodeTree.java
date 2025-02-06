@@ -148,7 +148,7 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
         if (otherNode.isElement()) {
             return newElement();
         }
-        if (otherNode.isText()) {
+        if (otherNode.isText() || otherNode.isComment()) {
             return newText();
         }
         if (otherNode.isDocument()) {
@@ -167,7 +167,7 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
         if (JSON_node_type_document.equals(name)) {
             return newDocument();
         }
-        if (JSON_node_type_text.equals(name)) {
+        if (JSON_node_type_text.equals(name) || JSON_node_type_comment.equals(name)) {
             return newText();
         }
         throw new JSONException("Unknown node type name: " + name);

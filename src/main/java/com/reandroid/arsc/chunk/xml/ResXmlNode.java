@@ -133,6 +133,9 @@ public abstract class ResXmlNode extends WrappedBlock implements
     public boolean isText() {
         return false;
     }
+    public boolean isComment() {
+        return false;
+    }
     public boolean isUnknown() {
         return false;
     }
@@ -204,6 +207,7 @@ public abstract class ResXmlNode extends WrappedBlock implements
     public static final String JSON_node_type_document = ObjectsUtil.of("document");
     public static final String JSON_node_type_element = ObjectsUtil.of("element");
     public static final String JSON_node_type_text = ObjectsUtil.of("text");
+    public static final String JSON_node_type_comment = ObjectsUtil.of("comment");
     public static final String JSON_node_type_unknown = ObjectsUtil.of("unknown");
 
     public static final String JSON_name = ObjectsUtil.of("name");

@@ -21,46 +21,63 @@ import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
 public class ResXmlTextChunk extends BaseXmlChunk {
+
     private final IntegerItem mReserved;
+
     public ResXmlTextChunk() {
         super(ChunkType.XML_CDATA, 1);
-        this.mReserved=new IntegerItem();
+        this.mReserved = new IntegerItem();
         addChild(mReserved);
         setStringReference(0);
     }
-    public String getText(){
-        ResXmlString xmlString=getResXmlString(getTextReference());
-        if(xmlString!=null){
-            return xmlString.getHtml();
+    public String getText() {
+        ResXmlString xmlString = getResXmlString(getTextReference());
+        if (xmlString != null) {
+            return xmlString.getXml();
         }
         return null;
     }
-    public int getTextReference(){
+    public int getTextReference() {
         return getNamespaceReference();
     }
-    public void setTextReference(int ref){
+    public void setTextReference(int ref) {
         setNamespaceReference(ref);
     }
-    public void setText(String text){
-        ResXmlStringPool stringPool=getStringPool();
-        if(stringPool==null){
+    public void setText(String text) {
+        ResXmlStringPool stringPool = getStringPool();
+        if (stringPool == null) {
             return;
         }
         ResXmlString resXmlString = stringPool.getOrCreate(text);
-        int ref=resXmlString.getIndex();
-        setTextReference(ref);
-    }
-    @Override
-    public boolean isNull() {
-        return getText() == null
-                || super.isNull();
+        setTextReference(resXmlString.getIndex());
     }
 
     @Override
-    public String toString(){
-        String txt=getText();
-        if(txt!=null){
-            return txt;
+    public void setComment(String comment) {
+        super.setComment(comment);
+        if (comment != null && getText() == null) {
+            setText("");
+        }
+    }
+
+    @Override
+    public boolean isNull() {
+        return (getComment() == null && getText() == null)
+                || super.isNull();
+    }
+    @Override
+    protected void onPreRefresh() {
+        if (getComment() != null && getText() == null) {
+            setText("");
+        }
+        super.onPreRefresh();
+    }
+
+    @Override
+    public String toString() {
+        String text = getText();
+        if (text != null) {
+            return text;
         }
         return super.toString();
     }

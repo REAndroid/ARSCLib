@@ -19,9 +19,12 @@ import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.xml.XMLComment;
 import com.reandroid.xml.XMLNode;
 import com.reandroid.xml.XMLText;
+import com.reandroid.xml.XMLUtil;
 import com.reandroid.xml.base.Text;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -50,25 +53,29 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
         return (ResXmlTextChunk) super.getChunk();
     }
 
-    public boolean isIndent(){
-        return isIndent(getText());
+    public boolean isIndent() {
+        return !hasComment() && isIndent(getText());
     }
 
     @Override
-    int autoSetLineNumber(int start){
-        String text = getText();
+    int autoSetLineNumber(int start) {
         int lineNumber = start;
-        if (isIndent(text) && isNextElement()){
-            lineNumber ++;
+        if (isComment()) {
+            start ++;
         } else {
-            start += countNewLines(text);
+            String text = getText();
+            if (isIndent(text) && isNextElement()) {
+                lineNumber ++;
+            } else {
+                start += StringsUtil.countChar(text, '\n');
+            }
         }
         setLineNumber(lineNumber);
         return start;
     }
-    private boolean isNextElement(){
+    private boolean isNextElement() {
         ResXmlNodeTree parent = getParentNode();
-        if(parent != null){
+        if (parent != null) {
             return parent.get(getIndex() + 1) instanceof ResXmlElement;
         }
         return false;
@@ -82,6 +89,13 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
 
     @Override
     Iterator<ResXmlEvent> getParserEvents() {
+        if (isComment()) {
+            return SingleIterator.of(ResXmlEvent.comment(this));
+        }
+        if (hasComment()) {
+            return CombiningIterator.singleOne(ResXmlEvent.comment(this),
+                    SingleIterator.of(ResXmlEvent.text(this)));
+        }
         return SingleIterator.of(ResXmlEvent.text(this));
     }
 
@@ -98,7 +112,7 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     public int getEndLineNumber() {
         int line = getStartLineNumber();
         if (!isIndent()) {
-            line += countNewLines(getText());
+            line += StringsUtil.countChar(getText(), '\n');
         }
         return line;
     }
@@ -107,23 +121,25 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     public void setLineNumber(int lineNumber) {
         getChunk().setLineNumber(lineNumber);
     }
-    public String getText(){
+    @Override
+    public String getText() {
         return getChunk().getText();
     }
-    public void setText(String text){
+    @Override
+    public void setText(String text) {
         getChunk().setText(text);
         mIndentText = null;
     }
-    public void append(String text){
+    public void append(String text) {
         String exist = getText();
-        if(exist == null || exist.length() == 0){
+        if (exist == null || exist.length() == 0) {
             exist = mIndentText;
         }
-        if(exist == null && isIndent(text)){
+        if (exist == null && isIndent(text)) {
             mIndentText = text;
             return;
         }
-        if(exist != null){
+        if (exist != null) {
             text = exist + text;
         }
         setText(text);
@@ -153,41 +169,45 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     @Override
     public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
         serializeComment(serializer, getComment());
-        if (!isNull()) {
-            serializer.text(getText());
+        if (isText()) {
+            String text = getText();
+            if (text != null) {
+                serializer.text(text);
+            }
         }
     }
 
     @Override
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+
         setLineNumber(parser.getLineNumber());
-        while (true) {
-            if (!parseNextText(parser)) {
-                break;
+
+        if (parser.getEventType() == XmlPullParser.COMMENT) {
+            setComment(parser.getText());
+            parser.nextToken();
+        } else {
+            if (!isTextEvent(parser.getEventType())) {
+                throw new XmlPullParserException("Expecting text events, but found: "
+                        + XMLUtil.toEventName(parser.getEventType()) + ", "
+                        + parser.getPositionDescription());
+            }
+
+            while (isTextEvent(parser.getEventType())) {
+                append(XmlSanitizer.unEscapeUnQuote(parser.getText()));
+                parser.nextToken();
+            }
+
+            if (isNull()) {
+                removeSelf();
             }
         }
-        if (isNull()) {
-            removeSelf();
-        }
-    }
-    private boolean parseNextText(XmlPullParser parser) throws IOException, XmlPullParserException {
-        setLineNumber(parser.getLineNumber());
-        String text;
-        int event = parser.getEventType();
-        if (isTextEvent(event)) {
-            text = parser.getText();
-            text = XmlSanitizer.unEscapeUnQuote(text);
-        } else {
-            throw new XmlPullParserException("Invalid text event: "
-                    + event + ", " + parser.getPositionDescription());
-        }
-        append(text);
-        event = parser.nextToken();
-        return isTextEvent(event);
     }
 
     @Override
     public XMLNode toXml(boolean decode) {
+        if (isComment()) {
+            return new XMLComment(getComment());
+        }
         return new XMLText(getText());
     }
 
@@ -208,11 +228,20 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
 
     @Override
     public boolean isText() {
-        return true;
+        return !isComment();
+    }
+    public boolean isComment() {
+        return hasComment() && isEmpty();
+    }
+    public boolean hasComment() {
+        return !StringsUtil.isEmpty(getComment());
     }
 
     @Override
     String nodeTypeName() {
+        if (isComment()) {
+            return JSON_node_type_comment;
+        }
         return JSON_node_type_text;
     }
     @Override
@@ -220,7 +249,9 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(JSON_node_type, nodeTypeName());
         jsonObject.put(JSON_line, getLineNumber());
-        jsonObject.put(JSON_value, getText());
+        if (isText()) {
+            jsonObject.put(JSON_value, getText());
+        }
         jsonObject.put(JSON_comment, getComment());
         return jsonObject;
     }
@@ -233,22 +264,11 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
 
     @Override
     public String toString() {
-        String text = getText();
-        return text == null ? "null" : text;
-    }
-
-    private static int countNewLines(String text) {
-        if (text == null) {
-            return 0;
+        if (isText()) {
+            String text = getText();
+            return text == null ? "null" : text;
         }
-        int result = 0;
-        int length = text.length();
-        for (int i = 1; i < length; i++) {
-            if (text.charAt(i) == '\n') {
-                i ++;
-            }
-        }
-        return result;
+        return "<!--" + getComment() + "-->";
     }
     private static boolean isIndent(String text) {
         if (text == null) {
@@ -258,10 +278,10 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
         if (length == 0) {
             return true;
         }
-        if(text.charAt(0) != '\n') {
+        if (text.charAt(0) != '\n') {
             return false;
         }
-        for(int i = 1; i < length; i++){
+        for (int i = 1; i < length; i++) {
             if (!StringsUtil.isWhiteSpace(text.charAt(i))) {
                 return false;
             }
