@@ -331,6 +331,20 @@ public class StringsUtil {
         }
         return results;
     }
+
+    public static int countChar(String text, char c){
+        if (text == null) {
+            return 0;
+        }
+        int count = 0;
+        int length = text.length();
+        for (int i = 0; i < length; i ++) {
+            if (text.charAt(i) == c) {
+                count ++;
+            }
+        }
+        return count;
+    }
     public static int countChar(String text, char[] search, boolean skipConsecutive) {
         if(text == null || text.length() == 0){
             return 0;
