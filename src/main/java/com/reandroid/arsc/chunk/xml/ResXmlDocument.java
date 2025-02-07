@@ -270,7 +270,7 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
         removeNullElements();
         int event = parser.getEventType();
         if (event == XmlPullParser.START_DOCUMENT) {
-            parser.next();
+            parser.nextToken();
             setEncoding(parser.getInputEncoding());
         }
         parseInnerNodes(parser);
