@@ -344,7 +344,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if (isUtf8()) {
             return "utf-8";
         }
-        return null;
+        return "utf-16";
     }
     public void setEncoding(String encoding) {
         setUtf8(encoding != null && !StringsUtil.toLowercase(encoding).startsWith("utf-16"));
