@@ -189,10 +189,6 @@ public class ApkModuleTest {
         attribute = textView2.getOrCreateAndroidAttribute("textIsSelectable", 0x01010316);
         attribute.setValueAsBoolean(true);
 
-        attribute = textView2.getOrCreateAndroidAttribute("textMultiLine", 0x0102041f);
-        attribute.setValueAsBoolean(true);
-
-
         attribute = textView2.getOrCreateAndroidAttribute("text", 0x0101014f);
 
         createStyledStringInXmlAttribute(attribute);
