@@ -164,6 +164,13 @@ public class StyleDocument extends XMLDocument implements
         styleDocument.parseString(xmlStyledString);
         return styleDocument;
     }
+    public static StyleDocument create(String xmlStyledString) {
+        try {
+            return parseStyledString(xmlStyledString);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
 
     private static final XmlPullParser PARSER = XMLFactory.newPullParser();
 }
