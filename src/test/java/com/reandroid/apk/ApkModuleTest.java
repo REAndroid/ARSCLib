@@ -105,6 +105,8 @@ public class ApkModuleTest {
     }
     private int createMainActivityContentViewXml(ApkModule apkModule){
         ResXmlDocument document = new ResXmlDocument();
+        document.setApkFile(apkModule);
+
         ResXmlElement root = document.getDocumentElement();
         root.setName("LinearLayout");
 
@@ -151,11 +153,7 @@ public class ApkModuleTest {
                 HexUtil.toHex(helloEntry.getResourceId(), 8) +
                 "</b></li>" +
                 "</ul>";
-        StyleDocument styleDocument = null;
-        try {
-            styleDocument = StyleDocument.parseStyledString(text);
-        } catch (Exception ignored) {
-        }
+        StyleDocument styleDocument = StyleDocument.create(text);
         Assert.assertNotNull(styleDocument);
         helloEntry.setValueAsString(styleDocument);
         Assert.assertEquals(text, helloEntry.getResValue().getValueAsString());
@@ -185,21 +183,28 @@ public class ApkModuleTest {
         attribute = textView2.getOrCreateAndroidAttribute("layout_height", 0x010100f5);
         attribute.setTypeAndData(ValueType.DEC, -2); // wrap_content
 
+        attribute = textView2.getOrCreateAndroidAttribute("linksClickable", 0x010100b1);
+        attribute.setValueAsBoolean(true);
+
+        attribute = textView2.getOrCreateAndroidAttribute("textIsSelectable", 0x01010316);
+        attribute.setValueAsBoolean(true);
+
+        attribute = textView2.getOrCreateAndroidAttribute("textMultiLine", 0x0102041f);
+        attribute.setValueAsBoolean(true);
+
+
         attribute = textView2.getOrCreateAndroidAttribute("text", 0x0101014f);
 
         createStyledStringInXmlAttribute(attribute);
     }
     private void createStyledStringInXmlAttribute(ResXmlAttribute attribute) {
 
-        String text = "This is <a href=\"https://www.github.com/REAndroid/ARSCLib\"><font size=\"30\" color=\"red\">STYLED!</font></a><b>string in xml document</b>";
+        String text = "\n\nThis is <font size=\"30\" color=\"red\">STYLED! string" +
+                "</font> placed directly in xml attribute android:text, contains clickable link (" +
+                " <a href=\"https://www.github.com/REAndroid/ARSCLib\">github.com/REAndroid/ARSCLib</a>)" +
+                " and <b> BOLD text</b>\n\n";
 
-        text="To em. <a href=\"intent:#Intent;action=android.settings.SYSTEM_UPDATE_SETTINGS;end\"/> Upd";
-        StyleDocument styleDocument = null;
-        try {
-            styleDocument = StyleDocument.parseStyledString(text);
-        } catch (Exception ignored) {
-            throw new RuntimeException(ignored);
-        }
+        StyleDocument styleDocument = StyleDocument.create(text);
         Assert.assertNotNull(styleDocument);
 
         attribute.setValueAsString(styleDocument);
@@ -323,7 +328,6 @@ public class ApkModuleTest {
 
         createMoreStrings_65(packageBlock);
         createMoreStrings_62(packageBlock);
-        //createMoreStrings_99(packageBlock);
     }
     private void createMoreStrings_65(PackageBlock packageBlock){
 
@@ -482,15 +486,6 @@ public class ApkModuleTest {
         Assert.assertEquals("compileSdkVersionCodeName",
                 "1.0", manifestBlock.getVersionName());
 
-        /*
-        Assert.assertEquals("platformBuildVersionCode",
-                Integer.valueOf(frameworkApk.getVersionCode()), manifestBlock.getPlatformBuildVersionCode());
-
-        Assert.assertEquals("platformBuildVersionName",
-                frameworkApk.getVersionName(), manifestBlock.getPlatformBuildVersionName());
-
-
-         */
         Assert.assertNotNull("android.permission.INTERNET",
                 manifestBlock.getUsesPermission("android.permission.INTERNET"));
         Assert.assertNotNull("android.permission.READ_EXTERNAL_STORAGE",
@@ -498,6 +493,7 @@ public class ApkModuleTest {
 
         Assert.assertNull("android.permission.NOTHING",
                 manifestBlock.getUsesPermission("android.permission.NOTHING"));
+
         manifestBlock.refreshFull();
         byte[] bytes = manifestBlock.getBytes();
         manifestBlock = new AndroidManifestBlock();
