@@ -16,6 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.utils.collection.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -175,7 +176,16 @@ abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
     }
     @Override
     public UnknownResXmlNode newUnknown() {
-        UnknownResXmlNode xmlNode = new  UnknownResXmlNode();
+        return newUnknown(ChunkType.NULL);
+    }
+    @Override
+    public UnknownResXmlNode newUnknown(ChunkType chunkType) {
+        UnknownResXmlNode xmlNode;
+        if (UnexpectedResXmlNode.isSet(chunkType)) {
+            xmlNode = new UnexpectedResXmlNode(chunkType);
+        } else {
+            xmlNode = new UnknownResXmlNode();
+        }
         add(xmlNode);
         return xmlNode;
     }

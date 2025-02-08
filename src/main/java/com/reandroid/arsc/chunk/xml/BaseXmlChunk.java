@@ -22,6 +22,7 @@ import com.reandroid.arsc.header.XmlNodeHeader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
+import com.reandroid.utils.ObjectsUtil;
 
 class BaseXmlChunk extends Chunk<XmlNodeHeader> {
 
@@ -29,150 +30,151 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     private final IntegerItem mStringReference;
 
     BaseXmlChunk(ChunkType chunkType, int initialChildesCount) {
-        super(new XmlNodeHeader(chunkType), initialChildesCount+2);
+        super(new XmlNodeHeader(chunkType), initialChildesCount + 2);
 
-        this.mNamespaceReference=new IntegerItem(-1);
-        this.mStringReference=new IntegerItem(-1);
+        this.mNamespaceReference = new IntegerItem(NULL_REFERENCE);
+        this.mStringReference = new IntegerItem(NULL_REFERENCE);
 
         addChild(mNamespaceReference);
         addChild(mStringReference);
     }
-    void onPreRemove(){
+
+    void onPreRemove() {
         ResXmlStringPool stringPool = getStringPool();
-        if(stringPool==null){
+        if (stringPool == null) {
             return;
         }
         stringPool.removeReference(getHeaderBlock().getCommentReference());
         stringPool.removeReference(mNamespaceReference);
         stringPool.removeReference(mStringReference);
     }
-    void linkStringReferences(){
+    void linkStringReferences() {
         linkStringReference(getHeaderBlock().getCommentReference());
         linkStringReference(mNamespaceReference);
         linkStringReference(mStringReference);
     }
-    private void linkStringReference(IntegerItem item){
+    private void linkStringReference(IntegerItem item) {
         ResXmlString xmlString = getResXmlString(item.get());
-        if(xmlString!=null){
+        if (xmlString != null) {
             xmlString.addReferenceIfAbsent(item);
         }
     }
-    void unLinkStringReference(IntegerItem item){
+    void unLinkStringReference(IntegerItem item) {
         ResXmlString xmlString = getResXmlString(item.get());
-        if(xmlString!=null){
+        if (xmlString!=null) {
             xmlString.removeReference(item);
         }
     }
-    public void setLineNumber(int val){
+    public void setLineNumber(int val) {
         getHeaderBlock().getLineNumber().set(val);
     }
-    public int getLineNumber(){
+    public int getLineNumber() {
         return getHeaderBlock().getLineNumber().get();
     }
-    public void setCommentReference(int val){
-        if(val == getCommentReference()){
+    public void setCommentReference(int reference) {
+        if (reference == getCommentReference()) {
             return;
         }
-        IntegerItem comment=getHeaderBlock().getCommentReference();
+        IntegerItem comment = getHeaderBlock().getCommentReference();
         unLinkStringReference(comment);
-        getHeaderBlock().getCommentReference().set(val);
+        getHeaderBlock().getCommentReference().set(reference);
         linkStringReference(comment);
     }
-    public int getCommentReference(){
+    public int getCommentReference() {
         return getHeaderBlock().getCommentReference().get();
     }
-    void setNamespaceReference(int value){
-        if(value == getNamespaceReference()){
+    void setNamespaceReference(int value) {
+        if (value == getNamespaceReference()) {
             return;
         }
         unLinkStringReference(mNamespaceReference);
         mNamespaceReference.set(value);
         linkStringReference(mNamespaceReference);
     }
-    int getNamespaceReference(){
+    int getNamespaceReference() {
         return mNamespaceReference.get();
     }
-    void setStringReference(int value){
-        if(value == getStringReference()){
+    void setStringReference(int reference) {
+        if (reference == getStringReference()) {
             return;
         }
         unLinkStringReference(mStringReference);
-        mStringReference.set(value);
+        mStringReference.set(reference);
         linkStringReference(mStringReference);
     }
-    int getStringReference(){
+    int getStringReference() {
         return mStringReference.get();
     }
     void setString(String str) {
-        ResXmlStringPool pool = getStringPool();
-        if (pool != null) {
-            ResXmlString xmlString = pool.getOrCreate(str);
+        ResXmlStringPool stringPool = getStringPool();
+        if (stringPool != null) {
+            ResXmlString xmlString = stringPool.getOrCreate(str);
             setStringReference(xmlString.getIndex());
         }
     }
-    ResXmlStringPool getStringPool(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof ResXmlDocument){
+    ResXmlStringPool getStringPool() {
+        Block parent = getParent();
+        while (parent != null) {
+            if (parent instanceof ResXmlDocument) {
                 return ((ResXmlDocument)parent).getStringPool();
             }
-            if(parent instanceof ResXmlElement){
+            if (parent instanceof ResXmlElement) {
                 return ((ResXmlElement)parent).getStringPool();
             }
-            parent=parent.getParent();
+            parent = parent.getParent();
         }
         return null;
     }
-    ResXmlString getResXmlString(int ref){
-        if(ref<0){
+    ResXmlString getResXmlString(int reference) {
+        if (reference == NULL_REFERENCE) {
             return null;
         }
-        ResXmlStringPool stringPool=getStringPool();
-        if(stringPool!=null){
-            return stringPool.get(ref);
+        ResXmlStringPool stringPool = getStringPool();
+        if (stringPool != null) {
+            return stringPool.get(reference);
         }
         return null;
     }
-    ResXmlString getOrCreateResXmlString(String str){
-        ResXmlStringPool stringPool=getStringPool();
-        if(stringPool!=null){
-            return stringPool.getOrCreate(str);
-        }
-        return null;
-    }
-    String getString(int ref){
-        ResXmlString xmlString=getResXmlString(ref);
-        if(xmlString!=null){
+    String getString(int reference) {
+        ResXmlString xmlString = getResXmlString(reference);
+        if (xmlString != null) {
             return xmlString.get();
         }
         return null;
     }
-    ResXmlString getOrCreateString(String str){
-        ResXmlStringPool stringPool=getStringPool();
-        if(stringPool==null){
+    ResXmlString getOrCreateString(String str) {
+        ResXmlStringPool stringPool = getStringPool();
+        if (stringPool == null) {
             return null;
         }
         return stringPool.getOrCreate(str);
     }
+    int getOrCreateStringReference(String str) {
+        ResXmlString xmlString = getOrCreateString(str);
+        if (xmlString != null) {
+            return xmlString.getIndex();
+        }
+        return NULL_REFERENCE;
+    }
 
-    public String getName(){
+    public String getName() {
         return getString(getStringReference());
     }
-    public String getUri(){
+    public String getUri() {
         return getString(getNamespaceReference());
     }
-    public String getComment(){
+    public String getComment() {
         return getString(getCommentReference());
     }
-    public void setComment(String comment){
-        if(comment==null||comment.length()==0){
-            setCommentReference(-1);
-        }else {
-            String old=getComment();
-            if(comment.equals(old)){
+    public void setComment(String comment) {
+        if (comment == null || comment.length() == 0) {
+            setCommentReference(NULL_REFERENCE);
+        } else {
+            String old = getComment();
+            if (comment.equals(old)) {
                 return;
             }
-            ResXmlString xmlString = getOrCreateResXmlString(comment);
+            ResXmlString xmlString = getOrCreateString(comment);
             setCommentReference(xmlString.getIndex());
         }
     }
@@ -181,15 +183,17 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     }
     @Override
     protected void onChunkRefreshed() {
-
     }
+
     @Override
-    public String toString(){
-        ChunkType chunkType=getHeaderBlock().getChunkType();
-        if(chunkType==null){
+    public String toString() {
+        ChunkType chunkType = getHeaderBlock().getChunkType();
+        if (chunkType == null) {
             return super.toString();
         }
         return chunkType.toString() + ": line=" + getLineNumber() +
                 " {" + getName() + "}";
     }
+
+    public static final int NULL_REFERENCE = ObjectsUtil.of(-1);
 }

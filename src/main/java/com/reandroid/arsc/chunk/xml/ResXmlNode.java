@@ -221,4 +221,5 @@ public abstract class ResXmlNode extends WrappedBlock implements
     public static final String JSON_attributes = ObjectsUtil.of("attributes");
     public static final String JSON_nodes = ObjectsUtil.of("nodes");
     public static final String JSON_value = ObjectsUtil.of("value");
+    public static final String JSON_type = ObjectsUtil.of("type");
 }

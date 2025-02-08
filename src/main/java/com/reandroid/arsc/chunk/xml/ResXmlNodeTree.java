@@ -1,6 +1,22 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONException;
@@ -142,6 +158,9 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
     ResXmlNode newUnknown() {
         return null;
     }
+    ResXmlNode newUnknown(ChunkType chunkType) {
+        return null;
+    }
 
     @Override
     ResXmlNode newSimilarTo(ResXmlNode otherNode) {
@@ -160,6 +179,14 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
         throw new RuntimeException("Unknown node class: " + otherNode.getClass());
     }
 
+    ResXmlNode newForNodeJson(JSONObject node) {
+        String typeName = node.getString(JSON_node_type);
+        if (JSON_node_type_unknown.equals(typeName)) {
+            return newUnknown(ChunkType.get(
+                    (short) node.optInt(JSON_type, 0)));
+        }
+        return newForNodeTypeName(typeName);
+    }
     ResXmlNode newForNodeTypeName(String name) {
         if (JSON_node_type_element.equals(name)) {
             return newElement();
@@ -230,8 +257,7 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
             if (!jsonObject.has(JSON_node_type)) {
                 throw new JSONException("Missing: " + JSON_node_type);
             }
-            newForNodeTypeName(jsonObject.getString(JSON_node_type))
-                    .fromJson(jsonObject);
+            newForNodeJson(jsonObject).fromJson(jsonObject);
         }
     }
     void touchChildNodesForDebug() {

@@ -133,7 +133,7 @@ public class ResXmlDocumentChunk extends Chunk<HeaderBlock> {
             return reader.isAvailable();
         } else {
             logUnknownChunkOnce(headerBlock);
-            document().newUnknown().readBytes(reader);
+            document().newUnknown(chunkType).readBytes(reader);
         }
         return reader.isAvailable() && position != reader.getPosition();
     }

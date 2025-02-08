@@ -15,9 +15,13 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.UnknownChunk;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
+import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.xml.XMLNode;
 import org.xmlpull.v1.XmlPullParser;
@@ -29,13 +33,16 @@ import java.util.Iterator;
 
 public class UnknownResXmlNode extends ResXmlNode {
 
+    public UnknownResXmlNode(Chunk<?> chunk) {
+        super(chunk);
+    }
     public UnknownResXmlNode() {
-        super(new UnknownChunk());
+        this(new UnknownChunk());
     }
 
     @Override
-    public UnknownChunk getChunk() {
-        return (UnknownChunk) getBaseBlock();
+    public Chunk<?> getChunk() {
+        return (Chunk<?>) getBaseBlock();
     }
 
     @Override
@@ -68,16 +75,40 @@ public class UnknownResXmlNode extends ResXmlNode {
         return true;
     }
 
+    public String getHexBytes() {
+        return HexUtil.toHexString(getBytes());
+    }
+    public void setHexBytes(String hexBytes) throws NumberFormatException {
+        byte[] bytes = HexUtil.fromHexSting(hexBytes);
+        try {
+            readBytes(new BlockReader(bytes));
+        } catch (IOException exception) {
+            throw new NumberFormatException("Invalid chunk hex bytes:"
+                    + exception.getMessage());
+        }
+    }
+    public int getChunkType() {
+        return getChunk().getHeaderBlock()
+                .getType() & 0xffff;
+    }
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(JSON_node_type, nodeTypeName());
+        jsonObject.put(JSON_type, getChunkType());
+        jsonObject.put(JSON_value, getHexBytes());
         return jsonObject;
     }
 
     @Override
-    public void fromJson(JSONObject json) {
-
+    public void fromJson(JSONObject json) throws NumberFormatException {
+        if (!nodeTypeName().equals(json.optString(JSON_node_type, null))) {
+            throw new JSONException("Expecting: " + nodeTypeName() + ", but found: " +
+                    json.optString(JSON_node_type, null));
+        }
+        if (json.has(JSON_value)) {
+            setHexBytes(json.getString(JSON_value));
+        }
     }
 
     @Override
