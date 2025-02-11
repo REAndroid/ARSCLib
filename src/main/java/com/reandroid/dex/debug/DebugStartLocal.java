@@ -149,8 +149,8 @@ public class DebugStartLocal extends DebugRegisterNumber {
     @Override
     public int hashCode() {
         int hash = 1;
+        hash = hash * 31 + getFlag();
         hash = hash * 31 + getRegisterNumber();
-        hash = hash + getRegisterNumber() * 31;
         hash = hash * 31 + ObjectsUtil.hash(getName(), getType());
         return hash;
     }
