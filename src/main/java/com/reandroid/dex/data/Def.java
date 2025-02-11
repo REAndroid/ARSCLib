@@ -261,9 +261,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     public void setAccessFlagsValue(int value) {
         accessFlags.set(value);
     }
-    public boolean isDirect(){
-        return false;
-    }
     @Override
     public T getId(){
         return mDefId;

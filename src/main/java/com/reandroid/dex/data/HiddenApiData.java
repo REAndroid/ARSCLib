@@ -64,7 +64,7 @@ class HiddenApiData extends FixedDexContainer
             return getInstanceFields();
         }
         if (key instanceof MethodKey) {
-            if(def.isDirect()){
+            if (((MethodDef) def).isDirect()) {
                 return getDirectMethods();
             }
             return getVirtualMethods();
