@@ -26,6 +26,7 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -318,6 +319,17 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     @Override
     public int getSortOrder() {
         return ExtraLine.ORDER_DEBUG_LINE;
+    }
+    @Override
+    public int compareExtraLine(ExtraLine other) {
+        if (other == this) {
+            return 0;
+        }
+        if (!(other instanceof DebugElement)) {
+            return ExtraLine.super.compareExtraLine(other);
+        }
+        DebugElement element = (DebugElement) other;
+        return CompareUtil.compare(getIndex(), element.getIndex());
     }
 
     public Iterator<IdItem> usedIds(){

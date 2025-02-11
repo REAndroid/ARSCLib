@@ -25,12 +25,12 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class DebugStartLocal extends DebugRegisterNumber {
 
@@ -142,22 +142,16 @@ public class DebugStartLocal extends DebugRegisterNumber {
         }
         DebugStartLocal debug = (DebugStartLocal) obj;
         return getFlag() == debug.getFlag() &&
-                Objects.equals(getName(), debug.getName()) &&
-                Objects.equals(getType(), debug.getType());
+                getRegisterNumber() == debug.getRegisterNumber() &&
+                ObjectsUtil.equals(getName(), debug.getName()) &&
+                ObjectsUtil.equals(getType(), debug.getType());
     }
     @Override
     public int hashCode() {
-        int hash = getFlag();
-        hash = hash * 31;
-        String text = getName();
-        if(text != null){
-            hash = hash + text.hashCode();
-        }
-        hash = hash * 31;
-        text = getType();
-        if(text != null){
-            hash = hash + text.hashCode();
-        }
+        int hash = 1;
+        hash = hash * 31 + getRegisterNumber();
+        hash = hash + getRegisterNumber() * 31;
+        hash = hash * 31 + ObjectsUtil.hash(getName(), getType());
         return hash;
     }
     @Override
