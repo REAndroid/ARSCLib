@@ -24,6 +24,7 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLUtil;
@@ -34,13 +35,11 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 
-import static com.reandroid.arsc.chunk.xml.ResXmlAttribute.*;
-
 public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         implements JSONConvert<JSONArray> {
 
-    public ResXmlAttributeArray(IntegerReference countReference) {
-        super(CREATOR, countReference);
+    public ResXmlAttributeArray(IntegerReference unitSize, IntegerReference countReference) {
+        super(new AttributesCreator(unitSize), countReference);
     }
 
     public boolean isEmpty() {
@@ -48,144 +47,60 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     }
     @Override
     public boolean sort(Comparator<? super ResXmlAttribute> comparator) {
-        if (isEmpty()) {
-            return false;
+        if (super.sort(comparator)) {
+            getStartElement().refreshAttributePositions();
+            return true;
         }
-        ResXmlStartElement startElement = getStartElement();
-
-        IntegerReference idPosition = startElement.getIdAttributePosition();
-        IntegerReference classPosition = startElement.getClassAttributePosition();
-        IntegerReference stylePosition = startElement.getStyleAttributePosition();
-
-        ResXmlAttribute idAttribute = get(idPosition.get() - 1);
-        ResXmlAttribute classAttribute = get(classPosition.get() - 1);
-        ResXmlAttribute styleAttribute = get(stylePosition.get() - 1);
-
-        fixClassAttribute(classAttribute);
-        fixStyleAttribute(styleAttribute);
-
-        boolean sorted = super.sort(comparator);
-
-        idPosition.set(idAttribute == null ? 0 : idAttribute.getIndex() + 1);
-        classPosition.set(classAttribute == null ? 0 : classAttribute.getIndex() + 1);
-        stylePosition.set(styleAttribute == null ? 0 : styleAttribute.getIndex() + 1);
-
-        return sorted;
-    }
-
-    private void fixClassAttribute(ResXmlAttribute classAttribute) {
-        if (classAttribute != null) {
-            if(!ATTRIBUTE_NAME_CLASS.equals(classAttribute.getName())){
-                classAttribute.setName(ATTRIBUTE_NAME_CLASS, 0);
-            }
-        }
-    }
-    private void fixStyleAttribute(ResXmlAttribute styleAttribute) {
-        if (styleAttribute != null) {
-            if(!ATTRIBUTE_NAME_STYLE.equals(styleAttribute.getName())){
-                styleAttribute.setName(ATTRIBUTE_NAME_STYLE, 0);
-            }
-        }
+        return false;
     }
 
     private void computePositionalAttributes() {
-
-        ResXmlAttribute idAttribute = searchAttributeByResourceId(ATTRIBUTE_RESOURCE_ID_id);
-        ResXmlAttribute classAttribute = searchAttributeByName(ATTRIBUTE_NAME_CLASS);
-        ResXmlAttribute styleAttribute = searchAttributeByName(ATTRIBUTE_NAME_STYLE);
-
         ResXmlStartElement startElement = getStartElement();
 
-        IntegerReference idPosition = startElement.getIdAttributePosition();
-        IntegerReference classPosition = startElement.getClassAttributePosition();
-        IntegerReference stylePosition = startElement.getStyleAttributePosition();
-
-        idPosition.set(idAttribute == null ? 0 : idAttribute.getIndex() + 1);
-        classPosition.set(classAttribute == null ? 0 : classAttribute.getIndex() + 1);
-        stylePosition.set(styleAttribute == null ? 0 : styleAttribute.getIndex() + 1);
+        startElement.getIdAttributePosition().computePosition();
+        startElement.getClassAttributePosition().computePosition();
+        startElement.getStyleAttributePosition().computePosition();
     }
-
-    private void detachPositionalAttribute(ResXmlAttribute attribute) {
+    private ResXmlAttributePosition getPosition(int positionType) {
+        if (positionType != -1) {
+            ResXmlStartElement startElement = getStartElement();
+            if (positionType == ResXmlAttributePosition.TYPE_ID) {
+                return startElement.getIdAttributePosition();
+            }
+            if (positionType == ResXmlAttributePosition.TYPE_CLASS) {
+                return startElement.getClassAttributePosition();
+            }
+            if (positionType == ResXmlAttributePosition.TYPE_STYLE) {
+                return startElement.getStyleAttributePosition();
+            }
+        }
+        return ObjectsUtil.getNull();
+    }
+    private ResXmlAttributePosition getPosition(ResXmlAttribute attribute) {
         ResXmlStartElement startElement = getStartElement();
-
-        int index = attribute.getIndex();
-
-        IntegerReference idPosition = startElement.getIdAttributePosition();
-        IntegerReference classPosition = startElement.getClassAttributePosition();
-        IntegerReference stylePosition = startElement.getStyleAttributePosition();
-
-        if (index == idPosition.get() - 1) {
-            idPosition.set(0);
-        } else if (index == classPosition.get() - 1) {
-            classPosition.set(0);
-        } else if (index == stylePosition.get() - 1) {
-            stylePosition.set(0);
+        ResXmlAttributePosition position = startElement.getIdAttributePosition();
+        if (position.getAttribute() == attribute) {
+            return position;
+        }
+        position = startElement.getClassAttributePosition();
+        if (position.getAttribute() == attribute) {
+            return position;
+        }
+        position = startElement.getStyleAttributePosition();
+        if (position.getAttribute() == attribute) {
+            return position;
+        }
+        return null;
+    }
+    private void linkPositionalAttribute(ResXmlAttribute attribute) {
+        ResXmlAttributePosition position = getPosition(ResXmlAttributePosition.getPositionType(attribute));
+        if (position != null) {
+            position.setAttribute(attribute);
         }
     }
 
-    private void mergePositionalAttribute(ResXmlAttributeArray comingArray, ResXmlAttribute comingAttribute, ResXmlAttribute attribute) {
-        ResXmlStartElement comingElement = comingArray.getStartElement();
-
-        int comingIndex = comingAttribute.getIndex();
-
-        IntegerReference idPosition = comingElement.getIdAttributePosition();
-        IntegerReference classPosition = comingElement.getClassAttributePosition();
-        IntegerReference stylePosition = comingElement.getStyleAttributePosition();
-
-        ResXmlStartElement thisElement = getStartElement();
-
-        if (comingIndex == idPosition.get() - 1) {
-            thisElement.getIdAttributePosition().set(attribute.getIndex() + 1);
-        } else if (comingIndex == classPosition.get() - 1) {
-            thisElement.getClassAttributePosition().set(attribute.getIndex() + 1);
-        } else if (comingIndex == stylePosition.get() - 1) {
-            thisElement.getStyleAttributePosition().set(attribute.getIndex() + 1);
-        }
-    }
-
-    public boolean removeUndefinedAttributes() {
-        return removeIf(ResXmlAttribute::isUndefined);
-    }
-
-    void computePositionsAndSort() {
-        computePositionalAttributes();
-        sort();
-    }
     public void sort() {
         sort(CompareUtil.getComparableComparator());
-    }
-    private int getOffset() {
-        ResXmlStartElement element = getStartElement();
-        return element.getHeaderBlock().getHeaderSize()
-                + element.getAttributeStart().get();
-    }
-    private void setOffset(int value) {
-        ResXmlStartElement element = getStartElement();
-        value = value - element.getHeaderBlock().countBytes();
-        element.getAttributeStart().set(value);
-    }
-    private int getUnitSize() {
-        IntegerReference reference = getStartElement().getAttributeUnitSize();
-        int unit = reference.get();
-        if (unit == 0) {
-            unit = 20;
-            reference.set(unit);
-            updateUnitSize();
-        }
-        return unit;
-    }
-    public void setUnitSize(int value) {
-        if (value != getUnitSize()) {
-            getStartElement().getAttributeUnitSize().set(value);
-            updateUnitSize();
-        }
-    }
-    private void updateUnitSize() {
-        int unit = getUnitSize();
-        int size = size();
-        for (int i = 0; i < size; i++) {
-            get(i).setAttributesUnitSize(unit);
-        }
     }
     private ResXmlStartElement getStartElement() {
         return getParentInstance(ResXmlStartElement.class);
@@ -197,36 +112,36 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     @Override
     public ResXmlAttribute createNext() {
         ResXmlAttribute attribute =  super.createNext();
-        attribute.setAttributesUnitSize(getUnitSize());
+        updateCountReference();
         return attribute;
     }
 
     @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
-        refreshOffset();
-    }
-    private void refreshOffset() {
-        ResXmlStartElement element = getStartElement();
-        setOffset(element.countUpTo(this));
+    public void setSize(int size) {
+        if (size != size()) {
+            getCountReference().set(size);
+            super.setSize(size);
+        }
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        reader.seek(getOffset());
         int size = getCountReference().get();
         setSize(size);
-        int unitSize = getUnitSize();
-        for (int i = 0; i < size; i++) {
-            ResXmlAttribute attribute = get(i);
-            attribute.setAttributesUnitSize(unitSize);
-            int position = reader.getPosition();
-            attribute.readBytes(reader);
-            reader.seek(position + unitSize);
+        if (size != 0) {
+            int unitSize = getStartElement().getAttributeUnitSize().get();
+            for (int i = 0; i < size; i++) {
+                ResXmlAttribute attribute = get(i);
+                attribute.setAttributesUnitSize(unitSize);
+                int position = reader.getPosition();
+                attribute.readBytes(reader);
+                reader.seek(position + unitSize);
+            }
         }
     }
     public void clear() {
         clearChildes();
+        updateCountReference();
     }
 
     public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId){
@@ -242,6 +157,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             attribute = createNext();
             attribute.setName(name, resourceId);
             attribute.setNamespace(uri, prefix);
+            linkPositionalAttribute(attribute);
         }
         return attribute;
     }
@@ -250,6 +166,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         if (attribute == null) {
             attribute = createNext();
             attribute.setName(name, resourceId);
+            linkPositionalAttribute(attribute);
         }
         return attribute;
     }
@@ -303,7 +220,10 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     @Override
     public void onPreRemove(ResXmlAttribute attribute) {
         super.onPreRemove(attribute);
-        detachPositionalAttribute(attribute);
+        ResXmlAttributePosition position = getPosition(attribute);
+        if (position != null) {
+            position.setAttribute(null);
+        }
         attribute.onRemoved();
     }
 
@@ -313,9 +233,8 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             ResXmlAttribute coming = iterator.next();
             ResXmlAttribute attribute = createNext();
             attribute.merge(coming);
-            mergePositionalAttribute(attributeArray, coming, attribute);
+            mergePositionalAttribute(attribute, attributeArray, coming);
         }
-        computePositionsAndSort();
     }
     public void mergeWithName(ResourceMergeOption option, ResXmlAttributeArray attributeArray) {
         Iterator<ResXmlAttribute> iterator = attributeArray.iterator();
@@ -323,9 +242,14 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             ResXmlAttribute coming = iterator.next();
             ResXmlAttribute attribute = createNext();
             attribute.mergeWithName(option, coming);
-            mergePositionalAttribute(attributeArray, coming, attribute);
+            mergePositionalAttribute(attribute, attributeArray, coming);
         }
-        computePositionsAndSort();
+    }
+    private void mergePositionalAttribute(ResXmlAttribute attribute, ResXmlAttributeArray sourceArray, ResXmlAttribute source) {
+        ResXmlAttributePosition sourcePosition = sourceArray.getPosition(source);
+        if (sourcePosition != null) {
+            this.getPosition(sourcePosition.type()).setAttribute(attribute);
+        }
     }
 
     @Override
@@ -334,19 +258,22 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     }
     @Override
     public void fromJson(JSONArray json) {
-        clear();
-        if (json == null) {
-            return;
+        if (json != null) {
+            int start = size();
+            int length = json.length();
+            setSize(start + length);
+            for (int i = 0; i < length; i++) {
+                get(start + i).fromJson(json.getJSONObject(i));
+            }
+            computePositionalAttributes();
+            sort();
         }
-        int length = json.length();
-        setSize(length);
-        for (int i = 0; i < length; i++) {
-            get(i).fromJson(json.getJSONObject(i));
-        }
-        computePositionsAndSort();
     }
 
     public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
+        if (decode) {
+            getStartElement().fixClassStyleAttributeNames();
+        }
         int size = size();
         for (int i = 0; i < size; i++) {
             get(i).serialize(serializer, decode);
@@ -381,17 +308,28 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             createNext().encode(false, uri, prefix, name, value);
         }
         if (count != 0) {
-            computePositionsAndSort();
+            computePositionalAttributes();
+            sort();
         }
     }
     public void toXml(XMLElement element, boolean decode) {
+        if (decode) {
+            getStartElement().fixClassStyleAttributeNames();
+        }
         int size = size();
         for (int i = 0; i < size; i++) {
             element.addAttribute(get(i).toXml(decode));
         }
     }
 
-    private static final Creator<ResXmlAttribute> CREATOR = new Creator<ResXmlAttribute>() {
+    static class AttributesCreator implements Creator<ResXmlAttribute> {
+
+        private final IntegerReference unitSize;
+
+        public AttributesCreator(IntegerReference unitSize) {
+            this.unitSize = unitSize;
+        }
+
         @Override
         public ResXmlAttribute[] newArrayInstance(int length) {
             if (length == 0) {
@@ -402,9 +340,11 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
 
         @Override
         public ResXmlAttribute newInstance() {
-            return new ResXmlAttribute();
+            ResXmlAttribute attribute = new ResXmlAttribute();
+            attribute.setAttributesUnitSize(unitSize.get());
+            return attribute;
         }
-    };
 
-    private static final ResXmlAttribute[] EMPTY = new ResXmlAttribute[0];
+        private static final ResXmlAttribute[] EMPTY = new ResXmlAttribute[0];
+    }
 }

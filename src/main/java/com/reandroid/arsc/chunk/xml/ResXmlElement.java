@@ -182,7 +182,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
 
     @Override
     public void setAttributesUnitSize(int size, boolean recursive) {
-        getAttributeArray().setUnitSize(size);
+        getStartElement().getAttributeUnitSize().set(size);
         if (recursive) {
             super.setAttributesUnitSize(size, true);
         }
@@ -320,11 +320,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     }
 
     public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId){
-        return getOrCreateAttribute(
-                ResourceLibrary.URI_ANDROID,
-                ResourceLibrary.PREFIX_ANDROID,
-                name,
-                resourceId);
+        return getAttributeArray().getOrCreateAndroidAttribute(name, resourceId);
     }
     public ResXmlAttribute getOrCreateAttribute(String uri, String prefix, String name, int resourceId) {
         return getAttributeArray().getOrCreateAttribute(uri, prefix, name, resourceId);
@@ -349,18 +345,15 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     }
 
     public ResXmlAttribute getIdAttribute() {
-        return getStartElement().getIdAttribute();
+        return getStartElement().getIdAttributePosition().getAttribute();
     }
     public ResXmlAttribute getClassAttribute() {
-        return getStartElement().getClassAttribute();
+        return getStartElement().getClassAttributePosition().getAttribute();
     }
     public ResXmlAttribute getStyleAttribute() {
-        return getStartElement().getStyleAttribute();
+        return getStartElement().getStyleAttributePosition().getAttribute();
     }
 
-    public void computePositionalAttributes() {
-        getAttributeArray().computePositionsAndSort();
-    }
     private ResXmlAttributeArray getAttributeArray() {
         return getStartElement().getResXmlAttributeArray();
     }

@@ -30,15 +30,17 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
     }
     @Override
     public void setUri(String uri) {
+        int reference;
         if (uri == null) {
-            setUriReference(-1);
-            return;
+            reference = NULL_REFERENCE;
+        } else {
+            ResXmlString xmlString = getOrCreateString(uri);
+            if (xmlString == null){
+                throw new IllegalArgumentException("Null ResXmlString, add to parent element first");
+            }
+            reference = xmlString.getIndex();
         }
-        ResXmlString xmlString = getOrCreateString(uri);
-        if(xmlString == null){
-            throw new IllegalArgumentException("Null ResXmlString, add to parent element first");
-        }
-        setUriReference(xmlString.getIndex());
+        setUriReference(reference);
     }
     @Override
     public String getPrefix(){
@@ -46,43 +48,44 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
     }
     @Override
     public void setPrefix(String prefix) {
-        if(prefix == null) {
-            setPrefixReference(-1);
-            return;
+        int reference;
+        if (prefix == null) {
+            reference = NULL_REFERENCE;
+        } else {
+            ResXmlString xmlString = null;
+            ResXmlString uriString = getResXmlString(getUriReference());
+            if (uriString != null) {
+                xmlString = uriString.getNamespacePrefix();
+            }
+            if (xmlString == null) {
+                xmlString = getOrCreateString(prefix);
+            }
+            if (xmlString == null) {
+                throw new IllegalArgumentException("Null ResXmlString, add to parent element first");
+            }
+            reference = xmlString.getIndex();
         }
-        ResXmlString xmlString = null;
-        ResXmlString uriString = getResXmlString(getUriReference());
-        if (uriString != null) {
-            xmlString = uriString.getNamespacePrefix();
-        }
-        if (xmlString == null) {
-            xmlString = getOrCreateString(prefix);
-        }
-        if(xmlString == null) {
-            throw new IllegalArgumentException("Null ResXmlString, add to parent element first");
-        }
-        setPrefixReference(xmlString.getIndex());
+        setPrefixReference(reference);
     }
     @Override
     public int getUriReference(){
         return getStringReference();
     }
-    void setUriReference(int ref) {
-        int old = getUriReference();
-        setStringReference(ref);
-        if (old != ref) {
-            onUriReferenceChanged(old, ref);
+    void setUriReference(int uriReference) {
+        int oldReference = getUriReference();
+        setStringReference(uriReference);
+        if (oldReference != uriReference) {
+            onUriReferenceChanged(uriReference);
         }
     }
-    void onUriReferenceChanged(int old, int uriReference){
-
+    void onUriReferenceChanged(int uriReference){
     }
 
     public int getPrefixReference() {
         return getNamespaceReference();
     }
-    public void setPrefixReference(int ref) {
-        setNamespaceReference(ref);
+    public void setPrefixReference(int prefixReference) {
+        setNamespaceReference(prefixReference);
     }
     @Override
     public void setLineNumber(int lineNumber) {

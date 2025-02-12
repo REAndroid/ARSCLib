@@ -18,6 +18,7 @@ package com.reandroid.arsc.chunk.xml;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.Chunk;
+import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.XmlNodeHeader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
@@ -29,14 +30,17 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mStringReference;
 
-    BaseXmlChunk(ChunkType chunkType, int initialChildesCount) {
-        super(new XmlNodeHeader(chunkType), initialChildesCount + 2);
+    BaseXmlChunk(ChunkType chunkType, SingleBlockContainer<Block> firstPlaceHolder, int initialChildesCount) {
+        super(new XmlNodeHeader(chunkType), firstPlaceHolder, initialChildesCount + 2);
 
         this.mNamespaceReference = new IntegerItem(NULL_REFERENCE);
         this.mStringReference = new IntegerItem(NULL_REFERENCE);
 
         addChild(mNamespaceReference);
         addChild(mStringReference);
+    }
+    BaseXmlChunk(ChunkType chunkType, int initialChildesCount) {
+        this(chunkType, new SingleBlockContainer<>(), initialChildesCount);
     }
 
     void onPreRemove() {

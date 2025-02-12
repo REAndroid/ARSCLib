@@ -94,6 +94,7 @@ public class ApkModuleTest {
         DexFile dexFile = SampleDexFileCreator.createApplicationClass(appClass, mainActivity, mainActivityLayoutId);
         byte[] bytes = dexFile.getBytes();
         apkModule.add(new ByteInputSource(bytes, "classes.dex"));
+        apkModule.getUncompressedFiles().addPath(apkModule.getZipEntryMap());
 
         File generated_apk = new File(TestUtils.getTesApkDirectory(), "generated.apk");
         generated_apk.delete();
@@ -126,9 +127,18 @@ public class ApkModuleTest {
         attribute = textView.getOrCreateAndroidAttribute("layout_height", 0x010100f5);
         attribute.setTypeAndData(ValueType.DEC, -2); // wrap_content
 
-        attribute = textView.getOrCreateAndroidAttribute("text", 0x0101014f);
         TableBlock tableBlock = apkModule.getTableBlock();
         PackageBlock packageBlock = tableBlock.pickOne();
+
+        Entry idEntry = packageBlock.getOrCreate("", "id", "tv1");
+        idEntry.setValueAsBoolean(false);
+        idEntry.getHeader().setPublic(true);
+        idEntry.getHeader().setWeak(true);
+
+        attribute = textView.getOrCreateAndroidAttribute("id", 0x010100d0);
+        attribute.setTypeAndData(ValueType.REFERENCE, idEntry.getResourceId());
+
+        attribute = textView.getOrCreateAndroidAttribute("text", 0x0101014f);
 
         Entry helloEntry = packageBlock.getOrCreate(ResConfig.getDefault(), "string", "hello_world");
 
@@ -452,13 +462,13 @@ public class ApkModuleTest {
 
         manifestBlock.setCompileSdkVersion(frameworkApk.getVersionCode());
         manifestBlock.setCompileSdkVersionCodename(frameworkApk.getVersionName());
-        manifestBlock.setCompileSdk(AndroidApiLevel.J);
+        manifestBlock.setCompileSdk(AndroidApiLevel.O);
 
         manifestBlock.setPlatformBuildVersionCode(frameworkApk.getVersionCode());
         manifestBlock.setPlatformBuildVersionName(frameworkApk.getVersionName());
-        manifestBlock.setPlatformBuild(AndroidApiLevel.J);
-        manifestBlock.setMinSdkVersion(AndroidApiLevel.J.getApi());
-        manifestBlock.setTargetSdkVersion(AndroidApiLevel.J.getApi());
+        manifestBlock.setPlatformBuild(AndroidApiLevel.O);
+        manifestBlock.setMinSdkVersion(AndroidApiLevel.O.getApi());
+        manifestBlock.setTargetSdkVersion(AndroidApiLevel.O.getApi());
 
         manifestBlock.addUsesPermission("android.permission.INTERNET");
         manifestBlock.addUsesPermission("android.permission.READ_EXTERNAL_STORAGE");

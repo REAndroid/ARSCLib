@@ -240,7 +240,7 @@ public class ResXmlStartNamespaceList extends ResXmlChunkList<ResXmlStartNamespa
         }
         ResXmlStartNamespace startNamespace = createNext();
         if (uri != null || prefix != null) {
-            startNamespace.setNamespace(uri, prefix);
+            startNamespace.set(uri, prefix);
         }
         return startNamespace;
     }

@@ -27,20 +27,27 @@ import java.io.IOException;
 public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContainer {
 
     private final T mHeaderBlock;
-    protected final SingleBlockContainer<Block> firstPlaceHolder;
+    private final SingleBlockContainer<Block> firstPlaceHolder;
     private AlignItem alignItem;
 
-    protected Chunk(T headerBlock, int initialChildesCount) {
-        super(initialChildesCount + 3);
+    protected Chunk(T headerBlock, SingleBlockContainer<Block> firstPlaceHolder, int initialChildesCount) {
+        super(initialChildesCount + (firstPlaceHolder == null ? 2 : 3));
+
         this.mHeaderBlock = headerBlock;
-        this.firstPlaceHolder = new SingleBlockContainer<>();
+        this.firstPlaceHolder = firstPlaceHolder;
+
         addChild(headerBlock);
-        addChild(firstPlaceHolder);
+        if (firstPlaceHolder != null) {
+            addChild(firstPlaceHolder);
+        }
+    }
+    protected Chunk(T headerBlock, int initialChildesCount) {
+        this(headerBlock, new SingleBlockContainer<>(), initialChildesCount);
     }
 
     public AlignItem getAlignItem() {
         AlignItem alignItem = this.alignItem;
-        if(alignItem == null) {
+        if (alignItem == null) {
             alignItem = new AlignItem();
             addChild(alignItem);
             this.alignItem = alignItem;
@@ -51,10 +58,10 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
     public SingleBlockContainer<Block> getFirstPlaceHolder() {
         return firstPlaceHolder;
     }
-    void setHeaderLoaded(HeaderBlock.HeaderLoaded headerLoaded){
+    void setHeaderLoaded(HeaderBlock.HeaderLoaded headerLoaded) {
         getHeaderBlock().setHeaderLoaded(headerLoaded);
     }
-    public final T getHeaderBlock(){
+    public final T getHeaderBlock() {
         return mHeaderBlock;
     }
     @Override
@@ -70,12 +77,12 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
         alignItem.align(this);
     }
     protected abstract void onChunkRefreshed();
-    public void onChunkLoaded(){
+    public void onChunkLoaded() {
 
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock=reader.readHeaderBlock();
+        HeaderBlock headerBlock = reader.readHeaderBlock();
         checkInvalidChunk(headerBlock);
         BlockReader chunkReader = reader.create(headerBlock.getChunkSize());
         onReadChildes(chunkReader);
@@ -91,16 +98,12 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
     }
     void checkInvalidChunk(HeaderBlock headerBlock) throws IOException {
         ChunkType chunkType = headerBlock.getChunkType();
-        if(chunkType==null || chunkType==ChunkType.NULL){
-            throw new IOException("Invalid chunk: "+headerBlock);
+        if (chunkType == null || chunkType == ChunkType.NULL) {
+            throw new IOException("Invalid chunk: " + headerBlock);
         }
     }
     @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
-        builder.append(getClass().getSimpleName());
-        builder.append(": ");
-        builder.append(getHeaderBlock());
-        return builder.toString();
+    public String toString() {
+        return getClass().getSimpleName() +  ": " + getHeaderBlock();
     }
 }
