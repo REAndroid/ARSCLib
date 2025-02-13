@@ -229,12 +229,6 @@ public class ShortIdList<T extends IdItem> extends DataItem
             this.usageType = usageType;
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        public ShortIdReference<T>[] newArrayInstance(int length) {
-            return new ShortIdReference[length];
-        }
-
         @Override
         public ShortIdReference<T> newInstance() {
             return new ShortIdReference<>(sectionType, usageType);

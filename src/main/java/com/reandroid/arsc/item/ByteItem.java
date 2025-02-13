@@ -64,14 +64,5 @@ public class ByteItem extends BlockItem implements IntegerReference, DirectStrea
         return String.valueOf(getByte());
     }
 
-    public static final Creator<ByteItem> CREATOR = new Creator<ByteItem>() {
-        @Override
-        public ByteItem[] newArrayInstance(int length) {
-            return new ByteItem[length];
-        }
-        @Override
-        public ByteItem newInstance() {
-            return new ByteItem();
-        }
-    };
+    public static final Creator<ByteItem> CREATOR = ByteItem::new;
 }

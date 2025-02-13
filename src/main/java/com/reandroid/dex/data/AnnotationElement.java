@@ -222,18 +222,5 @@ public class AnnotationElement extends DataItem implements KeyReference,
         return getName() + " = " + getValueBlock();
     }
 
-    public static final Creator<AnnotationElement> CREATOR = new Creator<AnnotationElement>() {
-        @Override
-        public AnnotationElement[] newArrayInstance(int length) {
-            if(length == 0){
-                return EMPTY;
-            }
-            return new AnnotationElement[length];
-        }
-        @Override
-        public AnnotationElement newInstance() {
-            return new AnnotationElement();
-        }
-    };
-    private static final AnnotationElement[] EMPTY = new AnnotationElement[0];
+    public static final Creator<AnnotationElement> CREATOR = AnnotationElement::new;
 }

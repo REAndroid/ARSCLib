@@ -166,10 +166,6 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     public Entry newInstance() {
         return new Entry();
     }
-    @Override
-    public Entry[] newArrayInstance(int len) {
-        return new Entry[len];
-    }
 
     @Override
     public JSONArray toJson() {

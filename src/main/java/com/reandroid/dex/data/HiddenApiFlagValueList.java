@@ -155,10 +155,6 @@ class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
         }
 
         @Override
-        public HiddenApiFlagValue[] newArrayInstance(int length) {
-            return new HiddenApiFlagValue[length];
-        }
-        @Override
         public HiddenApiFlagValue newInstance() {
             throw new RuntimeException("Call newInstanceAt()");
         }
@@ -168,14 +164,5 @@ class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
         }
     }
 
-    private static final Creator<HiddenApiFlagValue> CREATOR = new Creator<HiddenApiFlagValue>() {
-        @Override
-        public HiddenApiFlagValue[] newArrayInstance(int length) {
-            return new HiddenApiFlagValue[length];
-        }
-        @Override
-        public HiddenApiFlagValue newInstance() {
-            return new HiddenApiFlagValue();
-        }
-    };
+    private static final Creator<HiddenApiFlagValue> CREATOR = HiddenApiFlagValue::new;
 }

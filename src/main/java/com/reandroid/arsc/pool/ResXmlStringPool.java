@@ -15,28 +15,23 @@
  */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.OffsetArray;
-import com.reandroid.arsc.array.ResXmlStringArray;
+import com.reandroid.arsc.array.ResXmlIDArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
-import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlID;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.utils.NumbersUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.xml.StyleDocument;
 
+import java.util.Comparator;
 
 public class ResXmlStringPool extends StringPool<ResXmlString> {
 
     public ResXmlStringPool(boolean is_utf8) {
-        super(is_utf8, false);
-    }
-
-    @Override
-    StringArray<ResXmlString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
-        return new ResXmlStringArray(offsets, itemCount, itemStart, is_utf8);
+        super(is_utf8, false, ResXmlString::new);
     }
 
     @Override
@@ -99,12 +94,28 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         }
         return xmlString;
     }
+
+    @Override
+    public void onPreAddInternal(int index, ResXmlString item) {
+        ResXmlIDArray xmlIDMap = getResXmlIDMap().getResXmlIDArray();
+        if(index < xmlIDMap.size() - 1) {
+            xmlIDMap.add(index, new ResXmlID());
+        }
+        super.onPreAddInternal(index, item);
+    }
+
+    @Override
+    public void onSortedInternal(Comparator<? super ResXmlString> comparator) {
+        super.onSortedInternal(comparator);
+        getResXmlIDMap().getResXmlIDArray().sort();
+    }
+
     private ResXmlIDMap getResXmlIDMap(){
         ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
         if(resXmlDocument != null){
             return resXmlDocument.getResXmlIDMap();
         }
-        return null;
+        return ObjectsUtil.getNull();
     }
 
     public void linkResXmlIDMapInternal() {
@@ -130,6 +141,13 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             notifyResXmlStringPoolHasStyles(styleArray.size());
         }
     }
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        getStringsArray().sort();
+    }
+
     private static void notifyResXmlStringPoolHasStyles(int styleArrayCount){
         if(HAS_STYLE_NOTIFIED){
             return;

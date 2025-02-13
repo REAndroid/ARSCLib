@@ -81,25 +81,7 @@ public class IntegerItem extends BlockItem implements ReferenceItem, DirectStrea
         return String.valueOf(get());
     }
 
-    public static final Creator<IntegerItem> CREATOR = new Creator<IntegerItem>() {
-        @Override
-        public IntegerItem[] newArrayInstance(int length) {
-            return new IntegerItem[length];
-        }
-        @Override
-        public IntegerItem newInstance() {
-            return new IntegerItem(false);
-        }
-    };
+    public static final Creator<IntegerItem> CREATOR = () -> new IntegerItem(false);
 
-    public static final Creator<IntegerItem> CREATOR_BIG_ENDIAN = new Creator<IntegerItem>() {
-        @Override
-        public IntegerItem[] newArrayInstance(int length) {
-            return new IntegerItem[length];
-        }
-        @Override
-        public IntegerItem newInstance() {
-            return new IntegerItem(true);
-        }
-    };
+    public static final Creator<IntegerItem> CREATOR_BIG_ENDIAN = () -> new IntegerItem(true);
 }

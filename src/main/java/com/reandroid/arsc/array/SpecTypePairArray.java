@@ -210,10 +210,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     public SpecTypePair newInstance() {
         return new SpecTypePair();
     }
-    @Override
-    public SpecTypePair[] newArrayInstance(int len) {
-        return new SpecTypePair[len];
-    }
+
     @Override
     protected void onRefreshed() {
 

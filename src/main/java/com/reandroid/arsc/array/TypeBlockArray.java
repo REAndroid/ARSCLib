@@ -317,10 +317,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         typeBlock.setTypeId(id);
         return typeBlock;
     }
-    @Override
-    public TypeBlock[] newArrayInstance(int len) {
-        return new TypeBlock[len];
-    }
+
     public TypeBlock createNext(boolean sparse, boolean offset16){
         byte id = getTypeId();
         TypeBlock typeBlock = new TypeBlock(sparse, offset16);

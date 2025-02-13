@@ -46,28 +46,9 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
         super(3, Opcode.SPARSE_SWITCH_PAYLOAD);
         this.elementCount = new ShortItem();
 
-        Creator<IntegerItem> creator = new Creator<IntegerItem>() {
-            @Override
-            public IntegerItem[] newArrayInstance(int length) {
-                return new IntegerItem[length];
-            }
-            @Override
-            public IntegerItem newInstance() {
-                return new IntegerItem();
-            }
-        };
-        Creator<EntryKey> entryKeyCreator = new Creator<EntryKey>() {
-            @Override
-            public EntryKey[] newArrayInstance(int length) {
-                return new EntryKey[length];
-            }
-            @Override
-            public EntryKey newInstance() {
-                return new EntryKey();
-            }
-        };
+        Creator<EntryKey> entryKeyCreator = EntryKey::new;
 
-        this.elements = new CountedBlockList<>(creator, elementCount);
+        this.elements = new CountedBlockList<>(IntegerItem.CREATOR, elementCount);
         this.keys = new CountedBlockList<>(entryKeyCreator, elementCount);
 
         addChild(1, elementCount);

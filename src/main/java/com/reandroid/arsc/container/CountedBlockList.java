@@ -64,12 +64,4 @@ public class CountedBlockList<T extends Block> extends BlockList<T> implements D
         }
         return result;
     }
-
-    @Override
-    public T[] toArray() {
-        return super.toArray(getCreator().newArrayInstance(size()));
-    }
-    public T[] toArrayIf(Predicate<? super T> predicate) {
-        return toArrayIf(predicate, getCreator());
-    }
 }

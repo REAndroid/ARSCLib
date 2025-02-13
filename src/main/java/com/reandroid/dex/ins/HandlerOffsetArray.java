@@ -118,14 +118,5 @@ public class HandlerOffsetArray extends CountedBlockList<HandlerOffset> {
         return builder.toString();
     }
 
-    private static final Creator<HandlerOffset> CREATOR = new Creator<HandlerOffset>() {
-        @Override
-        public HandlerOffset[] newArrayInstance(int length) {
-            return new HandlerOffset[length];
-        }
-        @Override
-        public HandlerOffset newInstance() {
-            return new HandlerOffset();
-        }
-    };
+    private static final Creator<HandlerOffset> CREATOR = HandlerOffset::new;
 }

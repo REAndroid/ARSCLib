@@ -338,10 +338,6 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         }
 
         @Override
-        public ArrayDataEntry[] newArrayInstance(int length) {
-            return new ArrayDataEntry[length];
-        }
-        @Override
         public ArrayDataEntry newInstance() {
             return new ArrayDataEntry(this.width.get());
         }

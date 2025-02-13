@@ -18,6 +18,7 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.AlignItem;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.arsc.pool.StringPool;
@@ -32,7 +33,7 @@ import java.util.Iterator;
 public class StyleArray extends OffsetBlockArray<StyleItem> implements
         Iterable<StyleItem>, JSONConvert<JSONArray> {
 
-    public StyleArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart) {
+    public StyleArray(OffsetArray offsets, IntegerReference itemCount, IntegerReference itemStart) {
         super(offsets, itemCount, itemStart);
     }
 
@@ -76,10 +77,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements
     public StyleItem newInstance() {
         return new StyleItem();
     }
-    @Override
-    public StyleItem[] newArrayInstance(int length) {
-        return new StyleItem[length];
-    }
+
     public boolean sort() {
         return sort(CompareUtil.getComparableComparator());
     }

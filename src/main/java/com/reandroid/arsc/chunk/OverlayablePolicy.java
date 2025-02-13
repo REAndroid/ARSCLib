@@ -172,16 +172,7 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
                 +"', count="+ getReferenceCount();
     }
 
-    private static final Creator<PolicyItem> CREATOR = new Creator<PolicyItem>() {
-        @Override
-        public PolicyItem[] newArrayInstance(int length) {
-            return new PolicyItem[length];
-        }
-        @Override
-        public PolicyItem newInstance() {
-            return new PolicyItem();
-        }
-    };
+    private static final Creator<PolicyItem> CREATOR = PolicyItem::new;
 
     public static final String NAME_flags = "flags";
     public static final String NAME_references = "references";

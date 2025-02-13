@@ -152,10 +152,7 @@ class HiddenApiIndexList extends BlockList<HiddenApiIndex> implements
         HiddenApiIndexCreator(HiddenApiIndexList hiddenApiIndexList){
             this.hiddenApiIndexList = hiddenApiIndexList;
         }
-        @Override
-        public HiddenApiIndex[] newArrayInstance(int length) {
-            return new HiddenApiIndex[length];
-        }
+
         @Override
         public HiddenApiIndex newInstance() {
             throw new RuntimeException("Must call newInstanceAt(index)");

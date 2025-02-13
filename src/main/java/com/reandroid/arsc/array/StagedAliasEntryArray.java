@@ -55,10 +55,7 @@ public class StagedAliasEntryArray extends BlockArray<StagedAliasEntry>
         }
         return null;
     }
-    @Override
-    public StagedAliasEntry[] newArrayInstance(int len) {
-        return new StagedAliasEntry[len];
-    }
+
     @Override
     protected void onRefreshed() {
         updateCount();

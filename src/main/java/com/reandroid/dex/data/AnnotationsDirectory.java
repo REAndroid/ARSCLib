@@ -425,39 +425,11 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         }
 
     }
-    @SuppressWarnings("unchecked")
-    private static final Creator<DirectoryEntry<FieldDef, AnnotationSet>> CREATOR_FIELDS = new Creator<DirectoryEntry<FieldDef, AnnotationSet>>() {
-        @Override
-        public DirectoryEntry<FieldDef, AnnotationSet>[] newArrayInstance(int length) {
-            return new DirectoryEntry[length];
-        }
-        @Override
-        public DirectoryEntry<FieldDef, AnnotationSet> newInstance() {
-            return new DirectoryEntry<>(SectionType.ANNOTATION_SET);
-        }
-    };
 
-    @SuppressWarnings("unchecked")
-    private static final Creator<DirectoryEntry<MethodDef, AnnotationSet>> CREATOR_METHODS = new Creator<DirectoryEntry<MethodDef, AnnotationSet>>() {
-        @Override
-        public DirectoryEntry<MethodDef, AnnotationSet>[] newArrayInstance(int length) {
-            return new DirectoryEntry[length];
-        }
-        @Override
-        public DirectoryEntry<MethodDef, AnnotationSet> newInstance() {
-            return new DirectoryEntry<>(SectionType.ANNOTATION_SET);
-        }
-    };
-
-    @SuppressWarnings("unchecked")
-    private static final Creator<DirectoryEntry<MethodDef, AnnotationGroup>> CREATOR_PARAMS = new Creator<DirectoryEntry<MethodDef, AnnotationGroup>>() {
-        @Override
-        public DirectoryEntry<MethodDef, AnnotationGroup>[] newArrayInstance(int length) {
-            return new DirectoryEntry[length];
-        }
-        @Override
-        public DirectoryEntry<MethodDef, AnnotationGroup> newInstance() {
-            return new DirectoryEntry<>(SectionType.ANNOTATION_GROUP);
-        }
-    };
+    private static final Creator<DirectoryEntry<FieldDef, AnnotationSet>> CREATOR_FIELDS = () ->
+            new DirectoryEntry<>(SectionType.ANNOTATION_SET);
+    private static final Creator<DirectoryEntry<MethodDef, AnnotationSet>> CREATOR_METHODS = () ->
+            new DirectoryEntry<>(SectionType.ANNOTATION_SET);
+    private static final Creator<DirectoryEntry<MethodDef, AnnotationGroup>> CREATOR_PARAMS = () ->
+            new DirectoryEntry<>(SectionType.ANNOTATION_GROUP);
 }

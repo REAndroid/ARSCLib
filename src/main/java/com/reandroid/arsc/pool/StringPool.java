@@ -16,7 +16,6 @@
 package com.reandroid.arsc.pool;
 
 import com.reandroid.arsc.array.IntegerOffsetArray;
-import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.base.Block;
@@ -40,6 +39,7 @@ import com.reandroid.xml.StyleDocument;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -54,19 +54,19 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     private final MultiMap<String, T> poolMap;
     private boolean stringLinkLocked;
 
-    StringPool(boolean is_utf8, boolean stringLinkLocked){
+    StringPool(boolean is_utf8, boolean stringLinkLocked, StringCreator<T> creator) {
         super(new StringPoolHeader(), 4);
 
         IntegerOffsetArray offsetStrings = new IntegerOffsetArray();
         IntegerOffsetArray offsetStyles = new IntegerOffsetArray();
 
         StringPoolHeader header = getHeaderBlock();
+        header.setUtf8(is_utf8);
 
-        this.mArrayStrings = newInstance(
+        this.mArrayStrings = new StringArray<>(
                 offsetStrings,
-                header.getCountStrings(),
-                header.getStartStrings(),
-                is_utf8);
+                header,
+                creator);
 
         this.mArrayStyles = new StyleArray(
                 offsetStyles,
@@ -93,8 +93,8 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             return i;
         });
     }
-    StringPool(boolean is_utf8){
-        this(is_utf8, true);
+    StringPool(boolean is_utf8, StringCreator<T> creator){
+        this(is_utf8, true, creator);
     }
 
     @Override
@@ -350,7 +350,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         setUtf8(encoding != null && !StringsUtil.toLowercase(encoding).startsWith("utf-16"));
     }
 
-    abstract StringArray<T> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
     @Override
     protected void onChunkRefreshed() {
         mArrayStrings.refreshCountAndStart();
@@ -368,6 +367,12 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if(sender == header.getFlagUtf8()){
             mArrayStrings.setUtf8(header.isUtf8());
         }
+    }
+    public void onPreAddInternal(int index, T item) {
+
+    }
+    public void onSortedInternal(Comparator<? super T> comparator) {
+
     }
     @Override
     public byte[] getBytes(){

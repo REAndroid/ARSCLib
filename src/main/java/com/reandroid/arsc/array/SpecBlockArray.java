@@ -28,11 +28,6 @@ public class SpecBlockArray extends BlockArray<SpecBlock> {
     }
 
     @Override
-    public SpecBlock[] newArrayInstance(int len) {
-        return new SpecBlock[len];
-    }
-
-    @Override
     protected void onRefreshed() {
 
     }

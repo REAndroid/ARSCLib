@@ -22,10 +22,10 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.ArraySort;
+import com.reandroid.utils.collection.CollectionUtil;
 
-import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 public class MapList extends SpecialItem
         implements Iterable<MapItem>, PositionAlignedItem {
@@ -151,11 +151,11 @@ public class MapList extends SpecialItem
         return itemArray.iterator();
     }
 
+    @SuppressWarnings("all")
     MapItem[] getBodyReaderSorted() {
-        Comparator<MapItem> comparator = SectionType.getReadComparator(MapItem::getSectionType);
-        MapItem[] results = itemArray.toArrayIf(MapItem::isNormalItem);
-        ArraySort.sort(results, comparator);
-        return results;
+        List<MapItem> list = CollectionUtil.toList(itemArray.iterator(MapItem::isNormalItem));
+        list.sort(SectionType.getReadComparator(MapItem::getSectionType));
+        return list.toArray(new MapItem[list.size()]);
     }
 
     @Override
@@ -199,16 +199,7 @@ public class MapList extends SpecialItem
         return positionAlign;
     }
 
-    private static final Creator<MapItem> CREATOR = new Creator<MapItem>() {
-        @Override
-        public MapItem[] newArrayInstance(int length) {
-            return new MapItem[length];
-        }
-        @Override
-        public MapItem newInstance() {
-            return new MapItem();
-        }
-    };
+    private static final Creator<MapItem> CREATOR = MapItem::new;
 
     static class DataStartReference implements IntegerReference {
 

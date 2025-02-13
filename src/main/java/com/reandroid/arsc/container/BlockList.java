@@ -511,21 +511,6 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     public <T1> T1[] toArray(T1[] ts) {
         return mItems.toArray(ts);
     }
-    public T[] toArrayIf(Predicate<? super T> predicate, BlockArrayCreator<? extends T> creator) {
-        int length = countIf(predicate);
-        int size = size();
-        T[] results = creator.newArrayInstance(length);
-        int j = 0;
-        for (int i = 0; i < size; i++) {
-            T item = get(i);
-            if (predicate.test(item)) {
-                results[j] = item;
-                j ++;
-            }
-        }
-        return results;
-    }
-
     public List<T> getChildes(){
         return mItems;
     }
@@ -560,17 +545,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
             mItems.setInitializer(null);
             return;
         }
-        ArrayCollection.Initializer<T> initializer = new ArrayCollection.Initializer<T>() {
-            @Override
-            public T createNewItem(int index) {
-                T item = creator.newInstanceAt(index);
-                onItemCreated(index, item);
-                return item;
-            }
-            @Override
-            public T[] newArray(int length) {
-                return creator.newArrayInstance(length);
-            }
+        ArrayCollection.Initializer<T> initializer = index -> {
+            T item = creator.newInstanceAt(index);
+            onItemCreated(index, item);
+            return item;
         };
         mItems.setInitializer(initializer);
     }

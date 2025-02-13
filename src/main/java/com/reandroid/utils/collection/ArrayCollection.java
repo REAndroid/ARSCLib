@@ -1046,11 +1046,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return result;
     }
     private Object[] getNewArray(int length){
-        Initializer<T> initializer = getInitializer();
-        if(initializer != null){
-            return initializer.newArray(length);
-        }
-        if(length == 0){
+        if (length == 0) {
             return EMPTY_OBJECTS;
         }
         return new Object[length];
@@ -1299,7 +1295,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
 
     public interface Initializer<T1> {
         T1 createNewItem(int index);
-        T1[] newArray(int length);
     }
     public interface Monitor<T> {
         void onAdd(int i, T item);

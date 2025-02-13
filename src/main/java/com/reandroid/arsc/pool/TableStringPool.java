@@ -15,16 +15,12 @@
  */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.OffsetArray;
-import com.reandroid.arsc.array.StringArray;
-import com.reandroid.arsc.array.TableStringArray;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.UnknownChunk;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlPullParser;
@@ -35,7 +31,7 @@ import java.io.InputStream;
 
 public class TableStringPool extends StringPool<TableString> {
     public TableStringPool(boolean is_utf8) {
-        super(is_utf8);
+        super(is_utf8, TableString::new);
     }
 
     public TableString getOrCreateStyled(String xmlString) throws IOException, XmlPullParserException {
@@ -51,10 +47,6 @@ public class TableStringPool extends StringPool<TableString> {
         if(tableBlock != null){
             tableBlock.linkTableStringsInternal(this);
         }
-    }
-    @Override
-    StringArray<TableString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
-        return new TableStringArray(offsets, itemCount, itemStart, is_utf8);
     }
 
     /**

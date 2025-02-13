@@ -219,12 +219,6 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
             this.usageType = usageType;
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        public IntegerDataReference<T>[] newArrayInstance(int length) {
-            return new IntegerDataReference[length];
-        }
-
         @Override
         public IntegerDataReference<T> newInstance() {
             return new IntegerDataReference<>(sectionType, usageType);

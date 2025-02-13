@@ -307,9 +307,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
     public TryItem newInstance() {
         return new TryItem(initHandlersOffset());
     }
-    public TryItem[] newArrayInstance(int length) {
-        return new TryItem[length];
-    }
+
     @Override
     public TryItem newInstanceAt(int index) {
         BlockList<TryItem> tryItemArray = this.tryItemArray;

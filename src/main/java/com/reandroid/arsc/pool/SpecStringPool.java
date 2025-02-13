@@ -15,12 +15,8 @@
  */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.OffsetArray;
-import com.reandroid.arsc.array.SpecStringArray;
-import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.utils.collection.IterableIterator;
@@ -29,7 +25,7 @@ import java.util.Iterator;
 
 public class SpecStringPool extends StringPool<SpecString>{
     public SpecStringPool(boolean is_utf8){
-        super(is_utf8);
+        super(is_utf8, SpecString::new);
     }
 
     public int resolveResourceId(int typeId, String name){
@@ -77,10 +73,7 @@ public class SpecStringPool extends StringPool<SpecString>{
             }
         };
     }
-    @Override
-    StringArray<SpecString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
-        return new SpecStringArray(offsets, itemCount, itemStart, is_utf8);
-    }
+
     public PackageBlock getPackageBlock(){
         return getParent(PackageBlock.class);
     }

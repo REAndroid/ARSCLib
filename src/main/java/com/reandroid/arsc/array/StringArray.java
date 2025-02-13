@@ -15,7 +15,9 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.header.StringPoolHeader;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.StringCreator;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONArray;
@@ -27,13 +29,18 @@ import com.reandroid.utils.ObjectsUtil;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JSONConvert<JSONArray> {
+public class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JSONConvert<JSONArray> {
 
+    private final StringCreator<T> creator;
     private boolean mUtf8;
 
-    public StringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
+    public StringArray(OffsetArray offsets, IntegerReference itemCount, IntegerReference itemStart, boolean is_utf8, StringCreator<T> creator) {
         super(offsets, itemCount, itemStart);
+        this.creator = creator;
         this.mUtf8 = is_utf8;
+    }
+    public StringArray(OffsetArray offsets, StringPoolHeader header, StringCreator<T> creator) {
+        this(offsets, header.getCountStrings(), header.getStartStrings(), header.isUtf8(), creator);
     }
 
     public void setUtf8(boolean is_utf8){
@@ -51,6 +58,11 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     }
     public boolean isUtf8() {
         return mUtf8;
+    }
+
+    @Override
+    public T newInstance() {
+        return creator.newInstance(isUtf8());
     }
 
     @SuppressWarnings("unchecked")
@@ -76,7 +88,19 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     public boolean sort(Comparator<? super T> comparator) {
         boolean sorted = super.sort(comparator);
         getStyleArray().sort();
+        getStringPool().onSortedInternal(comparator);
         return sorted;
+    }
+
+    @Override
+    public void add(int index, T item) {
+        getStringPool().onPreAddInternal(index, item);
+        super.add(index, item);
+    }
+
+    @SuppressWarnings("unchecked")
+    private StringPool<T> getStringPool() {
+        return getParentInstance(StringPool.class);
     }
     @Override
     protected void onPreRefresh() {

@@ -31,14 +31,5 @@ public class MethodDefArray extends DefArray<MethodDef> {
         }
     }
 
-    private static final Creator<MethodDef> CREATOR = new Creator<MethodDef>() {
-        @Override
-        public MethodDef[] newArrayInstance(int length) {
-            return new MethodDef[length];
-        }
-        @Override
-        public MethodDef newInstance() {
-            return new MethodDef();
-        }
-    };
+    private static final Creator<MethodDef> CREATOR = MethodDef::new;
 }

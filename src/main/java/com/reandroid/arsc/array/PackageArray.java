@@ -121,11 +121,6 @@ public class PackageArray extends BlockArray<PackageBlock>
     }
 
     @Override
-    public PackageBlock[] newArrayInstance(int len) {
-        return new PackageBlock[len];
-    }
-
-    @Override
     protected void onRefreshed() {
         refreshPackageCount();
     }

@@ -32,14 +32,5 @@ public class FieldDefArray extends DefArray<FieldDef> {
         }
     }
 
-    private static final Creator<FieldDef> CREATOR = new Creator<FieldDef>() {
-        @Override
-        public FieldDef[] newArrayInstance(int length) {
-            return new FieldDef[length];
-        }
-        @Override
-        public FieldDef newInstance() {
-            return new FieldDef();
-        }
-    };
+    private static final Creator<FieldDef> CREATOR = FieldDef::new;
 }

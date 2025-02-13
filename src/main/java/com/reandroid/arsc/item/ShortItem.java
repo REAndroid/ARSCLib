@@ -82,25 +82,7 @@ public class ShortItem extends BlockItem implements IntegerReference, DirectStre
         return String.valueOf(get());
     }
 
-    public static final Creator<ShortItem> CREATOR = new Creator<ShortItem>() {
-        @Override
-        public ShortItem[] newArrayInstance(int length) {
-            return new ShortItem[length];
-        }
-        @Override
-        public ShortItem newInstance() {
-            return new ShortItem(false);
-        }
-    };
+    public static final Creator<ShortItem> CREATOR = () -> new ShortItem(false);
 
-    public static final Creator<ShortItem> CREATOR_BIG_ENDIAN = new Creator<ShortItem>() {
-        @Override
-        public ShortItem[] newArrayInstance(int length) {
-            return new ShortItem[length];
-        }
-        @Override
-        public ShortItem newInstance() {
-            return new ShortItem(true);
-        }
-    };
+    public static final Creator<ShortItem> CREATOR_BIG_ENDIAN = () -> new ShortItem(true);
 }

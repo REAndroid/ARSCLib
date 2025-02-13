@@ -266,18 +266,5 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
         builder.append(']');
         return builder.toString();
     }
-    private static final Creator<DexValueBlock<?>> CREATOR = new Creator<DexValueBlock<?>>() {
-        @Override
-        public DexValueBlock<?>[] newArrayInstance(int length) {
-            if(length == 0){
-                return EncodedArray.EMPTY;
-            }
-            return new DexValueBlock[length];
-        }
-        @Override
-        public DexValueBlock<?> newInstance() {
-            return NullValue.PLACE_HOLDER;
-        }
-    };
-    static final DexValueBlock<?>[] EMPTY = new DexValueBlock<?>[0];
+    private static final Creator<DexValueBlock<?>> CREATOR = () -> NullValue.PLACE_HOLDER;
 }

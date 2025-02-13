@@ -13,21 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.array;
+package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.SpecString;
-
-public class SpecStringArray extends StringArray<SpecString> {
-    public SpecStringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
-        super(offsets, itemCount, itemStart, is_utf8);
-    }
-    @Override
-    public SpecString newInstance() {
-        return new SpecString(isUtf8());
-    }
-    @Override
-    public SpecString[] newArrayInstance(int length) {
-        return new SpecString[length];
-    }
+public interface StringCreator<T extends StringItem> {
+    T newInstance(boolean utf8);
 }

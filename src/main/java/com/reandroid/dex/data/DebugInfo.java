@@ -238,19 +238,6 @@ public class DebugInfo extends DataItem implements KeyReference {
                 ")}";
     }
 
-    private static final Creator<DebugParameter> CREATOR = new Creator<DebugParameter>() {
-        @Override
-        public DebugParameter[] newArrayInstance(int length) {
-            if(length == 0){
-                return EMPTY;
-            }
-            return new DebugParameter[length];
-        }
-        @Override
-        public DebugParameter newInstance() {
-            return new DebugParameter();
-        }
-    };
-    static final DebugParameter[] EMPTY = new DebugParameter[0];
+    private static final Creator<DebugParameter> CREATOR = DebugParameter::new;
 
 }

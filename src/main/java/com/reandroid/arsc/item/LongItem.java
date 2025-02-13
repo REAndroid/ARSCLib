@@ -78,25 +78,7 @@ public class LongItem extends BlockItem implements LongReference, DirectStreamRe
         return String.valueOf(getLong());
     }
 
-    public static final Creator<LongItem> CREATOR = new Creator<LongItem>() {
-        @Override
-        public LongItem[] newArrayInstance(int length) {
-            return new LongItem[length];
-        }
-        @Override
-        public LongItem newInstance() {
-            return new LongItem(false);
-        }
-    };
+    public static final Creator<LongItem> CREATOR = () -> new LongItem(false);
 
-    public static final Creator<LongItem> CREATOR_BIG_ENDIAN = new Creator<LongItem>() {
-        @Override
-        public LongItem[] newArrayInstance(int length) {
-            return new LongItem[length];
-        }
-        @Override
-        public LongItem newInstance() {
-            return new LongItem(true);
-        }
-    };
+    public static final Creator<LongItem> CREATOR_BIG_ENDIAN = () -> new LongItem(true);
 }

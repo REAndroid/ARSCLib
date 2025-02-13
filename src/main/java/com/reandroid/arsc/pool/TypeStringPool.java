@@ -15,9 +15,7 @@
  */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
-import com.reandroid.arsc.array.TypeStringArray;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TypeString;
@@ -29,7 +27,7 @@ public class TypeStringPool extends StringPool<TypeString> {
     private final IntegerItem mTypeIdOffset;
 
     public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffset) {
-        super(is_utf8, false);
+        super(is_utf8, false, TypeString::new);
         this.mTypeIdOffset = typeIdOffset;
     }
     public int getLastId(){
@@ -91,9 +89,5 @@ public class TypeStringPool extends StringPool<TypeString> {
                     +") without type id. use getOrCreate(typeId, typeName)");
         }
         return typeString;
-    }
-    @Override
-    StringArray<TypeString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
-        return new TypeStringArray(offsets, itemCount, itemStart, is_utf8);
     }
 }

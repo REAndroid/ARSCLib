@@ -16,5 +16,7 @@
 package com.reandroid.arsc.base;
 
 public interface BlockArrayCreator<T extends Block> extends BlockCreator<T>{
-    T[] newArrayInstance(int len);
+    default T[] newArrayInstance(int length) {
+        throw new RuntimeException();
+    }
 }

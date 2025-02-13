@@ -207,14 +207,5 @@ public class PackedSwitchDataList extends CountedBlockList<PackedSwitchDataList.
         }
     }
 
-    private static final Creator<PackedSwitchEntry> CREATOR = new Creator<PackedSwitchEntry>() {
-        @Override
-        public PackedSwitchEntry[] newArrayInstance(int length) {
-            return new PackedSwitchEntry[length];
-        }
-        @Override
-        public PackedSwitchEntry newInstance() {
-            return new PackedSwitchEntry();
-        }
-    };
+    private static final Creator<PackedSwitchEntry> CREATOR = PackedSwitchEntry::new;
 }

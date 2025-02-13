@@ -114,11 +114,6 @@ public class BlockListArray<T extends Block> extends BlockArray<T>
     }
 
     @Override
-    public T[] newArrayInstance(int length) {
-        return getCreator().newArrayInstance(length);
-    }
-
-    @Override
     public T newInstance() {
         return getCreator().newInstance();
     }

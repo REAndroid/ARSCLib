@@ -75,10 +75,7 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             public DexHeader newInstance() {
                 return new DexHeader();
             }
-            @Override
-            public DexHeader[] newArrayInstance(int length) {
-                return new DexHeader[length];
-            }
+
             @Override
             public boolean isSpecialSection() {
                 return true;
@@ -99,10 +96,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         MAP_LIST = new SectionType<MapList>("MAP_LIST", 0x1000) {
-            @Override
-            public MapList[] newArrayInstance(int length) {
-                return new MapList[length];
-            }
             @Override
             public MapList newInstance() {
                 return new MapList(new NumberIntegerReference());
@@ -127,11 +120,7 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         STRING_ID = new SectionType<StringId>("STRING_ID", 0x0001) {
-            
-            @Override
-            public StringId[] newArrayInstance(int length) {
-                return new StringId[length];
-            }
+
             @Override
             public StringId newInstance() {
                 return new StringId();
@@ -155,10 +144,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         STRING_DATA = new SectionType<StringData>("STRING_DATA", 0x2002) {
             @Override
-            public StringData[] newArrayInstance(int length) {
-                return new StringData[length];
-            }
-            @Override
             public StringData newInstance() {
                 return new StringData();
             }
@@ -174,10 +159,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         TYPE_ID = new SectionType<TypeId>("TYPE_ID", 0x0002) {
-            @Override
-            public TypeId[] newArrayInstance(int length) {
-                return new TypeId[length];
-            }
             @Override
             public TypeId newInstance() {
                 return new TypeId();
@@ -197,10 +178,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         TYPE_LIST = new SectionType<TypeList>("TYPE_LIST", 0x1001) {
-            @Override
-            public TypeList[] newArrayInstance(int length) {
-                return new TypeList[length];
-            }
             @Override
             public TypeList newInstance() {
                 return new TypeList();
@@ -223,10 +200,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         PROTO_ID = new SectionType<ProtoId>("PROTO_ID", 0x0003) {
             @Override
-            public ProtoId[] newArrayInstance(int length) {
-                return new ProtoId[length];
-            }
-            @Override
             public ProtoId newInstance() {
                 return new ProtoId();
             }
@@ -246,11 +219,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         FIELD_ID = new SectionType<FieldId>("FIELD_ID", 0x0004) {
-            
-            @Override
-            public FieldId[] newArrayInstance(int length) {
-                return new FieldId[length];
-            }
 
             @Override
             public FieldId newInstance() {
@@ -273,10 +241,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         METHOD_ID = new SectionType<MethodId>("METHOD_ID", 0x0005) {
             @Override
-            public MethodId[] newArrayInstance(int length) {
-                return new MethodId[length];
-            }
-            @Override
             public MethodId newInstance() {
                 return new MethodId();
             }
@@ -297,10 +261,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         ANNOTATION_ITEM = new SectionType<AnnotationItem>("ANNOTATION_ITEM", 0x2004) {
             @Override
-            public AnnotationItem[] newArrayInstance(int length) {
-                return new AnnotationItem[length];
-            }
-            @Override
             public AnnotationItem newInstance() {
                 return new AnnotationItem();
             }
@@ -317,10 +277,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         ANNOTATION_SET = new SectionType<AnnotationSet>("ANNOTATION_SET", 0x1003) {
-            @Override
-            public AnnotationSet[] newArrayInstance(int length) {
-                return new AnnotationSet[length];
-            }
             @Override
             public AnnotationSet newInstance() {
                 return new AnnotationSet();
@@ -342,10 +298,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         ANNOTATION_GROUP = new SectionType<AnnotationGroup>("ANNOTATION_GROUP", 0x1002) {
-            @Override
-            public AnnotationGroup[] newArrayInstance(int length) {
-                return new AnnotationGroup[length];
-            }
 
             @Override
             public AnnotationGroup newInstance() {
@@ -369,10 +321,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         ANNOTATION_DIRECTORY = new SectionType<AnnotationsDirectory>("ANNOTATIONS_DIRECTORY", 0x2006) {
             @Override
-            public AnnotationsDirectory[] newArrayInstance(int length) {
-                return new AnnotationsDirectory[length];
-            }
-            @Override
             public AnnotationsDirectory newInstance() {
                 return new AnnotationsDirectory();
             }
@@ -392,10 +340,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         CALL_SITE_ID = new SectionType<CallSiteId>("CALL_SITE_ID", 0x0007) {
-            @Override
-            public CallSiteId[] newArrayInstance(int length) {
-                return new CallSiteId[length];
-            }
             @Override
             public CallSiteId newInstance() {
                 return new CallSiteId();
@@ -418,10 +362,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         METHOD_HANDLE = new SectionType<MethodHandleId>("METHOD_HANDLE", 0x0008) {
             @Override
-            public MethodHandleId[] newArrayInstance(int length) {
-                return new MethodHandleId[length];
-            }
-            @Override
             public MethodHandleId newInstance() {
                 return new MethodHandleId();
             }
@@ -442,10 +382,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         DEBUG_INFO = new SectionType<DebugInfo>("DEBUG_INFO", 0x2003) {
             @Override
-            public DebugInfo[] newArrayInstance(int length) {
-                return new DebugInfo[length];
-            }
-            @Override
             public DebugInfo newInstance() {
                 return new DebugInfo();
             }
@@ -461,10 +397,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         CODE = new SectionType<CodeItem>("CODE", 0x2001) {
-            @Override
-            public CodeItem[] newArrayInstance(int length) {
-                return new CodeItem[length];
-            }
 
             @Override
             public CodeItem newInstance() {
@@ -488,10 +420,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         ENCODED_ARRAY = new SectionType<EncodedArray>("ENCODED_ARRAY", 0x2005) {
             @Override
-            public EncodedArray[] newArrayInstance(int length) {
-                return new EncodedArray[length];
-            }
-            @Override
             public EncodedArray newInstance() {
                 return new EncodedArray();
             }
@@ -508,10 +436,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
         CLASS_DATA = new SectionType<ClassData>("CLASS_DATA", 0x2000) {
             @Override
-            public ClassData[] newArrayInstance(int length) {
-                return new ClassData[length];
-            }
-            @Override
             public ClassData newInstance() {
                 return new ClassData();
             }
@@ -527,10 +451,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         CLASS_ID = new SectionType<ClassId>("CLASS_ID", 0x0006) {
-            @Override
-            public ClassId[] newArrayInstance(int length) {
-                return new ClassId[length];
-            }
             @Override
             public ClassId newInstance() {
                 return new ClassId();
@@ -551,10 +471,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         };
 
         HIDDEN_API = new SectionType<HiddenApiRestrictions>("HIDDEN_API", 0xF000) {
-            @Override
-            public HiddenApiRestrictions[] newArrayInstance(int length) {
-                return new HiddenApiRestrictions[length];
-            }
             @Override
             public HiddenApiRestrictions newInstance() {
                 return new HiddenApiRestrictions();
@@ -745,9 +661,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         return this;
     }
 
-    @Override
-    public abstract T[] newArrayInstance(int length);
-    
     @Override
     public abstract T newInstance();
 

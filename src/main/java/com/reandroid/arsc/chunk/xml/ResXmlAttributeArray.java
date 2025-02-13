@@ -331,20 +331,10 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         }
 
         @Override
-        public ResXmlAttribute[] newArrayInstance(int length) {
-            if (length == 0) {
-                return EMPTY;
-            }
-            return new ResXmlAttribute[length];
-        }
-
-        @Override
         public ResXmlAttribute newInstance() {
             ResXmlAttribute attribute = new ResXmlAttribute();
             attribute.setAttributesUnitSize(unitSize.get());
             return attribute;
         }
-
-        private static final ResXmlAttribute[] EMPTY = new ResXmlAttribute[0];
     }
 }

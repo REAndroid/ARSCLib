@@ -15,8 +15,7 @@
  */
 package com.reandroid.arsc.base;
 
-public interface Creator<T extends Block> extends BlockArrayCreator<T>, BlockCreator<T> {
-    T[] newArrayInstance(int length);
+public interface Creator<T extends Block> extends BlockCreator<T> {
     T newInstance();
     default T newInstanceAt(int index){
         return newInstance();
