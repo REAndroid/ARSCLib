@@ -168,7 +168,7 @@ public class ResXmlAttributePosition extends ShortItem {
     }
 
     public static final int TYPE_ID = ObjectsUtil.of(0);
-    public static final int TYPE_CLASS = ObjectsUtil.of(0);
-    public static final int TYPE_STYLE = ObjectsUtil.of(0);
+    public static final int TYPE_CLASS = ObjectsUtil.of(1);
+    public static final int TYPE_STYLE = ObjectsUtil.of(2);
 
 }
