@@ -691,5 +691,121 @@ public class StringsUtil {
         return str.charAt(0) == ch;
     }
 
+    /**
+     * Replaces each  literal (non regexp) substring with given string
+     * */
+    public static String replaceAll(String str, String search, String replace) {
+        if (str == null || search == null || replace == null || search.equals(replace)) {
+            return str;
+        }
+        int length = str.length();
+        int searchLength = search.length();
+        if (length == 0 || searchLength == 0 || searchLength > length) {
+            return str;
+        }
+        if (length == searchLength) {
+            if (str.equals(search)) {
+                return replace;
+            }
+            return str;
+        }
+        int index = 0;
+        StringBuilder builder = null;
+        while (true) {
+            int i = str.indexOf(search, index);
+            if (i < 0) {
+                if (index == 0) {
+                    return str;
+                }
+                builder.append(str.substring(index));
+                return builder.toString();
+            }
+            if (builder == null) {
+                builder = new StringBuilder(length + replace.length() * 5);
+            }
+            builder.append(str, index, i);
+            builder.append(replace);
+            index = i + searchLength;
+        }
+    }
+
+    /**
+     * Replaces each character with given string
+     * */
+    public static String replaceAll(String text, char search, String replace) {
+        if (text == null || replace == null) {
+            return text;
+        }
+        int length = text.length();
+        if (length == 0) {
+            return text;
+        }
+        if (length == 1) {
+            if (search == text.charAt(0)) {
+                return replace;
+            }
+            return text;
+        }
+        if (replace.length() == 1) {
+            return text.replace(search, replace.charAt(0));
+        }
+        int index = 0;
+        StringBuilder builder = null;
+        while (true) {
+            int i = text.indexOf(search, index);
+            if (i < 0) {
+                if (index == 0) {
+                    return text;
+                }
+                builder.append(text.substring(index));
+                return builder.toString();
+            }
+            if (builder == null) {
+                builder = new StringBuilder(length + replace.length() * 5);
+            }
+            builder.append(text, index, i);
+            builder.append(replace);
+            index = i + 1;
+        }
+    }
+
+    /**
+     * Replaces each literal (non regexp) substring with given character
+     * */
+    public static String replaceAll(String str, String search, char replace) {
+        if (str == null || search == null) {
+            return str;
+        }
+        int length = str.length();
+        int searchLength = search.length();
+        if (length == 0 || searchLength == 0 || searchLength > length) {
+            return str;
+        }
+        if (length == searchLength) {
+            if (str.equals(search)) {
+                return String.valueOf(replace);
+            }
+            return str;
+        }
+        int index = 0;
+        StringBuilder builder = null;
+        while (true) {
+            int i = str.indexOf(search, index);
+            if (i < 0) {
+                if (index == 0) {
+                    return str;
+                }
+                builder.append(str.substring(index));
+                return builder.toString();
+            }
+            if (builder == null) {
+                builder = new StringBuilder(length + 10);
+            }
+            builder.append(str, index, i);
+            builder.append(replace);
+            index = i + searchLength;
+        }
+    }
+
     private static final int MAX_STRING_APPEND = 5;
 }
