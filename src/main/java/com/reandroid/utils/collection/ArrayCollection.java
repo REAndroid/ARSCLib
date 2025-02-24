@@ -139,9 +139,15 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return result;
     }
     public int countFromLast(Predicate<? super T> predicate){
+        return countFromLast(0, predicate);
+    }
+    public int countFromLast(int end, Predicate<? super T> predicate) {
+        if (end < 0) {
+            end = 0;
+        }
         int result = 0;
         int i = this.size() - 1;
-        while (i >= 0 && predicate.test(get(i))) {
+        while (i >= end && predicate.test(get(i))) {
             result ++;
             i --;
         }
@@ -308,13 +314,20 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
     }
     public void setSize(int size){
+        setSize(size, false);
+    }
+    public void setSize(int size, boolean notify) {
         int start = this.size;
-        if(size == start){
+        if (size == start) {
             return;
         }
-        if(size < start){
-            this.size = size;
-            onChanged();
+        if (size < start) {
+            if (notify) {
+                shrinkWithNotify(size);
+            } else {
+                this.size = size;
+                onChanged();
+            }
             return;
         }
         boolean locked = this.mLocked;
@@ -323,6 +336,22 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         ensureCapacity(length);
         this.size = size;
         fillElements(this.mElements, start, length);
+        this.mLocked = locked;
+        onChanged();
+    }
+    private void shrinkWithNotify(int targetSize) {
+        boolean locked = this.mLocked;
+        this.mLocked = true;
+        int i = this.size - 1;
+        int end = targetSize - 1;
+        Object[] elements = this.mElements;
+        while (i > end) {
+            T item = (T) elements[i];
+            this.size --;
+            elements[i] = null;
+            notifyRemoved(i, item);
+            i--;
+        }
         this.mLocked = locked;
         onChanged();
     }
@@ -1275,7 +1304,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         public void sort(Comparator<? super Object> comparator) {
         }
         @Override
-        public void setSize(int size) {
+        public void setSize(int size, boolean notify) {
         }
         @Override
         public int hashCode() {
