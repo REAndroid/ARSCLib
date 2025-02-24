@@ -101,7 +101,11 @@ public class StyleElement extends XMLElement implements Span {
 
     @Override
     public int getLastChar() {
-        return getFirstChar() + getLength() - 1;
+        int result = getFirstChar() + getLength();
+        if (result != 0) {
+            result = result -1;
+        }
+        return result;
     }
 
     @Override
