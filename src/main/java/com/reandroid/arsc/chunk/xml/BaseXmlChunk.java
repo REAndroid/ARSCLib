@@ -60,7 +60,7 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     private void linkStringReference(IntegerItem item) {
         ResXmlString xmlString = getResXmlString(item.get());
         if (xmlString != null) {
-            xmlString.addReferenceIfAbsent(item);
+            xmlString.addReference(item);
         }
     }
     void unLinkStringReference(IntegerItem item) {

@@ -23,7 +23,6 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.header.HeaderBlock;
-import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
@@ -168,14 +167,14 @@ public class SpecTypePair extends BlockContainer<Block>
     public Boolean hasComplexEntry(){
         return getTypeBlockArray().hasComplexEntry();
     }
-    public void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(TypeBlock typeBlock : this){
-            typeBlock.linkTableStringsInternal(tableStringPool);
+    public void linkTableStringsInternal(TableStringPool tableStringPool) {
+        for(TypeBlock typeBlock : this) {
+            typeBlock.getEntryArray().linkTableStringsInternal(tableStringPool);
         }
     }
-    public void linkSpecStringsInternal(SpecStringPool specStringPool){
-        for(TypeBlock typeBlock : this){
-            typeBlock.linkSpecStringsInternal(specStringPool);
+    public void linkSpecStringsInternal(SpecStringPool specStringPool) {
+        for(TypeBlock typeBlock : this) {
+            typeBlock.getEntryArray().linkSpecStringsInternal(specStringPool);
         }
     }
     public void destroy(){
@@ -365,9 +364,7 @@ public class SpecTypePair extends BlockContainer<Block>
         mSpecBlock.readBytes(reader);
     }
     private void readTypeBlock(BlockReader reader) throws IOException {
-        TypeHeader typeHeader = TypeHeader.read(reader);
-        TypeBlock typeBlock = mTypeBlockArray.createNext(
-                typeHeader.isSparse(), typeHeader.isOffset16());
+        TypeBlock typeBlock = mTypeBlockArray.createNext();
         typeBlock.readBytes(reader);
     }
     private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{

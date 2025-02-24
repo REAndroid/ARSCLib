@@ -15,10 +15,10 @@
  */
 package com.reandroid.arsc.value;
 
-import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -28,6 +28,7 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecFlag;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.list.EntryItemList;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.pool.SpecStringPool;
@@ -122,7 +123,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public int getId(){
         int id = getIndex();
-        EntryArray entryArray = getParentInstance(EntryArray.class);
+        EntryItemList entryArray = getParentInstance(EntryItemList.class);
         if(entryArray != null){
             id = entryArray.getEntryId(id);
         }
@@ -622,10 +623,10 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
 
     @Override
     public JSONObject toJson() {
-        if(isNull()){
-            return null;
+        if (!isNull()) {
+            return getTableEntry().toJson();
         }
-        return getTableEntry().toJson();
+        return null;
     }
     @Override
     public void fromJson(JSONObject json) {
@@ -692,5 +693,8 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         builder.append(getName());
         return builder.toString();
     }
+
+    public static final Creator<Entry> CREATOR = Entry::new;
+
     public static final String NAME_id = "id";
 }

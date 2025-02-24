@@ -26,14 +26,21 @@ public class AlignItem extends BlockItem {
 
     private byte fill;
     private int alignment;
+    private final boolean readable;
 
-    public AlignItem(int alignment) {
+    public AlignItem(int alignment, boolean readable) {
         super(0);
         this.alignment = alignment;
+        this.readable = readable;
     }
-
+    public AlignItem(int alignment) {
+        this(alignment, false);
+    }
+    public AlignItem(boolean readable) {
+        this(ALIGNMENT, readable);
+    }
     public AlignItem() {
-        this(ALIGNMENT);
+        this(ALIGNMENT, false);
     }
 
     public int align(Block block) {
@@ -57,22 +64,22 @@ public class AlignItem extends BlockItem {
         align(reader.getPosition());
         int size = size();
         int available = reader.available();
-        if(size != 0 && available >= size) {
-            super.onReadBytes(reader);
+        if (size != 0 && available >= size) {
+            reader.readFully(getBytesInternal(), 0, size);
         }
     }
-    public void clear(){
+    public void clear() {
         setBytesLength(0, false);
     }
-    public int size(){
+    public int size() {
         return countBytes();
     }
-    public void ensureSize(int size){
-        if(size > size()){
+    public void ensureSize(int size) {
+        if (size > size()) {
             setSize(size);
         }
     }
-    public void setSize(int size){
+    public void setSize(int size) {
         setBytesLength(size, false);
         setFill(this.fill);
     }
@@ -81,7 +88,7 @@ public class AlignItem extends BlockItem {
     }
     public void setAlignment(int alignment) {
         this.alignment = alignment;
-        if(alignment <= 0){
+        if (alignment <= 0) {
             setBytesLength(0, false);
         }
     }
@@ -92,20 +99,29 @@ public class AlignItem extends BlockItem {
     }
 
     @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        if (readable) {
+            alignSafe(reader);
+        } else {
+            super.onReadBytes(reader);
+        }
+    }
+
+    @Override
     public String toString() {
         int alignment = getAlignment();
-        if(alignment <= 0){
+        if (alignment <= 0) {
             return "OFF";
         }
         int size = size();
         byte fill = this.fill;
         StringBuilder builder = new StringBuilder();
-        if(alignment != ALIGNMENT){
+        if (alignment != ALIGNMENT) {
             builder.append("alignment=");
             builder.append(alignment);
             builder.append(", ");
         }
-        if(fill != 0){
+        if (fill != 0) {
             builder.append("fill=");
             builder.append(HexUtil.toHex2(fill));
             builder.append(", ");

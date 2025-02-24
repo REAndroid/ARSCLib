@@ -128,6 +128,7 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put(Entry.NAME_id, getParentEntry().getId());
         getHeader().toJson(jsonObject);
         jsonObject.put(NAME_values, getValue().toJson());
         return jsonObject;

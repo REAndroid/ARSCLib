@@ -15,76 +15,87 @@
  */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.list.StringItemList;
 import com.reandroid.utils.collection.CollectionUtil;
-
 
 public class TypeStringPool extends StringPool<TypeString> {
 
-    private final IntegerItem mTypeIdOffset;
+    private final IntegerReference typeIdOffsetReference;
 
-    public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffset) {
+    public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffsetReference) {
         super(is_utf8, false, TypeString::new);
-        this.mTypeIdOffset = typeIdOffset;
+        this.typeIdOffsetReference = typeIdOffsetReference;
     }
-    public int getLastId(){
+    
+    public int getLastId() {
         int count = size();
         return toTypeId(count - 1);
     }
-    public int idOf(String typeName){
+    public int idOf(String typeName) {
         return idOf(getByName(typeName));
     }
+    
     /**
      * Resolves id of {@link TypeBlock}
-     * Not recommend to use unless unless you are sure of proper pool
+     * <br /> Not recommend to use unless you are sure of proper pool
      **/
-    public int idOf(TypeString typeString){
-        if(typeString == null){
+    public int idOf(TypeString typeString) {
+        if (typeString == null) {
             return 0;
         }
         return (toTypeId(typeString.getIndex()));
     }
+    
     /**
-     * Searches string entry {@link TypeBlock}
-     * {@param name} is name of {@link TypeBlock}
-     * This might not working if duplicate type names are present
+     * Searches string by type name
      **/
-    public TypeString getByName(String name){
-        for(TypeString typeString : this){
-            if(name.equals(typeString.get())){
+    public TypeString getByName(String name) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            TypeString typeString = get(i);
+            if (name.equals(typeString.get())) {
                 return typeString;
             }
         }
         return null;
     }
-    public TypeString getById(int id){
+    public TypeString getById(int id) {
         return super.get(toIndex(id));
     }
-    public TypeString getOrCreate(int typeId, String typeName){
-        StringArray<TypeString> stringsArray = getStringsArray();
-        int size = toIndex(typeId) + 1;
-        stringsArray.ensureSize(size);
+    public TypeString getOrCreate(int typeId, String typeName) {
+        ensureStringsSize(toIndex(typeId) + 1);
         TypeString typeString = getById(typeId);
         typeString.set(typeName);
         return typeString;
     }
-    private int toIndex(int typeId){
-        return typeId - 1 - mTypeIdOffset.get();
+    private void ensureStringsSize(int size) {
+        StringItemList<TypeString> stringsArray = getStringsArray();
+        int current = stringsArray.size();
+        if (size > current) {
+            stringsArray.setSize(size);
+            for (int i = current; i < size; i++) {
+                stringsArray.get(i).set("type-" + i);
+            }
+        }
     }
-    private int toTypeId(int index){
-        return index + 1 + mTypeIdOffset.get();
+    private int toIndex(int typeId) {
+        return typeId - 1 - typeIdOffsetReference.get();
+    }
+    private int toTypeId(int index) {
+        return index + 1 + typeIdOffsetReference.get();
     }
     /**
      * Use getOrCreate(typeId, typeName)}
      **/
     @Deprecated
     @Override
-    public final TypeString getOrCreate(String str){
+    public final TypeString getOrCreate(String str) {
         TypeString typeString = CollectionUtil.getSingle(getAll(str));
-        if(typeString == null){
+        if (typeString == null) {
             throw new IllegalArgumentException("Can not create TypeString (" + str
                     +") without type id. use getOrCreate(typeId, typeName)");
         }

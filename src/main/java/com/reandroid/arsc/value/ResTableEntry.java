@@ -72,6 +72,7 @@ public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put(Entry.NAME_id, getParentEntry().getId());
         getHeader().toJson(jsonObject);
         jsonObject.put(NAME_value, getValue().toJson());
         return jsonObject;

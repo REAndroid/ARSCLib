@@ -32,8 +32,12 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
         implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
@@ -116,33 +120,26 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         return null;
     }
-    public TypeBlock getOrCreate(ResConfig resConfig){
-        return getOrCreate(resConfig, false);
-    }
-    public TypeBlock getOrCreate(ResConfig resConfig, boolean sparse){
-        return getOrCreate(resConfig, sparse, false);
-    }
-    public TypeBlock getOrCreate(ResConfig resConfig, boolean sparse, boolean offset16){
-        TypeBlock typeBlock = getTypeBlock(resConfig, sparse);
-        if(typeBlock != null){
+    public TypeBlock getOrCreate(ResConfig resConfig) {
+        TypeBlock typeBlock = getTypeBlock(resConfig);
+        if (typeBlock != null) {
             return typeBlock;
         }
-        byte id = getTypeId();
-        typeBlock = createNext(sparse, offset16);
-        typeBlock.setTypeId(id);
+        typeBlock = createNext();
+        typeBlock.setId(getTypeId() & 0xff);
         ResConfig config = typeBlock.getResConfig();
         config.copyFrom(resConfig);
         return typeBlock;
     }
     public TypeBlock getOrCreate(String qualifiers){
-        TypeBlock typeBlock=getTypeBlock(qualifiers);
-        if(typeBlock!=null){
+        TypeBlock typeBlock = getTypeBlock(qualifiers);
+        if (typeBlock != null) {
             return typeBlock;
         }
         int count = getHighestEntryCount();
         typeBlock = createNext();
         typeBlock.ensureEntriesCount(count);
-        ResConfig config=typeBlock.getResConfig();
+        ResConfig config = typeBlock.getResConfig();
         config.parseQualifiers(qualifiers);
         return typeBlock;
     }
@@ -208,22 +205,6 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             map.put(typeBlock.getQualifiers(), typeBlock);
         }
     }
-    public TypeBlock getTypeBlock(ResConfig config, boolean sparse){
-        if(config == null){
-            return null;
-        }
-        Iterator<TypeBlock> iterator = iterator();
-        while (iterator.hasNext()){
-            TypeBlock typeBlock = iterator.next();
-            if(typeBlock == null || sparse != typeBlock.isSparse()){
-                continue;
-            }
-            if(config.equals(typeBlock.getResConfig())){
-                return typeBlock;
-            }
-        }
-        return null;
-    }
     public void setTypeId(byte id){
         this.mTypeId = id;
         Iterator<TypeBlock> iterator = iterator();
@@ -275,15 +256,15 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
                 TypeBlock::getResConfig);
     }
     public Iterator<TypeBlock> iteratorNonEmpty(){
-        return super.iterator(NON_EMPTY_TESTER);
+        return super.iterator(typeBlock -> {
+            if(typeBlock == null || typeBlock.isNull()){
+                return false;
+            }
+            return !typeBlock.isEmpty();
+        });
     }
     public Iterator<TypeBlock> iterator(ResConfig resConfig){
-        return iterator(new Predicate<TypeBlock>() {
-            @Override
-            public boolean test(TypeBlock typeBlock) {
-                return typeBlock.getResConfig().equals(resConfig);
-            }
-        });
+        return iterator(typeBlock -> typeBlock.getResConfig().equals(resConfig));
     }
     public boolean hasDuplicateResConfig(boolean ignoreEmpty){
         Set<Integer> uniqueHashSet = new HashSet<>();
@@ -313,18 +294,11 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     @Override
     public TypeBlock newInstance() {
         byte id = getTypeId();
-        TypeBlock typeBlock = new TypeBlock(false, false);
+        TypeBlock typeBlock = new TypeBlock();
         typeBlock.setTypeId(id);
         return typeBlock;
     }
 
-    public TypeBlock createNext(boolean sparse, boolean offset16){
-        byte id = getTypeId();
-        TypeBlock typeBlock = new TypeBlock(sparse, offset16);
-        typeBlock.setTypeId(id);
-        add(typeBlock);
-        return typeBlock;
-    }
     @Override
     protected void onRefreshed() {
         this.mQualifiersMap = null;
@@ -397,10 +371,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public TypeString getTypeString(){
         Iterator<TypeBlock> iterator = iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             TypeBlock typeBlock = iterator.next();
             TypeString typeString = typeBlock.getTypeString();
-            if(typeString != null){
+            if (typeString != null) {
                 return typeString;
             }
         }
@@ -408,54 +382,37 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     @Override
     public JSONArray toJson() {
-        JSONArray jsonArray=new JSONArray();
-        int i=0;
-        for(TypeBlock typeBlock:listItems()){
-            JSONObject jsonObject= typeBlock.toJson();
-            if(jsonObject==null){
-                continue;
+        int size = size();
+        JSONArray jsonArray = new JSONArray(size);
+        for (int i = 0; i < size; i++) {
+            JSONObject jsonObject = get(i).toJson();
+            if (jsonObject != null) {
+                jsonArray.put(jsonObject);
             }
-            jsonArray.put(i, jsonObject);
-            i++;
         }
         return jsonArray;
     }
     @Override
     public void fromJson(JSONArray json) {
-        if(json == null){
-            return;
-        }
-        int length = json.length();
-        for(int i = 0; i < length; i++){
-            JSONObject jsonObject = json.getJSONObject(i);
-            TypeBlock typeBlock = createNext(
-                    jsonObject.optBoolean(TypeBlock.NAME_is_sparse, false),
-                    jsonObject.optBoolean(TypeBlock.NAME_is_offset16, false));
-            typeBlock.fromJson(jsonObject);
+        if (json != null) {
+            int length = json.length();
+            for (int i = 0; i < length; i++) {
+                createNext().fromJson(json.getJSONObject(i));
+            }
         }
     }
-    public void merge(TypeBlockArray typeBlockArray){
-        if(typeBlockArray == null || typeBlockArray == this){
-            return;
-        }
-        for(TypeBlock typeBlock:typeBlockArray.listItems()){
-            TypeBlock exist = getOrCreate(
-                    typeBlock.getResConfig(), typeBlock.isSparse());
-            exist.merge(typeBlock);
+    public void merge(TypeBlockArray typeBlockArray) {
+        if (typeBlockArray != null && typeBlockArray != this) {
+            int size = typeBlockArray.size();
+            for (int i = 0; i < size; i++) {
+                TypeBlock typeBlock = typeBlockArray.get(i);
+                TypeBlock exist = getOrCreate(typeBlock.getResConfig());
+                exist.merge(typeBlock);
+            }
         }
     }
     @Override
     public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {
         return typeBlock1.compareTo(typeBlock2);
     }
-
-    private static final Predicate<TypeBlock> NON_EMPTY_TESTER = new Predicate<TypeBlock>() {
-        @Override
-        public boolean test(TypeBlock typeBlock) {
-            if(typeBlock == null || typeBlock.isNull()){
-                return false;
-            }
-            return !typeBlock.isEmpty();
-        }
-    };
 }

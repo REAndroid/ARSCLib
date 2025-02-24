@@ -15,80 +15,74 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.array.ResXmlIDArray;
 import com.reandroid.arsc.chunk.Chunk;
-import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.XmlIDMapHeader;
 import com.reandroid.arsc.item.ResXmlID;
 import com.reandroid.arsc.item.ResXmlString;
+import com.reandroid.arsc.list.ResXmlIDList;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
 import java.util.Iterator;
 
-public class ResXmlIDMap extends Chunk<HeaderBlock> implements Iterable<ResXmlID> {
+public class ResXmlIDMap extends Chunk<XmlIDMapHeader> implements Iterable<ResXmlID> {
 
-    private final ResXmlIDArray mResXmlIDArray;
+    private final ResXmlIDList mResXmlIDArray;
 
     public ResXmlIDMap() {
-        super(new HeaderBlock(ChunkType.XML_RESOURCE_MAP), 1);
-        this.mResXmlIDArray=new ResXmlIDArray(getHeaderBlock());
+        super(new XmlIDMapHeader(), 1);
+        this.mResXmlIDArray = new ResXmlIDList(getHeaderBlock().getIdsCount());
+
         addChild(mResXmlIDArray);
     }
-    void removeSafely(ResXmlID resXmlID){
-        if(resXmlID==null
-                || resXmlID.getParent()==null
-                || resXmlID.getIndex()<0
-                || resXmlID.hasReference()){
+
+    void removeSafely(ResXmlID resXmlID) {
+        if (resXmlID == null
+                || resXmlID.getParent() == null
+                || resXmlID.getIndex() < 0
+                || resXmlID.hasReference()) {
             return;
         }
         ResXmlString xmlString = resXmlID.getResXmlString();
-        if(xmlString == null
-                || xmlString.getParent()==null
-                || xmlString.getIndex()<0
-                || xmlString.hasReference()){
+        if (xmlString == null
+                || xmlString.getParent() == null
+                || xmlString.getIndex() < 0
+                || xmlString.hasReference()) {
             return;
         }
         ResXmlStringPool stringPool = getXmlStringPool();
-        if(stringPool == null){
+        if (stringPool == null) {
             return;
         }
         resXmlID.set(0);
-        ResXmlIDArray idArray = getResXmlIDArray();
-        idArray.remove(resXmlID);
+        getResXmlIDArray().remove(resXmlID);
         stringPool.removeString(xmlString);
     }
-    public int size(){
+    public int size() {
         return getResXmlIDArray().size();
     }
-    public ResXmlID get(int index){
+    public ResXmlID get(int index) {
         return getResXmlIDArray().get(index);
     }
-    public void destroy(){
+    public void destroy() {
         getResXmlIDArray().clear();
     }
-    public ResXmlIDArray getResXmlIDArray(){
+    public ResXmlIDList getResXmlIDArray() {
         return mResXmlIDArray;
     }
     @Override
-    public Iterator<ResXmlID> iterator(){
+    public Iterator<ResXmlID> iterator() {
         return getResXmlIDArray().iterator();
     }
-    public void addResourceId(int index, int resId){
-        getResXmlIDArray().addResourceId(index, resId);
-    }
-    public ResXmlID getOrCreate(int resourceId){
+    public ResXmlID getOrCreate(int resourceId) {
         return getResXmlIDArray().getOrCreate(resourceId);
-    }
-    public ResXmlID getByResourceId(int resourceId){
-        return getResXmlIDArray().getByResourceId(resourceId);
     }
     @Override
     protected void onChunkRefreshed() {
 
     }
-    ResXmlStringPool getXmlStringPool(){
+    private ResXmlStringPool getXmlStringPool() {
         ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
-        if(resXmlDocument!=null){
+        if (resXmlDocument != null) {
             return resXmlDocument.getStringPool();
         }
         return null;
@@ -98,7 +92,7 @@ public class ResXmlIDMap extends Chunk<HeaderBlock> implements Iterable<ResXmlID
     public void onChunkLoaded() {
         super.onChunkLoaded();
         ResXmlStringPool resXmlStringPool = getXmlStringPool();
-        if(resXmlStringPool != null) {
+        if (resXmlStringPool != null && !resXmlStringPool.isEmpty()) {
             resXmlStringPool.linkResXmlIDMapInternal();
         }
     }

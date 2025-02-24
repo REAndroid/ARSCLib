@@ -18,7 +18,7 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
@@ -32,7 +32,7 @@ import java.util.Iterator;
 
 public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<JSONArray> {
 
-    public EntryArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart){
+    public EntryArray(OffsetArray offsets, IntegerReference itemCount, IntegerReference itemStart){
         super(offsets, itemCount, itemStart);
     }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
@@ -97,8 +97,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         }
         return null;
     }
-    @Override
-    public boolean isEmpty(){
+    public boolean isEmptyEntries() {
         return !iterator(true).hasNext();
     }
 
@@ -185,9 +184,9 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     @Override
     public void fromJson(JSONArray json) {
         clear();
-        if(isSparse()){
+        if(isSparse()) {
             fromJsonSparse(json);
-        }else {
+        } else {
             fromJsonNonSparse(json);
         }
         refreshCountAndStart();
@@ -227,7 +226,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         }
     }
     public void merge(EntryArray entryArray){
-        if(entryArray ==null|| entryArray == this|| entryArray.isEmpty()){
+        if(entryArray ==null|| entryArray == this|| entryArray.isEmptyEntries()){
             return;
         }
         if(isSparse()){

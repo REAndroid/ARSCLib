@@ -19,13 +19,13 @@ import com.reandroid.apk.ApkModule;
 import com.reandroid.apk.ResFile;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ZipEntryMap;
-import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.list.EntryItemList;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
@@ -261,11 +261,11 @@ public class ResourceBuilder {
         sourceEntryList.sort(this::compareEntryNames);
 
         TypeBlock typeBlock = resultPackage.getOrCreateTypeBlock(ResConfig.getDefault(), typeName);
-        EntryArray entryArray = typeBlock.getEntryArray();
+        EntryItemList entryArray = typeBlock.getEntryArray();
         int size = sourceEntryList.size();
         entryArray.setSize(sourceEntryList.size());
 
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             ResourceEntry resourceEntry = sourceEntryList.get(i);
             Entry entry = entryArray.get(i);
             entry.setName(resourceEntry.getName(), true);

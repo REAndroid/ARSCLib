@@ -112,12 +112,6 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
         block.setParent(null);
         block.setIndex(-1);
     }
-    public void trimLastIf(Predicate<? super T> predicate) {
-        int size = size() - countFromLast(predicate);
-        if(size != size()) {
-            setSize(size);
-        }
-    }
     private Predicate<? super T> nullPredicate() {
         return Block::isNull;
     }

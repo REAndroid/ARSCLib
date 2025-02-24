@@ -15,19 +15,18 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.list.StringItemList;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsStore;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -37,42 +36,33 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.Predicate;
 
 public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
 
     private boolean mUtf8;
-    private final Set<ReferenceItem> mReferencedList;
+    private Object mReferencedList;
     private StyleItem mStyleItem;
 
     public StringItem(boolean utf8) {
         super();
         this.mUtf8 = utf8;
-        this.mReferencedList = new HashSet<>();
     }
 
     public StyleDocument getStyleDocument() {
-        if(hasStyle()){
+        if (hasStyle()) {
             return getStyle().build(get());
         }
         return null;
     }
 
-    public<T extends Block> Iterator<T> getUsers(Class<T> parentClass){
+    public<T extends Block> Iterator<T> getUsers(Class<T> parentClass) {
         return getUsers(parentClass, null);
     }
     public<T extends Block> Iterator<T> getUsers(Class<T> parentClass,
-                                                 Predicate<T> resultFilter){
-
-        Collection<ReferenceItem> referencedList = getReferencedList();
-        if(referencedList.size() == 0){
-            return EmptyIterator.of();
-        }
-        return new ComputeIterator<>(referencedList.iterator(), referenceItem -> {
+                                                 Predicate<T> resultFilter) {
+        return ComputeIterator.of(getReferences(), referenceItem -> {
             T result = referenceItem.getReferredParent(parentClass);
             if (result == null || resultFilter != null && !resultFilter.test(result)) {
                 result = null;
@@ -82,74 +72,60 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
 
     }
 
-    public boolean removeReference(ReferenceItem ref){
-        return mReferencedList.remove(ref);
+    public void removeReference(ReferenceItem reference) {
+        mReferencedList = ObjectsStore.remove(mReferencedList, reference);
     }
-    public void removeAllReference(){
-        mReferencedList.clear();
+    public void clearReferences() {
+        mReferencedList = ObjectsStore.clear(mReferencedList);
     }
-    public boolean hasReference(){
+    public boolean hasReference() {
         ensureStringLinkUnlocked();
-        if(mReferencedList.size() == 0) {
-            return false;
-        }
-        return FilterIterator.of(mReferencedList.iterator(),
-                referenceItem -> !(referenceItem instanceof StyleItem.StyleIndexReference))
-                .hasNext();
+        return ObjectsStore.containsIf(mReferencedList, referenceItem ->
+                !(referenceItem instanceof StyleItem.StyleIndexReference));
     }
     public int getReferencesSize() {
-        return mReferencedList.size();
+        return ObjectsStore.size(mReferencedList);
     }
-    public Collection<ReferenceItem> getReferencedList(){
+    public Iterator<ReferenceItem> getReferences() {
         ensureStringLinkUnlocked();
-        return mReferencedList;
+        return ObjectsStore.iterator(mReferencedList);
     }
-    void ensureStringLinkUnlocked(){
+    void ensureStringLinkUnlocked() {
         StringPool<?> stringPool = getParentInstance(StringPool.class);
-        if(stringPool != null){
+        if (stringPool != null) {
             stringPool.ensureStringLinkUnlockedInternal();
         }
     }
-    public void addReference(ReferenceItem ref){
-        if(ref!=null){
-            mReferencedList.add(ref);
-        }
-    }
-    public void addReferenceIfAbsent(ReferenceItem ref){
-        if(ref!=null){
-            mReferencedList.add(ref);
-        }
-    }
-    public void addReference(Collection<ReferenceItem> refList){
-        if(refList == null){
-            return;
-        }
-        for(ReferenceItem ref:refList){
-            if(ref != null){
-                this.mReferencedList.add(ref);
+    public void addReference(ReferenceItem reference) {
+        if (reference != null) {
+            mReferencedList = ObjectsStore.add(mReferencedList, reference);
+            int index = this.getIndex();
+            if (reference.get() != index) {
+                reference.set(index);
             }
         }
     }
-    private void reUpdateReferences(int newIndex){
-        ReferenceItem[] referenceItems = mReferencedList.toArray(new ReferenceItem[0]);
-        for(ReferenceItem ref:referenceItems){
-            ref.set(newIndex);
+    private void reUpdateReferences(int newIndex) {
+        Iterator<ReferenceItem> iterator = ObjectsStore.clonedIterator(mReferencedList);
+        while (iterator.hasNext()) {
+            ReferenceItem reference = iterator.next();
+            reference.set(newIndex);
         }
     }
-    public void onRemoved(){
+    public void onRemoved() {
         clearStyle();
         setParent(null);
     }
     @Override
-    public void onIndexChanged(int oldIndex, int newIndex){
+    public void onIndexChanged(int oldIndex, int newIndex) {
         reUpdateReferences(newIndex);
     }
     @SuppressWarnings("unchecked")
     @Override
     protected void onStringChanged(String old, String text) {
         super.onStringChanged(old, text);
-        StringPool<StringItem> stringPool = getParentInstance(StringPool.class);
-        if(stringPool != null) {
+        StringItemList<StringItem> stringPool = getParentInstance(StringItemList.class);
+        if (stringPool != null) {
             stringPool.onStringChanged(old, this);
         }
     }
@@ -159,82 +135,83 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     public void serializeText(XmlSerializer serializer, boolean escapeValues) throws IOException {
         String text = get();
-        if(text == null){
+        if (text == null) {
             return;
         }
-        if(escapeValues){
+        if (escapeValues) {
             text = XmlSanitizer.escapeDecodedValue(text);
-        }else {
+        } else {
             text = XmlSanitizer.escapeSpecialCharacter(text);
         }
         serializer.text(text);
     }
     public void serializeAttribute(XmlSerializer serializer, String namespace, String name) throws IOException {
         String text = get();
-        if(text == null){
-            // TODO: could happen?
+        if (text == null) {
             text = "";
         }
         serializer.attribute(namespace, name, XmlSanitizer.escapeSpecialCharacter(text));
     }
-    public String getHtml(){
+    public String getHtml() {
         String text = get();
-        if(text == null){
+        if (text == null) {
             return null;
         }
         StyleItem styleItem = getStyle();
-        if(styleItem == null){
+        if (styleItem == null) {
             return text;
         }
         return styleItem.applyStyle(text, false, false);
     }
-    public String getXml(){
+    public String getXml() {
         return getXml(false);
     }
-    public String getXml(boolean escapeXmlText){
+    public String getXml(boolean escapeXmlText) {
         String text = get();
-        if(text == null){
+        if (text == null) {
             return null;
         }
         StyleItem styleItem = getStyle();
-        if(styleItem == null){
+        if (styleItem == null) {
             return text;
         }
         return styleItem.applyStyle(text, true, escapeXmlText);
     }
     @Override
-    public void set(String str){
-        if(str == null){
+    public void set(String str) {
+        boolean is_null = str == null;
+        setNull(is_null);
+        if (is_null) {
             StyleItem style = getStyle();
-            if(style != null){
+            if (style != null) {
                 style.clearStyle();
             }
         }
         super.set(str);
     }
-    public void set(StyleDocument document){
+    public void set(StyleDocument document) {
         String old = getXml();
-        if(countBytes() == 0) {
+        if (countBytes() == 0) {
             old = null;
         }
         clearStyle();
         this.set(document.getStyledString(), false);
-        if(document.hasElements()) {
+        if (document.hasElements()) {
             StyleItem styleItem = getOrCreateStyle();
             styleItem.parse(document);
         }
         String update = getXml();
         onStringChanged(old, update);
     }
-    public void set(JSONObject jsonObject){
+    public void set(JSONObject jsonObject) {
         String old = getXml();
-        if(countBytes() == 0) {
+        if (countBytes() == 0) {
             old = null;
         }
         clearStyle();
         this.set(jsonObject.getString(NAME_string), false);
         JSONObject style = jsonObject.optJSONObject(NAME_style);
-        if(style != null) {
+        if (style != null) {
             StyleItem styleItem = getOrCreateStyle();
             styleItem.fromJson(style);
         }
@@ -242,19 +219,20 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         onStringChanged(old, update);
     }
 
-    public boolean isUtf8(){
+    public boolean isUtf8() {
         return mUtf8;
     }
-    public void setUtf8(boolean utf8){
-        if(utf8 == mUtf8){
-            return;
+    public void setUtf8(boolean utf8) {
+        if (utf8 != mUtf8) {
+            mUtf8 = utf8;
+            if (countBytes() != 0) {
+                writeStringBytes(get());
+            }
         }
-        mUtf8 = utf8;
-        onBytesChanged();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        if(reader.available() < 4){
+        if (reader.available() < 4) {
             return;
         }
         setBytesLength(calculateReadLength(reader), false);
@@ -262,64 +240,63 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         onBytesChanged();
     }
     int calculateReadLength(BlockReader reader) throws IOException {
-        if(reader.available() < 4){
+        if (reader.available() < 4) {
             return reader.available();
         }
         byte[] bytes = new byte[4];
         reader.readFully(bytes);
         reader.offset(-4);
         int[] lengthResult;
-        if(isUtf8()){
+        if (isUtf8()) {
             lengthResult = decodeUtf8StringByteLength(bytes);
-        }else {
+        } else {
             lengthResult = decodeUtf16StringByteLength(bytes);
         }
-        int add = isUtf8()? 1:2;
+        int add = isUtf8() ? 1:2;
         return lengthResult[0] + lengthResult[1] + add;
     }
     @Override
-    protected String decodeString(byte[] bytes){
+    protected String decodeString(byte[] bytes) {
         return decodeString(bytes, mUtf8);
     }
     @Override
-    protected byte[] encodeString(String str){
-        if(mUtf8){
+    protected byte[] encodeString(String str) {
+        if (mUtf8) {
             return encodeUtf8ToBytes(str);
-        }else {
+        } else {
             return encodeUtf16ToBytes(str);
         }
     }
-    private String decodeString(byte[] allStringBytes, boolean isUtf8) {
-        if(isNullBytes(allStringBytes)){
-            if(allStringBytes==null||allStringBytes.length==0){
+    private String decodeString(byte[] encodedBytes, boolean isUtf8) {
+        if (isNullBytes(encodedBytes)) {
+            if (encodedBytes == null || encodedBytes.length == 0) {
                 return null;
             }
             return "";
         }
         int[] offLen;
-        if(isUtf8){
-            offLen=decodeUtf8StringByteLength(allStringBytes);
-        }else {
-            offLen=decodeUtf16StringByteLength(allStringBytes);
+        if (isUtf8) {
+            offLen = decodeUtf8StringByteLength(encodedBytes);
+        } else {
+            offLen = decodeUtf16StringByteLength(encodedBytes);
         }
         CharsetDecoder charsetDecoder;
-        if(isUtf8){
-            charsetDecoder=UTF8_DECODER;
-        }else {
-            charsetDecoder=UTF16LE_DECODER;
+        if (isUtf8) {
+            charsetDecoder = UTF8_DECODER;
+        } else {
+            charsetDecoder = UTF16LE_DECODER;
         }
         try {
-            ByteBuffer buf=ByteBuffer.wrap(allStringBytes, offLen[0], offLen[1]);
-            CharBuffer charBuffer=charsetDecoder.decode(buf);
-            return charBuffer.toString();
+            ByteBuffer buffer = ByteBuffer.wrap(encodedBytes, offLen[0], offLen[1]);
+            return charsetDecoder.decode(buffer).toString();
         } catch (CharacterCodingException ex) {
-            if(isUtf8){
-                return tryThreeByteDecoder(allStringBytes, offLen[0], offLen[1]);
+            if (isUtf8) {
+                return tryThreeByteDecoder(encodedBytes, offLen[0], offLen[1]);
             }
-            return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
+            return new String(encodedBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
         }
     }
-    private String tryThreeByteDecoder(byte[] bytes, int offset, int length){
+    private String tryThreeByteDecoder(byte[] bytes, int offset, int length) {
         try {
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes, offset, length);
             CharBuffer charBuffer = DECODER_3B.decode(byteBuffer);
@@ -328,19 +305,19 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             return new String(bytes, offset, length, StandardCharsets.UTF_8);
         }
     }
-    public boolean hasStyle(){
-        StyleItem styleItem=getStyle();
-        if(styleItem==null){
-            return false;
+    public boolean hasStyle() {
+        StyleItem styleItem = getStyle();
+        if (styleItem != null) {
+            return styleItem.hasSpans();
         }
-        return styleItem.size()>0;
+        return false;
     }
-    public StyleItem getStyle(){
+    public StyleItem getStyle() {
         return mStyleItem;
     }
-    public StyleItem getOrCreateStyle(){
+    public StyleItem getOrCreateStyle() {
         StyleItem styleItem = getStyle();
-        if(styleItem == null) {
+        if (styleItem == null) {
             styleItem = getParentInstance(StringPool.class).getStyleArray().createNext();
             linkStyleItemInternal(styleItem);
             styleItem = getStyle();
@@ -348,23 +325,23 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return styleItem;
     }
     public void linkStyleItemInternal(StyleItem styleItem) {
-        if(styleItem == null) {
+        if (styleItem == null) {
             throw new NullPointerException("Can not link null style item");
         }
-        if(this.mStyleItem == styleItem) {
+        if (this.mStyleItem == styleItem) {
             return;
         }
-        if(this.mStyleItem != null) {
+        if (this.mStyleItem != null) {
             throw new IllegalStateException("Style item is already linked");
         }
         this.mStyleItem = styleItem;
         styleItem.setStringItemInternal(this);
     }
     public void unlinkStyleItemInternal(StyleItem styleItem) {
-        if(this.mStyleItem == null) {
+        if (this.mStyleItem == null) {
             return;
         }
-        if(styleItem != this.mStyleItem) {
+        if (styleItem != this.mStyleItem) {
             throw new IllegalStateException("Wrong style item");
         }
         this.mStyleItem = null;
@@ -372,50 +349,66 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     private void clearStyle() {
         StyleItem styleItem = getStyle();
-        if(styleItem != null) {
+        if (styleItem != null) {
             styleItem.clearStyle();
         }
     }
-    public void transferReferences(StringItem source){
-        if(source == this || source == null || getParent() != source.getParent()){
+    public void transferReferences(StringItem source) {
+        if (source == this || source == null || getParent() != source.getParent()) {
             return;
         }
-        int index = getIndex();
-        if(index < 0 || source.getIndex() < 0){
+        if (getIndex() < 0 || source.getIndex() < 0) {
             return;
         }
-        ReferenceItem[] copyList = source.getReferencedList().toArray(new ReferenceItem[0]);
-        for(ReferenceItem ref : copyList){
-            if(isTransferable(ref)){
-                source.removeReference(ref);
-                ref.set(index);
-                addReference(ref);
+        Iterator<ReferenceItem> iterator = ObjectsStore.clonedIterator(source.mReferencedList);
+        while (iterator.hasNext()) {
+            ReferenceItem reference = iterator.next();
+            if (isTransferable(reference)) {
+                source.removeReference(reference);
+                addReference(reference);
             }
         }
     }
-    private boolean isTransferable(ReferenceItem referenceItem){
+    private boolean isTransferable(ReferenceItem referenceItem) {
         return !((referenceItem instanceof WeakStringReference));
     }
     public boolean merge(StringItem other) {
-        if(!canMerge(other)) {
+        if (!canMerge(other)) {
             return false;
         }
         clearStyle();
         set(other.get(), false);
         StyleItem otherStyle = other.getStyle();
-        if(otherStyle != null && otherStyle.hasSpans()) {
+        if (otherStyle != null && otherStyle.hasSpans()) {
             getOrCreateStyle().merge(otherStyle);
         }
         onStringChanged(null, getXml());
         return true;
     }
     boolean canMerge(StringItem stringItem) {
-        if(stringItem == null || stringItem == this) {
+        if (stringItem == null || stringItem == this) {
             return false;
         }
-        Block array1 = this.getParentInstance(StringArray.class);
-        Block array2 = stringItem.getParentInstance(StringArray.class);
+        Block array1 = this.getParentInstance(StringItemList.class);
+        Block array2 = stringItem.getParentInstance(StringItemList.class);
         return array1 != null && array2 != null && array1 != array2;
+    }
+    public boolean equalsValue(StyleDocument styled) {
+        if (styled == null) {
+            return isNull();
+        }
+        if (this.hasStyle()) {
+            return styled.equals(getStyleDocument());
+        } else if (!styled.hasElements()) {
+            return ObjectsUtil.equals(getXml(), styled.getXml());
+        }
+        return false;
+    }
+    public boolean equalsValue(String value) {
+        if (value == null) {
+            return isNull();
+        }
+        return value.equals(getXml());
     }
     @Override
     public int compareTo(StringItem stringItem) {
@@ -426,14 +419,14 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             return 0;
         }
         int i = compareStringValue(stringItem);
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         return compareReferences(stringItem);
     }
     public int compareStringValue(StringItem stringItem) {
         int i = -1 * CompareUtil.compare(hasStyle(), stringItem.hasStyle());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         return CompareUtil.compare(get(), stringItem.get());
@@ -445,7 +438,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(NAME_string, get());
-        if(hasStyle()) {
+        if (hasStyle()) {
             jsonObject.put(NAME_style, getStyle().toJson());
         }
         return jsonObject;
@@ -455,20 +448,20 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         set(json);
     }
     @Override
-    public String toString(){
+    public String toString() {
         String xml = getXml();
-        if(xml == null){
+        if (xml == null) {
             return getIndex() + ": NULL";
         }
         StringPool<?> stringPool = getParentInstance(StringPool.class);
-        if(stringPool != null && !stringPool.isStringLinkLocked()){
+        if (stringPool != null && !stringPool.isStringLinkLocked()) {
             return getIndex() + ": USED BY=" + getReferencesSize() + "{" + xml + "}";
         }
         return getIndex() + ":" + xml;
     }
 
     private static int[] decodeUtf8StringByteLength(byte[] lengthBytes) {
-        int offset=0;
+        int offset = 0;
         int val = lengthBytes[offset];
         int length;
         if ((val & 0x80) != 0) {
@@ -500,16 +493,16 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
         return new int[] {2, val * 2};
     }
-    static boolean isNullBytes(byte[] bts){
-        if(bts==null){
+    static boolean isNullBytes(byte[] bytes) {
+        if (bytes == null) {
             return true;
         }
-        int max=bts.length;
-        if(max<2){
+        int length = bytes.length;
+        if (length < 2) {
             return true;
         }
-        for(int i=2; i<max;i++){
-            if(bts[i] != 0){
+        for (int i = 2; i < length; i++) {
+            if (bytes[i] != 0) {
                 return false;
             }
         }
@@ -517,87 +510,87 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
 
 
-    private static byte[] encodeUtf8ToBytes(String str){
-        byte[] bts;
-        byte[] lenBytes=new byte[2];
-        if(str!=null){
-            bts=str.getBytes(StandardCharsets.UTF_8);
-            int strLen=bts.length;
-            if((strLen & 0xff80)!=0){
-                lenBytes=new byte[4];
-                int l2=strLen&0xff;
-                int l1=(strLen-l2)>>8;
-                lenBytes[3]=(byte) (l2);
-                lenBytes[2]=(byte) (l1|0x80);
-                strLen=str.length();
-                l2=strLen&0xff;
-                l1=(strLen-l2)>>8;
-                lenBytes[1]=(byte) (l2);
-                lenBytes[0]=(byte) (l1|0x80);
-            }else{
-                lenBytes=new ShortItem((short) strLen).getBytesInternal();
-                lenBytes[1]=lenBytes[0];
-                lenBytes[0]=(byte)str.length();
+    private static byte[] encodeUtf8ToBytes(String str) {
+        byte[] bytes;
+        byte[] lenBytes = new byte[2];
+        if (str != null) {
+            bytes = str.getBytes(StandardCharsets.UTF_8);
+            int strLen = bytes.length;
+            if ((strLen & 0xff80) != 0) {
+                lenBytes = new byte[4];
+                int l2 = strLen & 0xff;
+                int l1 = (strLen-l2) >> 8;
+                lenBytes[3] = (byte) (l2);
+                lenBytes[2] = (byte) (l1 | 0x80);
+                strLen = str.length();
+                l2 = strLen & 0xff;
+                l1 = (strLen - l2) >> 8;
+                lenBytes[1] = (byte) (l2);
+                lenBytes[0] = (byte) (l1 | 0x80);
+            } else {
+                lenBytes = new ShortItem((short) strLen).getBytesInternal();
+                lenBytes[1] = lenBytes[0];
+                lenBytes[0] = (byte) str.length();
             }
-        }else {
-            bts=new byte[0];
+        } else {
+            bytes = new byte[0];
         }
-        return addBytes(lenBytes, bts, new byte[1]);
+        return addBytes(lenBytes, bytes, new byte[1]);
     }
-    private static byte[] encodeUtf16ToBytes(String str){
-        if(str==null){
+    private static byte[] encodeUtf16ToBytes(String str) {
+        if (str == null) {
             return null;
         }
         byte[] lenBytes;
-        byte[] bts=getUtf16Bytes(str);
-        int strLen=bts.length;
-        strLen=strLen/2;
-        if((strLen & 0xffff8000)!=0){
-            lenBytes=new byte[4];
-            int low=strLen&0xff;
-            int high=(strLen-low)&0xff00;
-            int rem=strLen-low-high;
-            lenBytes[3]=(byte) (high>>8);
-            lenBytes[2]=(byte) (low);
-            low=rem&0xff;
-            high=(rem&0xff00)>>8;
-            lenBytes[1]=(byte) (high|0x80);
-            lenBytes[0]=(byte) (low);
-        }else{
-            lenBytes=new ShortItem((short) strLen).getBytesInternal();
+        byte[] bytes = getUtf16Bytes(str);
+        int strLen = bytes.length;
+        strLen = strLen / 2;
+        if ((strLen & 0xffff8000) != 0) {
+            lenBytes = new byte[4];
+            int low = strLen & 0xff;
+            int high = (strLen - low) & 0xff00;
+            int rem = strLen - low - high;
+            lenBytes[3] = (byte) (high >> 8);
+            lenBytes[2] = (byte) low;
+            low = rem & 0xff;
+            high = (rem & 0xff00) >> 8;
+            lenBytes[1] = (byte) (high | 0x80);
+            lenBytes[0] = (byte) low;
+        } else {
+            lenBytes = new ShortItem((short) strLen).getBytesInternal();
         }
-        return addBytes(lenBytes, bts, new byte[2]);
+        return addBytes(lenBytes, bytes, new byte[2]);
     }
-    static byte[] getUtf16Bytes(String str){
+    static byte[] getUtf16Bytes(String str) {
         return str.getBytes(StandardCharsets.UTF_16LE);
     }
 
-    private static byte[] addBytes(byte[] bts1, byte[] bts2, byte[] bts3){
-        if(bts1==null && bts2==null && bts3==null){
+    private static byte[] addBytes(byte[] bytes1, byte[] bytes2, byte[] bytes3) {
+        if (bytes1 == null && bytes2 == null && bytes3 == null) {
             return null;
         }
-        int len=0;
-        if(bts1!=null){
-            len=bts1.length;
+        int length = 0;
+        if (bytes1 != null) {
+            length = bytes1.length;
         }
-        if(bts2!=null){
-            len+=bts2.length;
+        if (bytes2 != null) {
+            length += bytes2.length;
         }
-        if(bts3!=null){
-            len+=bts3.length;
+        if (bytes3 != null) {
+            length += bytes3.length;
         }
-        byte[] result=new byte[len];
-        int start=0;
-        if(bts1!=null){
-            start=bts1.length;
-            System.arraycopy(bts1, 0, result, 0, start);
+        byte[] result = new byte[length];
+        int start = 0;
+        if (bytes1 != null) {
+            start = bytes1.length;
+            System.arraycopy(bytes1, 0, result, 0, start);
         }
-        if(bts2!=null){
-            System.arraycopy(bts2, 0, result, start, bts2.length);
-            start+=bts2.length;
+        if (bytes2 != null) {
+            System.arraycopy(bytes2, 0, result, start, bytes2.length);
+            start += bytes2.length;
         }
-        if(bts3!=null){
-            System.arraycopy(bts3, 0, result, start, bts3.length);
+        if (bytes3 != null) {
+            System.arraycopy(bytes3, 0, result, start, bytes3.length);
         }
         return result;
     }

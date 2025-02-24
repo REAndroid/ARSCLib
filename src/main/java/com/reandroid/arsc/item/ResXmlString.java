@@ -18,6 +18,7 @@ package com.reandroid.arsc.item;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.xml.StyleDocument;
 
 public class ResXmlString extends StringItem {
 
@@ -161,6 +162,20 @@ public class ResXmlString extends StringItem {
         return true;
     }
 
+    @Override
+    public boolean equalsValue(String value) {
+        return !hasResourceId() && super.equalsValue(value);
+    }
+    @Override
+    public boolean equalsValue(StyleDocument styled) {
+        return !hasResourceId() && super.equalsValue(styled);
+    }
+    public boolean equalsValue(int resourceId, StyleDocument styled) {
+        return resourceId == getResourceId() && super.equalsValue(styled);
+    }
+    public boolean equalsValue(int resourceId, String value) {
+        return resourceId == getResourceId() && super.equalsValue(value);
+    }
     @Override
     public int compareTo(StringItem stringItem){
         if(!(stringItem instanceof ResXmlString)){

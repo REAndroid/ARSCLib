@@ -15,21 +15,21 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.array.*;
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.list.EntryItemList;
+import com.reandroid.arsc.list.EntryItemOffsetList;
 import com.reandroid.arsc.pool.SpecStringPool;
-import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -43,29 +43,22 @@ import java.util.List;
 public class TypeBlock extends Chunk<TypeHeader>
         implements Iterable<Entry>, JSONConvert<JSONObject>, Comparable<TypeBlock> {
 
-    private final EntryArray mEntryArray;
+    private final EntryItemList mEntryArray;
     private TypeString mTypeString;
 
-    public TypeBlock(boolean sparse, boolean offset16) {
-        super(new TypeHeader(sparse, offset16), 2);
+
+    public TypeBlock() {
+        super(new TypeHeader(), 2);
         TypeHeader header = getHeaderBlock();
 
-        OffsetArray entryOffsets;
-        if(sparse){
-            entryOffsets = new SparseOffsetsArray();
-        }else if(offset16){
-            entryOffsets = new ShortOffsetArray();
-        }else {
-            entryOffsets = new IntegerOffsetArray();
-        }
-        this.mEntryArray = new EntryArray(entryOffsets,
-                header.getCountItem(), header.getEntriesStart());
+        EntryItemOffsetList entryOffsets = new EntryItemOffsetList(header.getCountItem());
+        this.mEntryArray = new EntryItemList(header, entryOffsets);
 
-        addChild((Block) entryOffsets);
+        addChild(entryOffsets);
         addChild(mEntryArray);
     }
 
-    public Iterator<ValueItem> allValues(){
+    public Iterator<ValueItem> allValues() {
         return new IterableIterator<Entry, ValueItem>(iterator()) {
             @Override
             public Iterator<ValueItem> iterator(Entry element) {
@@ -73,144 +66,136 @@ public class TypeBlock extends Chunk<TypeHeader>
             }
         };
     }
-    public boolean isTypeAttr(){
+    public boolean isTypeAttr() {
         TypeString typeString = getTypeString();
-        if(typeString != null){
+        if (typeString != null) {
             return typeString.isTypeAttr();
         }
         return false;
     }
-    public boolean isTypeId(){
+    public boolean isTypeId() {
         TypeString typeString = getTypeString();
-        if(typeString != null){
+        if (typeString != null) {
             return typeString.isTypeId();
         }
         return false;
     }
-    public String buildUniqueDirectoryName(){
+    public String buildUniqueDirectoryName() {
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock != null && packageBlock.hasValidTypeNames()){
+        if (packageBlock != null && packageBlock.hasValidTypeNames()) {
             return getTypeName() + getResConfig().getQualifiers();
         }
         return "type_" + HexUtil.toHex2(getTypeId())
                 + getResConfig().getQualifiers();
     }
-    public void linkTableStringsInternal(TableStringPool tableStringPool){
-        EntryArray entryArray = getEntryArray();
-        entryArray.linkTableStringsInternal(tableStringPool);
-    }
-    public void linkSpecStringsInternal(SpecStringPool specStringPool){
-        EntryArray entryArray = getEntryArray();
-        entryArray.linkSpecStringsInternal(specStringPool);
-    }
-    public boolean isSparse(){
+    public boolean isSparse() {
         return getHeaderBlock().isSparse();
     }
-    public boolean isOffset16(){
+    public boolean isOffset16() {
         return getHeaderBlock().isOffset16();
     }
-    public void destroy(){
+    public void destroy() {
         getEntryArray().destroy();
         setId(0);
         setParent(null);
     }
-    public boolean removeNullEntries(int startId){
-        startId = 0x0000ffff & startId;
-        EntryArray entryArray = getEntryArray();
+    public boolean removeNullEntries(int startId) {
+        startId = 0xffff & startId;
+        EntryItemList entryArray = getEntryArray();
         entryArray.removeAllNull(startId);
         return entryArray.size() == startId;
     }
-    public PackageBlock getPackageBlock(){
+    public PackageBlock getPackageBlock() {
         SpecTypePair specTypePair = getParent(SpecTypePair.class);
-        if(specTypePair!=null){
+        if (specTypePair != null) {
             return specTypePair.getPackageBlock();
         }
         return null;
     }
-    public String getTypeName(){
-        TypeString typeString=getTypeString();
-        if(typeString==null){
-            return null;
+    public String getTypeName() {
+        TypeString typeString = getTypeString();
+        if (typeString != null) {
+            return typeString.get();
         }
-        return typeString.get();
+        return null;
     }
-    public TypeString getTypeString(){
-        if(mTypeString!=null){
-            if(mTypeString.getId()==getTypeId()){
+    public TypeString getTypeString() {
+        if (mTypeString != null) {
+            if (mTypeString.getId() == getTypeId()) {
                 return mTypeString;
             }
             mTypeString=null;
         }
         PackageBlock packageBlock=getPackageBlock();
-        if(packageBlock==null){
+        if (packageBlock == null) {
             return null;
         }
-        TypeStringPool typeStringPool=packageBlock.getTypeStringPool();
-        mTypeString=typeStringPool.getById(getId());
+        TypeStringPool typeStringPool = packageBlock.getTypeStringPool();
+        mTypeString = typeStringPool.getById(getId());
         return mTypeString;
     }
-    public byte getTypeId(){
+    public byte getTypeId() {
         return getHeaderBlock().getId().getByte();
     }
-    public int getId(){
+    public int getId() {
         return getHeaderBlock().getId().get();
     }
-    public void setId(int id){
+    public void setId(int id) {
         setTypeId((byte) (0xff & id));
     }
-    public void setTypeId(byte id){
+    public void setTypeId(byte id) {
         getHeaderBlock().getId().set(id);
     }
-    public void setTypeName(String name){
+    public void setTypeName(String name) {
         TypeStringPool typeStringPool = getTypeStringPool();
-        int id= getId();
+        int id = getId();
         TypeString typeString=typeStringPool.getById(id);
-        if(typeString==null){
+        if (typeString == null) {
             typeString=typeStringPool.getOrCreate(id, name);
         }
         typeString.set(name);
     }
-    private TypeStringPool getTypeStringPool(){
+    private TypeStringPool getTypeStringPool() {
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock != null){
+        if (packageBlock != null) {
             return packageBlock.getTypeStringPool();
         }
         return ObjectsUtil.cast(null);
     }
-    public void setEntryCount(int count){
-        IntegerItem entryCount = getHeaderBlock().getCountItem();
-        if(count == entryCount.get()){
+    public void setEntryCount(int count) {
+        IntegerReference entryCount = getHeaderBlock().getCountItem();
+        if (count == entryCount.get()) {
             return;
         }
         entryCount.set(count);
         onSetEntryCount(count);
     }
-    public boolean isEmpty(){
-        return getEntryArray().isEmpty();
+    public boolean isEmpty() {
+        return getEntryArray().isEmptyEntries();
     }
-    public boolean isDefault(){
+    public boolean isDefault() {
         return getResConfig().isDefault();
     }
-    public String getQualifiers(){
+    public String getQualifiers() {
         return getResConfig().getQualifiers();
     }
-    public void setQualifiers(String qualifiers){
+    public void setQualifiers(String qualifiers) {
         getResConfig().parseQualifiers(qualifiers);
     }
-    public SpecTypePair getParentSpecTypePair(){
+    public SpecTypePair getParentSpecTypePair() {
         return getParent(SpecTypePair.class);
     }
-    public Entry getOrCreateDefinedEntry(String name){
+    public Entry getOrCreateDefinedEntry(String name) {
         Entry entry = getEntry(name);
-        if(entry != null){
+        if (entry != null) {
             return entry;
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return null;
         }
         int id = packageBlock.resolveResourceId(getId(), name);
-        if(id == 0){
+        if (id == 0) {
             return null;
         }
         SpecStringPool stringPool = packageBlock.getSpecStringPool();
@@ -220,20 +205,20 @@ public class TypeBlock extends Chunk<TypeHeader>
         entry.setSpecReference(specString);
         return entry;
     }
-    public Entry getOrCreateEntry(String name){
+    public Entry getOrCreateEntry(String name) {
         if (name == null) {
             return null;
         }
         Entry entry = getEntry(name);
-        if(entry != null){
+        if (entry != null) {
             return entry;
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return null;
         }
         int id = packageBlock.resolveResourceId(getId(), name);
-        if(id != 0){
+        if (id != 0) {
             id = id & 0xffff;
         } else {
             id = getParentSpecTypePair().getHighestEntryId() + 1;
@@ -245,56 +230,51 @@ public class TypeBlock extends Chunk<TypeHeader>
         entry.setSpecReference(specString);
         return entry;
     }
-    public Entry getOrCreateEntry(short entryId){
+    public Entry getOrCreateEntry(short entryId) {
         return getEntryArray().getOrCreate(entryId);
     }
-    public Entry getEntry(short entryId){
+    public Entry getEntry(short entryId) {
         return getEntryArray().getEntry(entryId);
     }
-    public int realSize(){
+    public int realSize() {
         return getEntryArray().countNonNull();
     }
     public int size() {
         return getEntryArray().size();
     }
     @Override
-    public Iterator<Entry> iterator(){
+    public Iterator<Entry> iterator() {
         return getEntryArray().iterator(false);
     }
-    public void clear(){
-        for (Entry entry : this) {
-            entry.setNull(true);
-        }
+    public void clear() {
         getEntryArray().clear();
     }
     /**
      * It is allowed to have duplicate entry name therefore it is not recommend to use this.
      */
-    public Entry getEntry(String entryName){
+    public Entry getEntry(String entryName) {
         return getEntryArray().getEntry(entryName);
     }
-    public Boolean hasComplexEntry(){
+    public Boolean hasComplexEntry() {
         SpecTypePair specTypePair = getParentSpecTypePair();
-        if(specTypePair != null){
+        if (specTypePair != null) {
             return specTypePair.hasComplexEntry();
         }
         return null;
     }
-    public ResConfig getResConfig(){
+    public ResConfig getResConfig() {
         return getHeaderBlock().getConfig();
     }
-    public EntryArray getEntryArray(){
+    public EntryItemList getEntryArray() {
         return mEntryArray;
     }
-    public void ensureEntriesCount(int count){
-        EntryArray entryArray = getEntryArray();
-        entryArray.ensureSize(count);
-        entryArray.refreshCount();
+    public void ensureEntriesCount(int count) {
+        getEntryArray().ensureSize(count);
     }
     public List<Entry> listEntries(boolean skipNullBlock) {
         return CollectionUtil.toList(getEntryArray().iterator(skipNullBlock));
     }
-    public Entry getEntry(int entryId){
+    public Entry getEntry(int entryId) {
         return getEntryArray().getEntry(entryId);
     }
 
@@ -303,10 +283,10 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     protected void onChunkRefreshed() {
-        getEntryArray().refreshCountAndStart();
+        //getEntryArray().refreshCountAndStart();
     }
     @Override
-    protected void onPreRefresh(){
+    protected void onPreRefresh() {
         getHeaderBlock().getConfig().refresh();
         super.onPreRefresh();
     }
@@ -315,7 +295,7 @@ public class TypeBlock extends Chunk<TypeHeader>
      * so let's override here because this block is the largest
      */
     @Override
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         ByteArrayOutputStream os=new ByteArrayOutputStream();
         try {
             writeBytes(os);
@@ -327,10 +307,10 @@ public class TypeBlock extends Chunk<TypeHeader>
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
-        if(isSparse()){
+        if (isSparse()) {
             jsonObject.put(NAME_is_sparse, true);
         }
-        if(isOffset16()){
+        if (isOffset16()) {
             jsonObject.put(NAME_is_offset16, true);
         }
         jsonObject.put(NAME_id, getId());
@@ -343,31 +323,38 @@ public class TypeBlock extends Chunk<TypeHeader>
     public void fromJson(JSONObject json) {
         setId(json.getInt(NAME_id));
         String name = json.optString(NAME_name);
-        if(name!=null){
+        if (name != null) {
             setTypeName(name);
         }
-        getEntryArray()
-                .fromJson(json.getJSONArray(NAME_entries));
-        getResConfig()
-                .fromJson(json.getJSONObject(NAME_config));
+        if (isEmpty()) {
+            getHeaderBlock().setOffsetType(
+                    json.optBoolean(NAME_is_sparse, false),
+                    json.optBoolean(NAME_is_offset16, false));
+        }
+        getResConfig().fromJson(json.getJSONObject(NAME_config));
+        getEntryArray().fromJson(json.getJSONArray(NAME_entries));
     }
-    public void merge(TypeBlock typeBlock){
-        if(typeBlock==null||typeBlock==this){
+    public void merge(TypeBlock typeBlock) {
+        if (typeBlock == null || typeBlock == this) {
             return;
         }
-        if(getTypeId() != typeBlock.getTypeId()){
+        if (getTypeId() != typeBlock.getTypeId()) {
             throw new IllegalArgumentException("Can not merge different id types: "
-                    +getTypeId()+"!="+typeBlock.getTypeId());
+                    + getTypeId() + "!=" + typeBlock.getTypeId());
         }
         setTypeName(typeBlock.getTypeName());
+        if (this.isEmpty()) {
+            this.getHeaderBlock().setOffsetType(
+                    typeBlock.getHeaderBlock().getOffsetType());
+        }
         getEntryArray().merge(typeBlock.getEntryArray());
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {
         int id1 = getId();
         int id2 = typeBlock.getId();
-        if(id1 != id2){
-            return Integer.compare(id1, id2);
+        if (id1 != id2) {
+            return CompareUtil.compare(id1, id2);
         }
         String q1 = (isSparse() ? "1" : "0")
                 + getResConfig().getQualifiers();
@@ -375,37 +362,37 @@ public class TypeBlock extends Chunk<TypeHeader>
                 + typeBlock.getResConfig().getQualifiers();
         return q1.compareTo(q2);
     }
-    public boolean isEqualTypeName(String typeName){
+    public boolean isEqualTypeName(String typeName) {
         return isEqualTypeName(getTypeName(), typeName);
     }
     @Override
-    public String toString(){
+    public String toString() {
         return getTypeName() + '{' +  getHeaderBlock() + '}';
     }
 
-    public static boolean canHaveResourceFile(String typeName){
+    public static boolean canHaveResourceFile(String typeName) {
         return !isEqualTypeName("string", typeName);
     }
-    public static boolean isEqualTypeName(String name1, String name2){
-        if(name1 == null){
+    public static boolean isEqualTypeName(String name1, String name2) {
+        if (name1 == null) {
             return name2 == null;
         }
-        if(name2 == null){
+        if (name2 == null) {
             return false;
         }
-        if(name1.equals(name2)){
+        if (name1.equals(name2)) {
             return true;
         }
         return trimTypeName(name1).equals(trimTypeName(name2));
     }
-    private static String trimTypeName(String typeName){
-        while (typeName.length() > 0 && isWildTypeNamePrefix(typeName.charAt(0))){
+    private static String trimTypeName(String typeName) {
+        while (typeName.length() > 0 && isWildTypeNamePrefix(typeName.charAt(0))) {
             typeName = typeName.substring(1);
         }
         return typeName;
     }
-    private static boolean isWildTypeNamePrefix(char ch){
-        switch (ch){
+    private static boolean isWildTypeNamePrefix(char ch) {
+        switch (ch) {
             case '^':
             case '*':
             case '+':

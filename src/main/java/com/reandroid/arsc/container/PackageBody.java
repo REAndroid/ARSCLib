@@ -119,11 +119,10 @@ public class PackageBody extends FixedBlockContainer {
         SpecTypePair specTypePair = mSpecTypePairArray.getOrCreate(specHeader.getId().getByte());
         specTypePair.getSpecBlock().readBytes(reader);
     }
-    private void readTypeBlock(BlockReader reader) throws IOException{
+    private void readTypeBlock(BlockReader reader) throws IOException {
         TypeHeader typeHeader = TypeHeader.read(reader);
         SpecTypePair specTypePair = mSpecTypePairArray.getOrCreate(typeHeader.getId().getByte());
-        TypeBlock typeBlock = specTypePair.getTypeBlockArray().createNext(
-                typeHeader.isSparse(), typeHeader.isOffset16());
+        TypeBlock typeBlock = specTypePair.getTypeBlockArray().createNext();
         typeBlock.readBytes(reader);
     }
     private void readLibraryBlock(BlockReader reader) throws IOException{

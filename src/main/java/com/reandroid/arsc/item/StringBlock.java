@@ -45,12 +45,15 @@ public abstract class StringBlock extends BlockItem implements StringReference {
         }else if(text.equals(old)) {
             return;
         }
+        writeStringBytes(text);
+        if (notify) {
+            onStringChanged(old, text);
+        }
+    }
+    protected void writeStringBytes(String text) {
         this.mCache = text;
         byte[] bytes = encodeString(text);
         setBytesInternal(bytes, false);
-        if(notify){
-            onStringChanged(old, text);
-        }
     }
     protected void onBytesChanged(){
         mCache = decodeString(getBytesInternal());

@@ -16,6 +16,7 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
@@ -108,13 +109,13 @@ public class StyleItem extends FixedBlockContainer implements
     }
     protected void clearStyle(){
         StringItem stringItem = getStringItemInternal();
-        if(stringItem != null) {
+        if (stringItem != null) {
             stringItem.unlinkStyleItemInternal(this);
         }
         clearSpans();
     }
     protected void clearSpans(){
-        if(getParent() == null){
+        if (getParent() == null){
             return;
         }
         for(StyleSpan styleSpan : this){
@@ -131,14 +132,14 @@ public class StyleItem extends FixedBlockContainer implements
         }
     }
     public void setStringItemInternal(StringItem stringItem) {
-        if(stringItem == null) {
+        if (stringItem == null) {
             StringItem exist = this.mStringItem;
             this.mStringItem = null;
             unLinkIndexReference(exist);
             return;
         }
-        if(this.mStringItem != null) {
-            if(stringItem == this.mStringItem) {
+        if (this.mStringItem != null) {
+            if (stringItem == this.mStringItem) {
                 return;
             }
             throw new IllegalStateException("Different string item");
@@ -153,7 +154,7 @@ public class StyleItem extends FixedBlockContainer implements
     }
     public boolean isEmpty() {
         StringItem stringItem = getStringItemInternal();
-        if(stringItem == null) {
+        if (stringItem == null) {
             return true;
         }
         return !hasSpans();
@@ -161,50 +162,50 @@ public class StyleItem extends FixedBlockContainer implements
 
     private void unLinkIndexReference(StringItem stringItem){
         StyleIndexReference reference = this.indexReference;
-        if(reference == null){
+        if (reference == null){
             return;
         }
         this.indexReference = null;
-        if(stringItem == null){
+        if (stringItem == null){
             return;
         }
         stringItem.removeReference(reference);
     }
 
     public String applyStyle(String text, boolean xml, boolean escapeXmlText){
-        if(text == null){
+        if (text == null){
             return null;
         }
         StyleDocument styleDocument = build(text);
-        if(styleDocument == null){
+        if (styleDocument == null){
             return text;
         }
         return styleDocument.getText(xml, escapeXmlText);
     }
     @Override
     public void setNull(boolean is_null){
-        if(!is_null){
+        if (!is_null){
             return;
         }
         clearStyle();
     }
     @Override
     public JSONObject toJson() {
-        if(isNull()){
+        if (isNull()){
             return null;
         }
         JSONObject jsonObject=new JSONObject();
         JSONArray jsonArray=new JSONArray();
         int i=0;
         for(StyleSpan spanInfo:this){
-            if(spanInfo==null){
+            if (spanInfo==null){
                 continue;
             }
             JSONObject jsonObjectSpan=spanInfo.toJson();
             jsonArray.put(i, jsonObjectSpan);
             i++;
         }
-        if(i==0){
+        if (i==0){
             return null;
         }
         jsonObject.put(NAME_spans, jsonArray);
@@ -213,7 +214,7 @@ public class StyleItem extends FixedBlockContainer implements
     @Override
     public void fromJson(JSONObject json) {
         clearSpans();
-        if(json == null){
+        if (json == null){
             clearStyle();
             return;
         }
@@ -226,7 +227,7 @@ public class StyleItem extends FixedBlockContainer implements
         }
     }
     public void merge(StyleItem styleItem){
-        if(styleItem == null || styleItem == this){
+        if (styleItem == null || styleItem == this){
             return;
         }
         for(StyleSpan styleSpan : styleItem){
@@ -236,20 +237,16 @@ public class StyleItem extends FixedBlockContainer implements
 
     @Override
     public int compareTo(StyleItem styleItem) {
-        if(styleItem == this) {
+        if (styleItem == this) {
             return 0;
         }
-        if(styleItem == null) {
+        if (styleItem == null) {
             return -1;
-        }
-        int i = -1 * CompareUtil.compare(this.hasSpans(), styleItem.hasSpans());
-        if(i != 0) {
-            return i;
         }
         StringItem stringItem1 = this.getStringItemInternal();
         StringItem stringItem2 = styleItem.getStringItemInternal();
-        i = CompareUtil.compare(stringItem1 == null, stringItem2 == null);
-        if(i != 0 || stringItem1 == null || stringItem2 == null) {
+        int i = CompareUtil.compare(stringItem1 == null, stringItem2 == null);
+        if (i != 0 || stringItem1 == null || stringItem2 == null) {
             return i;
         }
         return CompareUtil.compareUnsigned(stringItem1.getIndex(), stringItem2.getIndex());
@@ -278,12 +275,13 @@ public class StyleItem extends FixedBlockContainer implements
         @SuppressWarnings("unchecked")
         @Override
         public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
-            if(parentClass.isInstance(styleItem)){
+            if (parentClass.isInstance(styleItem)){
                 return (T1) styleItem;
             }
             return null;
         }
     }
 
+    public static final Creator<StyleItem> CREATOR = StyleItem::new;
     public static final String NAME_spans = ObjectsUtil.of("spans");
 }

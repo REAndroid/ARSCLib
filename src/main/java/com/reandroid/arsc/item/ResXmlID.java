@@ -16,86 +16,56 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.ObjectsStore;
 
-import java.util.List;
+import java.util.Iterator;
 
-public class ResXmlID extends IntegerItem implements Comparable<ResXmlID>{
+public class ResXmlID extends IntegerItem implements Comparable<ResXmlID> {
 
-    private List<ReferenceItem> mReferencedList;
+    private Object mReferencedList;
     private ResXmlString mResXmlString;
 
-    public ResXmlID(int resId){
-        super(resId);
-    }
-    public ResXmlID(){
-        this(0);
+    public ResXmlID() {
+        super();
     }
 
-    public boolean removeReference(ReferenceItem ref) {
-        boolean removed = false;
-        List<ReferenceItem> referencedList = this.mReferencedList;
-        if(referencedList != null) {
-            removed = referencedList.remove(ref);
-            if(referencedList.size() == 0) {
-                this.mReferencedList = null;
-            }
-        }
-        return removed;
+    public void addReference(ReferenceItem reference) {
+        this.mReferencedList = ObjectsStore.add(mReferencedList, reference);
     }
-    public void addReference(ReferenceItem ref){
-        if(ref != null) {
-            List<ReferenceItem> referencedList = this.mReferencedList;
-            if(referencedList == null) {
-                referencedList = new ArrayCollection<>();
-                this.mReferencedList = referencedList;
-            }
-            referencedList.add(ref);
-        }
+    public void removeReference(ReferenceItem reference) {
+        mReferencedList = ObjectsStore.remove(mReferencedList, reference);
+    }
+    public int getReferenceCount() {
+        return ObjectsStore.size(mReferencedList);
     }
     public boolean hasReference() {
-        List<ReferenceItem> referencedList = this.mReferencedList;
-        if(referencedList != null) {
-            return referencedList.size() != 0;
-        }
-        return false;
+        return !ObjectsStore.isEmpty(mReferencedList);
     }
     public boolean hasReference(Block block) {
-        if(block == null) {
-            return false;
-        }
-        List<ReferenceItem> referencedList = this.mReferencedList;
-        if(referencedList != null) {
-            for(ReferenceItem item : referencedList) {
-                if(item.getReferredParent(block.getClass()) == block) {
+        if (block != null) {
+            Iterator<ReferenceItem> iterator = ObjectsStore.iterator(mReferencedList);
+            while (iterator.hasNext()) {
+                ReferenceItem item = iterator.next();
+                if (item.getReferredParent(block.getClass()) == block) {
                     return true;
                 }
             }
         }
         return false;
     }
-    public int getReferenceCount() {
-        List<ReferenceItem> referencedList = this.mReferencedList;
-        if(referencedList != null) {
-            return referencedList.size();
-        }
-        return 0;
-    }
-    @Override
-    public void onIndexChanged(int oldIndex, int newIndex) {
-    }
-    public String getName(){
+    public String getName() {
         ResXmlString xmlString = getResXmlString();
-        if(xmlString == null){
+        if (xmlString == null) {
             return null;
         }
         return xmlString.getHtml();
     }
     public ResXmlString getResXmlString() {
         ResXmlString resXmlString = this.mResXmlString;
-        if(resXmlString == null || resXmlString.isNull()) {
+        if (resXmlString == null || resXmlString.getParent() == null) {
             return null;
         }
         return resXmlString;
@@ -106,40 +76,40 @@ public class ResXmlID extends IntegerItem implements Comparable<ResXmlID>{
 
     public boolean isEmpty() {
         StringItem stringItem = getResXmlString();
-        if(stringItem == null) {
+        if (stringItem == null) {
             return true;
         }
         return get() == 0;
     }
     @Override
     public int compareTo(ResXmlID resXmlID) {
-        if(resXmlID == null) {
+        if (resXmlID == null) {
             return -1;
         }
-        if(resXmlID == this) {
+        if (resXmlID == this) {
             return 0;
         }
         ResXmlString xmlString1 = this.getResXmlString();
         ResXmlString xmlString2 = resXmlID.getResXmlString();
         int i = CompareUtil.compare(xmlString1 == null, xmlString2 == null);
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
-        if(xmlString1 == null || xmlString2 == null) {
+        if (xmlString1 == null || xmlString2 == null) {
             return 0;
         }
         return CompareUtil.compare(xmlString1.getIndex(), xmlString2.getIndex());
     }
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("USED-BY=");
         builder.append(getReferenceCount());
         builder.append('{');
         String name = getName();
-        if(name != null){
+        if (name != null) {
             builder.append(name);
-        }else {
+        } else {
             builder.append(getIndex());
         }
         builder.append(':');
@@ -147,4 +117,6 @@ public class ResXmlID extends IntegerItem implements Comparable<ResXmlID>{
         builder.append('}');
         return builder.toString();
     }
+
+    public static final Creator<ResXmlID> CREATOR = ResXmlID::new;
 }

@@ -29,7 +29,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.common.FileChannelInputStream;
-import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -183,21 +183,24 @@ public class FrameworkTable extends TableBlock {
         tableStringPool.getStringsArray().ensureSize(1);
         TableString title=tableStringPool.get(0);
         title.set(ARSCLib.getRepo());
-        for(TableString tableString:tableStringPool.getStringsArray().listItems()){
-            if(tableString==title){
-                continue;
+        Iterator<TableString> iterator = tableStringPool.iterator();
+        while (iterator.hasNext()) {
+            TableString tableString = iterator.next();
+            if (tableString != title) {
+                shrinkTableString(title, tableString);
             }
-            shrinkTableString(title, tableString);
         }
         tableStringPool.refresh();
     }
     private void shrinkTableString(TableString zero, TableString tableString){
-        List<ReferenceItem> allRef = new ArrayCollection<>(tableString.getReferencedList());
-        tableString.removeAllReference();
-        for(ReferenceItem item:allRef){
-            item.set(zero.getIndex());
+        List<ReferenceItem> referenceItemList = CollectionUtil.toList(tableString.getReferences());
+        tableString.clearReferences();
+        for (ReferenceItem reference : referenceItemList) {
+            reference.set(zero.getIndex());
         }
-        zero.addReference(allRef);
+        for (ReferenceItem reference : referenceItemList) {
+            zero.addReference(reference);
+        }
     }
     private void removeExtraConfigEntries(){
         Iterator<ResourceEntry> iterator = getResources();
