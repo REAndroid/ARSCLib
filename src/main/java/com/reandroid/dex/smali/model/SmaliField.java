@@ -127,8 +127,7 @@ public class SmaliField extends SmaliDef implements FieldProgram {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
-        Modifier.append(writer, getAccessFlags());
-        Modifier.append(writer, hiddenApiFlags());
+        Modifier.append(writer, getModifiers());
         writer.append(getName());
         writer.append(':');
         getType().append(writer);

@@ -15,8 +15,6 @@
  */
 package com.reandroid.dex.key;
 
-import com.reandroid.dex.common.MethodHandleType;
-import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -169,7 +167,7 @@ public class ArrayKey<T extends Key> extends KeyList<T> {
         }
         ArrayCollection<Key> results = new ArrayCollection<>();
         while (true) {
-            Key key = readNext(reader);
+            Key key = KeyUtil.readKey(reader);
             results.add(key);
             reader.skipWhitespacesOrComment();
             if (reader.getASCII(reader.position()) == end) {
@@ -179,65 +177,6 @@ public class ArrayKey<T extends Key> extends KeyList<T> {
         }
         SmaliParseException.expect(reader, end);
         return results.toArrayFill(new Key[results.size()]);
-    }
-    private static Key readNext(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        char c = reader.getASCII(reader.position());
-        if (c == '"') {
-            return StringKey.read(reader);
-        }
-        Key key = MethodHandleKey.read(reader);
-        if (key != null) {
-            return key;
-        }
-        key = TypeKey.primitiveType(c);
-        if (key != null) {
-            reader.readASCII();
-            return key;
-        }
-        int lineEnd = reader.indexOfBeforeLineEnd(',');
-        if (lineEnd < 0) {
-            lineEnd = reader.indexOfLineEnd();
-        }
-        if (c == 'L' || c == '[') {
-            int i = reader.indexOfBeforeLineEnd('>');
-            if (i < 0 || i > lineEnd) {
-                return TypeKey.read(reader);
-            }
-            c = reader.getASCII(i + 1);
-            if (c == '(') {
-                return MethodKey.read(reader);
-            }
-            if (c != ':') {
-                throw new SmaliParseException("Expecting ':'", reader);
-            }
-            return FieldKey.read(reader);
-        }
-        if (c == '{') {
-            return ArrayValueKey.read(reader);
-        }
-        if (c == '.') {
-            SmaliDirective directive = SmaliDirective.parse(reader, false);
-            if (directive == SmaliDirective.SUB_ANNOTATION) {
-                return AnnotationItemKey.read(reader);
-            }
-            if (directive == SmaliDirective.ENUM) {
-                return EnumKey.read(reader);
-            }
-            throw new SmaliParseException("Unexpected value ", reader);
-        }
-        if (c == 'n') {
-            return NullValueKey.read(reader);
-        }
-        if (MethodHandleType.startsWithHandleType(reader)) {
-            return MethodHandleKey.read(reader);
-        }
-
-        PrimitiveKey primitiveKey = PrimitiveKey.readSafe(reader);
-        if (primitiveKey != null) {
-            return primitiveKey;
-        }
-        throw new SmaliParseException("Unexpected value ", reader);
     }
 
     public static<E extends Key> ArrayKey<E> parse(String text) {

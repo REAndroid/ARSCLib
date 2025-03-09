@@ -189,6 +189,10 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
             reader.skipWhitespacesOrComment();
         }
         reader.skipWhitespacesOrComment();
+        if (!reader.finished() && !SmaliDirective.CLASS.is(
+                SmaliDirective.parse(reader, false))) {
+            throw new SmaliParseException("Unexpected character", reader);
+        }
         fixUninitializedFinalFields();
     }
     private boolean parseNext(SmaliReader reader) throws IOException {

@@ -17,13 +17,14 @@ package com.reandroid.dex.common;
 
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.ObjectsStore;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -80,11 +81,11 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
 
         Map<String, HiddenApiFlag> map = new HashMap<>();
         int index = 0;
-        for(HiddenApiFlag flag : RESTRICTION_VALUES){
+        for (HiddenApiFlag flag : RESTRICTION_VALUES) {
             VALUES[index++] = flag;
             map.put(flag.getName(), flag);
         }
-        for(HiddenApiFlag flag : DOMAIN_VALUES){
+        for (HiddenApiFlag flag : DOMAIN_VALUES) {
             VALUES[index++] = flag;
             map.put(flag.getName(), flag);
         }
@@ -93,11 +94,11 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
 
     private final boolean domainFlag;
 
-    private HiddenApiFlag(int value, String name, boolean domainFlag){
+    private HiddenApiFlag(int value, String name, boolean domainFlag) {
         super(value, name);
         this.domainFlag = domainFlag;
     }
-    private HiddenApiFlag(int value, String name){
+    private HiddenApiFlag(int value, String name) {
         this(value, name, false);
     }
 
@@ -114,17 +115,23 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
         return domainFlag;
     }
 
-    public static HiddenApiFlag valueOf(String name){
+    public static HiddenApiFlag valueOf(String name) {
         return NAME_MAP.get(name);
     }
 
     public static Iterator<HiddenApiFlag> valuesOf(int value) {
+        if (value == NO_RESTRICTION) {
+            return EmptyIterator.of();
+        }
+        if (value >= 0 && value < NO_RESTRICTION) {
+            return SingleIterator.of(RESTRICTION_VALUES[value]);
+        }
         return getValues(hiddenApiFlag -> hiddenApiFlag.isSet(value));
     }
-    public static Iterator<HiddenApiFlag> getValues(){
+    public static Iterator<HiddenApiFlag> getValues() {
         return getValues(null);
     }
-    public static Iterator<HiddenApiFlag> getValues(Predicate<HiddenApiFlag> filter){
+    public static Iterator<HiddenApiFlag> getValues(Predicate<HiddenApiFlag> filter) {
         return new ArrayIterator<>(VALUES, filter);
     }
     public static HiddenApiFlag restrictionOf(int value) {
@@ -144,36 +151,63 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
         return null;
     }
 
-    public static HiddenApiFlag[] parse(SmaliReader reader){
-        List<HiddenApiFlag> hiddenApiFlags = null;
+    public static HiddenApiFlag[] parse(SmaliReader reader) {
+        Object container = null;
         HiddenApiFlag flag;
-        while ((flag = parseNext(reader)) != null){
-            if (hiddenApiFlags == null) {
-                hiddenApiFlags = new ArrayCollection<>();
-            }
-            hiddenApiFlags.add(flag);
+        while ((flag = parseNext(reader)) != null) {
+            container = ObjectsStore.add(container, flag);
         }
-        if (hiddenApiFlags == null) {
+        if (container == null) {
             return null;
         }
-        int size = hiddenApiFlags.size();
-        if(size == 0){
-            return null;
-        }
+        int size = ObjectsStore.size(container);
         reader.skipWhitespaces();
-        return hiddenApiFlags.toArray(new HiddenApiFlag[size]);
+        HiddenApiFlag[] results = new HiddenApiFlag[size];
+        ObjectsStore.collect(container, results);
+        return results;
     }
-    private static HiddenApiFlag parseNext(SmaliReader reader){
+    private static HiddenApiFlag parseNext(SmaliReader reader) {
         reader.skipWhitespaces();
         int i = reader.indexOf(' ');
-        if(i < 0){
+        if (i < 0) {
             return null;
         }
         int position = reader.position();
         HiddenApiFlag hiddenApiFlag = valueOf(reader.readString(i - reader.position()));
-        if(hiddenApiFlag == null) {
+        if (hiddenApiFlag == null) {
             reader.position(position);
         }
         return hiddenApiFlag;
+    }
+
+    public static int combineHiddenApiFlag(HiddenApiFlag[] flags) {
+        int result = NO_RESTRICTION;
+        if (flags != null) {
+            for (HiddenApiFlag flag : flags) {
+                int value = flag.getValue();
+                if (result == NO_RESTRICTION) {
+                    result = value;
+                } else {
+                    result |= value;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static int combineHiddenApiFlag(Iterator<? extends Modifier> iterator) {
+        int result = NO_RESTRICTION;
+        while (iterator.hasNext()) {
+            Modifier modifier = iterator.next();
+            if (modifier instanceof AccessFlag) {
+                int value = modifier.getValue();
+                if (result == NO_RESTRICTION) {
+                    result = value;
+                } else {
+                    result |= value;
+                }
+            }
+        }
+        return result;
     }
 }

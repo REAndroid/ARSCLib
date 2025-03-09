@@ -29,7 +29,7 @@ public class SmaliAnnotationElement extends Smali implements KeyReference {
     private String name;
     private SmaliValue value;
 
-    public SmaliAnnotationElement(){
+    public SmaliAnnotationElement() {
         super();
     }
 
@@ -65,16 +65,19 @@ public class SmaliAnnotationElement extends Smali implements KeyReference {
     }
     public void setValue(SmaliValue value) {
         this.value = value;
-        if(value != null){
+        if (value != null) {
             value.setParent(this);
         }
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(getName());
-        writer.append(" = ");
-        getValue().append(writer);
+        AnnotationElementKey key = getKey();
+        if (key == null) {
+            writer.append("# error");
+        } else {
+            key.append(writer);
+        }
     }
 
     @Override

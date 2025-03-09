@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class AccessFlag extends Modifier{
+public class AccessFlag extends Modifier {
 
     public static final AccessFlag PUBLIC;
     public static final AccessFlag PRIVATE;
@@ -165,16 +165,16 @@ public class AccessFlag extends Modifier{
     public static AccessFlag valueOf(String name) {
         return accessFlagsByName.get(name);
     }
-    public static Iterator<AccessFlag> getValues(){
+    public static Iterator<AccessFlag> getValues() {
         return getValues(null);
     }
-    public static Iterator<AccessFlag> getValues(Predicate<AccessFlag> filter){
+    public static Iterator<AccessFlag> getValues(Predicate<AccessFlag> filter) {
         return new ArrayIterator<>(VALUES, filter);
     }
-    public static AccessFlag[] parse(SmaliReader reader){
+    public static AccessFlag[] parse(SmaliReader reader) {
         List<AccessFlag> accessFlags = null;
         AccessFlag flag;
-        while ((flag = parseNext(reader)) != null){
+        while ((flag = parseNext(reader)) != null) {
             if (accessFlags == null) {
                 accessFlags = new ArrayCollection<>();
             }
@@ -184,23 +184,34 @@ public class AccessFlag extends Modifier{
             return null;
         }
         int size = accessFlags.size();
-        if(size == 0){
+        if (size == 0) {
             return null;
         }
         reader.skipWhitespaces();
         return accessFlags.toArray(new AccessFlag[size]);
     }
-    private static AccessFlag parseNext(SmaliReader reader){
+    private static AccessFlag parseNext(SmaliReader reader) {
         reader.skipWhitespaces();
         int i = reader.indexOf(' ');
-        if(i < 0){
+        if (i < 0) {
             return null;
         }
         int position = reader.position();
         AccessFlag accessFlag = valueOf(reader.readString(i - reader.position()));
-        if(accessFlag == null){
+        if (accessFlag == null) {
             reader.position(position);
         }
         return accessFlag;
+    }
+
+    public static int combineAccessFlags(Iterator<? extends Modifier> iterator) {
+        int result = 0;
+        while (iterator.hasNext()) {
+            Modifier modifier = iterator.next();
+            if (modifier instanceof AccessFlag) {
+                result |= modifier.getValue();
+            }
+        }
+        return result;
     }
 }

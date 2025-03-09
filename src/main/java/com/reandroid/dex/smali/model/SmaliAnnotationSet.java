@@ -18,16 +18,19 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
+public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{ 
 
-    public SmaliAnnotationSet(){
+    public SmaliAnnotationSet() {
         super();
     }
 
@@ -41,40 +44,78 @@ public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
     }
     public void setKey(Key key) {
         clear();
-        addAllKeys((AnnotationSetKey) key);
-    }
-
-    public void addAllKeys(Iterable<? extends AnnotationItemKey> iterable) {
-        if (iterable != null) {
-            addAllKeys(iterable.iterator());
+        AnnotationSetKey annotationSetKey = (AnnotationSetKey)  key;
+        for (AnnotationItemKey itemKey : annotationSetKey) {
+            createNew().setKey(itemKey);
         }
     }
-    public void addAllKeys(Iterator<? extends AnnotationItemKey> iterator) {
+    public void addAnnotations(Iterator<? extends AnnotationItemKey> iterator) {
         while (iterator.hasNext()) {
-            addKey(iterator.next());
+            addAnnotation(iterator.next());
         }
     }
-    public void addKey(AnnotationItemKey key) {
-        createNew().setKey(key);
+    public void addAnnotation(AnnotationItemKey key) {
+        getOrCreate(key.getType()).setKey(key);
     }
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.appendAll(iterator());
+    public SmaliAnnotationItem getOrCreate(TypeKey typeKey) {
+        SmaliAnnotationItem item = get(typeKey);
+        if (item == null) {
+            item = createNew();
+            item.setType(typeKey);
+        }
+        return item;
     }
-
+    public boolean hasAnnotation(TypeKey typeKey) {
+        return get(typeKey) != null;
+    }
+    public SmaliAnnotationItem get(TypeKey typeKey) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            SmaliAnnotationItem item = get(i);
+            if (ObjectsUtil.equals(item.getType(), typeKey)) {
+                return item;
+            }
+        }
+        return null;
+    }
     public SmaliAnnotationItem createNew() {
         SmaliAnnotationItem item = new SmaliAnnotationItem();
         add(item);
         return item;
     }
+    public AnnotatedProgram asAnnotatedProgram() {
+        final SmaliAnnotationSet smaliAnnotationSet = this;
+        return new AnnotatedProgram() {
+            @Override
+            public AnnotationSetKey getAnnotation() {
+                return smaliAnnotationSet.getKey();
+            }
+            @Override
+            public void setAnnotation(AnnotationSetKey annotationSet) {
+                smaliAnnotationSet.setKey(annotationSet);
+            }
+            @Override
+            public void clearAnnotations() {
+                smaliAnnotationSet.clear();
+            }
+            @Override
+            public boolean hasAnnotation(TypeKey typeKey) {
+                return smaliAnnotationSet.hasAnnotation(typeKey);
+            }
+        };
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.appendAll(iterator());
+    }
     @Override
     SmaliAnnotationItem createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
-        if(directive != SmaliDirective.ANNOTATION && directive != SmaliDirective.SUB_ANNOTATION){
+        if (directive != SmaliDirective.ANNOTATION && directive != SmaliDirective.SUB_ANNOTATION) {
             return null;
         }
-        if(directive.isEnd(reader)){
+        if (directive.isEnd(reader)) {
             SmaliDirective.parse(reader);
             return null;
         }
@@ -83,7 +124,7 @@ public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
     public static SmaliAnnotationSet read(SmaliReader reader) throws IOException {
         SmaliAnnotationSet smali = new SmaliAnnotationSet();
         smali.parse(reader);
-        if(!smali.isEmpty()) {
+        if (!smali.isEmpty()) {
             return smali;
         }
         return null;

@@ -32,7 +32,6 @@ import java.util.Iterator;
 public class StringKey implements Key{
 
     private final String text;
-    private boolean mSignature;
 
     public StringKey(String text) {
         this.text = text;
@@ -51,19 +50,9 @@ public class StringKey implements Key{
         return encodeSimpleName(getString());
     }
 
-    public boolean isSignature() {
-        return mSignature;
-    }
-    public void setSignature(boolean signature) {
-        this.mSignature = signature;
-    }
-
     @Override
     public TypeKey getDeclaring() {
-        if(!isSignature()){
-            return null;
-        }
-        return TypeKey.parseSignature(getString());
+        return null;
     }
     @Override
     public Iterator<Key> mentionedKeys() {
@@ -73,7 +62,7 @@ public class StringKey implements Key{
     }
     @Override
     public Key replaceKey(Key search, Key replace) {
-        if(search.equals(this)){
+        if (search.equals(this)) {
             return replace;
         }
         return this;
@@ -86,7 +75,7 @@ public class StringKey implements Key{
         writer.append('"');
         boolean unicodeDetected = DexUtils.encodeString(writer, getString());
         writer.append('"');
-        if(enableComment && unicodeDetected && writer.isCommentUnicodeStrings()) {
+        if (enableComment && unicodeDetected && writer.isCommentUnicodeStrings()) {
             DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
         }
     }
@@ -125,28 +114,28 @@ public class StringKey implements Key{
         return getQuoted();
     }
 
-    public static StringKey create(String text){
-        if(text == null){
+    public static StringKey create(String text) {
+        if (text == null) {
             return null;
         }
-        if(text.length() == 0){
+        if (text.length() == 0) {
             return EMPTY;
         }
         return new StringKey(text);
     }
     public static StringKey parseQuotedString(String quotedString) {
-        if(quotedString == null || quotedString.length() < 2) {
+        if (quotedString == null || quotedString.length() < 2) {
             return null;
         }
         SmaliReader reader = SmaliReader.of(quotedString);
-        if(reader.get() != '\"') {
+        if (reader.get() != '\"') {
             return null;
         }
         String str;
         try {
             reader.skip(1);
             str = reader.readEscapedString('"');
-            if(reader.available() != 1 || reader.get() != '\"') {
+            if (reader.available() != 1 || reader.get() != '\"') {
                 return null;
             }
         } catch (IOException ignored) {
@@ -286,6 +275,9 @@ public class StringKey implements Key{
             throw new SmaliParseException(error, reader);
         }
         return create(name);
+    }
+    public static StringKey readSimpleName(SmaliReader reader) throws IOException {
+        return create(reader.readSimpleNameIgnoreWhitespaces());
     }
 
     private static String validateSimpleName(String name) {

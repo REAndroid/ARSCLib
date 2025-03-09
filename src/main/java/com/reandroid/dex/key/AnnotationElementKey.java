@@ -159,20 +159,10 @@ public class AnnotationElementKey implements Key {
     }
 
     public static AnnotationElementKey read(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        int i1 = reader.indexOfWhiteSpace();
-        int i2 = reader.indexOf('=');
-        int i;
-        if (i1 >= 0 && i1 < i2) {
-            i = i1;
-        } else {
-            i = i2;
-        }
-        int length = i - reader.position();
-        String name = reader.readString(length);
-        reader.skipWhitespaces();
+        String name = reader.readSimpleNameIgnoreWhitespaces();
         SmaliParseException.expect(reader, '=');
-        Key value = KeyUtil.readValue(reader);
+        reader.skipWhitespacesOrComment();
+        Key value = KeyUtil.readKey(reader);
         return create(name, value);
     }
 }

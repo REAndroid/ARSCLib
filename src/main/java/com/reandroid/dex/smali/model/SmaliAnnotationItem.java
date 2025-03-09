@@ -18,36 +18,35 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.*;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
 public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement>
         implements KeyReference, SmaliRegion {
 
-    private final SmaliDirective smaliDirective;
+    private SmaliDirective smaliDirective;
     private AnnotationVisibility visibility;
     private TypeKey type;
 
-    public SmaliAnnotationItem(boolean subAnnotation){
+    public SmaliAnnotationItem() {
         super();
-        this.smaliDirective = subAnnotation ? SmaliDirective.SUB_ANNOTATION :
-                SmaliDirective.ANNOTATION;
-        if(!subAnnotation) {
-            visibility = AnnotationVisibility.BUILD;
-        }
-    }
-    public SmaliAnnotationItem(){
-        this(false);
+        this.smaliDirective = SmaliDirective.ANNOTATION;
+        this.visibility = AnnotationVisibility.BUILD;
     }
 
     @Override
     public AnnotationItemKey getKey() {
-        int length = this.size();
-        AnnotationElementKey[] elements = new AnnotationElementKey[length];
-        for (int i = 0; i < length; i++) {
-            elements[i] = get(i).getKey();
+        TypeKey typeKey = getType();
+        if (typeKey != null) {
+            int length = this.size();
+            AnnotationElementKey[] elements = new AnnotationElementKey[length];
+            for (int i = 0; i < length; i++) {
+                elements[i] = get(i).getKey();
+            }
+            return AnnotationItemKey.create(getVisibility(), typeKey, elements);
         }
-        return AnnotationItemKey.create(getVisibility(), getType(), elements);
+        return null;
     }
     @Override
     public void setKey(Key key) {
@@ -63,12 +62,13 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement>
         return visibility;
     }
     public void setVisibility(AnnotationVisibility visibility) {
-        SmaliDirective smaliDirective = getSmaliDirective();
-        if(smaliDirective == SmaliDirective.ANNOTATION && visibility == null) {
-            throw new NullPointerException("Null annotation visibility");
-        }
-        if(smaliDirective == SmaliDirective.SUB_ANNOTATION && visibility != null) {
-            throw new IllegalArgumentException("Can not set annotation visibility for: " + smaliDirective);
+        if (visibility == null) {
+            if (getParentAnnotationSet() != null) {
+                throw new NullPointerException("Null AnnotationVisibility");
+            }
+            this.smaliDirective = SmaliDirective.SUB_ANNOTATION;
+        } else {
+            this.smaliDirective = SmaliDirective.ANNOTATION;
         }
         this.visibility = visibility;
     }
@@ -80,6 +80,20 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement>
         this.type = type;
     }
 
+    public boolean hasElement(String name) {
+        return get(name) != null;
+    }
+    public SmaliAnnotationElement get(String name) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            SmaliAnnotationElement element = get(i);
+            if (ObjectsUtil.equals(element.getName(), name)) {
+                return element;
+            }
+        }
+        return null;
+    }
+
     public SmaliAnnotationElement newElement() {
         SmaliAnnotationElement element = new SmaliAnnotationElement();
         add(element);
@@ -89,41 +103,60 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement>
     public SmaliDirective getSmaliDirective() {
         return smaliDirective;
     }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
-        writer.appendOptional(getVisibility());
-        writer.appendOptional(getType());
-        writer.appendAllWithIndent(iterator());
-        getSmaliDirective().appendEnd(writer);
+    public SmaliAnnotationSet getParentAnnotationSet() {
+        Smali parent = getParent();
+        if (parent instanceof SmaliAnnotationSet) {
+            return (SmaliAnnotationSet) parent;
+        }
+        return null;
     }
 
     @Override
-    public void parse(SmaliReader reader) throws IOException{
-        reader.skipWhitespacesOrComment();
+    public void append(SmaliWriter writer) throws IOException {
+        AnnotationItemKey key = getKey();
+        if (key != null) {
+            key.append(writer);
+        } else {
+            getSmaliDirective().append(writer);
+            writer.appendOptional(getVisibility());
+            writer.appendOptional(getType());
+            writer.appendAllWithIndent(iterator());
+            getSmaliDirective().appendEnd(writer);
+        }
+    }
+
+    @Override
+    public void parse(SmaliReader reader) throws IOException {
+        int position = reader.position();
+
+        AnnotationItemKey itemKey = AnnotationItemKey.read(reader);
+
         SmaliDirective directive = getSmaliDirective();
-        SmaliParseException.expect(reader, directive);
-        if(directive == SmaliDirective.ANNOTATION) {
-            AnnotationVisibility visibility = AnnotationVisibility.parse(reader);
-            if(visibility == null) {
-                throw new SmaliParseException("Unrecognized annotation visibility", reader);
+        SmaliAnnotationSet parent = getParentAnnotationSet();
+        if (parent != null) {
+            directive = SmaliDirective.ANNOTATION;
+        }
+        if (directive != itemKey.getSmaliDirective()) {
+            reader.position(position);
+            throw new SmaliParseException("Expecting: " + directive, reader);
+        }
+        if (parent != null) {
+            TypeKey typeKey = itemKey.getType();
+            SmaliAnnotationItem duplicate = parent.get(typeKey);
+            if (duplicate != null && duplicate != this) {
+                reader.position(position);
+                throw new SmaliParseException("Duplicate annotation: " + typeKey, reader);
             }
-            setVisibility(visibility);
         }
-        setType(TypeKey.read(reader));
-        while (parseNext(reader) != null){
-            reader.skipWhitespacesOrComment();
-        }
-        SmaliParseException.expect(reader, getSmaliDirective(), true);
+        setKey(itemKey);
     }
     @Override
     SmaliAnnotationElement createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();
-        if(reader.finished()) {
+        if (reader.finished()) {
             return null;
         }
-        if(getSmaliDirective().isEnd(reader)){
+        if (getSmaliDirective().isEnd(reader)) {
             return null;
         }
         return new SmaliAnnotationElement();

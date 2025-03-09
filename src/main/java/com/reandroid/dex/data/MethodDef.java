@@ -359,6 +359,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         SmaliMethod smaliMethod = new SmaliMethod();
         smaliMethod.setKey(getKey());
         smaliMethod.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
+        smaliMethod.setHiddenApiFlags(getHiddenApiFlags());
         smaliMethod.setAnnotation(getAnnotationKeys());
         CodeItem codeItem = getCodeItem();
         if (codeItem != null) {

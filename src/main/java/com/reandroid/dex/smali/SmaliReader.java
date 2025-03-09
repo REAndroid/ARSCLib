@@ -56,13 +56,13 @@ public class SmaliReader {
     public boolean finished() {
         return available() == 0;
     }
-    public void offset(int amount){
+    public void offset(int amount) {
         position(position() + amount);
     }
-    public byte get(){
+    public byte get() {
         return get(position());
     }
-    public char getASCII(int i){
+    public char getASCII(int i) {
         int c = get(i) & 0xff;
         return (char) c;
     }
@@ -78,10 +78,10 @@ public class SmaliReader {
         position ++;
         return this.byteSource.read(i);
     }
-    public String getString(int length){
+    public String getString(int length) {
         return new String(getBytes(length), StandardCharsets.UTF_8);
     }
-    public String readString(int length){
+    public String readString(int length) {
         return new String(readBytes(length), StandardCharsets.UTF_8);
     }
     public String readEscapedString(char stopChar) throws IOException{
@@ -89,45 +89,106 @@ public class SmaliReader {
         boolean utf8Detected = false;
         StringBuilder builder = new StringBuilder();
         boolean skipped = false;
-        while (true){
-            if(finished()){
+        while (true) {
+            if (finished()) {
                 skip(-1);
                 throw new SmaliParseException("Missing character '" + stopChar + "'", this);
             }
             char ch = readASCII();
-            if(ch > 0x7f) {
+            if (ch > 0x7f) {
                 utf8Detected = true;
             }
-            if(skipped){
+            if (skipped) {
                 builder.append(decodeSkipped(this, ch));
                 skipped = false;
                 continue;
             }
-            if(ch == '\\'){
+            if (ch == '\\') {
                 skipped = true;
                 continue;
             }
-            if(ch == stopChar){
+            if (ch == stopChar) {
                 skip(-1);
                 break;
             }
             builder.append(ch);
         }
-        if(utf8Detected) {
+        if (utf8Detected) {
             int len = position() - position;
             position(position);
             return decodeEscapedString(readString(len));
         }
         return builder.toString();
     }
-    public String readStringForNumber(){
+    public String readSimpleNameIgnoreWhitespaces() throws IOException {
+        skipWhitespacesOrComment();
+        String name = readSimpleName();
+        skipWhitespacesOrComment();
+        return name;
+    }
+    public String readSimpleName() throws IOException {
+        int position = position();
+        boolean utf8Detected = false;
+        StringBuilder builder = new StringBuilder();
+        boolean skipped = false;
+        while (true) {
+            if (finished()) {
+                break;
+            }
+            char ch = readASCII();
+            if (ch > 0x7f) {
+                utf8Detected = true;
+            }
+            if (skipped) {
+                builder.append(decodeSkipped(this, ch));
+                skipped = false;
+                continue;
+            }
+            if (ch == '\\') {
+                skipped = true;
+                continue;
+            }
+            if (isSimpleNameEnd(ch)) {
+                skip(-1);
+                break;
+            }
+            builder.append(ch);
+        }
+        int length = position() - position;
+        if (length == 0) {
+            throw new SmaliParseException("Expecting simple name", this);
+        }
+        if (utf8Detected) {
+            position(position);
+            return decodeEscapedString(readString(length));
+        }
+        return builder.toString();
+    }
+    private boolean isSimpleNameEnd(char c) {
+        if (c == '$' || c == '+' || c == '-') {
+            return false;
+        }
+        if (c <= '/' || c == '=') {
+            return true;
+        }
+        return c == ':'
+                || c == ';'
+                || c == '['
+                || c == '\\'
+                || c == ']'
+                || c == '^'
+                || c == '{'
+                || c == '|'
+                || c == '}';
+    }
+    public String readStringForNumber() {
         int pos = position();
         int end = indexOfLineEnd();
         StringBuilder builder = new StringBuilder();
         int count = 0;
-        for(int i = pos; i < end; i++){
+        for (int i = pos; i < end; i++) {
             byte b = get(i);
-            if(!isNumber(b)){
+            if (!isNumber(b)) {
                 break;
             }
             char ch = (char) (0xff & b);
@@ -141,221 +202,221 @@ public class SmaliReader {
     public int readInteger() throws IOException{
         byte signByte = get();
         boolean negative = signByte == '-';
-        if(negative || signByte == '+'){
+        if (negative || signByte == '+') {
             skip(1);
         }
         int result = 0;
         int pos = position();
-        while (!finished()){
+        while (!finished()) {
             int i = base10Digit(read());
-            if(i == -1 || result < 0){
+            if (i == -1 || result < 0) {
                 skip(-1);
                 break;
             }
             result = result * 10;
             result = result + i;
         }
-        if(pos == position()){
+        if (pos == position()) {
             throw new SmaliParseException("Invalid integer format", this);
         }
-        if(result < 0){
+        if (result < 0) {
             skip(-1);
             throw new SmaliParseException("Integer overflow", this);
         }
-        if(negative){
+        if (negative) {
             result = -result;
         }
         return result;
     }
-    public byte[] readBytes(int length){
+    public byte[] readBytes(int length) {
         byte[] bytes = getBytes(length);
         offset(length);
         return bytes;
     }
 
-    public byte[] getBytes(int length){
+    public byte[] getBytes(int length) {
         byte[] result = new byte[length];
         int pos = position();
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             result[i] = get(pos + i);
         }
         return result;
     }
-    public boolean startsWith(byte[] bytes){
+    public boolean startsWith(byte[] bytes) {
         return startsWith(bytes, position());
     }
-    public boolean startsWith(byte[] bytes, int start){
+    public boolean startsWith(byte[] bytes, int start) {
         int length = available();
-        if(length < bytes.length){
+        if (length < bytes.length) {
             return false;
         }
         length = bytes.length;
-        for(int i = 0; i < length; i++){
-            if(bytes[i] != get(start + i)){
+        for (int i = 0; i < length; i++) {
+            if (bytes[i] != get(start + i)) {
                 return false;
             }
         }
         return true;
     }
-    public int startsWithSqueezeSpaces(byte[] bytes){
+    public int startsWithSqueezeSpaces(byte[] bytes) {
         int pos = position();
         int length = available();
         int bytesLength = bytes.length;
-        if(length == 0 || bytesLength == 0){
+        if (length == 0 || bytesLength == 0) {
             return -1;
         }
         int index = 0;
         boolean prevSpace = false;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             byte b1 = get(pos + i);
-            if(b1 == ' '){
-                if(prevSpace){
+            if (b1 == ' ') {
+                if (prevSpace) {
                     continue;
                 }
                 prevSpace = true;
             }else {
                 prevSpace = false;
             }
-            if(index == bytesLength){
+            if (index == bytesLength) {
                 return i;
             }
             byte b2 = bytes[index];
             index ++;
-            if(b1 != b2){
+            if (b1 != b2) {
                 return -1;
             }
         }
-        if(index == bytesLength) {
+        if (index == bytesLength) {
             return bytesLength;
         }
         return -1;
     }
-    public int indexOf(char ch){
+    public int indexOf(char ch) {
         return indexOf((byte) ch);
     }
-    public int indexOfWhiteSpace(){
+    public int indexOfWhiteSpace() {
         int pos = position();
         int end = pos + available();
-        for(int i = pos; i < end; i++){
-            if(isWhiteSpace(get(i))){
+        for (int i = pos; i < end; i++) {
+            if (isWhiteSpace(get(i))) {
                 return i;
             }
         }
         return end;
     }
-    public int indexOfWhiteSpaceOrComment(){
+    public int indexOfWhiteSpaceOrComment() {
         int pos = position();
         int end = pos + available();
-        for(int i = pos; i < end; i++){
-            if(isWhiteSpaceOrComment(get(i))){
+        for (int i = pos; i < end; i++) {
+            if (isWhiteSpaceOrComment(get(i))) {
                 return i;
             }
         }
         return end;
     }
-    public int indexOfLineEnd(){
+    public int indexOfLineEnd() {
         int pos = position();
         int end = pos + available();
-        for(int i = pos; i < end; i++){
-            if(isLineEnd(get(i))){
+        for (int i = pos; i < end; i++) {
+            if (isLineEnd(get(i))) {
                 return i;
             }
         }
         return end;
     }
-    public int indexOf(byte b){
+    public int indexOf(byte b) {
         return indexOf(position(), b);
     }
-    public int indexOf(int start, byte b){
+    public int indexOf(int start, byte b) {
         return byteSource.indexOf(start, b);
     }
-    public int indexOfBeforeLineEnd(char ch){
+    public int indexOfBeforeLineEnd(char ch) {
         int pos = position();
         int end = pos + available();
-        for(int i = pos; i < end; i++){
+        for (int i = pos; i < end; i++) {
             byte b = get(i);
-            if(ch == b){
+            if (ch == b) {
                 return i;
             }
-            if(isLineEnd(b)){
+            if (isLineEnd(b)) {
                 return -1;
             }
         }
         return -1;
     }
-    public int indexOf(byte[] bytes){
+    public int indexOf(byte[] bytes) {
         int length = bytes.length;
-        if(length == 0){
+        if (length == 0) {
             return -1;
         }
         int pos = position();
         int end = pos + available() - length;
-        for(int i = pos; i <= end; i++){
-            if(equalsAt(i, bytes)){
+        for (int i = pos; i <= end; i++) {
+            if (equalsAt(i, bytes)) {
                 return i;
             }
         }
         return -1;
     }
-    private boolean equalsAt(int index, byte[] bytes){
+    private boolean equalsAt(int index, byte[] bytes) {
         int length = bytes.length;
-        if(length > available() - index) {
+        if (length > available() - index) {
             return false;
         }
-        for(int i = 0; i < length; i++){
-            if(bytes[i] != get(i + index)){
+        for (int i = 0; i < length; i++) {
+            if (bytes[i] != get(i + index)) {
                 return false;
             }
         }
         return true;
     }
-    public boolean skipWhitespacesOrComment(){
-        if(finished()) {
+    public boolean skipWhitespacesOrComment() {
+        if (finished()) {
             return false;
         }
         boolean result = false;
-        if(get() == '#'){
+        if (get() == '#') {
             nextLine();
             result = true;
         }
-        while (skipWhitespaces()){
-            if(get() == '#'){
+        while (skipWhitespaces()) {
+            if (get() == '#') {
                 nextLine();
             }
             result = true;
         }
         return result;
     }
-    public boolean skipWhitespaces(){
-        if(finished()) {
+    public boolean skipWhitespaces() {
+        if (finished()) {
             return false;
         }
         int pos = position();
         int nextPosition = pos;
         int end = pos + available();
-        for(int i = pos; i < end; i++){
-            if(!isWhiteSpace(get(i))){
+        for (int i = pos; i < end; i++) {
+            if (!isWhiteSpace(get(i))) {
                 break;
             }
             nextPosition = i + 1;
         }
-        if(nextPosition != pos){
+        if (nextPosition != pos) {
             position(nextPosition);
             return nextPosition != end;
         }
         return false;
     }
-    public boolean skipSpaces(){
+    public boolean skipSpaces() {
         int pos = position();
         int nextPosition = pos;
         int end = pos + available();
-        for(int i = pos; i < end; i++){
-            if(!isSpace(get(i))){
+        for (int i = pos; i < end; i++) {
+            if (!isSpace(get(i))) {
                 nextPosition = i;
                 break;
             }
         }
-        if(nextPosition != pos){
+        if (nextPosition != pos) {
             position(nextPosition);
             return true;
         }
@@ -369,16 +430,16 @@ public class SmaliReader {
         }
         return false;
     }
-    public void nextLine(){
+    public void nextLine() {
         int i = indexOf('\n');
-        if(i < 0){
+        if (i < 0) {
             i = position() + available();
         }
         position(i);
     }
-    public void skip(int amount){
+    public void skip(int amount) {
         int available = available();
-        if(amount > available){
+        if (amount > available) {
             amount = available;
         }
         position(amount + position());
@@ -394,7 +455,7 @@ public class SmaliReader {
     }
     public Origin getOrigin() {
         Origin origin =  this.origin;
-        if(origin == null) {
+        if (origin == null) {
             origin = Origin.newRoot();
             this.origin = origin;
         }
@@ -409,11 +470,11 @@ public class SmaliReader {
         return getCurrentOrigin().toString();
     }
 
-    public static boolean isWhiteSpaceOrComment(byte b){
+    public static boolean isWhiteSpaceOrComment(byte b) {
         return isWhiteSpace(b) || b == '#';
     }
-    public static boolean isWhiteSpace(byte b){
-        switch (b){
+    public static boolean isWhiteSpace(byte b) {
+        switch (b) {
             case ' ':
             case '\n':
             case '\t':
@@ -423,8 +484,8 @@ public class SmaliReader {
                 return false;
         }
     }
-    public static boolean isSpace(byte b){
-        switch (b){
+    public static boolean isSpace(byte b) {
+        switch (b) {
             case ' ':
             case '\t':
                 return true;
@@ -432,24 +493,24 @@ public class SmaliReader {
                 return false;
         }
     }
-    private static int base10Digit(byte b){
+    private static int base10Digit(byte b) {
         int bound = '0';
-        if(b >= bound && b <= '9'){
+        if (b >= bound && b <= '9') {
             return b - bound;
         }
         return -1;
     }
-    private static boolean isNumber(byte b){
-        if(b >= '0' && b <= '9'){
+    private static boolean isNumber(byte b) {
+        if (b >= '0' && b <= '9') {
             return true;
         }
-        if(b >= 'a' && b <= 'z'){
+        if (b >= 'a' && b <= 'z') {
             return true;
         }
-        if(b >= 'A' && b <= 'Z'){
+        if (b >= 'A' && b <= 'Z') {
             return true;
         }
-        switch (b){
+        switch (b) {
             case '-':
             case '+':
             case '.':
@@ -458,8 +519,8 @@ public class SmaliReader {
                 return false;
         }
     }
-    private static boolean isLineEnd(byte b){
-        switch (b){
+    private static boolean isLineEnd(byte b) {
+        switch (b) {
             case '\n':
             case '\r':
             case '#':
@@ -468,14 +529,14 @@ public class SmaliReader {
                 return false;
         }
     }
-    private static char decodeSkipped(SmaliReader reader, char ch){
-        if(ch == 'u') {
+    private static char decodeSkipped(SmaliReader reader, char ch) {
+        if (ch == 'u') {
             return decodeFourHex(reader);
         }
         return decodeSkippedChar(ch);
     }
-    private static char decodeSkippedChar(char ch){
-        switch (ch){
+    private static char decodeSkippedChar(char ch) {
+        switch (ch) {
             case 'b':
                 return '\b';
             case 'f':
@@ -490,7 +551,7 @@ public class SmaliReader {
                 return ch;
         }
     }
-    private static char decodeFourHex(SmaliReader reader){
+    private static char decodeFourHex(SmaliReader reader) {
         int i = HexUtil.decodeHexChar(reader.read());
         i = i << 4;
         i |= HexUtil.decodeHexChar(reader.read());
@@ -500,14 +561,14 @@ public class SmaliReader {
         i |= HexUtil.decodeHexChar(reader.read());
         return (char) i;
     }
-    public static String decodeEscapedString(String text){
+    public static String decodeEscapedString(String text) {
         StringBuilder builder = new StringBuilder();
         boolean skipped = false;
         int length = text.length();
-        for (int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             char ch = text.charAt(i);
-            if(skipped){
-                if(ch == 'u') {
+            if (skipped) {
+                if (ch == 'u') {
                     builder.append(decodeHex(
                             text.charAt(i + 1),
                             text.charAt(i + 2),
@@ -520,7 +581,7 @@ public class SmaliReader {
                 skipped = false;
                 continue;
             }
-            if(ch == '\\'){
+            if (ch == '\\') {
                 skipped = true;
                 continue;
             }
@@ -528,7 +589,7 @@ public class SmaliReader {
         }
         return builder.toString();
     }
-    private static char decodeHex(char c1, char c2, char c3, char c4){
+    private static char decodeHex(char c1, char c2, char c3, char c4) {
         int i = HexUtil.decodeHexChar(c1);
         i = i << 4;
         i |= HexUtil.decodeHexChar(c2);
@@ -538,7 +599,7 @@ public class SmaliReader {
         i |= HexUtil.decodeHexChar(c4);
         return (char) i;
     }
-    public static SmaliReader of(String text){
+    public static SmaliReader of(String text) {
         SmaliReader reader = new SmaliReader(text.getBytes(StandardCharsets.UTF_8));
         reader.setOrigin(Origin.createNew("<text-source>"));
         return reader;
@@ -575,7 +636,7 @@ public class SmaliReader {
             return super.getColumnNumber();
         }
         private void computeValues() {
-            if(this.byteSource == null) {
+            if (this.byteSource == null) {
                 return;
             }
             ByteSource byteSource = this.byteSource;
@@ -584,7 +645,7 @@ public class SmaliReader {
             int column = 1;
             try {
                 int end = NumbersUtil.min(position, byteSource.length());
-                for(int i = 0; i < end; i++) {
+                for (int i = 0; i < end; i++) {
                     if (byteSource.read(i) == '\n') {
                         line ++;
                         column = 1;
@@ -602,45 +663,45 @@ public class SmaliReader {
         }
         private String computePositionDescription(ByteSource byteSource) {
             int pos = this.position;
-            if(pos >= byteSource.length()){
+            if (pos >= byteSource.length()) {
                 return "EOF";
             }
             StringBuilder builder = new StringBuilder();
             builder.append('\n');
             int lineStart = pos;
-            while (byteSource.read(lineStart) != '\n'){
-                if(lineStart == 0){
+            while (byteSource.read(lineStart) != '\n') {
+                if (lineStart == 0) {
                     break;
                 }
                 lineStart --;
             }
-            if(byteSource.read(lineStart) == '\n'){
+            if (byteSource.read(lineStart) == '\n') {
                 lineStart ++;
             }
             int limit = 38;
-            if(pos - lineStart > limit){
+            if (pos - lineStart > limit) {
                 lineStart = pos - limit;
             }
             int end = -1;
-            if(byteSource.length() - pos > 1) {
+            if (byteSource.length() - pos > 1) {
                 end = byteSource.indexOf(lineStart, (byte) '\n');
             }
-            if(end < 0){
-                if(pos == 0){
+            if (end < 0) {
+                if (pos == 0) {
                     end = lineStart;
                 }else {
                     end = pos;
                 }
                 end = end + (byteSource.length() - pos);
             }
-            if(end - pos > limit){
+            if (end - pos > limit) {
                 end = pos + limit;
             }
-            for(int i = lineStart; i < end; i++){
+            for (int i = lineStart; i < end; i++) {
                 builder.append((char) (byteSource.read(i) & 0xff));
             }
             builder.append('\n');
-            for(int i = lineStart; i < pos; i++){
+            for (int i = lineStart; i < pos; i++) {
                 builder.append(' ');
             }
             builder.append('^');

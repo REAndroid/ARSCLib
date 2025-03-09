@@ -22,7 +22,7 @@ import com.reandroid.dex.key.*;
 import com.reandroid.dex.program.AccessibleProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.CombiningIterator;
 
 import java.util.Iterator;
 
@@ -30,15 +30,15 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
 
     private StringKey name;
     private int accessFlagsValue;
+    private int hiddenApiFlagsValue;
 
     private SmaliAnnotationSet annotation;
 
-    private HiddenApiFlag[] hiddenApiFlags;
-
     private TypeKey defining;
 
-    public SmaliDef(){
+    public SmaliDef() {
         super();
+        this.hiddenApiFlagsValue = HiddenApiFlag.NO_RESTRICTION;
     }
 
     @Override
@@ -51,6 +51,13 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
     @Override
     public void setAccessFlagsValue(int accessFlagsValue) {
         this.accessFlagsValue = accessFlagsValue;
+    }
+
+    public int getHiddenApiFlagsValue() {
+        return hiddenApiFlagsValue;
+    }
+    public void setHiddenApiFlagsValue(int hiddenApiFlagsValue) {
+        this.hiddenApiFlagsValue = hiddenApiFlagsValue;
     }
     @Override
     public AnnotationSetKey getAnnotation() {
@@ -82,16 +89,21 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
         setAccessFlagsValue(Modifier.combineValues(accessFlags));
     }
     public void setAccessFlags(Iterator<AccessFlag> iterator) {
-        setAccessFlagsValue(Modifier.combineValues(iterator));
+        setAccessFlagsValue(AccessFlag.combineAccessFlags(iterator));
     }
     public Iterator<HiddenApiFlag> getHiddenApiFlags() {
-        return ArrayIterator.of(hiddenApiFlags());
+        return HiddenApiFlag.valuesOf(getHiddenApiFlagsValue());
     }
-    public HiddenApiFlag[] hiddenApiFlags() {
-        return this.hiddenApiFlags;
+    public void setHiddenApiFlags(HiddenApiFlag ... flags) {
+        setHiddenApiFlagsValue(HiddenApiFlag.combineHiddenApiFlag(flags));
     }
-    public void setHiddenApiFlags(HiddenApiFlag[] hiddenApiFlags) {
-        this.hiddenApiFlags = hiddenApiFlags;
+    public void setHiddenApiFlags(Iterator<HiddenApiFlag> iterator) {
+        setHiddenApiFlagsValue(HiddenApiFlag.combineHiddenApiFlag(iterator));
+    }
+
+    @Override
+    public Iterator<? extends Modifier> getModifiers() {
+        return CombiningIterator.two(getAccessFlags(), getHiddenApiFlags());
     }
 
     public StringKey getNameKey() {
@@ -113,10 +125,10 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
     public TypeKey getDefining() {
         TypeKey typeKey = null;
         SmaliDefSet<?> defSet = getDefSet();
-        if(defSet != null) {
+        if (defSet != null) {
             typeKey = defSet.getDefining();
         }
-        if(typeKey == null) {
+        if (typeKey == null) {
             typeKey = this.defining;
         }
         return typeKey;
@@ -134,21 +146,22 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
     }
     public void setAnnotation(Iterator<AnnotationItemKey> iterator) {
         if (iterator.hasNext()) {
-            getOrCreateSmaliAnnotationSet().addAllKeys(iterator);
+            getOrCreateSmaliAnnotationSet().addAnnotations(iterator);
         } else {
             setSmaliAnnotationSet(null);
         }
     }
+    @Override
     public void addAnnotation(AnnotationItemKey annotation) {
         SmaliAnnotationSet annotationSet = getOrCreateSmaliAnnotationSet();
-        annotationSet.addKey(annotation);
+        annotationSet.addAnnotation(annotation);
     }
     public SmaliAnnotationSet getAnnotationSet() {
         return annotation;
     }
     public SmaliAnnotationSet getOrCreateSmaliAnnotationSet() {
         SmaliAnnotationSet directory = getAnnotationSet();
-        if(directory == null){
+        if (directory == null) {
             directory = new SmaliAnnotationSet();
             setSmaliAnnotationSet(directory);
         }
@@ -164,7 +177,7 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
             old.setParent(null);
         }
     }
-    public boolean hasAnnotation(){
+    public boolean hasAnnotation() {
         SmaliAnnotationSet annotation = getAnnotationSet();
         return annotation != null && !annotation.isEmpty();
     }
@@ -173,11 +186,11 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
         return null;
     }
 
-    private SmaliDefSet<?> getDefSet(){
+    private SmaliDefSet<?> getDefSet() {
         return getParentInstance(SmaliDefSet.class);
     }
-    public SmaliClass getSmaliClass(){
-        if(getClass().isInstance(SmaliClass.class)) {
+    public SmaliClass getSmaliClass() {
+        if (getClass().isInstance(SmaliClass.class)) {
             return (SmaliClass) this;
         }
         return getParentInstance(SmaliClass.class);

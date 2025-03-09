@@ -41,7 +41,7 @@ public class KeyUtil {
                 name2.equals(ANY_NAME);
     }
 
-    public static Key readValue(SmaliReader reader) throws IOException {
+    public static Key readKey(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if (directive != null) {
@@ -64,39 +64,40 @@ public class KeyUtil {
             return ProtoKey.read(reader);
         }
         if (first == 'n') {
+            return NullValueKey.read(reader);
+        }
+        Key key = MethodHandleKey.read(reader);
+        if (key != null) {
+            return key;
+        }
+        key = TypeKey.primitiveType(first);
+        if (key != null) {
             reader.readASCII();
-            if (reader.readASCII() == 'u' &&
-                    reader.readASCII() == 'l' &&
-                    reader.readASCII() == 'l') {
-                return NullValueKey.INSTANCE;
-            }
-            throw new SmaliParseException("Unrecognised value", reader);
+            return key;
         }
         if (first == 'L' || first == '[') {
             TypeKey typeKey = TypeKey.read(reader);
-            if (reader.skipWhitespacesOrComment() || reader.finished()) {
+            if (reader.finished() || reader.get() != '-') {
                 return typeKey;
             }
-            char c = reader.getASCII(reader.position());
-            if (c == '}' || c == ',') {
-                return typeKey;
-            }
-            SmaliParseException.expect(reader, '-');
+            reader.readASCII();
             SmaliParseException.expect(reader, '>');
             reader.skipWhitespacesOrComment();
-            int i = reader.indexOfBeforeLineEnd('(');
-            if (i > 0) {
-                StringKey name = StringKey.readSimpleName(reader, '(');
+            StringKey name = StringKey.readSimpleName(reader);
+            reader.skipWhitespacesOrComment();
+            char c = SmaliParseException.expect(reader, '(', ':');
+            if (c == '(') {
+                reader.skip(-1);
                 ProtoKey protoKey = ProtoKey.read(reader);
                 return MethodKey.create(typeKey, name, protoKey);
             }
-            throw new SmaliParseException("Expecting method", reader);
+            return FieldKey.create(typeKey, name, TypeKey.read(reader));
         }
-        PrimitiveKey primitiveKey = PrimitiveKey.readSafe(reader);
-        if (primitiveKey == null) {
-            throw new SmaliParseException("Unexpected value", reader);
+        key = PrimitiveKey.readSafe(reader);
+        if (key == null) {
+            throw new SmaliParseException("Unrecognized value", reader);
         }
-        return primitiveKey;
+        return key;
     }
 
     public static TypeKey getReturnTypeForValue(Key value) {

@@ -21,6 +21,7 @@ import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsStore;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
@@ -167,7 +168,7 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     }
 
     public SmaliDirective getSmaliDirective() {
-        if(hasVisibility()) {
+        if (hasVisibility()) {
             return SmaliDirective.ANNOTATION;
         }
         return SmaliDirective.SUB_ANNOTATION;
@@ -295,33 +296,47 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
             throw new SmaliParseException("Expecting annotation directive", reader);
         }
         AnnotationVisibility visibility = null;
-        if(directive == SmaliDirective.ANNOTATION) {
+        if (directive == SmaliDirective.ANNOTATION) {
             visibility = AnnotationVisibility.parse(reader);
-            if(visibility == null) {
+            if (visibility == null) {
                 throw new SmaliParseException("Unrecognized annotation visibility", reader);
             }
         }
         reader.skipWhitespacesOrComment();
         TypeKey typeKey = TypeKey.read(reader);
         reader.skipWhitespacesOrComment();
-        ArrayCollection<AnnotationElementKey> elementList = null;
+        Object elementList = null;
         while (!directive.isEnd(reader)) {
+            int position = reader.position();
             AnnotationElementKey element = AnnotationElementKey.read(reader);
-            if (elementList == null) {
-                elementList = new ArrayCollection<>();
+            if (containsElementName(elementList, element.getName())) {
+                // TODO: move this validator to SmaliReader
+                reader.position(position);
+                throw new SmaliParseException("Duplicate element name: " + element.getName(),
+                        reader);
             }
-            elementList.add(element);
+            elementList = ObjectsStore.add(elementList, element);
             reader.skipWhitespacesOrComment();
         }
-        reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, directive, true);
         Key[] elements;
         if (elementList != null) {
-            elements = elementList.toArrayFill(new Key[elementList.size()]);
+            elements = new Key[ObjectsStore.size(elementList)];
+            ObjectsStore.collect(elementList, elements);
         } else {
             elements = null;
         }
         return createKey(visibility, typeKey, elements);
+    }
+    private static boolean containsElementName(Object elementList, String name) {
+        int size = ObjectsStore.size(elementList);
+        for (int i = 0; i < size; i++) {
+            AnnotationElementKey elementKey = ObjectsStore.get(elementList, i);
+            if (name.equals(elementKey.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
     public static AnnotationItemKey parse(String text) {
         //FIXME
