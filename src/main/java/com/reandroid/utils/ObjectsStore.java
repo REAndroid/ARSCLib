@@ -50,14 +50,14 @@ public class ObjectsStore {
         }
         return 1;
     }
-    public static boolean contains(Object container, Object reference) {
+    public static boolean contains(Object container, Object item) {
         if (container == null) {
             return false;
         }
         if (container.getClass() == ObjectsList.class) {
-            return ((ObjectsList) container).contains(reference);
+            return ((ObjectsList) container).contains(item);
         }
-        return container.equals(reference);
+        return container.equals(item);
     }
     public static<T> boolean containsIf(Object container, Predicate<T> predicate) {
         return iteratorIf(container, predicate).hasNext();
@@ -93,18 +93,18 @@ public class ObjectsStore {
     public static<T> Iterator<T> iteratorIf(Object container, Predicate<T> predicate) throws ClassCastException {
         return FilterIterator.of(iterator(container), predicate);
     }
-    public static Object remove(Object container, Object reference) {
-        if (reference == null || container == null || reference == container) {
+    public static Object remove(Object container, Object item) {
+        if (item == null || container == null || item == container) {
             return null;
         }
         if (container.getClass() != ObjectsList.class) {
-            if (container.equals(reference)) {
+            if (container.equals(item)) {
                 container = null;
             }
             return container;
         }
         ObjectsList list = (ObjectsList) container;
-        list.remove(reference);
+        list.remove(item);
         int size = list.size();
         if (size == 0) {
             return null;
@@ -114,12 +114,12 @@ public class ObjectsStore {
         }
         return list;
     }
-    public static Object add(Object container, Object reference) {
-        if (reference == null || reference == container) {
+    public static Object add(Object container, Object item) {
+        if (item == null || item == container) {
             return container;
         }
         if (container == null) {
-            return reference;
+            return item;
         }
         ObjectsList list;
         if (container.getClass() == ObjectsList.class) {
@@ -128,7 +128,7 @@ public class ObjectsStore {
             list = new ObjectsList();
             list.add(container);
         }
-        list.add(reference);
+        list.add(item);
         return list;
     }
     public static Object addAll(Object container, Collection<?> collection) {
@@ -136,13 +136,18 @@ public class ObjectsStore {
             return container;
         }
         ObjectsList list;
-        if (container.getClass() == ObjectsList.class) {
+        if (container != null && container.getClass() == ObjectsList.class) {
             list = (ObjectsList) container;
+            list.addAll(collection);
         } else {
-            list = new ObjectsList();
-            list.add(container);
+            if (container == null) {
+                list = new ObjectsList(collection.toArray());
+            } else {
+                list = new ObjectsList();
+                list.add(container);
+                list.addAll(collection);
+            }
         }
-        list.addAll(collection);
         int size = list.size();
         if (size == 0) {
             return null;
@@ -152,11 +157,88 @@ public class ObjectsStore {
         }
         return list;
     }
+    public static Object addAll(Object container, Object[] itemsArray) {
+        if (itemsArray == null || itemsArray.length == 0) {
+            return container;
+        }
+        ObjectsList list;
+        if (container != null && container.getClass() == ObjectsList.class) {
+            list = (ObjectsList) container;
+            list.addAll(itemsArray);
+        } else {
+            if (container == null) {
+                list = new ObjectsList(itemsArray);
+            } else {
+                list = new ObjectsList();
+                list.add(container);
+                list.addAll(itemsArray);
+            }
+        }
+        int size = list.size();
+        if (size == 0) {
+            return null;
+        }
+        if (size == 1) {
+            return list.get(0);
+        }
+        return list;
+    }
+    public static<T> T get(Object container, int i) throws ClassCastException {
+        Object item = null;
+        if (container != null) {
+            if (container.getClass() == ObjectsList.class) {
+                item = ((ObjectsList) container).get(i);
+            } else if(i == 0) {
+                item = container;
+            }
+        }
+        return ObjectsUtil.cast(item);
+    }
+    public static void collect(Object container, Object[] array) {
+        if (container == null || array == null || array.length == 0) {
+            return;
+        }
+        if (container.getClass() == ObjectsList.class) {
+            ObjectsList list = (ObjectsList) container;
+            list.toArrayFill(array);
+        } else {
+            array[0] = container;
+        }
+    }
+    public static Object create(Object[] array) {
+        if (array == null) {
+            return null;
+        }
+        int length = array.length;
+        if (length == 0) {
+            return null;
+        }
+        if (length == 1) {
+            return array[0];
+        }
+        return new ObjectsList(array);
+    }
+    public static Object create(Iterator<?> iterator) {
+        if (iterator == null || !iterator.hasNext()) {
+            return null;
+        }
+        Object first = iterator.next();
+        if (!iterator.hasNext()) {
+            return first;
+        }
+        ObjectsList list = new ObjectsList();
+        list.add(first);
+        list.addAll(iterator);
+        return list;
+    }
 
     static final class ObjectsList extends ArrayCollection<Object> {
 
         ObjectsList() {
             super(10);
+        }
+        ObjectsList(Object[] elements) {
+            super(elements);
         }
 
         @Override
