@@ -192,10 +192,13 @@ public abstract class InputSource {
         }
         String num = name.substring(prefix.length(), name.length() - ext.length());
         try {
-            return Integer.parseInt(num);
+            int value = Integer.parseInt(num);
+            if (value > 0) {
+                return value;
+            }
         }catch (NumberFormatException ignored){
-            return -1;
         }
+        return -1;
     }
     public static int compareDex(String dex1, String dex2){
         int d1 = getDexNumber(dex1);
