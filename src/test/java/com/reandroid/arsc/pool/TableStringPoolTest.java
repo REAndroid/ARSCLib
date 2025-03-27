@@ -23,6 +23,7 @@ public class TableStringPoolTest {
         sortStringsTest();
         duplicateStringsTest();
         styledStringsTest();
+        unusedStringsTest();
     }
 
     private void createStringsTest() {
@@ -189,6 +190,68 @@ public class TableStringPoolTest {
         stringPool.sort();
 
         Assert.assertSame("Styled string out of order \"item-1\"", item_1_styled, stringPool.get(0));
+    }
+
+    private void unusedStringsTest() {
+        TableStringPool stringPool = newStringPool();
+
+        createPlainString(stringPool, 10);
+
+        createStyledString(stringPool, 7);
+        createPlainString(stringPool, 9);
+        createStyledString(stringPool, 5);
+        createPlainString(stringPool, 0);
+        createStyledString(stringPool, 6);
+
+        TableString tableString = createStyledString(stringPool, 4);
+        ReferenceItem reference = StringPoolTestUtil.getFirstFakeReference(tableString);
+
+        createStyledString(stringPool, 1);
+        createStyledString(stringPool, 2);
+        createStyledString(stringPool, 3);
+        createPlainString(stringPool, 8);
+
+        Assert.assertTrue(tableString.hasReference());
+
+        Assert.assertTrue(stringPool.getStringsArray().contains(tableString));
+
+
+        int stringsCount = stringPool.size();
+        int stylesCount = stringPool.countStyles();
+
+        tableString.removeReference(reference);
+
+        Assert.assertFalse(tableString.hasReference());
+
+        stringPool.removeUnusedStrings();
+
+        Assert.assertFalse(stringPool.getStringsArray().contains(tableString));
+
+        stringPool.getStyleArray().sort();
+
+        stringPool.sort();
+        stringPool.refresh();
+
+        Assert.assertTrue(stringPool.size() < stringsCount);
+        Assert.assertTrue(stringPool.countStyles() < stylesCount);
+    }
+
+    private TableString createStyledString(TableStringPool stringPool, int label) {
+        String labelString = StringPoolTestUtil.to4WidthString(label);
+        String xmlString = "<a attr=\"attr_value-" + "labelString" + "\">item_" + labelString + "</a>";
+        StyleDocument document = StyleDocument.create(xmlString);
+        Assert.assertNotNull("Failed to parse item_" + labelString, document);
+        TableString tableString = stringPool.getOrCreate(document);
+        ReferenceItem reference = StringPoolTestUtil.newFakeReference(labelString);
+        tableString.addReference(reference);
+        return tableString;
+    }
+    private TableString createPlainString(TableStringPool stringPool, int label) {
+        String labelString = StringPoolTestUtil.to4WidthString(label);
+        TableString tableString = stringPool.getOrCreate("item_" + labelString);
+        ReferenceItem reference = StringPoolTestUtil.newFakeReference(labelString);
+        tableString.addReference(reference);
+        return tableString;
     }
     public TableStringPool newStringPool() {
         return newTableBlock().getStringPool();
