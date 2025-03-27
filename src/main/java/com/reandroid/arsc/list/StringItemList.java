@@ -75,6 +75,7 @@ public class StringItemList<T extends StringItem> extends OffsetBlockList<T> imp
         block.onRemoved();
         super.onPreRemove(block);
         resetCountBytes();
+        mSortRequired = true;
     }
 
     public void sort() {
@@ -167,6 +168,10 @@ public class StringItemList<T extends StringItem> extends OffsetBlockList<T> imp
         super.readChildes(reader);
         resetCountBytes();
         mSortRequired = false;
+    }
+
+    public boolean isSortRequired() {
+        return mSortRequired;
     }
 
     @Override

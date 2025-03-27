@@ -37,6 +37,9 @@ public class StyleItemList extends OffsetBlockList<StyleItem> {
     }
     @Override
     public boolean sort(Comparator<? super StyleItem> comparator) {
+        if (!isSortingAllowed()) {
+            return false;
+        }
         boolean sorted = super.sort(comparator);
         if (adjustIndexes()) {
             if (super.sort(comparator)) {
@@ -67,6 +70,13 @@ public class StyleItemList extends OffsetBlockList<StyleItem> {
                 get(i).linkStringsInternal();
             }
         }
+    }
+    private boolean isSortingAllowed() {
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
+        if (stringPool != null) {
+            return !stringPool.getStringsArray().isSortRequired();
+        }
+        return false;
     }
 
     private boolean adjustIndexes() {
