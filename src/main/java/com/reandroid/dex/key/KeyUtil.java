@@ -66,7 +66,11 @@ public class KeyUtil {
         if (first == 'n') {
             return NullValueKey.read(reader);
         }
-        Key key = MethodHandleKey.read(reader);
+        Key key = PrimitiveKey.readSafe(reader);
+        if (key != null) {
+            return key;
+        }
+        key = MethodHandleKey.read(reader);
         if (key != null) {
             return key;
         }
@@ -93,11 +97,7 @@ public class KeyUtil {
             }
             return FieldKey.create(typeKey, name, TypeKey.read(reader));
         }
-        key = PrimitiveKey.readSafe(reader);
-        if (key == null) {
-            throw new SmaliParseException("Unrecognized value", reader);
-        }
-        return key;
+        throw new SmaliParseException("Unrecognized value", reader);
     }
 
     public static TypeKey getReturnTypeForValue(Key value) {
