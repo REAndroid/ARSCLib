@@ -340,6 +340,13 @@ public class SmaliWriter implements Appendable, Closeable {
         this.writerSetting = writerSetting;
     }
 
+    public SmaliFileNameFactory getFileNameFactory() {
+        SmaliWriterSetting setting = getWriterSetting();
+        if (setting != null) {
+            return setting.getFileNameFactory();
+        }
+        return SmaliFileNameFactory.INSTANCE;
+    }
     public boolean isLocalRegistersCount() {
         SmaliWriterSetting setting = getWriterSetting();
         if (setting != null) {

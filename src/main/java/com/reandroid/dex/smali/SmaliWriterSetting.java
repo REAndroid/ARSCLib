@@ -29,6 +29,7 @@ import java.util.List;
 
 public class SmaliWriterSetting {
 
+    private SmaliFileNameFactory fileNameFactory;
     private ResourceIdComment resourceIdComment;
     private List<MethodComment> methodCommentList;
     private List<ClassComment> classCommentList;
@@ -42,6 +43,18 @@ public class SmaliWriterSetting {
         this.commentUnicodeStrings = false;
         this.localRegistersCount = true;
         this.maximumCommentLines = 500;
+    }
+
+    public SmaliFileNameFactory getFileNameFactory() {
+        SmaliFileNameFactory factory = this.fileNameFactory;
+        if (factory == null) {
+            factory = SmaliFileNameFactory.newInstance();
+            this.fileNameFactory = factory;
+        }
+        return factory;
+    }
+    public void setFileNameFactory(SmaliFileNameFactory fileNameFactory) {
+        this.fileNameFactory = fileNameFactory;
     }
 
     public boolean isSequentialLabel() {
@@ -80,13 +93,13 @@ public class SmaliWriterSetting {
 
     public void writeResourceIdComment(SmaliWriter writer, long l) throws IOException {
         ResourceIdComment resourceIdComment = getResourceIdComment();
-        if(resourceIdComment != null){
+        if (resourceIdComment != null) {
             resourceIdComment.writeComment(writer, (int)l);
         }
     }
     public void writeResourceIdComment(SmaliWriter writer, int i) throws IOException {
         ResourceIdComment resourceIdComment = getResourceIdComment();
-        if(resourceIdComment != null){
+        if (resourceIdComment != null) {
             resourceIdComment.writeComment(writer, i);
         }
     }
@@ -102,8 +115,8 @@ public class SmaliWriterSetting {
 
     public void writeMethodComment(SmaliWriter writer, MethodKey methodKey) throws IOException {
         List<MethodComment> methodCommentList = getMethodCommentList();
-        if(methodCommentList != null) {
-            for(MethodComment methodComment : methodCommentList) {
+        if (methodCommentList != null) {
+            for (MethodComment methodComment : methodCommentList) {
                 methodComment.writeComment(writer, methodKey);
             }
         }
@@ -113,20 +126,20 @@ public class SmaliWriterSetting {
     }
     public void clearMethodComments() {
         List<MethodComment> commentList = this.methodCommentList;
-        if(commentList != null) {
+        if (commentList != null) {
             commentList.clear();
         }
     }
     public void addMethodComment(MethodComment methodComment) {
-        if(methodComment == null) {
+        if (methodComment == null) {
             return;
         }
         List<MethodComment> commentList = this.methodCommentList;
-        if(commentList == null) {
+        if (commentList == null) {
             commentList = new ArrayCollection<>();
             this.methodCommentList = commentList;
         }
-        if(!commentList.contains(methodComment)) {
+        if (!commentList.contains(methodComment)) {
             commentList.add(methodComment);
         }
     }
@@ -136,8 +149,8 @@ public class SmaliWriterSetting {
     }
     public void writeClassComment(SmaliWriter writer, TypeKey typeKey) throws IOException {
         List<ClassComment> commentList = getClassCommentList();
-        if(commentList != null) {
-            for(ClassComment comment : commentList) {
+        if (commentList != null) {
+            for (ClassComment comment : commentList) {
                 comment.writeComment(writer, typeKey);
             }
         }
@@ -148,20 +161,20 @@ public class SmaliWriterSetting {
     }
     public void clearClassComments() {
         List<ClassComment> commentList = this.classCommentList;
-        if(commentList != null) {
+        if (commentList != null) {
             commentList.clear();
         }
     }
     public void addClassComment(ClassComment classComment) {
-        if(classComment == null) {
+        if (classComment == null) {
             return;
         }
         List<ClassComment> commentList = this.classCommentList;
-        if(commentList == null) {
+        if (commentList == null) {
             commentList = new ArrayCollection<>();
             this.classCommentList = commentList;
         }
-        if(!commentList.contains(classComment)) {
+        if (!commentList.contains(classComment)) {
             commentList.add(classComment);
         }
     }
