@@ -852,7 +852,7 @@ public class ApkModule implements ApkFile, Closeable {
         }
         packageBlock = tableBlock.pickOne(manifestBlock.guessCurrentPackageId());
         if(packageBlock == null) {
-            packageBlock = tableBlock.pickOne();
+            packageBlock = tableBlock.pickOrEmptyPackage();
         }
         if(packageBlock != null) {
             manifestBlock.setPackageBlock(packageBlock);
