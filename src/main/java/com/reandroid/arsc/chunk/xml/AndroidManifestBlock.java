@@ -190,6 +190,33 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
                 applicationElement.getOrCreateAndroidAttribute(NAME_label, ID_label);
         labelAttribute.setValueAsString(label);
     }
+
+    public Boolean isExtractNativeLibs() {
+        ResXmlElement application = getApplicationElement();
+        if (application != null) {
+            ResXmlAttribute attribute = application
+                    .searchAttributeByResourceId(ID_extractNativeLibs);
+            if (attribute != null && attribute.getValueType() == ValueType.BOOLEAN) {
+                return attribute.getValueAsBoolean();
+            }
+        }
+        return null;
+    }
+    public void setExtractNativeLibs(Boolean value) {
+        ResXmlElement application = value == null ?
+                getApplicationElement() :
+                getOrCreateApplicationElement();
+        if (application != null) {
+            if (value == null) {
+                application.removeAttributesWithId(ID_extractNativeLibs);
+            } else {
+                ResXmlAttribute attribute = application
+                        .getOrCreateAndroidAttribute(NAME_extractNativeLibs, ID_extractNativeLibs);
+                attribute.setValueAsBoolean(value);
+            }
+        }
+    }
+
     public boolean isDebuggable() {
         ResXmlElement application = getApplicationElement();
         if (application != null) {
