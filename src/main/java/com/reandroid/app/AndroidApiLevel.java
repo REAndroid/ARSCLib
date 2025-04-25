@@ -48,10 +48,11 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
     public static final AndroidApiLevel Q;
     public static final AndroidApiLevel R;
     public static final AndroidApiLevel S;
-    public static final AndroidApiLevel Sv2;
-    public static final AndroidApiLevel T;
-    public static final AndroidApiLevel U;
-    public static final AndroidApiLevel V;
+    public static final AndroidApiLevel S_V2;
+    public static final AndroidApiLevel TIRAMISU;
+    public static final AndroidApiLevel UPSIDE_DOWN_CAKE;
+    public static final AndroidApiLevel VANILLA_ICE_CREAM;
+    public static final AndroidApiLevel BAKLAVA;
 
     public static final AndroidApiLevel ANDROID_PLATFORM;
 
@@ -92,14 +93,15 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
         Q = new AndroidApiLevel("Q", 29, "10", "Quince Tart");
         R = new AndroidApiLevel("R", 30, "11", "Red Velvet Cake");
         S = new AndroidApiLevel("S", 31, "12", "Snow Cone");
-        Sv2 = new AndroidApiLevel("Sv2", 32, "12.1", "Snow Cone v2");
-        T = new AndroidApiLevel("T", 33, "13", "Tiramisu");
-        U = new AndroidApiLevel("U", 34, "14", "Upside Down Cake");
-        V = new AndroidApiLevel("V", 35, "15", "Vanilla Ice Cream");
+        S_V2 = new AndroidApiLevel("S_V2", 32, "12.1", "Snow Cone v2");
+        TIRAMISU = new AndroidApiLevel("TIRAMISU", 33, "13", "Tiramisu");
+        UPSIDE_DOWN_CAKE = new AndroidApiLevel("UPSIDE_DOWN_CAKE", 34, "14", "Upside Down Cake");
+        VANILLA_ICE_CREAM = new AndroidApiLevel("VANILLA_ICE_CREAM", 35, "15", "Vanilla Ice Cream");
+        BAKLAVA = new AndroidApiLevel("BAKLAVA", 36, "16", "Baklava");
 
         ANDROID_PLATFORM = new AndroidApiLevel("ANDROID_PLATFORM", 10000, "10000", "ANDROID_PLATFORM");
 
-        LATEST = V;
+        LATEST = BAKLAVA;
 
         VALUES = new AndroidApiLevel[]{
                 B,
@@ -133,10 +135,11 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
                 Q,
                 R,
                 S,
-                Sv2,
-                T,
-                U,
-                V,
+                S_V2,
+                TIRAMISU,
+                UPSIDE_DOWN_CAKE,
+                VANILLA_ICE_CREAM,
+                BAKLAVA,
                 ANDROID_PLATFORM
         };
 
