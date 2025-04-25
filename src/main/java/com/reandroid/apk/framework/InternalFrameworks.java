@@ -195,6 +195,6 @@ public class InternalFrameworks extends FrameworkManager {
     private static final String ANDROID_RESOURCE_DIRECTORY = "/frameworks/android/";
     private static final String ANDROID_PACKAGE = "android";
     private static final String FRAMEWORK_EXTENSION = ".apk";
-    private static final int LOWEST_AVAILABLE_VERSION = 22;
+    private static final int LOWEST_AVAILABLE_VERSION = 23;
     private static final int HIGHEST_AVAILABLE_VERSION = 36;
 }
