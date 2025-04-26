@@ -81,6 +81,7 @@ public class ApkModule implements ApkFile, Closeable {
     private Integer preferredFramework;
     private Closeable mCloseable;
     private final List<TableBlock> mExternalFrameworks;
+    private int extractNativeLibs;
 
     private final Map<Object, Object> mTagMaps;
 
@@ -466,6 +467,11 @@ public class ApkModule implements ApkFile, Closeable {
         DexFileInputSource.sort(results);
         return results;
     }
+    public List<InputSource> listNativeLibraryFiles() {
+        return CollectionUtil.toList(getZipEntryMap().iteratorWithPath(
+                path -> path != null && path.startsWith("lib/")
+                        && path.endsWith(".so")));
+    }
     public boolean isBaseModule() {
         if (!hasAndroidManifest()) {
             return false;
@@ -540,8 +546,54 @@ public class ApkModule implements ApkFile, Closeable {
     public UncompressedFiles getUncompressedFiles() {
         return mUncompressedFiles;
     }
+    public void setExtractNativeLibs(Boolean extractNativeLibs) {
+        int i;
+        if (extractNativeLibs == null) {
+            i = 1;
+        } else if (!extractNativeLibs) {
+            i = 2;
+        } else {
+            i = 3;
+        }
+        this.extractNativeLibs = i;
+    }
+    private void applyExtractNativeLibs() {
+        Boolean extractNativeLibs;
+        int i = this.extractNativeLibs;
+        if (i == 1) {
+            extractNativeLibs = null;
+        } else if (i == 2) {
+            extractNativeLibs = Boolean.FALSE;
+        } else if (i == 3) {
+            extractNativeLibs = Boolean.TRUE;
+        } else {
+            return;
+        }
+        applyExtractNativeLibsOnLoadedManifest(extractNativeLibs);
+        unCompressNativeLibs(Boolean.FALSE.equals(extractNativeLibs));
+    }
+    private void applyExtractNativeLibsOnLoadedManifest(Boolean value) {
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if (manifestBlock != null) {
+            manifestBlock.setExtractNativeLibs(value);
+        }
+    }
+    private void unCompressNativeLibs(boolean unCompressed) {
+        List<InputSource> nativeLibraryFiles = listNativeLibraryFiles();
+        UncompressedFiles uncompressedFiles = getUncompressedFiles();
+        for (InputSource inputSource : nativeLibraryFiles) {
+            inputSource.setUncompressed(unCompressed);
+            if (unCompressed) {
+                uncompressedFiles.addPath(inputSource);
+            } else {
+                uncompressedFiles.removePath(inputSource.getName());
+                uncompressedFiles.removePath(inputSource.getAlias());
+            }
+        }
+    }
     public void updateUncompressedFiles() {
         getUncompressedFiles().apply(getZipEntryMap());
+        applyExtractNativeLibs();
     }
     public void removeDir(String dirName) {
         getZipEntryMap().removeDir(dirName);
