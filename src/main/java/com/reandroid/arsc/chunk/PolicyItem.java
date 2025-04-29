@@ -46,8 +46,7 @@ public class PolicyItem extends IntegerItem {
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
         String name = parser.getAttributeValue(null, ATTR_name);
         if (StringsUtil.isEmpty(name)) {
-            throw new EncodeException("Missing attribute '" + ATTR_name + "', at "
-                    + parser.getPositionDescription());
+            throw new EncodeException(parser, "Missing attribute '" + ATTR_name + "'");
         }
         String type = parser.getAttributeValue(null, ATTR_type);
         if (StringsUtil.isEmpty(type)) {
@@ -65,8 +64,7 @@ public class PolicyItem extends IntegerItem {
                     .getResource((String) null, type, name);
         }
         if (resourceEntry == null) {
-            throw new EncodeException("Unknown policy item: type = " + type + ", name = " + name + ",\nat "
-                    + parser.getPositionDescription());
+            throw new EncodeException(parser, "Unknown policy item: type = " + type + ", name = " + name + "");
         }
         this.set(resourceEntry.getResourceId());
         skipToEnd(parser);

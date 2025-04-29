@@ -355,7 +355,6 @@ public class XMLTableBlockEncoder {
         PackageBlock packageBlock = tableBlock.getCurrentPackage();
         OverlayableList overlayableList = packageBlock.getOverlayableList();
         XmlPullParser parser = XMLFactory.newPullParser(file);
-        XMLFactory.setOrigin(parser, FileUtil.shortPath(file, 4));
         overlayableList.parse(parser);
     }
     private boolean addNonTypeValueFile(File file) {

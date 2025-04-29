@@ -305,7 +305,11 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             } else {
                 uri = null;
             }
-            createNext().encode(false, uri, prefix, name, value);
+            try {
+                createNext().encode(false, uri, prefix, name, value);
+            } catch (IOException e) {
+                throw new IOException(XMLUtil.getSimplePositionDescription(parser) + "\n" + e.getMessage(), e);
+            }
         }
         if (count != 0) {
             computePositionalAttributes();

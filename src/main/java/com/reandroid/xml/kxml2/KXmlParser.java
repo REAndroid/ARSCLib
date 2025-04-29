@@ -82,7 +82,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
     static final private int XML_DECLARATION = 998;
 
     // general
-    private String location;
+    private Object location;
 
     private String version;
     private Boolean standalone;
@@ -175,18 +175,11 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
     private boolean unresolved;
 
-    private Object origin;
     private boolean mClosedWithTag;
 
     public KXmlParser(){
     }
 
-    public Object getOrigin() {
-        return origin;
-    }
-    public void setOrigin(Object origin) {
-        this.origin = origin;
-    }
 
     /**
      * Retains namespace attributes like {@code xmlns="http://foo"} or {@code xmlns:foo="http:foo"}
@@ -1808,7 +1801,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
         } else if (property.equals(PROPERTY_XMLDECL_STANDALONE)) {
             return standalone;
         } else if (property.equals(PROPERTY_LOCATION)) {
-            return location != null ? location : reader.toString();
+            return location;
         } else {
             return null;
         }
@@ -1880,12 +1873,17 @@ public class KXmlParser implements XmlPullParser, Closeable {
     public String getPositionDescription() {
         StringBuilder buf = new StringBuilder();
 
-        Object origin = getOrigin();
-        if (origin != null) {
+        Object location = this.location;
+        if (location != null) {
             buf.append(" at ");
-            buf.append(origin);
+            buf.append(location);
             buf.append(' ');
         }
+        buf.append('[');
+        buf.append(getLineNumber());
+        buf.append(":");
+        buf.append(getColumnNumber());
+        buf.append("]\n");
 
         buf.append(type < TYPES.length ? TYPES[type] : "unknown");
         buf.append(' ');
@@ -1931,23 +1929,42 @@ public class KXmlParser implements XmlPullParser, Closeable {
             buf.append(text);
         }
 
-        buf.append("@");
-        buf.append(getLineNumber());
-        buf.append(":");
-        buf.append(getColumnNumber());
-        if (location != null) {
-            buf.append(" in ");
-            buf.append(location);
-        }
         return buf.toString();
+    }
+
+    public String getSimplePositionDescription() {
+        StringBuilder builder = new StringBuilder();
+
+        Object location = this.location;
+        if (location != null) {
+            builder.append("at ");
+            builder.append(location);
+            builder.append(' ');
+        }
+        builder.append("[line = ");
+        builder.append(getLineNumber());
+        builder.append(']');
+        return builder.toString();
     }
 
     public int getLineNumber() {
         int result = bufferStartLine;
-        for (int i = 0; i < position; i++) {
+        int position = this.position - 1;
+        char[] buffer = this.buffer;
+        int i;
+        for (i = 0; i < position; i++) {
             if (buffer[i] == '\n') {
-                result++;
+                result ++;
             }
+        }
+        while (i >= 0) {
+            char c = buffer[i];
+            if (c > ' ') {
+                break;
+            } else if (c == '\n') {
+                result --;
+            }
+            i --;
         }
         return result + 1; // the first line is '1'
     }

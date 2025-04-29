@@ -15,11 +15,17 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-public class EncodeException extends IllegalArgumentException{
-    public EncodeException(String message){
+ import com.reandroid.xml.XMLUtil;
+ import org.xmlpull.v1.XmlPullParser;
+
+ public class EncodeException extends IllegalArgumentException {
+    public EncodeException(String message) {
         super(message);
     }
-    public EncodeException(String message, Throwable cause){
+    public EncodeException(XmlPullParser parser, String message) {
+        this(XMLUtil.getSimplePositionDescription(parser) + "\n" + message);
+    }
+    public EncodeException(String message, Throwable cause) {
         super(message, cause);
     }
 }

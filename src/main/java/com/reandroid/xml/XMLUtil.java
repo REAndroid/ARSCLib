@@ -16,6 +16,7 @@
 package com.reandroid.xml;
 
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.kxml2.KXmlParser;
 import com.reandroid.xml.kxml2.KXmlSerializer;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -219,6 +220,14 @@ public class XMLUtil {
             parser.setProperty(XMLUtil.PROPERTY_LOCATION, location);
         } catch (Throwable ignored) {
         }
+    }
+    public static String getSimplePositionDescription(XmlPullParser parser) {
+        if (parser instanceof KXmlParser) {
+            return ((KXmlParser) parser).getSimplePositionDescription();
+        } else if (parser != null) {
+            return parser.getPositionDescription();
+        }
+        return null;
     }
     public static boolean hasFeatureRelaxed(XmlPullParser parser) {
         return getFeatureSafe(parser, FEATURE_RELAXED, false);

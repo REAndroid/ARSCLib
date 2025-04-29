@@ -16,13 +16,18 @@
 package com.reandroid.xml;
 
 import com.reandroid.utils.io.FileUtil;
-import com.reandroid.xml.kxml2.KXmlParser;
 import com.reandroid.xml.kxml2.KXmlSerializer;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
 
 public class XMLFactory {
 
@@ -30,6 +35,7 @@ public class XMLFactory {
         XmlPullParser parser = newPullParser();
         StringReader reader = new StringReader(xmlContent);
         parser.setInput(reader);
+        XMLUtil.setLocation(parser, "<XML_STRING>");
         return parser;
     }
     public static XmlPullParser newPullParser(File file) throws XmlPullParserException {
@@ -89,11 +95,6 @@ public class XMLFactory {
         return new CloseableSerializer();
     }
 
-    public static void setOrigin(XmlPullParser parser, Object origin) {
-        if (parser instanceof KXmlParser) {
-            ((KXmlParser) parser).setOrigin(origin);
-        }
-    }
     public static void setEnableIndentAttributes(XmlSerializer serializer, boolean indentAttributes) {
         KXmlSerializer kXmlSerializer = getKXmlSerializer(serializer);
         if (kXmlSerializer != null) {

@@ -26,9 +26,21 @@ import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.value.*;
+import com.reandroid.arsc.value.AttributeDataFormat;
+import com.reandroid.arsc.value.AttributeType;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValue;
+import com.reandroid.arsc.value.ResValueMap;
+import com.reandroid.arsc.value.ValueHeader;
+import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.io.IOUtil;
-import com.reandroid.xml.*;
+import com.reandroid.xml.StyleDocument;
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLFactory;
+import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -246,23 +258,27 @@ public class XmlCoder {
         public void encode(XmlPullParser parser, TypeBlock typeBlock) throws IOException, XmlPullParserException {
             int event = parser.getEventType();
             boolean documentStarted = false;
-            if(event == XmlPullParser.START_DOCUMENT){
+            if (event == XmlPullParser.START_DOCUMENT) {
                 documentStarted = true;
                 parser.next();
             }
             event = XMLUtil.ensureStartTag(parser);
-            if(event != XmlPullParser.START_TAG){
-                throw new XmlEncodeException("Expecting xml state START_TAG but found: "
+            if (event != XmlPullParser.START_TAG) {
+                throw new XmlEncodeException(parser, "Expecting xml state START_TAG but found: "
                         + XMLUtil.toEventName(parser.getEventType()));
             }
-            if(PackageBlock.TAG_resources.equals(parser.getName())){
+            if (PackageBlock.TAG_resources.equals(parser.getName())) {
                 parser.next();
-            }else if(documentStarted){
-                throw new XmlEncodeException("Expecting <resources> tag but found: " + parser.getName());
+            } else if(documentStarted){
+                throw new XmlEncodeException(parser, "Expecting <resources> tag but found: " + parser.getName());
             }
-            while (XMLUtil.ensureStartTag(parser) == XmlPullParser.START_TAG){
-                XMLElement element = XMLElement.parseElement(parser);
-                encodeEntry(element, typeBlock);
+            try {
+                while (XMLUtil.ensureStartTag(parser) == XmlPullParser.START_TAG) {
+                    XMLElement element = XMLElement.parseElement(parser);
+                    encodeEntry(element, typeBlock);
+                }
+            } catch (XmlEncodeException e) {
+                throw new XmlEncodeException(parser, e.getMessage());
             }
             IOUtil.close(parser);
         }

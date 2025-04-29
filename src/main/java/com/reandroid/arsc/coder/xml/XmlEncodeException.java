@@ -15,10 +15,18 @@
  */
 package com.reandroid.arsc.coder.xml;
 
+import com.reandroid.xml.XMLUtil;
+import org.xmlpull.v1.XmlPullParser;
+
 import java.io.IOException;
 
 public class XmlEncodeException extends IOException {
-    public XmlEncodeException(String message){
+
+    public XmlEncodeException(String message) {
         super(message);
+    }
+
+    public XmlEncodeException(XmlPullParser parser, String message) {
+        this(XMLUtil.getSimplePositionDescription(parser) + "\n" + message);
     }
 }

@@ -169,8 +169,7 @@ public class PolicyFlag {
             if (name.length() != 0) {
                 PolicyFlag flag = nameOf(name);
                 if (flag == null) {
-                    throw new EncodeException("Unknown policy flag '" + name
-                            + "' " + parser.getPositionDescription());
+                    throw new EncodeException(parser, "Unknown policy flag '" + name + "'");
                 }
                 result |= flag.flag();
             }
