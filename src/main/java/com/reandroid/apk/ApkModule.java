@@ -44,6 +44,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.identifiers.PackageIdentifier;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.XMLDocument;
@@ -1228,6 +1229,29 @@ public class ApkModule implements ApkFile, Closeable {
         mergeTable(module);
         mergeFiles(module);
         getUncompressedFiles().merge(module.getUncompressedFiles());
+        mergeFusedModules(module);
+    }
+    private void mergeFusedModules(ApkModule module) {
+        if (!this.hasAndroidManifest() || !module.hasAndroidManifest()) {
+            return;
+        }
+        AndroidManifestBlock baseManifest = this.getAndroidManifest();
+        AndroidManifestBlock manifest = module.getAndroidManifest();
+        if (!manifest.isFusingInclude()) {
+            return;
+        }
+        logMessage("Merging fused module: " + module.getModuleName());
+        String[] fusedModules = manifest.getFusedModules();
+        if (fusedModules != null && fusedModules.length != 0) {
+            baseManifest.addFusedModules(fusedModules);
+            logMessage("Fused modules added [" +
+                    StringsUtil.join(fusedModules, ',') + "]");
+        }
+        String split = manifest.getSplit();
+        if (split != null) {
+            baseManifest.addFusedModules(split);
+            logMessage("Added as fused module <" + split + ">");
+        }
     }
     private void validateMerge(ApkModule apkModule, boolean force) throws IOException{
         if (!hasTableBlock()) {

@@ -154,6 +154,7 @@ public interface AndroidManifest {
     String TAG_uses_sdk = ObjectsUtil.of("uses-sdk");
 
     String VALUE_android_intent_action_MAIN = ObjectsUtil.of("android.intent.action.MAIN");
+    String VALUE_com_android_dynamic_apk_fused_modules = ObjectsUtil.of("com.android.dynamic.apk.fused.modules");
 
     String FILE_NAME = ObjectsUtil.of("AndroidManifest.xml");
     String FILE_NAME_BIN = ObjectsUtil.of("AndroidManifest.xml.bin");

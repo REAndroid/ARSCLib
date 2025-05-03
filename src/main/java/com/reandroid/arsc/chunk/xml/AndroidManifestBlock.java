@@ -23,13 +23,18 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class AndroidManifestBlock extends ResXmlDocument implements AndroidManifest {
@@ -100,6 +105,78 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
             }
         }
         attribute.setValueAsString(split);
+    }
+
+    /**
+     * Returns "include" value from split manifest
+     *
+     * e.g.
+     * <dist:module type="asset-pack">
+     *     <dist:fusing include="true" />
+     * </dist:module>
+     */
+    public boolean isFusingInclude() {
+        ResXmlElement manifestElement = getManifestElement();
+        if (manifestElement != null) {
+            Iterator<ResXmlElement> modules = manifestElement.getElements("module");
+            while (modules.hasNext()) {
+                Iterator<ResXmlElement> iterator = modules.next().getElements("fusing");
+                while (iterator.hasNext()) {
+                    ResXmlAttribute attribute = iterator.next()
+                            .searchAttributeByName("include");
+                    if (attribute != null && attribute.getValueType() == ValueType.BOOLEAN) {
+                        return attribute.getValueAsBoolean();
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    public String[] getFusedModules() {
+        ResXmlElement manifestElement = getManifestElement();
+        if (manifestElement != null) {
+            ResXmlElement metaData = CollectionUtil.getFirst(
+                    manifestElement.getElements(PREDICATE_FUSED_MODULES));
+            if (metaData != null) {
+                ResXmlAttribute attribute = metaData.searchAttributeByResourceId(ID_value);
+                if (attribute != null && attribute.getValueType() == ValueType.STRING) {
+                    return StringsUtil.split(attribute.getValueAsString(), ',');
+                }
+            }
+        }
+        return null;
+    }
+    public void addFusedModules(String ... names) {
+        if (names == null || names.length == 0) {
+            return;
+        }
+        ResXmlElement manifestElement = getOrCreateManifestElement();
+        ResXmlElement metaData = CollectionUtil.getFirst(
+                manifestElement.getElements(PREDICATE_FUSED_MODULES));
+        if (metaData == null) {
+            metaData = manifestElement.newElement(TAG_meta_data);
+            metaData.getOrCreateAndroidAttribute(NAME_name, ID_name)
+                    .setValueAsString(VALUE_com_android_dynamic_apk_fused_modules);
+        }
+        ResXmlAttribute attribute = metaData.getOrCreateAndroidAttribute(NAME_value, ID_value);
+        ArrayCollection<String> nameList = new ArrayCollection<>();
+        String value = attribute.getValueAsString();
+        if (value != null) {
+            nameList.addAll(StringsUtil.split(value, ','));
+        }
+        for (String name : names) {
+            if (!StringsUtil.isEmpty(name) && !nameList.contains(name)) {
+                nameList.add(name);
+            }
+        }
+        attribute.setValueAsString(StringsUtil.join(nameList, ','));
+    }
+    public boolean clearFusedModules() {
+        ResXmlElement manifestElement = getManifestElement();
+        if (manifestElement != null) {
+            return manifestElement.removeElementsIf(PREDICATE_FUSED_MODULES);
+        }
+        return false;
     }
     // TODO: find a better way
     public int guessCurrentPackageId() {
@@ -700,4 +777,9 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         manifestBlock.getOrCreateElement(EMPTY_MANIFEST_TAG);
         return manifestBlock;
     }
+
+    public static final Predicate<ResXmlElement> PREDICATE_FUSED_MODULES = element ->
+            element.equalsName(TAG_meta_data) &&
+            VALUE_com_android_dynamic_apk_fused_modules.equals(
+                    getAndroidNameValue(element));
 }
