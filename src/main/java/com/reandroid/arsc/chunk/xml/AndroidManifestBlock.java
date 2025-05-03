@@ -132,11 +132,11 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         }
         return false;
     }
-    public String[] getFusedModules() {
-        ResXmlElement manifestElement = getManifestElement();
-        if (manifestElement != null) {
+    public String[] getFusedModuleNames() {
+        ResXmlElement applicationElement = getApplicationElement();
+        if (applicationElement != null) {
             ResXmlElement metaData = CollectionUtil.getFirst(
-                    manifestElement.getElements(PREDICATE_FUSED_MODULES));
+                    applicationElement.getElements(PREDICATE_FUSED_MODULES));
             if (metaData != null) {
                 ResXmlAttribute attribute = metaData.searchAttributeByResourceId(ID_value);
                 if (attribute != null && attribute.getValueType() == ValueType.STRING) {
@@ -146,15 +146,15 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         }
         return null;
     }
-    public void addFusedModules(String ... names) {
+    public void addFusedModuleNames(String ... names) {
         if (names == null || names.length == 0) {
             return;
         }
-        ResXmlElement manifestElement = getOrCreateManifestElement();
+        ResXmlElement applicationElement = getOrCreateApplicationElement();
         ResXmlElement metaData = CollectionUtil.getFirst(
-                manifestElement.getElements(PREDICATE_FUSED_MODULES));
+                applicationElement.getElements(PREDICATE_FUSED_MODULES));
         if (metaData == null) {
-            metaData = manifestElement.newElement(TAG_meta_data);
+            metaData = applicationElement.newElement(TAG_meta_data);
             metaData.getOrCreateAndroidAttribute(NAME_name, ID_name)
                     .setValueAsString(VALUE_com_android_dynamic_apk_fused_modules);
         }
@@ -171,10 +171,10 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         }
         attribute.setValueAsString(StringsUtil.join(nameList, ','));
     }
-    public boolean clearFusedModules() {
-        ResXmlElement manifestElement = getManifestElement();
-        if (manifestElement != null) {
-            return manifestElement.removeElementsIf(PREDICATE_FUSED_MODULES);
+    public boolean clearFusedModuleNames() {
+        ResXmlElement applicationElement = getApplicationElement();
+        if (applicationElement != null) {
+            return applicationElement.removeElementsIf(PREDICATE_FUSED_MODULES);
         }
         return false;
     }

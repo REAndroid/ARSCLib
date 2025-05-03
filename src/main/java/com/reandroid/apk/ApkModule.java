@@ -1240,15 +1240,15 @@ public class ApkModule implements ApkFile, Closeable {
         if (!manifest.isFusingInclude()) {
             return;
         }
-        String[] fusedModules = manifest.getFusedModules();
+        String[] fusedModules = manifest.getFusedModuleNames();
         if (fusedModules != null && fusedModules.length != 0) {
-            baseManifest.addFusedModules(fusedModules);
+            baseManifest.addFusedModuleNames(fusedModules);
             logMessage("Fused modules added [" +
                     StringsUtil.join(fusedModules, ',') + "]");
         }
         String split = manifest.getSplit();
         if (split != null) {
-            baseManifest.addFusedModules(split);
+            baseManifest.addFusedModuleNames(split);
             logMessage("Added as fused module <" + split + ">");
         }
     }
