@@ -76,8 +76,7 @@ public class TypeListKey extends KeyList<TypeKey> {
             return;
         }
         writer.newLine();
-        writer.newLine();
-        writer.appendComment("interfaces");
+        writer.appendCommentNewLine("interfaces");
         SmaliDirective directive = SmaliDirective.IMPLEMENTS;
         for (int i = 0; i < size; i ++) {
             writer.newLine();

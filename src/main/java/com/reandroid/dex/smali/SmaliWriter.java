@@ -23,6 +23,7 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.formatters.SequentialLabelFactory;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -47,11 +48,11 @@ public class SmaliWriter implements Appendable, Closeable {
     private SmaliWriterSetting writerSetting;
     private SequentialLabelFactory sequentialLabelFactory;
 
-    public SmaliWriter(Writer writer){
+    public SmaliWriter(Writer writer) {
         this();
         this.writer = writer;
     }
-    public SmaliWriter(){
+    public SmaliWriter() {
         this.lineNumber = 1;
         this.state_new_line = true;
     }
@@ -59,13 +60,13 @@ public class SmaliWriter implements Appendable, Closeable {
 
     public void onWriteClass(TypeKey typeKey) throws IOException {
         SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null){
+        if (setting != null && setting.isEnableComments()) {
             setting.writeClassComment(this, typeKey);
         }
     }
     public void onWriteMethod(MethodKey methodKey) throws IOException {
         SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null){
+        if (setting != null && setting.isEnableComments()) {
             setting.writeMethodComment(this, methodKey);
         }
     }
@@ -93,7 +94,7 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public void appendRegister(int registerValue) throws IOException {
         RegistersTable registersTable = getCurrentRegistersTable();
-        if(registersTable == null){
+        if (registersTable == null) {
             throw new IOException("Current registers table not set");
         }
         Register register = registersTable.getRegisterFor(registerValue);
@@ -102,10 +103,10 @@ public class SmaliWriter implements Appendable, Closeable {
 
     public void appendAllWithDoubleNewLine(Iterator<? extends SmaliFormat> iterator) throws IOException {
         while (iterator.hasNext()) {
-            if(!state_new_line) {
+            if (!state_new_line) {
                 newLine();
             }
-            if(indent == 0){
+            if (indent == 0) {
                 newLine();
             }
             iterator.next().append(this);
@@ -114,14 +115,14 @@ public class SmaliWriter implements Appendable, Closeable {
     public void appendAllWithIndent(Iterator<? extends SmaliFormat> iterator) throws IOException {
         boolean appendOnce = false;
         while (iterator.hasNext()) {
-            if(!appendOnce){
+            if (!appendOnce) {
                 indentPlus();
             }
             newLine();
             iterator.next().append(this);
             appendOnce = true;
         }
-        if(appendOnce){
+        if (appendOnce) {
             indentMinus();
         }
     }
@@ -131,7 +132,7 @@ public class SmaliWriter implements Appendable, Closeable {
     public void appendAll(Iterator<? extends SmaliFormat> iterator, boolean newLine) throws IOException {
         boolean appendOnce = false;
         while (iterator.hasNext()) {
-            if(newLine && appendOnce){
+            if (newLine && appendOnce) {
                 newLine();
             }
             iterator.next().append(this);
@@ -144,24 +145,23 @@ public class SmaliWriter implements Appendable, Closeable {
         }
     }
     public boolean appendOptional(SmaliFormat smaliFormat) throws IOException {
-        if(smaliFormat != null){
+        if (smaliFormat != null) {
             smaliFormat.append(this);
             return true;
         }
         return false;
     }
     public boolean appendOptional(SmaliFormat smaliFormat, String comment) throws IOException {
-        if(smaliFormat == null){
+        if (smaliFormat == null) {
             return false;
         }
         newLine();
-        newLine();
-        appendComment(comment);
+        appendCommentNewLine(comment);
         smaliFormat.append(this);
         return true;
     }
     public void appendRequired(SmaliFormat smaliFormat) throws IOException {
-        if(smaliFormat == null){
+        if (smaliFormat == null) {
             throw new IOException("Null SmaliFormat");
         }
         smaliFormat.append(this);
@@ -207,19 +207,19 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public void appendResourceIdComment(long l) throws IOException {
         SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null){
+        if (setting != null) {
             setting.writeResourceIdComment(this, l);
         }
     }
     public void appendResourceIdComment(int i) throws IOException {
         SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null){
+        if (setting != null) {
             setting.writeResourceIdComment(this, i);
         }
     }
     public void appendLabelName(String name) throws IOException {
         SequentialLabelFactory labelFactory = getSequentialLabelFactory();
-        if(labelFactory != null) {
+        if (labelFactory != null) {
             name = labelFactory.get(name);
         }
         append(name);
@@ -231,11 +231,11 @@ public class SmaliWriter implements Appendable, Closeable {
         newLine(1);
     }
     public void newLine(int amount) throws IOException {
-        if(lineNumber == 1 && columnNumber == 0 || amount == 0){
+        if (lineNumber == 1 && columnNumber == 0 || amount == 0) {
             return;
         }
         flushComment();
-        for(int i = 0; i < amount; i++){
+        for (int i = 0; i < amount; i++) {
             writer.append('\n');
         }
         columnNumber = 0;
@@ -244,7 +244,7 @@ public class SmaliWriter implements Appendable, Closeable {
         indentRequested = true;
     }
     private void flushIndent() throws IOException {
-        if(indentRequested) {
+        if (indentRequested) {
             writeIndent();
         }
     }
@@ -252,25 +252,36 @@ public class SmaliWriter implements Appendable, Closeable {
         indentRequested = false;
         Writer writer = this.writer;
         int length = this.indent;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             writer.append(' ');
         }
     }
+    public void appendCommentNewLine(String text) {
+        appendComment(text, true);
+    }
     public void appendComment(String text) {
-        if(text == null || text.length() == 0){
+        appendComment(text, false);
+    }
+    public void appendComment(String text, boolean newLine) {
+        if (StringsUtil.isEmpty(text) || !isEnableComments()) {
             return;
         }
+        if (newLine) {
+            try {
+                newLine();
+            } catch (IOException ignored) {}
+        }
         StringBuilder comment = this.comment;
-        if(comment == null){
+        if (comment == null || comment.length() == 0) {
             comment = new StringBuilder();
             this.comment = comment;
-            if(this.indent != 0 || this.columnNumber != 0){
+            if (this.indent != 0 || this.columnNumber != 0) {
                 comment.append("    ");
             }
             comment.append('#');
             comment.append(' ');
             columnNumber += 2;
-        }else {
+        } else {
             comment.append(' ');
             columnNumber += 1;
         }
@@ -278,11 +289,14 @@ public class SmaliWriter implements Appendable, Closeable {
         columnNumber += text.length();
     }
     public Appendable getCommentAppender() {
+        if (!isEnableComments()) {
+            return null;
+        }
         StringBuilder comment = this.comment;
-        if(comment == null){
+        if (comment == null) {
             comment = new StringBuilder();
             this.comment = comment;
-            if(this.indent != 0 || this.columnNumber != 0){
+            if (this.indent != 0 || this.columnNumber != 0) {
                 comment.append("    ");
             }
             comment.append('#');
@@ -293,7 +307,7 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     private void flushComment() throws IOException {
         StringBuilder comment = this.comment;
-        if(comment == null){
+        if (comment == null) {
             return;
         }
         append(comment.toString());
@@ -307,22 +321,22 @@ public class SmaliWriter implements Appendable, Closeable {
         return columnNumber;
     }
 
-    public void indentPlus(){
+    public void indentPlus() {
         indent += INDENT_STEP;
     }
-    public void indentMinus(){
+    public void indentMinus() {
         indent -= INDENT_STEP;
-        if(indent < 0){
+        if (indent < 0) {
             indent = 0;
         }
     }
-    public void indentReset(){
+    public void indentReset() {
         indent = 0;
     }
 
 
     private void write(CharSequence text, int start, int length) throws IOException {
-        for(int i = start; i < length; i++){
+        for (int i = start; i < length; i++) {
             write(text.charAt(i));
         }
     }
@@ -354,19 +368,26 @@ public class SmaliWriter implements Appendable, Closeable {
         }
         return true;
     }
+    public boolean isEnableComments() {
+        SmaliWriterSetting setting = getWriterSetting();
+        if (setting != null) {
+            return setting.isEnableComments();
+        }
+        return true;
+    }
     public SequentialLabelFactory getSequentialLabelFactory() {
         return sequentialLabelFactory;
     }
     private SequentialLabelFactory getOrCreateSequentialLabelFactory() {
         SequentialLabelFactory labelFactory = this.sequentialLabelFactory;
         SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null) {
-            if(setting.isSequentialLabel()) {
-                if(labelFactory == null) {
+        if (setting != null) {
+            if (setting.isSequentialLabel()) {
+                if (labelFactory == null) {
                     labelFactory = new SequentialLabelFactory();
                     this.sequentialLabelFactory = labelFactory;
                 }
-            }else {
+            } else {
                 labelFactory = null;
             }
         }
@@ -377,7 +398,7 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public boolean isCommentUnicodeStrings() {
         SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null && setting.isCommentUnicodeStrings()) {
+        if (setting != null && setting.isEnableComments() && setting.isCommentUnicodeStrings()) {
             return stateWritingFields || stateWritingInstructions;
         }
         return false;
@@ -386,14 +407,14 @@ public class SmaliWriter implements Appendable, Closeable {
     @Override
     public void close() throws IOException {
         Writer writer = this.writer;
-        if(writer == null){
+        if (writer == null) {
             return;
         }
         flushComment();
         this.writer = null;
         writer.close();
     }
-    public void reset(){
+    public void reset() {
         this.indent = 0;
         this.lineNumber = 1;
         this.columnNumber = 0;
@@ -406,7 +427,7 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public void setCurrentRegistersTable(RegistersTable currentRegistersTable) {
         this.currentRegistersTable = currentRegistersTable;
-        if(currentRegistersTable == null) {
+        if (currentRegistersTable == null) {
             clearSequentialLabels();
         }
     }
@@ -419,19 +440,19 @@ public class SmaliWriter implements Appendable, Closeable {
 
     public void buildLabels(Iterator<? extends Label> iterator) {
         SequentialLabelFactory labelFactory = getOrCreateSequentialLabelFactory();
-        if(labelFactory != null) {
+        if (labelFactory != null) {
             labelFactory.build(iterator);
         }
     }
     public void clearSequentialLabels() {
         SequentialLabelFactory labelFactory = getSequentialLabelFactory();
-        if(labelFactory != null) {
+        if (labelFactory != null) {
             labelFactory.reset();
         }
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "line = " + getLineNumber() + ", column = " + getColumnNumber();
     }
 
@@ -445,8 +466,8 @@ public class SmaliWriter implements Appendable, Closeable {
         writer.close();
         return stringWriter.toString();
     }
-    public static String toStringSafe(SmaliFormat smaliFormat){
-        if(smaliFormat == null){
+    public static String toStringSafe(SmaliFormat smaliFormat) {
+        if (smaliFormat == null) {
             return "# null";
         }
         StringWriter stringWriter = new StringWriter();

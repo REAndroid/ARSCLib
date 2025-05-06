@@ -201,6 +201,9 @@ public class DexUtils {
         return unicodeDetected;
     }
     public static void appendCommentString(int maxLength, Appendable appendable, String text) throws IOException {
+        if (appendable == null) {
+            return;
+        }
         int length = NumbersUtil.min(maxLength, text.length());
         appendable.append('\'');
         for (int i = 0; i < length; i++) {

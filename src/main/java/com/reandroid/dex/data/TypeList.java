@@ -103,12 +103,11 @@ public class TypeList extends ShortIdList<TypeId> implements KeyReference, Posit
     public void appendInterfaces(SmaliWriter writer) throws IOException {
         SmaliDirective smaliDirective = null;
         for(TypeId typeId : this){
-            writer.newLine();
             if(smaliDirective == null){
-                writer.appendComment("interfaces");
-                writer.newLine();
+                writer.appendCommentNewLine("interfaces");
                 smaliDirective = SmaliDirective.IMPLEMENTS;
             }
+            writer.newLine();
             smaliDirective.append(writer);
             typeId.append(writer);
         }

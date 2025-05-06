@@ -206,8 +206,7 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
         }
         writer.newLine();
         writer.newLine();
-        writer.newLine();
-        writer.appendComment("annotations");
+        writer.appendCommentNewLine("annotations");
         for (int i = 0; i < size; i ++) {
             if (i != 0) {
                 writer.newLine();
