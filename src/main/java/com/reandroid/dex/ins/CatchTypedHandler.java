@@ -24,7 +24,6 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliCodeCatch;
 import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
-import com.reandroid.utils.ObjectsUtil;
 
 
 public class CatchTypedHandler extends ExceptionHandler {
@@ -41,7 +40,7 @@ public class CatchTypedHandler extends ExceptionHandler {
         this.typeId = nullForCompact;
     }
 
-    CatchTypedHandler newCompact(TryItem parent){
+    CatchTypedHandler newCompact(TryItem parent) {
         CatchTypedHandler catchTypedHandler = new Compact(this);
         catchTypedHandler.setIndex(getIndex());
         catchTypedHandler.setParent(parent);
@@ -53,15 +52,15 @@ public class CatchTypedHandler extends ExceptionHandler {
         return typeKey != null && typeKey.equals(getKey());
     }
     @Override
-    public TypeId getTypeId(){
+    public TypeId getTypeId() {
         return getTypeUle128().getItem();
     }
     @Override
-    public TypeKey getKey(){
+    public TypeKey getKey() {
         return (TypeKey) getTypeUle128().getKey();
     }
     @Override
-    public void setKey(TypeKey typeKey){
+    public void setKey(TypeKey typeKey) {
         getTypeUle128().setKey(typeKey);
     }
     @Override
@@ -69,22 +68,22 @@ public class CatchTypedHandler extends ExceptionHandler {
         return false;
     }
 
-    Ule128IdItemReference<TypeId> getTypeUle128(){
+    Ule128IdItemReference<TypeId> getTypeUle128() {
         return typeId;
     }
     @Override
-    public SmaliDirective getSmaliDirective(){
+    public SmaliDirective getSmaliDirective() {
         return SmaliDirective.CATCH;
     }
 
     @Override
     public void onRemove() {
         super.onRemove();
-        this.typeId.setItem((TypeId) null);
+        this.typeId.setItem(null);
     }
 
     @Override
-    public void merge(ExceptionHandler handler){
+    public void merge(ExceptionHandler handler) {
         super.merge(handler);
         CatchTypedHandler typedHandler = (CatchTypedHandler) handler;
         typeId.setKey(typedHandler.typeId.getKey());
@@ -97,23 +96,11 @@ public class CatchTypedHandler extends ExceptionHandler {
         super.fromSmali(smaliCodeExceptionHandler);
     }
 
-    @Override
-    boolean isTypeEqual(ExceptionHandler handler){
-        return ObjectsUtil.equals(getKey(), handler.getKey());
-    }
-    @Override
-    int getTypeHashCode(){
-        TypeKey typeKey = getKey();
-        if(typeKey != null){
-            return typeKey.hashCode();
-        }
-        return 0;
-    }
     static class Compact extends CatchTypedHandler {
 
         private final CatchTypedHandler catchTypedHandler;
 
-        Compact(CatchTypedHandler catchTypedHandler){
+        Compact(CatchTypedHandler catchTypedHandler) {
             super(null);
             this.catchTypedHandler = catchTypedHandler;
         }
@@ -124,16 +111,16 @@ public class CatchTypedHandler extends ExceptionHandler {
         }
 
         @Override
-        Ule128IdItemReference<TypeId> getTypeUle128(){
+        Ule128IdItemReference<TypeId> getTypeUle128() {
             return catchTypedHandler.getTypeUle128();
         }
         @Override
-        Ule128Item getCatchAddressUle128(){
+        Ule128Item getCatchAddressUle128() {
             return catchTypedHandler.getCatchAddressUle128();
         }
 
         @Override
-        public void merge(ExceptionHandler handler){
+        public void merge(ExceptionHandler handler) {
         }
     }
 }
