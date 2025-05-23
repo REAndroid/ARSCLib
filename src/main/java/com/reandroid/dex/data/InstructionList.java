@@ -391,12 +391,15 @@ public class InstructionList extends FixedBlockContainer implements
             return false;
         }
         Object lock = insBlockList.linkLocked();
-        if(!force && isLonelyInTryCatch(item)) {
+        if (!force && isLonelyInTryCatch(item)) {
             return replaceWithNop(item) != null;
         }
         int index = item.getIndex();
         Ins next = get(index + 1);
-        if(next != null) {
+        if (next == null && item.hasExtraLines()) {
+            next = insBlockList.getOrCreateNullInstruction();
+        }
+        if (next != null) {
             item.transferExtraLinesTo(next);
         }
         insBlockList.remove(item);
