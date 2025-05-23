@@ -29,6 +29,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliLabel;
+import com.reandroid.utils.ObjectsStore;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
@@ -39,13 +40,12 @@ import java.util.Iterator;
 public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
 
     private final Opcode<?> opcode;
-    private ExtraLineList extraLineList;
+    private Object extraLineList;
     private Ins targetIns;
 
     Ins(int childesCount, Opcode<?> opcode) {
         super(childesCount);
         this.opcode = opcode;
-        this.extraLineList = ExtraLineList.EMPTY;
     }
     Ins(Opcode<?> opcode) {
         this(1, opcode);
@@ -92,7 +92,9 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         }
     }
     public void transferExtraLinesTo(Ins destination) {
-        destination.extraLineList = ExtraLineList.add(this.extraLineList, destination.getExtraLines());
+        destination.extraLineList = ObjectsStore.addAll(
+                destination.extraLineList, this.getExtraLines());
+
         Iterator<ExtraLine> iterator = destination.getExtraLines();
         while (iterator.hasNext()) {
             ExtraLine extraLine = iterator.next();
@@ -100,7 +102,7 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
             extraLine.setTargetIns(destination);
         }
         Ins target = this.targetIns;
-        if(target != null && destination instanceof Label) {
+        if (target != null && destination instanceof Label) {
             destination.setTargetIns(target);
         }
         this.clearExtraLines();
@@ -223,21 +225,23 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         return null;
     }
     public void addExtraLine(ExtraLine extraLine){
-        if(extraLine != this) {
-            this.extraLineList = ExtraLineList.add(this.extraLineList, extraLine);
+        if (extraLine != this) {
+            this.extraLineList = ObjectsStore.add(this.extraLineList, extraLine);
         }
     }
-    public Iterator<ExtraLine> getExtraLines(){
-        return this.extraLineList.iterator();
+    public Iterator<ExtraLine> getExtraLines() {
+        ObjectsStore.sort(this.extraLineList, ExtraLine.COMPARATOR);
+        return ObjectsStore.iterator(this.extraLineList);
     }
-    public<T1> Iterator<T1> getExtraLines(Class<T1> instance){
-        return this.extraLineList.iterator(instance);
+    public<T1> Iterator<T1> getExtraLines(Class<T1> instance) {
+        ObjectsStore.sort(this.extraLineList, ExtraLine.COMPARATOR);
+        return ObjectsStore.iterator(this.extraLineList, instance);
     }
     public void clearExtraLines() {
-        extraLineList = ExtraLineList.EMPTY;
+        extraLineList = ObjectsStore.clear(extraLineList);
     }
     public boolean hasExtraLines() {
-        return !extraLineList.isEmpty();
+        return !ObjectsStore.isEmpty(extraLineList);
     }
     private void appendExtraLines(SmaliWriter writer) throws IOException {
         Iterator<ExtraLine> iterator = getExtraLines();
