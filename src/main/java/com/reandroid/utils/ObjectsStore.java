@@ -21,6 +21,7 @@ import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -68,6 +69,11 @@ public class ObjectsStore {
         }
         return null;
     }
+    public static void sort(Object container, Comparator<?> comparator) throws ClassCastException {
+        if (container != null && container.getClass() == ObjectsList.class) {
+            ((ObjectsList) container).sort(ObjectsUtil.cast(comparator));
+        }
+    }
     public static<T> Iterator<T> iterator(Object container) throws ClassCastException {
         Iterator<?> iterator;
         if (container == null) {
@@ -76,6 +82,19 @@ public class ObjectsStore {
             iterator = ((ObjectsList) container).iterator();
         } else {
             iterator = SingleIterator.of(container);
+        }
+        return ObjectsUtil.cast(iterator);
+    }
+    public static<T> Iterator<T> iterator(Object container, Class<T> instance) throws ClassCastException {
+        Iterator<?> iterator;
+        if (container == null) {
+            iterator = EmptyIterator.of();
+        } else if (container.getClass() == ObjectsList.class) {
+            iterator = ((ObjectsList) container).iterator(instance);
+        } else if (instance.isInstance(container)) {
+            iterator = SingleIterator.of(container);
+        } else {
+            iterator = EmptyIterator.of();
         }
         return ObjectsUtil.cast(iterator);
     }
@@ -129,6 +148,35 @@ public class ObjectsStore {
             list.add(container);
         }
         list.add(item);
+        return list;
+    }
+    public static Object addAll(Object container, Iterator<?> iterator) {
+        if (iterator == null || !iterator.hasNext()) {
+            return container;
+        }
+        Object first = iterator.next();
+        if (!iterator.hasNext()) {
+            return add(container, first);
+        }
+        ObjectsList list;
+        if (container != null && container.getClass() == ObjectsList.class) {
+            list = (ObjectsList) container;
+        } else {
+            list = new ObjectsList();
+            if (container != null) {
+                list.add(container);
+            }
+        }
+        list.add(first);
+        list.add(iterator.next());
+        list.addAll(iterator);
+        int size = list.size();
+        if (size == 0) {
+            return null;
+        }
+        if (size == 1) {
+            return list.get(0);
+        }
         return list;
     }
     public static Object addAll(Object container, Collection<?> collection) {
@@ -234,6 +282,8 @@ public class ObjectsStore {
 
     static final class ObjectsList extends ArrayCollection<Object> {
 
+        private boolean sorted;
+
         ObjectsList() {
             super(10);
         }
@@ -241,12 +291,51 @@ public class ObjectsStore {
             super(elements);
         }
 
+
+        @Override
+        public boolean remove(Object obj) {
+            boolean removed = super.remove(obj);
+            if (removed) {
+                sorted = false;
+            }
+            return removed;
+        }
+
         @Override
         public boolean add(Object item) {
             if (containsExact(item) || item == null) {
                 return false;
             }
+            sorted = false;
             return super.add(item);
+        }
+
+        @Override
+        public void addAll(Iterator<?> iterator) {
+            while (iterator.hasNext()) {
+                this.add(iterator.next());
+            }
+        }
+
+        @Override
+        public boolean addAll(Collection<?> collection) {
+            int size = size();
+            this.add(collection.iterator());
+            return size != size();
+        }
+
+        @Override
+        public void sort(Comparator<? super Object> comparator) {
+            boolean sorted = this.sorted;
+            if (!sorted) {
+                if (size() < 2) {
+                    sorted = true;
+                }
+                this.sorted = true;
+            }
+            if (!sorted) {
+                super.sort(comparator);
+            }
         }
     }
 }
