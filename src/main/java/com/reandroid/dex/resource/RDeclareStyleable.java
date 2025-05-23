@@ -119,7 +119,7 @@ public class RDeclareStyleable extends RStyleableItem implements Iterable<Intege
         Iterator<DexInstruction> iterator = staticConstructor.getInstructions();
         while (iterator.hasNext()) {
             DexInstruction instruction = iterator.next();
-            if(instruction.is(Opcode.SPUT_OBJECT) && fieldKey.equals(instruction.getFieldKey())) {
+            if(instruction.is(Opcode.SPUT_OBJECT) && fieldKey.equals(instruction.getKeyAsField())) {
                 return instruction;
             }
         }

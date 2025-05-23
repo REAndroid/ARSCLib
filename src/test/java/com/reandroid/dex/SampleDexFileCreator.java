@@ -48,7 +48,7 @@ public class SampleDexFileCreator {
         constructor.addAccessFlag(AccessFlag.CONSTRUCTOR);
 
         DexInstruction instruction = constructor.parseInstruction("invoke-direct {p0}, Landroid/app/Activity;-><init>()V");
-        MethodKey key = instruction.getMethodKey();
+        MethodKey key = instruction.getKeyAsMethod();
         key = key.changeDeclaring(dexClass.getSuperClassKey());
         instruction.setKey(key);
         instruction.createNext("return-void");

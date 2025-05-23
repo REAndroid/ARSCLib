@@ -63,7 +63,7 @@ public class UnusedFieldsCleaner extends UnusedClassComponentCleaner<DexField> {
         Iterator<DexInstruction> iterator = dexField.getDexClass().getDexInstructions();
         while (iterator.hasNext()) {
             DexInstruction instruction = iterator.next();
-            if(fieldKey.equals(instruction.getFieldKey()) || name.equals(instruction.getString())) {
+            if(fieldKey.equals(instruction.getKeyAsField()) || name.equals(instruction.getString())) {
                 return false;
             }
         }

@@ -95,7 +95,7 @@ public class DexField extends DexDeclaration implements FieldProgram {
         FieldKey fieldKey = getKey();
         while (iterator.hasNext()) {
             DexInstruction instruction = iterator.next();
-            if(!fieldKey.equals(instruction.getFieldKey())) {
+            if(!fieldKey.equals(instruction.getKeyAsField())) {
                 continue;
             }
             if(!instruction.is(Opcode.SPUT)) {

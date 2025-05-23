@@ -17,17 +17,30 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.data.*;
+import com.reandroid.dex.data.CodeItem;
+import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.ins.SizeXIns;
 import com.reandroid.dex.ins.TryBlock;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.EmptyList;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.MergingIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -40,25 +53,25 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     private final MethodDef methodDef;
     private int mEditIndex;
 
-    public DexMethod(DexClass dexClass, MethodDef methodDef){
+    public DexMethod(DexClass dexClass, MethodDef methodDef) {
         this.dexClass = dexClass;
         this.methodDef = methodDef;
     }
 
-    public DexMethod getDeclared(){
+    public DexMethod getDeclared() {
         DexClass dexClass = getDexClass().getSuperClass();
-        if(dexClass != null){
+        if (dexClass != null) {
             DexMethod dexMethod = dexClass.getMethod(getKey());
-            if(dexMethod != null){
+            if (dexMethod != null) {
                 return dexMethod.getDeclared();
             }
         }
         dexClass = getDexClass();
         Iterator<DexClass> iterator = dexClass.getInterfaceClasses();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             dexClass = iterator.next();
             DexMethod dexMethod = dexClass.getMethod(getKey());
-            if(dexMethod != null){
+            if (dexMethod != null) {
                 return dexMethod.getDeclared();
             }
         }
@@ -165,17 +178,93 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
                 dexClass -> dexClass.getOverridingKeys(DexMethod.this.getKey())));
     }
 
-    public String getName(){
+    public String getName() {
         return getDefinition().getName();
     }
-    public void setName(String name){
+    public void setName(String name) {
         getDefinition().setName(name);
     }
 
-    public Iterator<DexInstruction> getInstructions(Opcode<?> opcode) {
-        return getInstructions(ins -> ins.getOpcode() == opcode);
+    public Iterator<DexInstruction> getInstructionsIfKey(Predicate<? super Key> predicate) {
+        return getInstructionsIfIns(ins -> {
+            if (ins instanceof SizeXIns) {
+                return predicate.test(((SizeXIns) ins).getKey());
+            }
+            return false;
+        });
     }
+    public Iterator<DexInstruction> getInstructionsIfMethodKey(Predicate<? super MethodKey> predicate) {
+        return getInstructionsIfIns(ins -> {
+            if (ins instanceof SizeXIns) {
+                Key key = ((SizeXIns) ins).getKey();
+                if (key instanceof MethodKey) {
+                    return predicate.test((MethodKey) key);
+                }
+                return false;
+            }
+            return false;
+        });
+    }
+    public Iterator<DexInstruction> getInstructionsIfFieldKey(Predicate<? super FieldKey> predicate) {
+        return getInstructionsIfIns(ins -> {
+            if (ins instanceof SizeXIns) {
+                Key key = ((SizeXIns) ins).getKey();
+                if (key instanceof FieldKey) {
+                    return predicate.test((FieldKey) key);
+                }
+                return false;
+            }
+            return false;
+        });
+    }
+    public Iterator<DexInstruction> getInstructionsIfTypeKey(Predicate<? super TypeKey> predicate) {
+        return getInstructionsIfIns(ins -> {
+            if (ins instanceof SizeXIns) {
+                Key key = ((SizeXIns) ins).getKey();
+                if (key instanceof TypeKey) {
+                    return predicate.test((TypeKey) key);
+                }
+                return false;
+            }
+            return false;
+        });
+    }
+    public Iterator<DexInstruction> getInstructionsIfStringKey(Predicate<? super StringKey> predicate) {
+        return getInstructionsIfIns(ins -> {
+            if (ins instanceof SizeXIns) {
+                Key key = ((SizeXIns) ins).getKey();
+                if (key instanceof StringKey) {
+                    return predicate.test((StringKey) key);
+                }
+                return false;
+            }
+            return false;
+        });
+    }
+    /**
+     * Use: getInstructionsWithOpcode
+     * */
+    @Deprecated
+    public Iterator<DexInstruction> getInstructions(Opcode<?> opcode) {
+        return getInstructionsWithOpcode(opcode);
+    }
+    public Iterator<DexInstruction> getInstructionsWithOpcode(Opcode<?> opcode) {
+        return getInstructionsIfOpcode(op -> op == opcode);
+    }
+    public Iterator<DexInstruction> getInstructionsWithOpcode(Opcode<?> opcode, Opcode<?> alt) {
+        return getInstructionsIfOpcode(op -> op == opcode || op == alt);
+    }
+    public Iterator<DexInstruction> getInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
+        return getInstructionsIfIns(ins -> predicate.test(ins.getOpcode()));
+    }
+    /**
+     * Use: getInstructionsIfIns
+     * */
+    @Deprecated
     public Iterator<DexInstruction> getInstructions(Predicate<? super Ins> filter) {
+        return getInstructionsIfIns(filter);
+    }
+    public Iterator<DexInstruction> getInstructionsIfIns(Predicate<? super Ins> filter) {
         Iterator<Ins> iterator = FilterIterator.of(getDefinition().getInstructions(), filter);
         return ComputeIterator.of(iterator, this::create);
     }
@@ -190,10 +279,10 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         this.mEditIndex = index;
     }
 
-    public void clearCode(){
+    public void clearCode() {
         getDefinition().clearCode();
     }
-    public void clearDebug(){
+    public void clearDebug() {
         getDefinition().clearDebug();
     }
     public Iterator<DexTry> getDexTry() {
@@ -201,7 +290,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     }
     public Iterator<DexTry> getDexTry(int address) {
         TryBlock tryBlock = getDefinition().getTryBlock();
-        if(tryBlock == null) {
+        if (tryBlock == null) {
             return EmptyIterator.of();
         }
         return DexTry.create(this, address,
@@ -211,13 +300,13 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         TryBlock tryBlock = getDefinition().getOrCreateTryBlock();
         return DexTry.create(this, tryBlock.createNext());
     }
-    public DexInstruction getInstruction(int i){
+    public DexInstruction getInstruction(int i) {
         return create(getDefinition().getInstruction(i));
     }
-    public DexInstruction getInstructionAt(int address){
+    public DexInstruction getInstructionAt(int address) {
         return create(getDefinition().getInstructionAt(address));
     }
-    public DexInstruction addInstruction(Opcode<?> opcode){
+    public DexInstruction addInstruction(Opcode<?> opcode) {
         return create(getDefinition().getOrCreateInstructionList().createNext(opcode));
     }
     public DexInstruction parseInstruction(String smaliString) throws IOException {
@@ -235,45 +324,45 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         ins.fromSmali(smaliInstruction);
         return create(ins);
     }
-    public DexInstruction createInstruction(int index, Opcode<?> opcode){
+    public DexInstruction createInstruction(int index, Opcode<?> opcode) {
         return create(getDefinition().getOrCreateInstructionList().createAt(index, opcode));
     }
-    public int getInstructionsCount(){
+    public int getInstructionsCount() {
         return getDefinition().getInstructionsCount();
     }
-    public RegistersTable getRegistersTable(){
+    public RegistersTable getRegistersTable() {
         return getDefinition().getCodeItem();
     }
-    public RegistersTable getOrCreateRegistersTable(){
+    public RegistersTable getOrCreateRegistersTable() {
         return getDefinition().getOrCreateCodeItem();
     }
-    public List<Register> getLocalFreeRegisters(int instructionIndex){
+    public List<Register> getLocalFreeRegisters(int instructionIndex) {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
+        if (instructionList != null) {
             return instructionList.getLocalFreeRegisters(instructionIndex);
         }
         return EmptyList.of();
     }
-    public void ensureLocalRegistersCount(int locals){
-        if(locals == 0){
+    public void ensureLocalRegistersCount(int locals) {
+        if (locals == 0) {
             return;
         }
         RegistersTable registersTable = getRegistersTable();
-        if(registersTable != null){
-            if(locals <= registersTable.getLocalRegistersCount()){
+        if (registersTable != null) {
+            if (locals <= registersTable.getLocalRegistersCount()) {
                 return;
             }
         }
         registersTable = getOrCreateRegistersTable();
         registersTable.ensureLocalRegistersCount(locals);
     }
-    public int refreshParameterRegistersCount(){
+    public int refreshParameterRegistersCount() {
         RegistersTable registersTable = getRegistersTable();
-        if(registersTable == null){
+        if (registersTable == null) {
             return 0;
         }
         int parameterCount = getKey().getParameterRegistersCount();
-        if(!isStatic()){
+        if (!isStatic()) {
             parameterCount = parameterCount + 1;
         }
         int locals = registersTable.getLocalRegistersCount();
@@ -281,12 +370,12 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         registersTable.setRegistersCount(locals + parameterCount);
         return parameterCount;
     }
-    private InstructionList getInstructionList(){
+    private InstructionList getInstructionList() {
         return getDefinition().getInstructionList();
     }
-    public int getLocalRegistersCount(){
+    public int getLocalRegistersCount() {
         RegistersTable registersTable = getRegistersTable();
-        if(registersTable != null){
+        if (registersTable != null) {
             return registersTable.getLocalRegistersCount();
         }
         return 0;
@@ -298,24 +387,24 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         }
         return 0;
     }
-    public void setParameterRegistersCount(int count){
+    public void setParameterRegistersCount(int count) {
         CodeItem codeItem = getDefinition().getOrCreateCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.setParameterRegistersCount(count);
         }
     }
-    public void setLocalRegistersCount(int count){
+    public void setLocalRegistersCount(int count) {
         CodeItem codeItem = getDefinition().getOrCreateCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.setRegistersCount(codeItem.getParameterRegistersCount() + count);
         }
     }
-    private DexInstruction create(Ins ins){
+    private DexInstruction create(Ins ins) {
         return DexInstruction.create(this, ins);
     }
 
     @Override
-    public MethodKey getKey(){
+    public MethodKey getKey() {
         return getId().getKey();
     }
     @Override
@@ -331,7 +420,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         return methodDef;
     }
 
-    public Iterator<DexMethodParameter> getParameters(){
+    public Iterator<DexMethodParameter> getParameters() {
         return ComputeIterator.of(getDefinition().getParameters(),
                 parameter -> DexMethodParameter.create(DexMethod.this, parameter));
     }
@@ -340,7 +429,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     }
 
     @Override
-    public void removeSelf(){
+    public void removeSelf() {
         getDefinition().removeSelf();
     }
     @Override

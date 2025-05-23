@@ -70,7 +70,7 @@ public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod>
         Iterator<DexInstruction> iterator = dexMethod.getDexClass().getDexInstructions();
         while (iterator.hasNext()) {
             DexInstruction instruction = iterator.next();
-            if(methodKey.equals(instruction.getMethodKey())) {
+            if(methodKey.equals(instruction.getKeyAsMethod())) {
                 return false;
             }
         }
@@ -123,7 +123,7 @@ public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod>
             Iterator<DexInstruction> instructionIterator = dexClass.getDexInstructions();
             while (instructionIterator.hasNext()) {
                 DexInstruction instruction = instructionIterator.next();
-                MethodKey key = instruction.getMethodKey();
+                MethodKey key = instruction.getKeyAsMethod();
                 if(key != null) {
                    unusedInternalMethods.remove(key);
                     Iterator<MethodKey> equivalents = repository.findEquivalentMethods(key);
