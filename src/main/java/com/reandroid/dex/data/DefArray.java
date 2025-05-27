@@ -49,8 +49,8 @@ public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> imp
     @Override
     public void onPreRemove(T item) {
         AnnotationsDirectory directory = getUniqueAnnotationsDirectory();
-        if(directory != null) {
-            directory.remove(item);
+        if (directory != null) {
+            directory.clear(item);
         }
         resetIndex();
         super.onPreRemove(item);

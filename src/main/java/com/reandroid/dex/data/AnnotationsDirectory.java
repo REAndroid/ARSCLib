@@ -142,10 +142,19 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         parametersAnnotationMap.link(def);
     }
     public void remove(Def<?> def) {
-        if(def instanceof FieldDef){
+        if (def instanceof FieldDef) {
             removeField((FieldDef) def);
-        }else if(def instanceof MethodDef){
+        } else if(def instanceof MethodDef) {
             removeMethod((MethodDef) def);
+        }
+    }
+    public void clear(Def<?> def) {
+        if (def instanceof FieldDef) {
+            removeField((FieldDef) def);
+        } else if (def instanceof MethodDef) {
+            MethodDef methodDef = (MethodDef) def;
+            removeMethod(methodDef);
+            removeParameter(methodDef);
         }
     }
     public void removeField(FieldDef def) {
@@ -153,6 +162,8 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     }
     public void removeMethod(MethodDef def) {
         methodsAnnotationMap.remove(def);
+    }
+    public void removeParameter(MethodDef def) {
         parametersAnnotationMap.remove(def);
     }
     public void addAnnotation(Def<?> def, AnnotationSetKey key){
