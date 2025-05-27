@@ -121,6 +121,11 @@ public class TypeKey implements ProgramKey {
         String name = getTypeName();
         return name.length() > 1 && name.charAt(0) == '[';
     }
+    public boolean isTypeDefinition() {
+        String name = getTypeName();
+        int i = name.length() - 1;
+        return i > 1 && name.charAt(0) == 'L' && name.charAt(i) == ';';
+    }
     public boolean isTypeObject(){
         return DexUtils.isTypeObject(getTypeName());
     }
@@ -217,6 +222,38 @@ public class TypeKey implements ProgramKey {
             return name.startsWith(packageName);
         }
         return name.equals(packageName);
+    }
+    public boolean startsWith(String prefix) {
+        return getTypeName().startsWith(prefix);
+    }
+    public boolean isOuterOf(TypeKey typeKey) {
+        return isOuterOf(typeKey, false);
+    }
+    public boolean isOuterOf(TypeKey typeKey, boolean immediate) {
+        if (typeKey == null) {
+            return false;
+        }
+        String name1 = this.getTypeName();
+        String name2 = typeKey.getTypeName();
+        if (name1.length() >= name2.length()) {
+            return false;
+        }
+        int diff = StringsUtil.diffStart(name1, name2);
+        if (diff < 0 || name1.charAt(diff) != ';' || name2.charAt(diff) != '$') {
+            return false;
+        }
+        int i = diff + 1;
+        if (name1.indexOf('/', i) > 0 || name2.indexOf('/', i) > 0) {
+            return false;
+        }
+        if (immediate) {
+            int length = name2.length();
+            while (i < length && name2.charAt(i) == '$') {
+                i ++;
+            }
+            return i != length && name2.indexOf('$', i) < 0;
+        }
+        return true;
     }
     public TypeKey getEnclosingClass(){
         String type = getTypeName();
@@ -567,6 +604,15 @@ public class TypeKey implements ProgramKey {
         public boolean isTypeArray() {
             return false;
         }
+        @Override
+        public boolean isTypeDefinition() {
+            return false;
+        }
+        @Override
+        public boolean isOuterOf(TypeKey typeKey, boolean immediate) {
+            return false;
+        }
+
         @Override
         public boolean isInnerName() {
             return false;
