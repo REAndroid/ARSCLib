@@ -260,7 +260,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey> {
         if (keyPair == null) {
             return false;
         }
-        return keyPair.getFirst().getSimpleName().equals(
+        return !keyPair.getFirst().getSimpleName().equals(
                 keyPair.getSecond().getSimpleName());
     }
     private void setString(StringId stringId, String value) {
