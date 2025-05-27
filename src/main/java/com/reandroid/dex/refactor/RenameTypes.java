@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.refactor;
 
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.dalvik.DalvikSignature;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
@@ -32,18 +33,25 @@ import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class RenameTypes extends Rename<TypeKey, TypeKey>{
+public class RenameTypes extends Rename<TypeKey, TypeKey> {
 
     private final Set<String> renamedStrings;
     private final Map<String, String> stringMap;
 
     private int arrayDepth;
-    private boolean renameSource;
+    private boolean renameSourceClassName;
     private boolean skipSourceRenameRootPackageClass;
     private boolean fixAccessibility;
     private boolean fixInnerSimpleName;
+    private boolean fixSourceFileName;
+    private boolean renameInnerClasses;
 
     private boolean mChanged;
 
@@ -52,10 +60,12 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         this.renamedStrings = new HashSet<>();
         this.stringMap = new HashMap<>();
         this.arrayDepth = DEFAULT_ARRAY_DEPTH;
-        this.renameSource = true;
+        this.renameSourceClassName = true;
         this.skipSourceRenameRootPackageClass = true;
         this.fixAccessibility = true;
         this.fixInnerSimpleName = true;
+        this.fixSourceFileName = false;
+        this.renameInnerClasses = false;
 
         this.mChanged = true;
     }
@@ -103,13 +113,38 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         add(classRepository, new KeyPair<>(search, replace));
     }
     public void add(DexClassRepository classRepository, KeyPair<TypeKey, TypeKey> keyPair) {
+        if (validateAndAdd(classRepository, keyPair)) {
+            if (renameInnerClasses) {
+                TypeKey search = keyPair.getFirst();
+                TypeKey replace = keyPair.getSecond();
+                Iterator<TypeId> iterator = classRepository.getItemsIfKey(SectionType.TYPE_ID,
+                        key -> search.isOuterOf(key.getDeclaring()));
+                String replacePrefix = replace.getTypeName().replace(';', '$');
+                int prefixLength = search.getTypeName().length();
+                while (iterator.hasNext()) {
+                    TypeKey typeSearch = iterator.next()
+                            .getKey().getDeclaring();
+                    TypeKey typeReplace = TypeKey.create(
+                            replacePrefix + typeSearch.getTypeName().substring(prefixLength));
+                    validateAndAdd(classRepository, new KeyPair<>(typeSearch, typeReplace));
+                }
+            }
+        }
+    }
+    private boolean validateAndAdd(DexClassRepository classRepository, KeyPair<TypeKey, TypeKey> keyPair) {
         if (keyPair == null || !keyPair.isValid()) {
-            return;
+            return false;
+        }
+        KeyPair<TypeKey, TypeKey> existing = get(keyPair.getFirst());
+        if (existing != null && existing.equalsBoth(keyPair)) {
+            return true;
         }
         if (classRepository.containsClass(keyPair.getSecond())) {
             lock(keyPair);
+            return false;
         } else {
             add(keyPair);
+            return true;
         }
     }
 
@@ -125,7 +160,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         renameAnnotationSignatures(classRepository);
         renameExternalTypeKeyReferences(classRepository);
         int size = renamedStrings.size();
-        if(size != 0) {
+        if (size != 0) {
             classRepository.clearPoolMap();
         }
         applyFix(classRepository);
@@ -137,7 +172,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
             return;
         }
         Iterator<StringId> iterator = classRepository.getClonedItems(SectionType.STRING_ID);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             StringId stringId = iterator.next();
             String text = map.get(stringId.getString());
             if (text != null) {
@@ -167,7 +202,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
     private void renameExternalTypeKeyReferences(DexClassRepository classRepository) {
         List<TypeKeyReference> referenceList = classRepository.getExternalTypeKeyReferenceList();
-        for(TypeKeyReference reference : referenceList) {
+        for (TypeKeyReference reference : referenceList) {
             renameExternalTypeKeyReference(reference);
         }
     }
@@ -178,11 +213,11 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         }
         Map<String, String> map = this.stringMap;
         String replace = map.get(typeKey.getTypeName());
-        if(replace == null) {
+        if (replace == null) {
             replace = map.get(typeKey.getSourceName());
         }
         TypeKey replaceKey = TypeKey.parse(replace);
-        if(replaceKey != null) {
+        if (replaceKey != null) {
             reference.setTypeKey(replaceKey);
             renamedStrings.add(replace);
         }
@@ -195,8 +230,9 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
         boolean fixAccessibility = this.fixAccessibility;
         boolean fixInnerSimpleName = this.fixInnerSimpleName;
+        boolean fixSourceFileName = this.fixSourceFileName;
 
-        if (!fixAccessibility && !fixInnerSimpleName) {
+        if (!fixAccessibility && !fixInnerSimpleName && !fixSourceFileName) {
             return;
         }
 
@@ -211,7 +247,21 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
             if (fixInnerSimpleName) {
                 dexClass.fixDalvikInnerClassName();
             }
+            if (fixSourceFileName) {
+                TypeKey typeKey = dexClass.getKey();
+                if (isSimpleNameChanged(typeKey)) {
+                    dexClass.setSourceFile(DexUtils.toSourceFileName(typeKey.getTypeName()));
+                }
+            }
         }
+    }
+    private boolean isSimpleNameChanged(TypeKey typeKey) {
+        KeyPair<TypeKey, TypeKey> keyPair = getFlipped(typeKey);
+        if (keyPair == null) {
+            return false;
+        }
+        return keyPair.getFirst().getSimpleName().equals(
+                keyPair.getSecond().getSimpleName());
     }
     private void setString(StringId stringId, String value) {
         stringId.setString(value);
@@ -224,8 +274,8 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         }
         this.arrayDepth = arrayDepth;
     }
-    public void setRenameSource(boolean renameSource) {
-        this.renameSource = renameSource;
+    public void setRenameSourceClassName(boolean renameSourceClassName) {
+        this.renameSourceClassName = renameSourceClassName;
     }
     public void setSkipSourceRenameRootPackageClass(boolean skipSourceRenameRootPackageClass) {
         this.skipSourceRenameRootPackageClass = skipSourceRenameRootPackageClass;
@@ -236,6 +286,12 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
     public void setFixInnerSimpleName(boolean fixInnerSimpleName) {
         this.fixInnerSimpleName = fixInnerSimpleName;
     }
+    public void setRenameInnerClasses(boolean renameInnerClasses) {
+        this.renameInnerClasses = renameInnerClasses;
+    }
+    public void setFixSourceFileName(boolean fixSourceFileName) {
+        this.fixSourceFileName = fixSourceFileName;
+    }
 
     private void buildRenameMap() {
         if (!mChanged) {
@@ -243,7 +299,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         }
         mChanged = false;
         List<KeyPair<TypeKey, TypeKey>> list = toList();
-        boolean renameSource = this.renameSource;
+        boolean renameSource = this.renameSourceClassName;
         boolean skipSourceRenameRootPackageClass = this.skipSourceRenameRootPackageClass;
 
         int size = list.size();
@@ -252,7 +308,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
         int arrayDepth = this.arrayDepth + 1;
 
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
 
             KeyPair<TypeKey, TypeKey> keyPair = list.get(i);
             TypeKey first = keyPair.getFirst();
@@ -262,14 +318,14 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
             String name2 = second.getTypeName();
             map.put(name1, name2);
 
-            for(int j = 1; j < arrayDepth; j++){
+            for (int j = 1; j < arrayDepth; j++) {
                 name1 = first.getArrayType(j);
                 name2 = second.getArrayType(j);
                 map.put(name1, name2);
             }
-            if(renameSource){
+            if (renameSource) {
                 name1 = first.getTypeName();
-                if(!skipSourceRenameRootPackageClass || name1.indexOf('/') > 0){
+                if (!skipSourceRenameRootPackageClass || name1.indexOf('/') > 0) {
                     name1 = first.getSourceName();
                     name2 = second.getSourceName();
                     map.put(name1, name2);

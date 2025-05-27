@@ -155,6 +155,9 @@ public abstract class Rename<T extends Key, R extends Key> {
     public KeyPair<T, R> get(Key search) {
         return keyPairMap.get(new KeyPair<>(search, null));
     }
+    public KeyPair<T, R> getFlipped(Key replace) {
+        return flippedKeyMap.get(new KeyPair<>(replace, null));
+    }
     public R getReplace(Key search) {
         KeyPair<T, R> keyPair = get(search);
         if (keyPair != null) {
