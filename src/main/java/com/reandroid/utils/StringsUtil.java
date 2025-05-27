@@ -650,17 +650,33 @@ public class StringsUtil {
         return -1;
     }
     public static String trimStart(String str, char ch) {
-        if(str == null) {
+        if (str == null) {
             return null;
         }
         int start = 0;
-        while (str.charAt(start) == ch) {
+        int length = str.length();
+        while (start < length && str.charAt(start) == ch) {
             start ++;
         }
-        if(start == 0) {
+        if (start == 0) {
             return str;
         }
         return str.substring(start);
+    }
+    public static String trimEnd(String str, char ch) {
+        if (str == null) {
+            return null;
+        }
+        int length = str.length();
+        int end = length - 1;
+        while (end >= 0 && str.charAt(end) == ch) {
+            end --;
+        }
+        end = end + 1;
+        if (end == length) {
+            return str;
+        }
+        return str.substring(0, end);
     }
     public static int indexOfFrom(String str, int start, char ch) {
         if(str == null || start < 0) {
