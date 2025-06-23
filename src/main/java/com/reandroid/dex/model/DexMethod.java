@@ -427,6 +427,9 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     public void removeParameter(int index) {
         getDefinition().removeParameter(index);
     }
+    public boolean hasParameter(int index) {
+        return getDefinition().hasParameter(index);
+    }
 
     @Override
     public void removeSelf() {

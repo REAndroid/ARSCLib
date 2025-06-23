@@ -101,6 +101,9 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         }
         return new MethodParameter(this, index);
     }
+    public boolean hasParameter(int index) {
+        return index >= 0 && index < getParametersCount();
+    }
     public Iterator<MethodParameter> getParameters() {
         return ArraySupplierIterator.of(new ArraySupplier<MethodParameter>() {
             @Override

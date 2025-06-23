@@ -89,6 +89,11 @@ public class DexMethodParameter extends Dex implements AnnotatedDex, MethodParam
     public void removeSelf() {
         getDexMethod().removeParameter(getIndex());
     }
+    @Override
+    public boolean isRemoved() {
+        DexMethod dexMethod = getDexMethod();
+        return dexMethod.isRemoved() || !dexMethod.hasParameter(getIndex());
+    }
 
     @Override
     public ProgramElement getProgramElement() {

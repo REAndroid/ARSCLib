@@ -334,6 +334,15 @@ public class DexInstruction extends DexCode {
             instructionList.remove(ins);
         }
     }
+    @Override
+    public boolean isRemoved() {
+        if (getDexMethod().isRemoved()) {
+            return true;
+        }
+        Ins ins = getIns();
+        return ins == null || ins.isRemoved();
+    }
+
     public Opcode<?> getOpcode() {
         return getIns().getOpcode();
     }

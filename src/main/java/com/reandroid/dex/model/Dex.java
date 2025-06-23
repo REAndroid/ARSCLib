@@ -26,6 +26,7 @@ public abstract class Dex implements SmaliFormat {
     public abstract boolean uses(Key key);
     public abstract DexClassRepository getClassRepository();
     public abstract void removeSelf();
+    public abstract boolean isRemoved();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
     public String toSmaliString(){

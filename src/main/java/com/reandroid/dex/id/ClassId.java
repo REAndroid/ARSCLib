@@ -355,6 +355,10 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         this.annotationsDirectory.unlink();
         this.staticValues.unlink();
     }
+    @Override
+    public boolean isRemoved() {
+        return super.isRemoved();
+    }
 
     public void replaceKeys(Key search, Key replace){
         classTypeId.replaceKeys(search, replace);

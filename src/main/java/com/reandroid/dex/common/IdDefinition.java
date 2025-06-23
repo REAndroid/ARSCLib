@@ -25,6 +25,7 @@ import java.util.Iterator;
 public interface IdDefinition<T extends IdItem> extends AccessibleProgram, IdUsageIterator {
 
     T getId();
+    boolean isRemoved();
 
     @Override
     default boolean uses(Key key) {

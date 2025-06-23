@@ -115,6 +115,7 @@ public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>
             applyRemoveSelf();
         }
     }
+    @Override
     public boolean isRemoved() {
         checkRemoved();
         return this.typeKey == null;

@@ -70,6 +70,7 @@ public class DexAnnotationElement extends Dex {
             applyRemoveSelf();
         }
     }
+    @Override
     public boolean isRemoved() {
         checkRemoved();
         return this.name == null;

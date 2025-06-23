@@ -153,8 +153,13 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
             array.remove(this);
         }
     }
+    @Override
     public boolean isRemoved() {
-        return getParent() == null || getId() == null;
+        if (getParent() == null) {
+            return true;
+        }
+        T id = getId();
+        return id == null || id.isRemoved();
     }
     void onRemove(){
         HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
