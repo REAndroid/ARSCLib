@@ -20,7 +20,6 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class AlignItem extends BlockItem {
 
@@ -92,10 +91,17 @@ public class AlignItem extends BlockItem {
             setBytesLength(0, false);
         }
     }
+
+    public byte getFill() {
+        return fill;
+    }
     public void setFill(byte fill) {
         this.fill = fill;
         byte[] bytes = getBytesInternal();
-        Arrays.fill(bytes, fill);
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            bytes[i] = fill;
+        }
     }
 
     @Override
