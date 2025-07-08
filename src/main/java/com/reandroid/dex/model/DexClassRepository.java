@@ -190,6 +190,16 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         }
         return getItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
+    default <T extends SectionItem> T getItem(SectionType<T> sectionType, int id) {
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            T item = iterator.next().getItem(sectionType, id);
+            if (item != null) {
+                return item;
+            }
+        }
+        return null;
+    }
     default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key) {
         Iterator<DexClassModule> iterator = modules();
         while (iterator.hasNext()) {
