@@ -72,7 +72,7 @@ public class ShortItem extends BlockItem implements IntegerReference, DirectStre
         if (bigEndian) {
             s = getBigEndianShort(bytes, 0);
         } else {
-            s = getShort(bytes, 0);
+            s = getShortUnsigned(bytes, 0);
         }
         mCache = s;
     }
