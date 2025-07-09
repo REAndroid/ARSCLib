@@ -25,7 +25,11 @@ public class NumberBlock extends BlockItem implements LongReference {
 
     @Override
     public long getLong() {
-        return NumberX.valueOfUnsigned(width(), unsigned()).longValue();
+        int width = width();
+        if (width > 8) {
+            width = 8;
+        }
+        return NumberX.valueOfUnsigned(width, unsigned()).longValue();
     }
     @Override
     public void set(long value) {

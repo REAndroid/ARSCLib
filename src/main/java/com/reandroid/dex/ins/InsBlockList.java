@@ -152,8 +152,14 @@ public class InsBlockList extends BlockList<Ins> {
         return link(new Object());
     }
     public Object link(Object obj) {
-        if(mLinked || isLocked()) {
+        if (isLocked()) {
             return null;
+        }
+        if (mLinked) {
+            if (obj == null) {
+                return null;
+            }
+            unlink();
         }
         mLockedBy = obj;
         mLocked = true;

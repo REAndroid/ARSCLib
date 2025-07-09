@@ -64,8 +64,10 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         return getEntryList().size();
     }
     public void setSize(int size) {
+        Object lock = requestLock();
         getEntryList().setSize(size);
         refreshAlignment();
+        releaseLock(lock);
     }
     public void clear() {
         getEntryList().clear();
@@ -84,8 +86,22 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         return getEntryList().getWidth();
     }
     public void setWidth(int width) {
+        Object lock = requestLock();
         getEntryList().setWidth(width);
         refreshAlignment();
+        releaseLock(lock);
+    }
+    private Object requestLock() {
+        InsBlockList insBlockList = getInsBlockList();
+        if (insBlockList != null) {
+            return insBlockList.linkLocked();
+        }
+        return null;
+    }
+    private void releaseLock(Object lock) {
+        if (lock != null) {
+            getInsBlockList().unlinkLocked(lock);
+        }
     }
     public void put(int index, long value) {
         int changed = size();
