@@ -16,17 +16,67 @@
 package com.reandroid.utils.io;
 
 import com.reandroid.arsc.ARSCLib;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "unused"})
 public class FileUtil {
 
+    public static List<File> listClassesDex(File dir) {
+        List<File> results = new ArrayCollection<>();
+        if (dir == null || !dir.isDirectory()) {
+            return results;
+        }
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && getClassesDexNumber(file) != -1) {
+                    results.add(file);
+                }
+            }
+        }
+        results.sort(((file1, file2) -> CompareUtil.compare(
+                getClassesDexNumber(file1),
+                getClassesDexNumber(file2))));
+        return results;
+    }
+    public static int getClassesDexNumber(File file) {
+        if (file != null) {
+            return getClassesDexNumber(file.getName());
+        }
+        return -1;
+    }
+    public static int getClassesDexNumber(String fileName) {
+        if (fileName == null) {
+            return -1;
+        }
+        if (fileName.equals("classes.dex")) {
+            return 0;
+        }
+        String prefix = "classes";
+        String ext = ".dex";
+        if (!fileName.startsWith(prefix) || !fileName.endsWith(ext)) {
+            return -1;
+        }
+        String numStr = fileName.substring(prefix.length(), fileName.length() - ext.length());
+        try {
+            int num = Integer.parseInt(numStr);
+            if (num < 2) { // no classes0.dex or classes1.dex
+                return -1;
+            }
+            return num;
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
+    }
     public static File toTmpName(File file) {
         File dir = file.getParentFile();
         String name = file.getName() + ".tmp";
