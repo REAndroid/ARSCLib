@@ -15,20 +15,22 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.*;
+import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliInstructionOperand;
+import com.reandroid.dex.smali.model.SmaliPayloadPackedSwitch;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsPackedSwitchData extends InsSwitchPayload {
+public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
 
-    private final ShortItem elementCount;
     private final IntegerItem firstKey;
     private final PackedSwitchDataList elements;
 
@@ -36,7 +38,7 @@ public class InsPackedSwitchData extends InsSwitchPayload {
 
     public InsPackedSwitchData() {
         super(3, Opcode.PACKED_SWITCH_PAYLOAD);
-        this.elementCount = new ShortItem();
+        ShortItem elementCount = new ShortItem();
         this.firstKey = new IntegerItem();
         this.elements = new PackedSwitchDataList(this, elementCount);
 
@@ -48,26 +50,38 @@ public class InsPackedSwitchData extends InsSwitchPayload {
     public int getFirstKey() {
         return firstKey.get();
     }
-    public void setFirstKey(int firstKey){
+    public void setFirstKey(int firstKey) {
         this.firstKey.set(firstKey);
     }
 
     @Override
-    public Iterator<SwitchEntry> iterator() {
-        return ObjectsUtil.cast(elements.getLabels());
+    public Iterator<PackedSwitchEntry> iterator() {
+        return ObjectsUtil.cast(elements.iterator());
     }
-
+    @Override
+    public PackedSwitchEntry get(int index) {
+        return elements.get(index);
+    }
+    @Override
+    public int size() {
+        return elements.size();
+    }
+    @Override
+    public void setSize(int size) {
+        Object lock = requestLock();
+        elements.setSize(size);
+        releaseLock(lock);
+    }
 
     void onDataChange(int index, int value) {
         replaceBySparse().get(index).set(value);
     }
     public InsSparseSwitchData replaceBySparse() {
         InsSparseSwitchData sparseData = this.mReplacement;
-        if(sparseData != null) {
+        if (sparseData != null) {
             return sparseData;
         }
-        InsBlockList insBlockList = getInsBlockList();
-        Object lock = insBlockList.linkLocked();
+        Object lock = requestLock();
 
         InsPackedSwitch packed = getSwitch();
         InsSparseSwitch sparse = packed.getSparseSwitchReplacement();
@@ -80,7 +94,7 @@ public class InsPackedSwitchData extends InsSwitchPayload {
 
         this.replace(sparseData);
 
-        insBlockList.unlinkLocked(lock);
+        releaseLock(lock);
 
         return sparseData;
     }
@@ -101,12 +115,12 @@ public class InsPackedSwitchData extends InsSwitchPayload {
     }
 
     @Override
-    public Iterator<PackedSwitchDataList.PackedSwitchEntry> getLabels() {
+    public Iterator<PackedSwitchEntry> getLabels() {
         return elements.getLabels();
     }
 
     @Override
-    public void merge(Ins ins){
+    public void merge(Ins ins) {
         InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
         setFirstKey(switchData.getFirstKey());
         elements.merge(switchData.elements);
@@ -147,9 +161,10 @@ public class InsPackedSwitchData extends InsSwitchPayload {
     @Override
     public String toString() {
         return "InsPackedSwitchData{" +
-                "elementCount=" + elementCount +
                 ", firstKey=" + firstKey +
                 ", elements=" + elements +
                 '}';
     }
+
+    public static final Creator<PackedSwitchEntry> CREATOR = PackedSwitchEntry::new;
 }
