@@ -193,7 +193,7 @@ public class DexUtils {
                         continue;
                 }
             }
-            escapeChar(appendable, c);
+            encodeToHexChar(appendable, c);
             if(!unicodeDetected && c != '…' && c > 0xff) {
                 unicodeDetected = true;
             }
@@ -228,7 +228,7 @@ public class DexUtils {
             if(Character.isDefined(c) && !Character.isWhitespace(c)) {
                 appendable.append(c);
             } else {
-                escapeChar(appendable, c);
+                encodeToHexChar(appendable, c);
             }
         }
         appendable.append('\'');
@@ -271,15 +271,25 @@ public class DexUtils {
         }
 
         appendable.append('\'');
-        escapeChar(appendable, ch);
+        encodeToHexChar(appendable, ch);
         appendable.append('\'');
     }
-    private static void escapeChar(Appendable appendable, char c) throws IOException {
+    public static void encodeToHexChar(Appendable appendable, char c) throws IOException {
         appendable.append("\\u");
         appendable.append(Character.forDigit(c >> 12, 16));
         appendable.append(Character.forDigit((c >> 8) & 0x0f, 16));
         appendable.append(Character.forDigit((c >> 4) & 0x0f, 16));
         appendable.append(Character.forDigit(c & 0x0f, 16));
+    }
+    public static void encodeToHexChar(StringBuilder builder, char c) {
+        try {
+            encodeToHexChar((Appendable) builder, c);
+        } catch (IOException ignored) {}
+    }
+    public static String encodeToHexChar(char c) {
+        StringBuilder builder = new StringBuilder(6);
+        encodeToHexChar(builder, c);
+        return builder.toString();
     }
     /**
      * Use StringKey.decodeEscapedString
