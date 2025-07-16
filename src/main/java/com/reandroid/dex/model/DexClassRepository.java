@@ -58,13 +58,16 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         }
     }
 
-    default int getDexClassesCount() {
+    default int getCount(SectionType<?> sectionType) {
         int result = 0;
         Iterator<DexClassModule> iterator = modules();
         while (iterator.hasNext()) {
-            result += iterator.next().getDexClassesCount();
+            result += iterator.next().getCount(sectionType);
         }
         return result;
+    }
+    default int getDexClassesCount() {
+        return getCount(SectionType.CLASS_ID);
     }
     default int shrink() {
         int result = 0;

@@ -85,10 +85,6 @@ public interface DexClassModule extends DexClassRepository {
         }
         return 0;
     }
-    @Override
-    default int getDexClassesCount() {
-        return getCount(SectionType.CLASS_ID);
-    }
 
     void addMarker(Marker marker);
     @Override
