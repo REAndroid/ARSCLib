@@ -23,6 +23,7 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.Swappable;
 
@@ -730,6 +731,13 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
             jsonArray.put(i, blockList.get(i).toJson());
         }
         return jsonArray;
+    }
+    public static void fromJsonArray(BlockList<? extends JSONConvert<?>> blockList, JSONArray jsonArray) {
+        int size = jsonArray == null ? 0 : jsonArray.length();
+        blockList.setSize(size);
+        for (int i = 0; i < size; i++) {
+            blockList.get(i).fromJson(ObjectsUtil.cast(jsonArray.get(i)));
+        }
     }
 
     private static final BlockList<?> empty_list = new BlockList<Block>() {
