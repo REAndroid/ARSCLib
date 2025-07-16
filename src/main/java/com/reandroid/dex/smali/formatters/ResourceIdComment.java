@@ -58,14 +58,17 @@ public interface ResourceIdComment extends SmaliComment {
             String ref = resourceEntry
                     .buildReference(packageBlock, ValueType.REFERENCE);
 
-            if(resourceEntry.getPackageBlock().getTableBlock() != tableBlock){
+            if (!resourceEntry.isContext(tableBlock)) {
                 return ref;
             }
-            if("id".equals(resourceEntry.getType())){
+            if ("id".equals(resourceEntry.getType())) {
                 return ref;
             }
 
-            Entry entry = resourceEntry.get();
+            Entry entry = resourceEntry.get("-en");
+            if (entry == null || !entry.isScalar()) {
+                entry = resourceEntry.get();
+            }
             if(entry == null){
                 return ref;
             }
