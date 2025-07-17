@@ -58,7 +58,16 @@ public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
             return;
         }
         FileChannel outputChannel = FileUtil.openWriteChannel(file);
-        outputChannel.transferFrom(fileChannel, 0, getLength());
+
+        long totalTransferred = 0;
+        long remaining = getLength();
+
+        while (remaining > 0) {
+            long transferred = outputChannel.transferFrom(fileChannel, totalTransferred, remaining);
+            totalTransferred += transferred;
+            remaining -= transferred;
+        }
+
         outputChannel.close();
     }
 
