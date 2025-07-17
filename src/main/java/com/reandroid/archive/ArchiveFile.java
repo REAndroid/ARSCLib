@@ -41,7 +41,16 @@ public class ArchiveFile extends Archive<ZipFileInput>{
         FileChannel outputChannel = FileUtil.openWriteChannel(file);
         FileChannel fileChannel = getZipInput().getFileChannel();
         fileChannel.position(archiveEntry.getFileOffset());
-        outputChannel.transferFrom(fileChannel, 0, archiveEntry.getDataSize());
+
+        long totalTransferred = 0;
+        long remaining = archiveEntry.getDataSize();
+
+        while (remaining > 0) {
+            long transferred = outputChannel.transferFrom(fileChannel, totalTransferred, remaining);
+            totalTransferred += transferred;
+            remaining -= transferred;
+        }
+
         outputChannel.close();
     }
 }

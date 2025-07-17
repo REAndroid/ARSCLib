@@ -37,8 +37,17 @@ public class ZipFileOutput extends ZipOutput{
     public void write(FileChannel input, long length) throws IOException{
         FileChannel fileChannel = getFileChannel();
         long pos = fileChannel.position();
-        length = fileChannel.transferFrom(input, pos, length);
-        fileChannel.position(pos + length);
+
+        long totalTransferred = 0;
+        long remaining = length;
+
+        while (remaining > 0) {
+            long transferred = fileChannel.transferFrom(input, pos + totalTransferred, remaining);
+            totalTransferred += transferred;
+            remaining -= transferred;
+        }
+
+        fileChannel.position(pos + totalTransferred);
     }
 
     @Override
