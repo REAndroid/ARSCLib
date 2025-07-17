@@ -16,12 +16,17 @@
 package com.reandroid.dex.dexopt;
 
 import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.StringReference;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.json.JSONObject;
 
+import java.io.IOException;
+
 
 public abstract class ProfileMetadata extends FixedBlockContainer implements ProfileData {
+
+    private boolean initialized;
 
     public ProfileMetadata(int childesCount) {
         super(childesCount);
@@ -39,12 +44,27 @@ public abstract class ProfileMetadata extends FixedBlockContainer implements Pro
         this.name().set(name);
     }
     @Override
+    public boolean isInitialized() {
+        return initialized;
+    }
+    @Override
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        setInitialized(true);
+    }
+
+    @Override
     public void link(DexFile dexFile) {
         classList().link(dexFile);
     }
     @Override
     public void update(DexFile dexFile) {
         classList().update(dexFile);
+        setInitialized(true);
     }
     @Override
     public JSONObject toJson() {
@@ -58,6 +78,7 @@ public abstract class ProfileMetadata extends FixedBlockContainer implements Pro
     public void fromJson(JSONObject json) {
         name().set(json.getString("name"));
         classList().fromJson(json.getJSONArray("classes"));
+        setInitialized(true);
     }
 
     @Override

@@ -16,22 +16,16 @@
 package com.reandroid.dex.dexopt;
 
 import com.reandroid.archive.ByteInputSource;
-import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.common.BytesOutputStream;
-import com.reandroid.dex.model.DexFile;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.Crc32;
-import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Iterator;
 
 // https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/profileinstaller/profileinstaller/src/main/java/androidx/profileinstaller/ProfileTranscoder.java
@@ -84,6 +78,12 @@ public class ProfileDataFile extends ProfileFile {
         return body().iterator();
     }
 
+    public void updateFileChecksum(File file) throws IOException {
+        DexProfileData data = get(file.getName());
+        if (data != null) {
+            data.setChecksum(Crc32.of(file));
+        }
+    }
     public void updateChecksum(ZipEntryMap zipEntryMap) throws IOException {
         removeIfName(name -> !zipEntryMap.contains(name));
         Iterator<DexProfileData> iterator = iterator();
@@ -93,71 +93,6 @@ public class ProfileDataFile extends ProfileFile {
             data.setChecksum(inputSource.getCrc());
         }
     }
-    public void link(ZipEntryMap zipEntryMap) throws IOException {
-        Iterator<DexProfileData> iterator = iterator();
-        while (iterator.hasNext()) {
-            DexProfileData data = iterator.next();
-            InputSource inputSource = zipEntryMap.getInputSource(data.getName());
-            if (inputSource != null) {
-                linkDex(inputSource);
-            }
-        }
-    }
-    public void linkDirectory(File dir) throws IOException {
-        Iterator<DexProfileData> iterator = iterator();
-        while (iterator.hasNext()) {
-            DexProfileData data = iterator.next();
-            File file = new File(dir, data.getName());
-            if (file.isFile()) {
-                linkDex(file);
-            }
-        }
-    }
-    public void linkDex(File file) throws IOException {
-        linkDex(new FileInputSource(file, file.getName()));
-    }
-    public void linkDex(InputSource inputSource) throws IOException {
-        DexProfileData data = get(FileUtil.getFileName(inputSource.getAlias()));
-        if (data == null) {
-            return;
-        }
-        BlockReader reader = new BlockReader(inputSource.openStream());
-        DexFile dexFile = DexFile.read(reader,
-                type -> type != SectionType.DEBUG_INFO);
-        dexFile.setSimpleName(data.getName());
-        reader.seek(0);
-        Crc32 crc32 = new Crc32();
-        crc32.update(reader.getBuffer());
-        data.setChecksum(crc32.getValue());
-        reader.close();
-        data.link(dexFile);
-        dexFile.close();
-    }
-
-    public void write(File file) throws IOException {
-        OutputStream outputStream = FileUtil.outputStream(file);
-        writeBytes(outputStream);
-        outputStream.close();
-    }
-
-    @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
-        body.refresh();
-    }
-
-    @Override
-    public byte[] getBytes() {
-        BytesOutputStream outputStream = new BytesOutputStream(countBytes());
-        try {
-            writeBytes(outputStream);
-            outputStream.close();
-        } catch (IOException ignored) {
-        }
-        return outputStream.toByteArray();
-    }
-
-
     public static ProfileDataFile read(File file) throws IOException {
         ProfileDataFile profileDataFile = new ProfileDataFile();
         profileDataFile.readBytes(new BlockReader(file));

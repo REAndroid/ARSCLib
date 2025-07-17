@@ -16,60 +16,41 @@
 package com.reandroid.dex.dexopt;
 
 import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.ObjectsUtil;
 
+import java.io.IOException;
 
-public class DexProfileData extends FixedBlockContainer implements ProfileData {
+public abstract class DexProfileData extends FixedBlockContainer implements ProfileData {
 
-    private final ProfileDataHeader header;
+    private boolean initialized;
 
-    private final HotMethodRegionList hotMethodList;
-    private final ProfileClassList classList;
-    private final MethodBitmap methodBitmap;
+    public DexProfileData(int childesCount) {
+        super(childesCount);
+    }
 
-    public DexProfileData(ProfileDataHeader header) {
-        super(3);
-        this.header = header;
-        this.hotMethodList = new HotMethodRegionList(header.hotMethodRegionSize);
-        this.classList = new ProfileClassList(header.classSetSize);
-        this.methodBitmap = new MethodBitmap(header.numMethodIds);
+    public abstract long getChecksum();
+    public abstract void setChecksum(long crc32);
 
-        addChild(0, hotMethodList);
-        addChild(1, classList);
-        addChild(2, methodBitmap);
+    public abstract HotMethodRegionList hotMethodList();
+    public abstract ProfileClassList classList();
+    public abstract MethodBitmap methodBitmap();
+
+    @Override
+    public boolean isInitialized() {
+        return initialized;
+    }
+    @Override
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
     }
 
     @Override
-    public String getName() {
-        return header().name.get();
-    }
-    @Override
-    public void setName(String name) {
-        header().name.set(name);
-    }
-
-    public ProfileDataHeader header() {
-        return header;
-    }
-
-    public long getChecksum() {
-        return header.dexChecksum.get() & 0xffffffffL;
-    }
-    public void setChecksum(long crc32) {
-        header().dexChecksum.set((int) crc32);
-    }
-
-    public HotMethodRegionList hotMethodList() {
-        return hotMethodList;
-    }
-    public ProfileClassList classList() {
-        return classList;
-    }
-    public MethodBitmap methodBitmap() {
-        return methodBitmap;
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        setInitialized(true);
     }
 
     @Override
@@ -82,11 +63,8 @@ public class DexProfileData extends FixedBlockContainer implements ProfileData {
     public void update(DexFile dexFile) {
         hotMethodList().update(dexFile);
         classList().update(dexFile);
-        methodBitmap().update(dexFile);
-    }
-
-    public boolean equalsName(String name) {
-        return ObjectsUtil.equals(getName(), name);
+        methodBitmap().update(dexFile, isInitialized());
+        setInitialized(true);
     }
 
     @Override
@@ -108,6 +86,7 @@ public class DexProfileData extends FixedBlockContainer implements ProfileData {
         classList().fromJson(json.optJSONArray("classes"));
         methodBitmap().setSize(json.getInt("method_ids"));
         methodBitmap().fromJson(json.optJSONArray("method_bitmap"));
+        setInitialized(true);
     }
     @Override
     public String toString() {

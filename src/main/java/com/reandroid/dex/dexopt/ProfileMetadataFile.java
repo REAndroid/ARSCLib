@@ -17,10 +17,12 @@ package com.reandroid.dex.dexopt;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 public class ProfileMetadataFile extends ProfileFile {
 
@@ -60,6 +62,15 @@ public class ProfileMetadataFile extends ProfileFile {
     @Override
     public ProfileMetadataBody body() {
         return body;
+    }
+
+    @Override
+    public ProfileMetadata get(String name) {
+        return (ProfileMetadata) super.get(name);
+    }
+    @Override
+    public Iterator<ProfileMetadata> iterator() {
+        return ObjectsUtil.cast(super.iterator());
     }
 
     public static ProfileMetadataFile read(File file) throws IOException {

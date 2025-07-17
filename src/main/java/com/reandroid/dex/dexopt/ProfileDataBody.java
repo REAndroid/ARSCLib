@@ -45,7 +45,7 @@ public class ProfileDataBody extends ProfileBody {
                 if (headerList.size() <= index) {
                     headerList.setSize(index + 1);
                 }
-                return new DexProfileData(headerList.get(index));
+                return new DexProfileDataVersionP(headerList.get(index));
             }
         };
 
@@ -69,7 +69,7 @@ public class ProfileDataBody extends ProfileBody {
     }
     @Override
     public DexProfileData get(String name) {
-        return (DexProfileData) super.get(name);
+        return (DexProfileDataVersionP) super.get(name);
     }
     @Override
     public Iterator<DexProfileData> iterator() {

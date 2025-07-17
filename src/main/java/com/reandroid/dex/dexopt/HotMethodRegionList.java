@@ -33,7 +33,9 @@ public class HotMethodRegionList extends SizedBlockList<HotMethodRegion>
     }
 
     public boolean sort() {
-        return sort(CompareUtil.getComparableComparator());
+        boolean sorted = sort(CompareUtil.getComparableComparator());
+        updateIdx();
+        return sorted;
     }
     public void removeInvalids() {
         removeIf(HotMethodRegion::isInvalid);
@@ -47,7 +49,6 @@ public class HotMethodRegionList extends SizedBlockList<HotMethodRegion>
         LinkableProfileItem.updateAll(dexFile, iterator());
         removeInvalids();
         sort();
-        updateIdx();
     }
     @Override
     protected void onReadBytes(BlockReader reader) throws IOException {
@@ -59,7 +60,6 @@ public class HotMethodRegionList extends SizedBlockList<HotMethodRegion>
     protected void onRefreshed() {
         super.onRefreshed();
         sort();
-        updateIdx();
     }
 
     private void initIdx() {
@@ -92,6 +92,5 @@ public class HotMethodRegionList extends SizedBlockList<HotMethodRegion>
     public void fromJson(JSONArray json) {
         BlockList.fromJsonArray(this, json);
         sort();
-        updateIdx();
     }
 }

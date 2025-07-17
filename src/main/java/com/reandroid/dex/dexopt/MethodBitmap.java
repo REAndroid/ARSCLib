@@ -40,13 +40,13 @@ public class MethodBitmap extends FixedBlockContainer
     private final BooleanList postStartupList;
 
     public MethodBitmap(IntegerReference countReference) {
-        super(1);
+        super(2);
         this.countReference = countReference;
         this.startupList = new BooleanList(countReference);
         this.postStartupList = new BooleanList(countReference);
 
         addChild(0, startupList);
-        addChild(0, postStartupList);
+        addChild(1, postStartupList);
     }
 
     public int size() {
@@ -125,8 +125,15 @@ public class MethodBitmap extends FixedBlockContainer
     }
     @Override
     public void update(DexFile dexFile) {
-        setSize(dexFile.getCount(SectionType.METHOD_ID));
-        LinkableProfileItem.updateAll(dexFile, iterator());
+        update(dexFile, false);
+    }
+    public void update(DexFile dexFile, boolean initialize) {
+        if (initialize) {
+            setSize(dexFile.getCount(SectionType.METHOD_ID));
+            link(dexFile);
+        } else {
+            LinkableProfileItem.updateAll(dexFile, iterator());
+        }
     }
 
     @Override

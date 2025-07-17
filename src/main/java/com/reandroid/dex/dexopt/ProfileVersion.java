@@ -16,11 +16,14 @@
 package com.reandroid.dex.dexopt;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.BooleanReference;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
+
+import java.io.IOException;
 
 public class ProfileVersion extends BlockItem {
 
@@ -84,6 +87,15 @@ public class ProfileVersion extends BlockItem {
         set(value);
     }
 
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        if (!isSupported(get())) {
+            throw new IOException("Unsupported version: " + get()
+                    + " (" + this.toString() + ")");
+        }
+    }
+
     boolean hasDeflatedBody() {
         int v = get();
         return v == V010_P || v == METADATA_V001_N || v == METADATA_V002;
@@ -129,6 +141,11 @@ public class ProfileVersion extends BlockItem {
     @Override
     public String toString() {
         return name();
+    }
+
+    // TODO: Support all versions
+    public static boolean isSupported(int version) {
+        return version == V010_P || version == METADATA_V002;
     }
 
     public static final int V015_S = ObjectsUtil.of(0x00353130);

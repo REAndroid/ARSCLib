@@ -61,6 +61,11 @@ public abstract class ProfileBody extends DeflatedBlockContainer
     public boolean removeData(String name) {
         return removeIfName(s -> ObjectsUtil.equals(s, name));
     }
+    public ProfileData createNew() {
+        int size = size();
+        setSize(size + 1);
+        return get(size);
+    }
 
     @Override
     public void link(DexFile dexFile) {

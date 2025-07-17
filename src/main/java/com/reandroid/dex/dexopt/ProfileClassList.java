@@ -33,8 +33,8 @@ public class ProfileClassList extends CountedBlockList<ProfileClass>
         super(ProfileClass.CREATOR, countReference);
     }
 
-    public boolean removeInvalids() {
-        return removeIf(ProfileClass::isInvalid);
+    public void removeInvalids() {
+        removeIf(ProfileClass::isInvalid);
     }
 
     @Override
@@ -44,10 +44,13 @@ public class ProfileClassList extends CountedBlockList<ProfileClass>
     @Override
     public void update(DexFile dexFile) {
         LinkableProfileItem.updateAll(dexFile, iterator());
+        removeInvalids();
     }
 
     public boolean sort() {
-        return sort(CompareUtil.getComparableComparator());
+        boolean sorted = sort(CompareUtil.getComparableComparator());
+        updateIdx();
+        return sorted;
     }
     @Override
     protected void onReadBytes(BlockReader reader) throws IOException {
@@ -59,7 +62,6 @@ public class ProfileClassList extends CountedBlockList<ProfileClass>
     protected void onRefreshed() {
         super.onRefreshed();
         sort();
-        updateIdx();
     }
     private void initIdx() {
         int lastId = 0;
@@ -89,6 +91,5 @@ public class ProfileClassList extends CountedBlockList<ProfileClass>
     public void fromJson(JSONArray json) {
         BlockList.fromJsonArray(this, json);
         sort();
-        updateIdx();
     }
 }

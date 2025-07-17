@@ -35,17 +35,16 @@ public class MethodBitmapElement implements LinkableProfileItem,
         this.postStartup = postStartup;
     }
 
-    public int getMethodId() {
+    public int getIdx() {
         return startup.getIndex();
     }
-
-    public void setMethodId(int id) {
-        if (id == getMethodId()) {
+    public void setIdx(int idx) {
+        if (idx == getIdx()) {
             return;
         }
         MethodBitmap bitmap = getParentBitmap();
         if (bitmap != null) {
-            bitmap.moveTo(this, id);
+            bitmap.moveTo(this, idx);
         }
     }
 
@@ -61,27 +60,21 @@ public class MethodBitmapElement implements LinkableProfileItem,
     public BooleanBit startup() {
         return startup;
     }
-
     public BooleanBit postStartup() {
         return postStartup;
     }
-
     public boolean isStartup() {
         return startup.get();
     }
-
     public void setStartup(boolean value) {
         startup.set(value);
     }
-
     public boolean isPostStartup() {
         return postStartup.get();
     }
-
     public void setPostStartup(boolean value) {
         postStartup.set(value);
     }
-
     public int getFlags() {
         int result = 0;
         if (isStartup()) {
@@ -92,7 +85,6 @@ public class MethodBitmapElement implements LinkableProfileItem,
         }
         return result;
     }
-
     public void removeSelf() {
         MethodBitmap bitmap = getParentBitmap();
         if (bitmap != null) {
@@ -100,6 +92,16 @@ public class MethodBitmapElement implements LinkableProfileItem,
         }
     }
 
+    public boolean isInvalid() {
+        Boolean invalid = (Boolean) postStartup.getTag();
+        if (invalid != null) {
+            return invalid;
+        }
+        return false;
+    }
+    private void setInvalid(boolean invalid) {
+        postStartup.setTag(invalid ? Boolean.TRUE : null);
+    }
     private MethodBitmap getParentBitmap() {
         return startup.getParentInstance(MethodBitmap.class);
     }
@@ -107,24 +109,37 @@ public class MethodBitmapElement implements LinkableProfileItem,
 
     @Override
     public void link(DexFile dexFile) {
-        MethodId methodId = dexFile.getItem(SectionType.METHOD_ID, getMethodId());
+        MethodId methodId = dexFile.getItem(SectionType.METHOD_ID, getIdx());
+        MethodKey key;
+        boolean invalid;
         if (methodId != null) {
-            setKey(methodId.getKey());
+            key = methodId.getKey();
+            invalid = false;
+        } else {
+            key = null;
+            invalid = true;
         }
+        setKey(key);
+        setInvalid(invalid);
     }
 
     @Override
     public void update(DexFile dexFile) {
         MethodId methodId = dexFile.getItem(SectionType.METHOD_ID, getKey());
+        boolean invalid;
         if (methodId != null) {
-            setKey(methodId.getKey());
+            setIdx(methodId.getIdx());
+            invalid = false;
+        } else {
+            invalid = true;
         }
+        setInvalid(invalid);
     }
 
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", getMethodId());
+        jsonObject.put("id", getIdx());
         if (isStartup()) {
             jsonObject.put("startup", true);
         }
@@ -135,6 +150,9 @@ public class MethodBitmapElement implements LinkableProfileItem,
         if (key != null) {
             jsonObject.put("key", key.toString());
         }
+        if (isInvalid()) {
+            jsonObject.put("invalid", true);
+        }
         return jsonObject;
     }
 
@@ -143,6 +161,7 @@ public class MethodBitmapElement implements LinkableProfileItem,
         setKey(MethodKey.parse(json.optString("key")));
         setStartup(json.optBoolean("startup", false));
         setPostStartup(json.optBoolean("post_startup", false));
+        setInvalid(json.optBoolean("invalid", false));
     }
 
     @Override
@@ -159,13 +178,16 @@ public class MethodBitmapElement implements LinkableProfileItem,
 
     @Override
     public int hashCode() {
-        return getMethodId();
+        return getIdx();
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append(getMethodId());
+        if (isInvalid()) {
+            builder.append("INVALID ");
+        }
+        builder.append(getIdx());
         builder.append(" (");
         builder.append(isStartup());
         builder.append(", ");

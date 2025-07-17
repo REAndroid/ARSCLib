@@ -17,8 +17,15 @@ package com.reandroid.dex.dexopt;
 
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
 
 public interface ProfileData extends LinkableProfileItem, JSONConvert<JSONObject> {
     String getName();
     void setName(String name);
+    boolean isInitialized();
+    void setInitialized(boolean initialized);
+
+    default boolean equalsName(String name) {
+        return ObjectsUtil.equals(getName(), name);
+    }
 }

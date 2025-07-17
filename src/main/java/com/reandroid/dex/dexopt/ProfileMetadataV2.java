@@ -68,8 +68,11 @@ public class ProfileMetadataV2 extends ProfileMetadata {
 
     @Override
     public void update(DexFile dexFile) {
-        super.update(dexFile);
+        if (!isInitialized()) {
+            profileIndex().set(getIndex());
+        }
         typeIdCount().set(dexFile.getCount(SectionType.TYPE_ID));
+        super.update(dexFile);
     }
     @Override
     public JSONObject toJson() {
