@@ -69,7 +69,7 @@ public class DexLayout implements DexClassModule, Closeable,
     }
 
     public String getName() {
-        return "layout" + getIndex();
+        return DIRECTORY_PREFIX + getIndex();
     }
 
     @Override
@@ -449,4 +449,6 @@ public class DexLayout implements DexClassModule, Closeable,
         }
         return  (DexLayout) obj;
     }
+
+    public static final String DIRECTORY_PREFIX = ObjectsUtil.of("layout.");
 }

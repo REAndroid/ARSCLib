@@ -290,7 +290,7 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             int size = size();
             for(int i = 0; i < size; i++) {
                 DexLayout dexLayout = getLayout(i);
-                String name = "layout" + i;
+                String name = DexLayout.DIRECTORY_PREFIX + i;
                 File dir = new File(root, name);
                 dexLayout.writeSmali(writer, dir);
             }
@@ -327,7 +327,7 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             return false;
         }
         String name = dir.getName();
-        String prefix = "layout";
+        String prefix = DexLayout.DIRECTORY_PREFIX;
         if (!name.startsWith(prefix)) {
             return false;
         }
