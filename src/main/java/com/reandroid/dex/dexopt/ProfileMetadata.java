@@ -77,7 +77,7 @@ public abstract class ProfileMetadata extends FixedBlockContainer implements Pro
     @Override
     public void fromJson(JSONObject json) {
         name().set(json.getString("name"));
-        classList().fromJson(json.getJSONArray("classes"));
+        classList().fromJson(json.optJSONArray("classes"));
         setInitialized(true);
     }
 
