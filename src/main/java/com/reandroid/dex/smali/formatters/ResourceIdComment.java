@@ -83,28 +83,7 @@ public interface ResourceIdComment extends SmaliComment {
             if(decoded.length() > 100){
                 decoded = decoded.substring(0, 100) + " ...";
             }
-            return ref + " '" + replaceNewLines(decoded)+ "'";
-        }
-        private String replaceNewLines(String decoded){
-            StringBuilder builder = new StringBuilder();
-            int length = decoded.length();
-            for(int i = 0; i < length; i++){
-                char ch = decoded.charAt(i);
-                builder.append(escapeChar(ch));
-            }
-            return builder.toString();
-        }
-        private String escapeChar(char ch){
-            if(ch == '\n'){
-                return "\\n";
-            }
-            if(ch == '\t'){
-                return "\\t";
-            }
-            if(ch == '\r'){
-                return "\\r";
-            }
-            return String.valueOf(ch);
+            return ref + " '" + decoded + "'";
         }
     }
 }
