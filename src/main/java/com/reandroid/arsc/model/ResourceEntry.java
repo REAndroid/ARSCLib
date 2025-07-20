@@ -32,14 +32,16 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
 
-public class ResourceEntry implements Iterable<Entry>{
+public class ResourceEntry implements Iterable<Entry> {
+
     private final int resourceId;
     private final PackageBlock packageBlock;
 
-    public ResourceEntry(PackageBlock packageBlock, int resourceId){
+    public ResourceEntry(PackageBlock packageBlock, int resourceId) {
         this.resourceId = resourceId;
         this.packageBlock = packageBlock;
     }
@@ -63,20 +65,20 @@ public class ResourceEntry implements Iterable<Entry>{
         if (valueType == ValueType.STRING) {
             return SingleIterator.of(resValue.getValueAsString());
         }
-        if(!valueType.isReference()) {
+        if (!valueType.isReference()) {
             return EmptyIterator.of();
         }
         TableBlock tableBlock = getPackageBlock().getTableBlock();
-        if(tableBlock == null) {
+        if (tableBlock == null) {
             return EmptyIterator.of();
         }
         return this.getStringValues(tableBlock.resolveReference(resValue.getData()).iterator());
     }
 
-    public ResourceEntry previous(){
+    public ResourceEntry previous() {
         int id = getResourceId();
         int entryId = id & 0xffff;
-        if(entryId == 0){
+        if (entryId == 0) {
             return null;
         }
         entryId = entryId - 1;
@@ -84,89 +86,89 @@ public class ResourceEntry implements Iterable<Entry>{
         id = id | entryId;
         return new ResourceEntry(getPackageBlock(), id);
     }
-    public ResourceEntry next(){
+    public ResourceEntry next() {
         int id = getResourceId();
         int entryId = id & 0xffff;
-        if(entryId == 0xffff){
+        if (entryId == 0xffff) {
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
         SpecTypePair specTypePair = packageBlock.getSpecTypePair((id >> 16) & 0xff);
-        if(specTypePair == null){
+        if (specTypePair == null) {
             return null;
         }
         entryId = entryId + 1;
         return specTypePair.getResource(entryId);
     }
-    public ResourceEntry getLast(){
+    public ResourceEntry getLast() {
         PackageBlock packageBlock = getPackageBlock();
         SpecTypePair specTypePair = packageBlock.getSpecTypePair((getResourceId() >> 16) & 0xff);
-        if(specTypePair != null){
+        if (specTypePair != null) {
             return specTypePair.getResource(specTypePair.getHighestEntryId());
         }
         return null;
     }
-    public ResourceEntry resolveReference(){
+    public ResourceEntry resolveReference() {
         Set<Integer> processedIds = new HashSet<>();
         processedIds.add(0);
         processedIds.add(getResourceId());
         ResourceEntry resolved = resolveReference(processedIds);
-        if(resolved != null){
+        if (resolved != null) {
             return resolved;
         }
         return this;
     }
-    private ResourceEntry resolveReference(Set<Integer> processedIds){
+    private ResourceEntry resolveReference(Set<Integer> processedIds) {
         Entry entry = get();
-        if(entry == null){
+        if (entry == null) {
             return this;
         }
         ResValue resValue = entry.getResValue();
-        if(resValue == null){
+        if (resValue == null) {
             return this;
         }
         ValueType valueType = resValue.getValueType();
-        if(valueType == null || !valueType.isReference()){
+        if (valueType == null || !valueType.isReference()) {
             return this;
         }
         int id = resValue.getData();
-        if(id == 0 || processedIds.contains(id)){
+        if (id == 0 || processedIds.contains(id)) {
             return null;
         }
         processedIds.add(id);
         ResourceEntry resourceEntry = getResourceEntry(id);
-        if(resourceEntry != null){
+        if (resourceEntry != null) {
             ResourceEntry resolved = resourceEntry.resolveReference(processedIds);
-            if(resolved != null){
+            if (resolved != null) {
                 resourceEntry = resolved;
             }
         }
         return resourceEntry;
     }
-    private ResourceEntry getResourceEntry(int id){
+    private ResourceEntry getResourceEntry(int id) {
         PackageBlock packageBlock = getPackageBlock();
         TableBlock tableBlock = packageBlock.getTableBlock();
-        if(tableBlock == null){
+        if (tableBlock == null) {
             return null;
         }
         return tableBlock.getResource(packageBlock, id);
     }
 
-    public Entry getOrCreate(String qualifiers){
+    public Entry getOrCreate(String qualifiers) {
         return getOrCreate(ResConfig.parse(qualifiers));
     }
-    public Entry getOrCreate(ResConfig resConfig){
+    public Entry getOrCreate(ResConfig resConfig) {
         int resourceId = this.getResourceId();
         byte typeId = (byte)((resourceId >> 16) & 0xff);
         short entryId = (short)(resourceId & 0xffff);
         Entry entry = getPackageBlock().getOrCreateEntry(typeId, entryId, resConfig);
         String name = getName();
-        if(name != null && entry.getName() ==  null){
+        if (name != null && entry.getName() ==  null) {
             entry.setName(name, true);
         }
         return entry;
     }
-    public Entry get(String qualifiers){
+    public Entry get(String qualifiers) {
         return get(ResConfig.parse(qualifiers));
     }
     public Entry get(ResConfig resConfig) {
@@ -174,39 +176,78 @@ public class ResourceEntry implements Iterable<Entry>{
         return getPackageBlock().getEntry(resConfig,
                 (id >> 16) & 0xff, id & 0xffff);
     }
-    public int getConfigsCount(){
+    public int getConfigsCount() {
         return CollectionUtil.count(iterator(true));
     }
-    public Entry getEqualsOrMoreSpecific(ResConfig resConfig){
+    public Entry forLocale(Locale locale) {
+        ResConfig resConfig;
+        if (locale == null) {
+            resConfig = ResConfig.getDefault();
+        } else {
+            resConfig = new ResConfig();
+            resConfig.setLanguage(locale.getLanguage());
+            resConfig.setRegion(locale.getCountry());
+        }
+        return getMatchingOrAny(resConfig);
+    }
+    public Entry getEqualsOrMoreSpecific(ResConfig resConfig) {
+        return findMatching(resConfig, false);
+    }
+    public Entry getMatchingOrAny(ResConfig resConfig) {
+        boolean noRegion = resConfig.getRegion() == null;
+        Entry entry = findMatching(resConfig, noRegion);
+        if (!noRegion && entry == null) {
+            // example if search locale is "en_US", then look for other
+            // alternates like "en", "en_AU", "en_CA" ...
+            // finally pick default config
+            ResConfig config = new ResConfig();
+            config.copyFrom(resConfig);
+            config.setRegion((String) null);
+            config.setLocaleScript((String) null);
+            config.setLocaleVariant((String) null);
+            entry = findMatching(resConfig, true);
+        }
+        if (entry == null) {
+            entry = any();
+        }
+        return entry;
+    }
+    private Entry findMatching(ResConfig resConfig, boolean defaultIfNotFound) {
+        Entry defaultEntry = null;
         Entry result = null;
-        for(Entry entry : this){
-            if(resConfig.equals(entry.getResConfig())){
+        for (Entry entry : this) {
+            ResConfig config = entry.getResConfig();
+            if (resConfig.equals(config)) {
                 return entry;
             }
-            if(result != null){
-                continue;
+            if (result == null) {
+                if (config.isEqualOrMoreSpecificThan(resConfig)) {
+                    result = entry;
+                } else if (defaultIfNotFound && defaultEntry == null && config.isDefault()) {
+                    defaultEntry = entry;
+                }
             }
-            if(entry.getResConfig().isEqualOrMoreSpecificThan(resConfig)){
+        }
+        if (result == null) {
+            result = defaultEntry;
+        }
+        return result;
+    }
+    public Entry get() {
+        Entry result = null;
+        for (Entry entry : this) {
+            if (entry.isDefault()) {
+                return entry;
+            }
+            if (result == null) {
                 result = entry;
             }
         }
         return result;
     }
-    public Entry get(){
-        Entry result = null;
-        for(Entry entry : this){
-            if(entry.isDefault()){
-                return entry;
-            }
-            if(result == null){
-                result = entry;
-            }
-        }
-        return result;
-    }
-    public Entry any(){
+    public Entry any() {
         Iterator<Entry> iterator = iterator(true);
-        if(iterator.hasNext()){
+        if (iterator.hasNext()) {
             return iterator.next();
         }
         return null;
@@ -220,28 +261,28 @@ public class ResourceEntry implements Iterable<Entry>{
     public boolean isDeclared() {
         return getName() != null;
     }
-    public PackageBlock getPackageBlock(){
+    public PackageBlock getPackageBlock() {
         return packageBlock;
     }
     public boolean isContext(Block block) {
-        if(block == null){
+        if (block == null) {
             return false;
         }
-        if(block instanceof TableBlock) {
+        if (block instanceof TableBlock) {
             PackageBlock packageBlock = getPackageBlock();
             return packageBlock != null && block == packageBlock.getTableBlock();
         }
-        if(block instanceof PackageBlock) {
+        if (block instanceof PackageBlock) {
             return isContext((PackageBlock) block);
         }
         return isContext(block.getParentInstance(PackageBlock.class));
     }
     public boolean isContext(PackageBlock packageBlock) {
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return false;
         }
         PackageBlock context = getPackageBlock();
-        if(context == null){
+        if (context == null) {
             return false;
         }
         return context == packageBlock ||
@@ -250,13 +291,13 @@ public class ResourceEntry implements Iterable<Entry>{
     public int getResourceId() {
         return resourceId;
     }
-    public String getPackageName(){
+    public String getPackageName() {
         return getPackageBlock().getName();
     }
-    public String getType(){
+    public String getType() {
         return getPackageBlock().typeNameOf((getResourceId() >> 16) & 0xff);
     }
-    public void setName(String name){
+    public void setName(String name) {
         boolean hasEntry = false;
         SpecString specString = null;
         for (Entry entry : this) {
@@ -267,17 +308,17 @@ public class ResourceEntry implements Iterable<Entry>{
             specString = entry.setName(name);
             hasEntry = true;
         }
-        if(hasEntry){
+        if (hasEntry) {
             return;
         }
         Iterator<Entry> itr = iterator(false);
-        if(!itr.hasNext()){
+        if (!itr.hasNext()) {
             return;
         }
         Entry entry = itr.next();
         entry.setName(name, true);
     }
-    public String getName(){
+    public String getName() {
         Iterator<Entry> itr = iterator(false);
         while (itr.hasNext()) {
             Entry entry = itr.next();
@@ -290,47 +331,47 @@ public class ResourceEntry implements Iterable<Entry>{
     }
 
     @Override
-    public Iterator<Entry> iterator(){
+    public Iterator<Entry> iterator() {
         return iterator(true);
     }
-    public Iterator<Entry> iterator(boolean skipNull){
+    public Iterator<Entry> iterator(boolean skipNull) {
         return getPackageBlock().getEntries(getResourceId(), skipNull);
     }
     public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
         return new FilterIterator<>(getPackageBlock().getEntries(getResourceId()), filter);
     }
-    public Iterator<ResConfig> getConfigs(){
+    public Iterator<ResConfig> getConfigs() {
         return new ComputeIterator<>(iterator(false), Entry::getResConfig);
     }
-    public String getHexId(){
+    public String getHexId() {
         return HexUtil.toHex8(getResourceId());
     }
     public ResourceName toResourceName() {
         String name = getName();
-        if(name == null) {
+        if (name == null) {
             return null;
         }
         return new ResourceName(getPackageName(), getType(), name);
     }
-    public String buildReference(){
+    public String buildReference() {
         return buildReference(getPackageBlock(), null);
     }
-    public String buildReference(PackageBlock context){
+    public String buildReference(PackageBlock context) {
         return buildReference(context, null);
     }
-    public String buildReference(PackageBlock context, ValueType referenceType){
+    public String buildReference(PackageBlock context, ValueType referenceType) {
         StringBuilder builder = new StringBuilder();
-        if(referenceType != null){
-            if(referenceType == ValueType.REFERENCE){
+        if (referenceType != null) {
+            if (referenceType == ValueType.REFERENCE) {
                 builder.append('@');
-            }else {
+            } else {
                 builder.append('?');
             }
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(context != packageBlock && !packageBlock.isEmpty()){
+        if (context != packageBlock && !packageBlock.isEmpty()) {
             String packageName = getPackageName();
-            if(packageName != null){
+            if (packageName != null) {
                 builder.append(packageName);
                 builder.append(':');
             }
@@ -340,13 +381,13 @@ public class ResourceEntry implements Iterable<Entry>{
         builder.append(getName());
         return builder.toString();
     }
-    public String decodeAttributeData(int data){
+    public String decodeAttributeData(int data) {
         Entry entry = get();
-        if(entry == null){
+        if (entry == null) {
             return null;
         }
         AttributeBag attributeBag = AttributeBag.create(entry.getResValueMapArray());
-        if(attributeBag != null){
+        if (attributeBag != null) {
             return attributeBag.decodeAttributeValue(data);
         }
         return null;
@@ -354,7 +395,7 @@ public class ResourceEntry implements Iterable<Entry>{
 
     public boolean serializePublicXml(XmlSerializer serializer) throws IOException {
         String name = getName();
-        if(name == null){
+        if (name == null) {
             return false;
         }
         serializer.text("\n  ");
@@ -367,7 +408,7 @@ public class ResourceEntry implements Iterable<Entry>{
     }
 
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return getResourceId();
     }
     @Override
@@ -383,9 +424,9 @@ public class ResourceEntry implements Iterable<Entry>{
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         String packageName = getPackageName();
-        if(packageName == null){
+        if (packageName == null) {
             return getHexId() + " @" + getType() + "/" + getName();
         }
         return getHexId() + " @" + packageName
