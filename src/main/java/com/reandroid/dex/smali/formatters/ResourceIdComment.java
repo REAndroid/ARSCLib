@@ -24,37 +24,77 @@ import com.reandroid.arsc.value.ValueType;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public interface ResourceIdComment extends SmaliComment {
 
     void writeComment(SmaliWriter writer, int id) throws IOException;
 
-    class ResourceTableComment implements ResourceIdComment{
+    static ResourceIdComment of(PackageBlock packageBlock, Locale locale) {
+        return new ResourceTableComment(packageBlock, locale);
+    }
+    static ResourceIdComment of(PackageBlock packageBlock) {
+        return new ResourceTableComment(packageBlock);
+    }
+
+    class ResourceTableComment implements ResourceIdComment {
 
         private final PackageBlock packageBlock;
         private final TableBlock tableBlock;
+        private final Locale locale;
+        private final Map<Integer, Object> mCachedComment;
+        private final Object mNoComment;
 
-        public ResourceTableComment(PackageBlock packageBlock){
+        public ResourceTableComment(PackageBlock packageBlock, Locale locale) {
             this.packageBlock = packageBlock;
             this.tableBlock = packageBlock.getTableBlock();
+            if (locale == null) {
+                locale = new Locale("en");
+            }
+            this.locale = locale;
+            this.mCachedComment = new HashMap<>();
+            this.mNoComment = new Object();
+        }
+        public ResourceTableComment(PackageBlock packageBlock) {
+            this(packageBlock, Locale.getDefault());
         }
 
         @Override
         public void writeComment(SmaliWriter writer, int resourceId) {
-            if(!PackageBlock.isResourceId(resourceId)){
+            if (!PackageBlock.isResourceId(resourceId)) {
                 return;
             }
-            String comment = buildComment(resourceId);
-            if(comment != null){
+            String comment = getComment(resourceId);
+            if (comment != null) {
                 writer.appendComment(comment);
             }
         }
-        private String buildComment(int resourceId){
-            ResourceEntry resourceEntry = tableBlock.getResource(resourceId);
-            if(resourceEntry == null || !resourceEntry.isDeclared()){
+        private String getComment(int resourceId) {
+            Integer id = resourceId;
+            Map<Integer, Object> map = this.mCachedComment;
+            Object obj = map.get(id);
+            if (obj == mNoComment) {
                 return null;
             }
-
+            if (obj != null) {
+                return (String) obj;
+            }
+            String comment = buildComment(resourceId);
+            if (comment == null) {
+                obj = mNoComment;
+            } else {
+                obj = comment;
+            }
+            map.put(id, obj);
+            return comment;
+        }
+        private String buildComment(int resourceId) {
+            ResourceEntry resourceEntry = tableBlock.getResource(resourceId);
+            if (resourceEntry == null || !resourceEntry.isDeclared()) {
+                return null;
+            }
             String ref = resourceEntry
                     .buildReference(packageBlock, ValueType.REFERENCE);
 
@@ -64,23 +104,19 @@ public interface ResourceIdComment extends SmaliComment {
             if ("id".equals(resourceEntry.getType())) {
                 return ref;
             }
-
-            Entry entry = resourceEntry.get("-en");
-            if (entry == null || !entry.isScalar()) {
-                entry = resourceEntry.get();
-            }
-            if(entry == null){
+            Entry entry = resourceEntry.forLocale(this.locale);
+            if (entry == null) {
                 return ref;
             }
             ResValue resValue = entry.getResValue();
-            if(resValue == null){
+            if (resValue == null) {
                 return ref;
             }
             String decoded = resValue.decodeValue();
-            if(decoded == null){
+            if (decoded == null) {
                 return ref;
             }
-            if(decoded.length() > 100){
+            if (decoded.length() > 100) {
                 decoded = decoded.substring(0, 100) + " ...";
             }
             return ref + " '" + decoded + "'";
