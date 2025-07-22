@@ -85,11 +85,11 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public Entry getOrCreateEntry(short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreate(qualifiers);
-        return typeBlock.getOrCreateEntry(entryId);
+        return typeBlock.getOrCreateEntry(entryId & 0xffff);
     }
     public Entry getOrCreateEntry(short entryId, ResConfig resConfig){
         TypeBlock typeBlock = getOrCreate(resConfig);
-        return typeBlock.getOrCreateEntry(entryId);
+        return typeBlock.getOrCreateEntry(entryId & 0xffff);
     }
     public boolean isEmpty(){
         for(TypeBlock typeBlock:listItems()){

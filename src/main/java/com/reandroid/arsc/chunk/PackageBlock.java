@@ -940,8 +940,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             TypeString typeString = packageBlock.getOrCreateTypeString(typeId, type);
             typeId = typeString.getId();
             TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock((byte) typeId, "");
-            int entryId = resourceId & 0xffff;
-            Entry entry = typeBlock.getOrCreateEntry((short) entryId);
+            Entry entry = typeBlock.getOrCreateEntry(resourceId & 0xffff);
             entry.setName(name, true);
             if(isInitializeIds() && typeBlock.isTypeId()){
                 entry.setValueAsBoolean(false);

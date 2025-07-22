@@ -74,11 +74,11 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     }
     public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreateTypeBlock(typeId, qualifiers);
-        return typeBlock.getOrCreateEntry(entryId);
+        return typeBlock.getOrCreateEntry(entryId & 0xffff);
     }
     public Entry getOrCreateEntry(byte typeId, short entryId, ResConfig resConfig){
         TypeBlock typeBlock=getOrCreateTypeBlock(typeId, resConfig);
-        return typeBlock.getOrCreateEntry(entryId);
+        return typeBlock.getOrCreateEntry(entryId & 0xffff);
     }
     public Entry getEntry(byte typeId, short entryId, String qualifiers){
         TypeBlock typeBlock=getTypeBlock(typeId, qualifiers);
