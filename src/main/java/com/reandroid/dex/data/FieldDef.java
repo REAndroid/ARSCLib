@@ -20,7 +20,12 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.NullValueKey;
+import com.reandroid.dex.key.PrimitiveKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.FieldProgram;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -199,11 +204,11 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
         setKey(smaliField.getKey());
         setAccessFlagsValue(smaliField.getAccessFlagsValue());
         addHiddenApiFlags(smaliField.getHiddenApiFlags());
-        if(smaliField.hasAnnotation()){
+        if (smaliField.hasAnnotation()) {
             setAnnotation(smaliField.getAnnotationSetKey());
         }
         Key value = smaliField.getStaticValue();
-        if(value != null) {
+        if (value != null) {
             setStaticValue(value);
         }
     }
@@ -214,7 +219,7 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
         smaliField.setKey(getKey());
         smaliField.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
         smaliField.setStaticValue(getStaticValue());
-        smaliField.setAnnotation(getAnnotationKeys());
+        smaliField.setAnnotation(getAnnotation());
         return smaliField;
     }
 

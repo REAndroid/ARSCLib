@@ -41,6 +41,9 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.CallSiteKey;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
@@ -159,6 +162,11 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
+            public boolean isSharedSection() {
+                return true;
+            }
+
+            @Override
             public int getReferenceType() {
                 return 0;
             }
@@ -179,6 +187,12 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             public boolean isDataSection() {
                 return true;
             }
+
+            @Override
+            public boolean isSharedSection() {
+                return true;
+            }
+
             @Override
             public StringDataSection createSection(IntegerPair countAndOffset){
                 return new StringDataSection(countAndOffset, this);
@@ -657,6 +671,9 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
     public boolean isSpecialSection(){
         return false;
     }
+    public boolean isSharedSection() {
+        return false;
+    }
     public Section<T> createSection(IntegerPair countAndOffset){
         return null;
     }
@@ -721,7 +738,7 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         }
     }
 
-    public static SectionType<? extends IdItem> getSectionType(Key key) {
+    public static SectionType<? extends IdItem> getIdSectionType(Key key) {
         if (key instanceof StringKey) {
             return STRING_ID;
         }
@@ -744,6 +761,23 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             return CALL_SITE_ID;
         }
         return null;
+    }
+
+    public static SectionType<?> getSectionType(Key key) {
+        SectionType<?> type = null;
+        if (key != null) {
+            type = getIdSectionType(key);
+            if (type == null) {
+                if (key instanceof AnnotationItemKey) {
+                    type = ANNOTATION_ITEM;
+                } else if (key instanceof AnnotationSetKey) {
+                    type = ANNOTATION_SET;
+                } else if (key instanceof AnnotationGroupKey) {
+                    type = ANNOTATION_GROUP;
+                }
+            }
+        }
+        return type;
     }
 
     public static Iterator<SectionType<?>> getSectionTypes(){

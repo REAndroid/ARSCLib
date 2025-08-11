@@ -18,8 +18,8 @@ package com.reandroid.dex.debug;
 import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
-import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliLineNumber;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
@@ -183,6 +183,28 @@ public class DebugLineNumber extends DebugElement {
         return getLineNumber();
     }
 
+    @Override
+    int compareDetailElement(DebugElement element) {
+        return CompareUtil.compare(getLineNumber(), element.getLineNumber());
+    }
+
+    @Override
+    public int hashCode() {
+        return getLineNumber() * 31 + getTargetAddress();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+        DebugLineNumber lineNumber = (DebugLineNumber) obj;
+        return this.getLineNumber() == lineNumber.getLineNumber() &&
+                this.getTargetAddress() == lineNumber.getTargetAddress();
+    }
 
     @Override
     public String toString() {

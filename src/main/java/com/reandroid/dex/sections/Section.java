@@ -18,12 +18,14 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -40,7 +42,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
 
     private DexSectionPool<T> dexSectionPool;
 
-    Section(SectionType<T> sectionType, SectionArray<T> itemArray){
+    Section(SectionType<T> sectionType, SectionArray<T> itemArray) {
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
@@ -48,7 +50,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         addChild(0, sectionAlign);
         addChild(1, itemArray);
     }
-    public Section(IntegerPair countAndOffset, SectionType<T> sectionType){
+    public Section(IntegerPair countAndOffset, SectionType<T> sectionType) {
         this(sectionType, new SectionArray<>(countAndOffset, sectionType.getCreator()));
     }
 
@@ -61,45 +63,52 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         refresh();
     }
 
-    int clearUnused(){
+    int clearUnused() {
         int size = getCount();
         removeEntries(item -> item.getUsageType() == UsageMarker.USAGE_NONE);
         return size - getCount();
     }
-    public boolean remove(Key key){
+    public int clearDuplicates() {
+        int i = getPool().clearDuplicates();
+        if (i != 0) {
+            refresh();
+        }
+        return i;
+    }
+    public boolean remove(Key key) {
         return false;
     }
-    public boolean removeWithKeys(Predicate<? super Key> filter){
+    public boolean removeWithKeys(Predicate<? super Key> filter) {
         return false;
     }
-    public boolean removeEntries(Predicate<? super T> filter){
+    public boolean removeEntries(Predicate<? super T> filter) {
         return getItemArray().removeIf(filter);
     }
-    void clearUsageTypes(){
+    void clearUsageTypes() {
         UsageMarker.clearUsageTypes(iterator());
     }
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return getCount() == 0;
     }
-    public void removeSelf(){
+    public void removeSelf() {
         SectionList sectionList = getSectionList();
-        if(sectionList != null){
+        if (sectionList != null) {
             sectionList.remove(this);
         }
     }
-    void onRemove(SectionList sectionList){
+    void onRemove(SectionList sectionList) {
         clear();
         sectionList.getMapList().remove(getSectionType());
         setParent(null);
         setIndex(-1);
     }
-    public void clear(){
+    public void clear() {
         clearPoolMap();
         getItemArray().clear();
     }
-    public void clearPoolMap(){
+    public void clearPoolMap() {
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
-        if(dexSectionPool != null){
+        if (dexSectionPool != null) {
             dexSectionPool.clear();
             this.dexSectionPool = null;
         }
@@ -110,7 +119,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         super.onReadBytes(reader);
     }
 
-    public boolean contains(Key key){
+    public boolean contains(Key key) {
         return getPool().contains(key);
     }
     public Iterator<T> getAll(Key key) {
@@ -120,31 +129,30 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         return getPool().get(key);
     }
 
-    @SuppressWarnings("unchecked")
-    boolean keyChanged(SectionItem block, Key key){
+    boolean keyChanged(SectionItem block, Key key) {
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
-        if(dexSectionPool != null){
-            return dexSectionPool.updateKey(key, block.getKey(), (T)block);
+        if (dexSectionPool != null) {
+            return dexSectionPool.updateKey(key, block.getKey(), ObjectsUtil.cast(block));
         }
         return false;
     }
-    public DexSectionPool<T> getPool(){
+    public DexSectionPool<T> getPool() {
         DexSectionPool<T> dexSectionPool = this.dexSectionPool;
-        if(dexSectionPool == null){
+        if (dexSectionPool == null) {
             dexSectionPool = createPool();
             this.dexSectionPool = dexSectionPool;
             dexSectionPool.load();
         }
         return dexSectionPool;
     }
-    public DexSectionPool<T> getLoadedPool(){
+    public DexSectionPool<T> getLoadedPool() {
         return dexSectionPool;
     }
 
-    DexSectionPool<T> createPool(){
+    DexSectionPool<T> createPool() {
         return new DexSectionPool<>(this);
     }
-    public void add(T item){
+    public void add(T item) {
         getItemArray().add(item);
     }
 
@@ -152,7 +160,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         return sectionType;
     }
 
-    public T getSectionItem(int idx){
+    public T getSectionItem(int idx) {
         return null;
     }
 
@@ -163,7 +171,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         return getItemArray().createNext();
     }
 
-    public T get(Key key){
+    public T get(Key key) {
         return getPool().get(key);
     }
     @Override
@@ -171,27 +179,33 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         return getItemArray().get(i);
     }
     @Override
-    public int getCount(){
+    public int getCount() {
         return getItemArray().getCount();
     }
-    public int getOffset(){
+    public int getOffset() {
         return getOffsetReference().get();
     }
     @Override
-    public IntegerReference getOffsetReference(){
+    public IntegerReference getOffsetReference() {
         return getItemArray().getOffsetReference();
+    }
+    public IntegerPair getCountAndOffset() {
+        return getItemArray().getCountAndOffset();
+    }
+    public void addCountAndOffset(IntegerPair countAndOffset) {
+        getItemArray().addCountAndOffset(countAndOffset);
     }
     public SectionArray<T> getItemArray() {
         return itemArray;
     }
     public boolean sort() throws ClassCastException {
         Object first = getItemArray().getFirst();
-        if(!(first instanceof Comparable)){
+        if (!(first instanceof Comparable)) {
             return false;
         }
         return sort(CompareUtil.getComparatorUnchecked());
     }
-    public boolean sort(Comparator<? super T> comparator){
+    public boolean sort(Comparator<? super T> comparator) {
         return getItemArray().sort(comparator);
     }
 
@@ -208,37 +222,37 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public Iterator<T> arrayIterator() {
         return getItemArray().arrayIterator();
     }
-    void updateNextSection(int position){
+    void updateNextSection(int position) {
         Section<?> next = getNextSection();
-        if(next != null){
+        if (next != null) {
             next.getOffsetReference().set(position);
         }
     }
-    Section<?> getNextSection(){
+    Section<?> getNextSection() {
         SectionList sectionList = getSectionList();
-        if(sectionList != null){
+        if (sectionList != null) {
             int i = sectionList.indexOf(this);
-            if(i >= 0){
+            if (i >= 0) {
                 return sectionList.get(i + 1);
             }
         }
         return null;
     }
-    Section<?> getPreviousSection(){
+    Section<?> getPreviousSection() {
         SectionList sectionList = getSectionList();
-        if(sectionList != null){
+        if (sectionList != null) {
             int i = sectionList.indexOf(this);
-            if(i >= 0){
+            if (i >= 0) {
                 return sectionList.get(i - 1);
             }
         }
         return null;
     }
-    public SectionList getSectionList(){
+    public SectionList getSectionList() {
         return getParent(SectionList.class);
     }
-    int compareOffset(Section<?> section){
-        if(section == null){
+    int compareOffset(Section<?> section) {
+        if (section == null) {
             return 1;
         }
         return CompareUtil.compare(getOffset(), section.getOffset());
@@ -246,8 +260,8 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
 
 
     @Override
-    protected boolean isValidOffset(int offset){
-        if(offset == 0){
+    protected boolean isValidOffset(int offset) {
+        if (offset == 0) {
             return getSectionType() == SectionType.HEADER;
         }
         return offset > 0;
@@ -268,15 +282,26 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         clearPoolMap();
     }
 
-    void onRefreshed(int position){
+    void onRefreshed(int position) {
         position += this.getItemArray().countBytes();
         this.updateNextSection(position);
     }
-    void onRemoving(T item){
+    void onRemoving(T item) {
         DexSectionPool<T> dexSectionPool = this.dexSectionPool;
-        if(dexSectionPool != null){
+        if (dexSectionPool != null) {
             dexSectionPool.remove(item);
         }
+    }
+
+    @Override
+    public byte[] getBytes() {
+        BytesOutputStream outputStream = new BytesOutputStream();
+        try {
+            writeBytes(outputStream);
+            outputStream.close();
+        } catch (IOException ignored) {
+        }
+        return outputStream.toByteArray();
     }
 
     @Override

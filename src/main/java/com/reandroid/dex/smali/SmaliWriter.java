@@ -498,11 +498,22 @@ public class SmaliWriter implements Appendable, Closeable {
         return stringWriter.toString();
     }
     public static String toStringSafe(SmaliFormat smaliFormat) {
+        return toStringSafe(smaliFormat, true);
+    }
+    public static String toStringSafe(SmaliFormat smaliFormat, boolean comment) {
         if (smaliFormat == null) {
             return "# null";
         }
         StringWriter stringWriter = new StringWriter();
         SmaliWriter writer = new SmaliWriter(stringWriter);
+        if (!comment) {
+            SmaliWriterSetting setting = writer.getWriterSetting();
+            if (setting == null) {
+                setting = new SmaliWriterSetting();
+                setting.setEnableComments(false);
+                writer.setWriterSetting(setting);
+            }
+        }
         try {
             smaliFormat.append(writer);
             writer.close();

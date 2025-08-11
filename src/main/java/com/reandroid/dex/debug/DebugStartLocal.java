@@ -25,6 +25,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -130,6 +131,21 @@ public class DebugStartLocal extends DebugRegisterNumber {
         SmaliDebugLocal smaliDebugLocal = (SmaliDebugLocal) smali;
         setName(smaliDebugLocal.getName());
         setType(smaliDebugLocal.getType());
+    }
+
+    @Override
+    int compareDetailElement(DebugElement element) {
+        int i = super.compareDetailElement(element);
+        if (i != 0) {
+            return i;
+        }
+        DebugStartLocal debug = (DebugStartLocal) element;
+        i = CompareUtil.compare(getNameKey(), debug.getNameKey());
+        if (i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getTypeKey(), debug.getTypeKey());
+        return i;
     }
 
     @Override

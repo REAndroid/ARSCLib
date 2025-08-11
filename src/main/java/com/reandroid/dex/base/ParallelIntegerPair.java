@@ -16,30 +16,30 @@
 package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.utils.ObjectsUtil;
+
 
 public class ParallelIntegerPair implements IntegerPair, BlockRefresh {
 
     private final ParallelReference first;
     private final ParallelReference second;
 
-    public ParallelIntegerPair(IntegerPair integerPair){
-        this.first = new ParallelReference(integerPair.getFirst(), null);
-        this.second = new ParallelReference(integerPair.getSecond(), null);
+    public ParallelIntegerPair(IntegerPair integerPair) {
+        this.first = new ParallelReference(integerPair.getFirst());
+        this.second = new ParallelReference(integerPair.getSecond());
     }
 
-    public void setReference2(IntegerPair integerPair){
-        IntegerReference first;
-        IntegerReference second;
-        if(integerPair == null){
-            first = null;
-            second = null;
-        }else {
-            first = integerPair.getFirst();
-            second = integerPair.getSecond();
-        }
-        getFirst().setReference2(first);
-        getSecond().setReference2(second);
+    public void add(IntegerPair pair) {
+        getFirst().add(pair.getFirst());
+        getSecond().add(pair.getSecond());
+    }
+    public void remove(IntegerPair pair) {
+        getFirst().remove(pair.getFirst());
+        getSecond().remove(pair.getSecond());
+    }
+    public boolean contains(IntegerPair pair) {
+        return getFirst().contains(pair.getFirst()) &&
+                getSecond().contains(pair.getSecond());
     }
     @Override
     public ParallelReference getFirst() {
@@ -50,8 +50,48 @@ public class ParallelIntegerPair implements IntegerPair, BlockRefresh {
         return second;
     }
     @Override
-    public void refresh(){
+    public void refresh() {
         getFirst().refresh();
         getSecond().refresh();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        ParallelIntegerPair pair = (ParallelIntegerPair) obj;
+        return ObjectsUtil.equals(first, pair.first) &&
+                ObjectsUtil.equals(second, pair.second);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsUtil.hash(first, second);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + first + ", " + second + ")";
+    }
+
+    public static IntegerPair combine(IntegerPair pair1, IntegerPair pair2) {
+        if (pair1 == null) {
+            return pair2;
+        }
+        if (pair2 == null) {
+            return pair1;
+        }
+        if (pair1 instanceof ParallelIntegerPair) {
+            ParallelIntegerPair p = (ParallelIntegerPair) pair1;
+            p.add(pair2);
+            return p;
+        }
+        ParallelIntegerPair p = new ParallelIntegerPair(pair1);
+        p.add(pair2);
+        return p;
     }
 }

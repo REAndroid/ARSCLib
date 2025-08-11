@@ -38,8 +38,8 @@ public class MapItem extends DexBlockItem implements Comparable<MapItem> {
 
     public void link(DexHeader header){
         CountAndOffset headerCountAndOffset = header.get(getSectionType());
-        if(headerCountAndOffset != null){
-            getCountAndOffset().setReference2(headerCountAndOffset);
+        if (headerCountAndOffset != null) {
+            getCountAndOffset().add(headerCountAndOffset);
         }
     }
     public ParallelIntegerPair getCountAndOffset() {

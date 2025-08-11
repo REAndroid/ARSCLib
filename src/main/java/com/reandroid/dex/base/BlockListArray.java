@@ -28,7 +28,7 @@ import java.io.IOException;
 public class BlockListArray<T extends Block> extends BlockArray<T>
         implements OffsetSupplier, DexArraySupplier<T>, Creator<T> {
 
-    private final IntegerPair countAndOffset;
+    private IntegerPair countAndOffset;
 
     public BlockListArray(IntegerPair countAndOffset,
                         Creator<T> creator) {
@@ -49,6 +49,9 @@ public class BlockListArray<T extends Block> extends BlockArray<T>
     }
     public IntegerPair getCountAndOffset() {
         return countAndOffset;
+    }
+    public void addCountAndOffset(IntegerPair countAndOffset) {
+        this.countAndOffset = ParallelIntegerPair.combine(this.countAndOffset, countAndOffset);
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {

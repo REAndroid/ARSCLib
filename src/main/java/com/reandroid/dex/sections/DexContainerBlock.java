@@ -38,12 +38,17 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
     private Object mTag;
     private String mSimpleName;
 
+    private boolean mReading;
+
     public DexContainerBlock() {
         super();
     }
 
     public boolean isMultiLayout() {
         return size() > 1;
+    }
+    public boolean hasMultiLayoutVersion() {
+        return getVersion() >= DexVersion.MinimumMultiLayoutVersion;
     }
     public boolean isEmpty() {
         for (DexLayoutBlock layoutBlock : this) {
@@ -53,15 +58,41 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         }
         return true;
     }
+
+    public int clearUnused() {
+        int result = 0;
+        while (true) {
+            clearUsageTypes();
+            refresh();
+            int unused = clearUnusedItems();
+            if (unused == 0) {
+                break;
+            }
+            result += unused;
+        }
+        return result;
+    }
+    private int clearUnusedItems() {
+        int result = 0;
+        for(DexLayoutBlock dexLayout : this) {
+            result += dexLayout.getSectionList().clearUnused();
+        }
+        return result;
+    }
+    private void clearUsageTypes() {
+        for (DexLayoutBlock layoutBlock : this) {
+            for (Section<?> section : layoutBlock.getSectionList()) {
+                section.clearUsageTypes();
+            }
+        }
+    }
     public void clearEmptyLayouts() {
         removeIf(DexLayoutBlock::isEmpty);
     }
-    public int clearEmptySections() {
-        int result = 0;
+    public void clearEmptySections() {
         for (DexLayoutBlock layoutBlock : this) {
-            result += layoutBlock.clearEmptySections();
+            layoutBlock.clearEmptySections();
         }
-        return result;
     }
     public void clear() {
         clearChildes();
@@ -98,9 +129,11 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         }
     }
     public DexLayoutBlock createNextDefault() {
-        DexLayoutBlock layoutBlock = DexLayoutBlock.createDefault();
+        DexLayoutBlock layoutBlock = new DexLayoutBlock();
         add(layoutBlock);
         onCreatedNew(layoutBlock);
+        layoutBlock.initialize(SectionType.getR8Order());
+        transferSharedToLast();
         return layoutBlock;
     }
     private void onCreatedNew(DexLayoutBlock layoutBlock) {
@@ -124,6 +157,7 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
 
     @Override
     public void refreshFull() {
+        clearUnused();
         clearEmptyLayouts();
         for (DexLayoutBlock layoutBlock : this) {
             layoutBlock.refreshFull();
@@ -174,6 +208,7 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         readBytes(reader, null);
     }
     public void readBytes(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+        mReading = true;
         int size = size();
         for (int i = 0; i < size; i++) {
             DexLayoutBlock layoutBlock = get(i);
@@ -181,6 +216,18 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         }
         while (reader.isAvailable()) {
             createNext().readBytes(reader, filter);
+        }
+        transferSharedToLast();
+        mReading = false;
+    }
+    private void transferSharedToLast() {
+        int size = size() - 1;
+        if (size < 1) {
+            return;
+        }
+        DexLayoutBlock last = get(size);
+        for (int i = 0; i < size; i ++) {
+            last.transferSharedSectionsFrom(get(i));
         }
     }
 
@@ -207,6 +254,10 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
     }
     public Iterator<SectionList> getSectionLists() {
         return ComputeIterator.of(iterator(), DexLayoutBlock::getSectionList);
+    }
+
+    public boolean isReading() {
+        return mReading;
     }
 
     public int getVersion() {

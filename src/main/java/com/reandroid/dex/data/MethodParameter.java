@@ -29,12 +29,8 @@ import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.ExpandIterator;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliRegion {
 
@@ -48,57 +44,41 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
 
     @Override
     public AnnotationSetKey getAnnotation() {
-        return AnnotationSetKey.create(
-                ComputeIterator.of(getAnnotationItemBlocks(), AnnotationItem::getKey));
+        AnnotationsDirectory directory = getMethodDef()
+                .getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getParameter(this);
+        }
+        return AnnotationSetKey.empty();
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotationSet) {
-        clearAnnotations();
-        writeAnnotation(annotationSet);
+        MethodDef methodDef = getMethodDef();
+        if (annotationSet == null || annotationSet.isEmpty()) {
+            AnnotationsDirectory directory = methodDef.getAnnotationsDirectory();
+            if (directory != null && directory.contains(this)) {
+                directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
+                directory.put(this, null);
+            }
+        } else {
+            methodDef.getOrCreateUniqueAnnotationsDirectory()
+                    .put(this, annotationSet);
+        }
     }
     @Override
     public void clearAnnotations() {
-        writeAnnotation(AnnotationSetKey.empty());
+        setAnnotation(AnnotationSetKey.empty());
+    }
+    @Override
+    public boolean hasAnnotations() {
+        AnnotationsDirectory directory = getMethodDef()
+                .getAnnotationsDirectory();
+        return directory != null && directory.contains(this);
     }
 
     public void onRemoved() {
         clearAnnotations();
         clearDebugParameter();
-    }
-
-    private boolean hasAnnotationSetBlocks() {
-        MethodDef methodDef = getMethodDef();
-        AnnotationsDirectory directory = methodDef.getAnnotationsDirectory();
-        if (directory != null) {
-            return directory.getParameterAnnotation(methodDef,
-                    getDefinitionIndex()).hasNext();
-        }
-        return false;
-    }
-
-    private Iterator<AnnotationItem> getAnnotationItemBlocks() {
-        MethodDef methodDef = getMethodDef();
-        AnnotationsDirectory directory = methodDef.getAnnotationsDirectory();
-        if (directory != null) {
-            return ExpandIterator.of(directory
-                    .getParameterAnnotation(methodDef, getDefinitionIndex()));
-        }
-        return EmptyIterator.of();
-    }
-
-    private void writeAnnotation(AnnotationSetKey key) {
-        MethodDef methodDef = getMethodDef();
-        int index = getDefinitionIndex();
-        if (key == null || key.isEmpty()) {
-            if (hasAnnotationSetBlocks()) {
-                AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
-                directory.removeParameterAnnotation(methodDef, index);
-            }
-        } else {
-            AnnotationsDirectory directory = methodDef.getOrCreateUniqueAnnotationsDirectory();
-            directory.removeParameterAnnotation(methodDef, index);
-            directory.setParameterAnnotation(methodDef, index, key);
-        }
     }
 
     public TypeKey getType() {
@@ -192,8 +172,11 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
     }
 
     public void fromSmali(SmaliMethodParameter smaliMethodParameter) {
-        if (smaliMethodParameter.hasAnnotations()) {
-            setAnnotation(smaliMethodParameter.getSmaliAnnotationSet().getKey());
+        fromSmali(smaliMethodParameter, true);
+    }
+    public void fromSmali(SmaliMethodParameter smaliMethodParameter, boolean withAnnotations) {
+        if (withAnnotations && smaliMethodParameter.hasAnnotations()) {
+            setAnnotation(smaliMethodParameter.getAnnotation());
         }
         setDebugName(smaliMethodParameter.getDebugName());
     }
@@ -203,7 +186,8 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         if (dalvikSignature != null) {
             DalvikSignatureKey signatureKey = dalvikSignature.getSignature();
             if (signatureKey != null) {
-                ParameterisedTypeKey typeKey = signatureKey.getProtoParameter(getDefinitionIndex());
+                ParameterisedTypeKey typeKey = signatureKey.getProtoParameter(
+                        getDefinitionIndex());
                 if (typeKey != null && typeKey.isParametrisedType()) {
                     return typeKey;
                 }

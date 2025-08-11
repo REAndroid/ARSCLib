@@ -18,10 +18,18 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.common.*;
+import com.reandroid.dex.common.EditableItem;
+import com.reandroid.dex.common.HiddenApiFlag;
+import com.reandroid.dex.common.IdDefinition;
+import com.reandroid.dex.common.IdUsageIterator;
+import com.reandroid.dex.common.Modifier;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ProgramKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
@@ -29,8 +37,9 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDef;
-import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -57,39 +66,33 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     @Override
     public AnnotationSetKey getAnnotation() {
-        return AnnotationSetKey.create(
-                ComputeIterator.of(getAnnotationItemBlocks(), AnnotationItem::getKey));
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if  (directory == null) {
+            return AnnotationSetKey.empty();
+        }
+        return directory.get(this);
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotationSet) {
-        if (!ObjectsUtil.equals(getAnnotation(), annotationSet)) {
-            clearAnnotations();
-            writeAnnotation(annotationSet);
+        if (annotationSet == null || annotationSet.isEmpty()) {
+            AnnotationsDirectory directory = getAnnotationsDirectory();
+            if (directory != null && directory.contains(this)) {
+                directory = getOrCreateUniqueAnnotationsDirectory();
+                directory.put(this, null);
+            }
+        } else {
+            getOrCreateUniqueAnnotationsDirectory().put(this, annotationSet);
         }
     }
     @Override
     public void clearAnnotations() {
-        writeAnnotation(AnnotationSetKey.empty());
+        setAnnotation(AnnotationSetKey.empty());
     }
-    private boolean hasAnnotationSetBlocks() {
-        return getAnnotationItemBlocks().hasNext();
-    }
-    private Iterator<AnnotationItem> getAnnotationItemBlocks() {
+
+    @Override
+    public boolean hasAnnotations() {
         AnnotationsDirectory directory = getAnnotationsDirectory();
-        if (directory != null) {
-            return ExpandIterator.of(directory
-                    .getAnnotations(this));
-        }
-        return EmptyIterator.of();
-    }
-    private void writeAnnotation(AnnotationSetKey key) {
-        if (key == null || key.isEmpty()) {
-            if (hasAnnotationSetBlocks()) {
-                getOrCreateUniqueAnnotationsDirectory().remove(this);
-            }
-        } else {
-            getOrCreateUniqueAnnotationsDirectory().addAnnotation(this, key);
-        }
+        return directory != null && directory.contains(this);
     }
 
     @Override
@@ -178,32 +181,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         setItem(key);
     }
 
-    public Iterator<AnnotationItemKey> getAnnotationKeys() {
-        Iterator<AnnotationSetKey> iterator = getAnnotationSetKeys();
-        if (!iterator.hasNext()) {
-            return EmptyIterator.of();
-        }
-        return new IterableIterator<AnnotationSetKey, AnnotationItemKey>(iterator) {
-            @Override
-            public Iterator<AnnotationItemKey> iterator(AnnotationSetKey element) {
-                return element.iterator();
-            }
-        };
-    }
-    public Iterator<AnnotationSetKey> getAnnotationSetKeys() {
-        return ComputeIterator.of(getAnnotationSets(true), AnnotationSet::getKey);
-    }
-    public Iterator<AnnotationSet> getAnnotationSets(boolean skipEmpty){
-        AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory == null) {
-            return EmptyIterator.of();
-        }
-        Iterator<AnnotationSet> iterator = directory.getAnnotations(this);
-        if(!skipEmpty || !iterator.hasNext()) {
-            return iterator;
-        }
-        return FilterIterator.of(iterator, annotationSet -> !annotationSet.isEmpty());
-    }
     public AnnotationsDirectory getAnnotationsDirectory(){
         ClassId classId = getClassId();
         if (classId != null) {

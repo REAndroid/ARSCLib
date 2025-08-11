@@ -19,7 +19,10 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.base.ParallelIntegerPair;
+import com.reandroid.dex.base.ParallelReference;
+import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -69,25 +72,22 @@ public class MapList extends SpecialItem
         return dataSize;
     }
 
-    public void sortMapItems(SectionType<?>[] order){
-        itemArray.sort(SectionType.comparator(order, MapItem::getSectionType));
+    public void sort() {
+        itemArray.sort(CompareUtil.getComparableComparator());
     }
 
     public void linkHeader(DexHeader dexHeader){
         linkSpecialReference(SectionType.HEADER);
         linkSpecialReference(SectionType.MAP_LIST);
         linkIdTypesHeader(dexHeader);
-        getFileSize().setReference2(dexHeader.fileSize);
-        getDataSize().setReference2(dexHeader.data.getFirst());
-        getDataStart().setReference2(dexHeader.data.getSecond());
+        getFileSize().add(dexHeader.fileSize);
+        getDataSize().add(dexHeader.data.getFirst());
+        getDataStart().add(dexHeader.data.getSecond());
     }
     private void linkSpecialReference(SectionType<?> sectionType){
         MapItem mapItem = get(sectionType);
         Section<?> section = getSection(sectionType);
-        ParallelIntegerPair pair = (ParallelIntegerPair) section.getItemArray()
-                .getCountAndOffset();
-        pair.setReference2(mapItem.getCountAndOffset());
-        pair.refresh();
+        section.addCountAndOffset(mapItem.getCountAndOffset());
     }
     private void linkIdTypesHeader(DexHeader dexHeader){
         Iterator<SectionType<?>> iterator = SectionType.getIdSectionTypes();
@@ -114,6 +114,10 @@ public class MapList extends SpecialItem
         }
         return null;
     }
+    boolean hasMultiLayoutVersion() {
+        DexContainerBlock containerBlock = getParentInstance(DexContainerBlock.class);
+        return containerBlock != null && containerBlock.hasMultiLayoutVersion();
+    }
     public void remove(SectionType<?> sectionType){
         remove(get(sectionType));
     }
@@ -124,7 +128,6 @@ public class MapList extends SpecialItem
         ParallelIntegerPair pair = mapItem.getCountAndOffset();
         pair.getFirst().set(0);
         pair.getSecond().set(0);
-        pair.setReference2(null);
         itemArray.remove(mapItem);
         mapItem.setParent(null);
         mapItem.setIndex(-1);
@@ -162,7 +165,7 @@ public class MapList extends SpecialItem
     protected void onPreRefresh() {
         super.onPreRefresh();
         itemArray.removeIf(MapItem::hasNoSection);
-        itemArray.sort(CompareUtil.getComparableComparator());
+        sort();
     }
 
     @Override
@@ -211,6 +214,10 @@ public class MapList extends SpecialItem
 
         @Override
         public int get() {
+            MapList mapList = this.mapList;
+            if (mapList.hasMultiLayoutVersion()) {
+                return 0;
+            }
             MapItem mapItem = mapList.getDataStartItem();
             if(mapItem != null){
                 return mapItem.getOffset().get();
@@ -219,6 +226,11 @@ public class MapList extends SpecialItem
         }
         @Override
         public void set(int value) {
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(get());
         }
     }
 
@@ -232,6 +244,10 @@ public class MapList extends SpecialItem
 
         @Override
         public int get() {
+            MapList mapList = this.mapList;
+            if (mapList.hasMultiLayoutVersion()) {
+                return 0;
+            }
             MapItem mapItem = mapList.getDataStartItem();
             if(mapItem != null){
                 return mapList.getFileSize().get() - mapItem.getOffset().get();
@@ -240,6 +256,11 @@ public class MapList extends SpecialItem
         }
         @Override
         public void set(int value) {
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(get());
         }
     }
 

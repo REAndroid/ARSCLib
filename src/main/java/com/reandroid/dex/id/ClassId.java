@@ -268,7 +268,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         if (classData != null) {
             return classData;
         }
-        Section<ClassData> section = getSection(SectionType.CLASS_DATA);
+        Section<ClassData> section = getOrCreateSection(SectionType.CLASS_DATA);
         classData = section.createItem();
         setClassData(classData);
         return classData;

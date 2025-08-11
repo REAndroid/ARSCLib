@@ -17,20 +17,51 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.data.AnnotationSet;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.pool.DexSectionPool;
 
-public class AnnotationSetSection extends DataSection<AnnotationSet>{
+public class AnnotationSetSection extends DataSection<AnnotationSet> {
 
     public AnnotationSetSection(IntegerPair countAndOffset, SectionType<AnnotationSet> sectionType) {
         super(countAndOffset, sectionType);
     }
 
     @Override
+    public boolean sort() {
+        AnnotationSet annotationSet = getEmptySet();
+        if (annotationSet != null && annotationSet.getIndex() != 0) {
+            getItemArray().moveTo(annotationSet, 0);
+            return true;
+        }
+        return false;
+    }
+
+    private AnnotationSet getEmptySet() {
+        DataSectionArray<AnnotationSet> array = getItemArray();
+        AnnotationSet annotationSet = array.getFirst();
+        if (annotationSet != null && annotationSet.isEmpty()) {
+            return annotationSet;
+        }
+        DexSectionPool<AnnotationSet> pool = getLoadedPool();
+        if (pool != null) {
+            return pool.get(AnnotationSetKey.empty());
+        }
+        int size = array.size();
+        for (int i = 0; i < size; i++) {
+            annotationSet = array.get(i);
+            if (annotationSet.isEmpty()) {
+                return annotationSet;
+            }
+        }
+        return null;
+    }
+    @Override
     protected void onRefreshed() {
         super.onRefreshed();
         ensureNotEmpty();
     }
-    private void ensureNotEmpty(){
-        if(!isEmpty()){
+    private void ensureNotEmpty() {
+        if (!isEmpty()) {
             return;
         }
         add(new AnnotationSet.EmptyAnnotationSet());
