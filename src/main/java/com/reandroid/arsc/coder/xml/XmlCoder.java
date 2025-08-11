@@ -311,6 +311,10 @@ public class XmlCoder {
             while (childes.hasNext()){
                 BAG_CHILD.encode(childes.next(), entry);
             }
+            ResTableMapEntry resTableMapEntry = entry.getResTableMapEntry();
+            if (resTableMapEntry != null) {
+                resTableMapEntry.sortIfStyle();
+            }
             checkVisibility(entry);
         }
         private boolean isBag(XMLElement element){

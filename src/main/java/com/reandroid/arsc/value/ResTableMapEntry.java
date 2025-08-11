@@ -92,6 +92,11 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         }
         return false;
     }
+    public void sortIfStyle() {
+        if (isStyle()) {
+            getValue().sort();
+        }
+    }
     public ValueType isAllSameValueType(){
         ValueType allValueType = null;
         Iterator<ResValueMap> iterator = getValue().iterator();
