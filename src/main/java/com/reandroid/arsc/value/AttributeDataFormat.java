@@ -159,26 +159,11 @@ public enum AttributeDataFormat {
     }
 
     public static AttributeDataFormat[] decodeValueTypes(int data){
-        AttributeDataFormat[] tmp = new AttributeDataFormat[VALUE_TYPES.length];
-        int length = 0;
-        for(AttributeDataFormat typeValue : VALUE_TYPES){
-            int mask = typeValue.getMask();
-            if(mask == data){
-                return new AttributeDataFormat[]{typeValue};
-            }
-            if(typeValue == ANY){
-                continue;
-            }
-            if((data & mask) == mask){
-                tmp[length] = typeValue;
-                length++;
-            }
-        }
-        if(length == 0){
-            return null;
-        }
-        AttributeDataFormat[] results = new AttributeDataFormat[length];
-        System.arraycopy(tmp, 0, results, 0, length);
+        final int length = Integer.bitCount(data & 0xffff);
+        if(length == 0)return null;
+        final AttributeDataFormat[] results = new AttributeDataFormat[length];
+        for(int i = 0, j = 0; i < VALUE_TYPES.length - 1 && j < results.length; ++i)
+            if(((data >> i) & 1) != 0) results[j++] = VALUE_TYPES[i];
         return results;
     }
     public static AttributeDataFormat[] parseValueTypes(String valuesTypes){
