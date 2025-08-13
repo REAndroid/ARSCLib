@@ -21,10 +21,15 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.id.*;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.TryBlock;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
@@ -33,12 +38,14 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArraySupplierIterator;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class MethodDef extends Def<MethodId> implements MethodProgram {
 
@@ -64,6 +71,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         return ElementType.METHOD;
     }
 
+    @Override
     public String getName() {
         MethodId methodId = getId();
         if (methodId != null) {
@@ -72,17 +80,46 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         return null;
     }
     public void setName(String name) {
-        if (Objects.equals(getName(), name)) {
+        if (ObjectsUtil.equals(getName(), name)) {
             return;
         }
         getId().setName(name);
     }
+    @Override
+    public ProtoKey getProtoKey() {
+        MethodId methodId = getId();
+        if (methodId != null) {
+            return methodId.getProto();
+        }
+        return null;
+    }
+    @Override
     public int getParametersCount() {
         MethodId methodId = getId();
         if (methodId != null) {
             return methodId.getParametersCount();
         }
         return 0;
+    }
+    @Override
+    public MethodParameterDef getParameter(int index) {
+        if (index < 0 || index >= getParametersCount()) {
+            return null;
+        }
+        return new MethodParameterDef(this, index);
+    }
+    @Override
+    public Iterator<MethodParameterDef> getParameters() {
+        return ArraySupplierIterator.of(new ArraySupplier<MethodParameterDef>() {
+            @Override
+            public MethodParameterDef get(int i) {
+                return MethodDef.this.getParameter(i);
+            }
+            @Override
+            public int getCount() {
+                return MethodDef.this.getParametersCount();
+            }
+        });
     }
     public int getParameterRegistersCount() {
         MethodId methodId = getId();
@@ -95,26 +132,8 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         }
         return 0;
     }
-    public MethodParameter getParameter(int index) {
-        if (index < 0 || index >= getParametersCount()) {
-            return null;
-        }
-        return new MethodParameter(this, index);
-    }
     public boolean hasParameter(int index) {
         return index >= 0 && index < getParametersCount();
-    }
-    public Iterator<MethodParameter> getParameters() {
-        return ArraySupplierIterator.of(new ArraySupplier<MethodParameter>() {
-            @Override
-            public MethodParameter get(int i) {
-                return MethodDef.this.getParameter(i);
-            }
-            @Override
-            public int getCount() {
-                return MethodDef.this.getParametersCount();
-            }
-        });
     }
     public AnnotationGroupKey getParametersAnnotation() {
         AnnotationsDirectory directory = getAnnotationsDirectory();
@@ -147,7 +166,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
 
     public void removeParameter(int index) {
-        MethodParameter parameter = getParameter(index);
+        MethodParameterDef parameter = getParameter(index);
         if (parameter == null) {
             return;
         }
@@ -370,7 +389,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
                         methodKey.getDeclaring() + ", method = " + methodKey.getName() +
                         methodKey.getProto() + "\n" + smaliMethodParameter);
             }
-            MethodParameter parameter = getParameter(index);
+            MethodParameterDef parameter = getParameter(index);
             parameter.fromSmali(smaliMethodParameter, false);
         }
         setParametersAnnotation(smaliMethod.getParameterAnnotations());

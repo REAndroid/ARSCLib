@@ -20,14 +20,18 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IndirectInteger;
+import com.reandroid.dex.common.DefIndex;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.ObjectsUtil;
@@ -82,28 +86,16 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         return SectionType.ANNOTATION_DIRECTORY;
     }
 
-    public void setClassAnnotations(AnnotationSetKey setKey) {
-        header.classAnnotation.setKey(setKey);
-    }
-    public AnnotationSetKey getClassAnnotation() {
-        AnnotationSetKey key = (AnnotationSetKey) header.classAnnotation.getKey();
-        if (key == null) {
-            key = AnnotationSetKey.empty();
-        }
-        return key;
-    }
-    public boolean hasClassAnnotation() {
-        AnnotationSet annotationSet = header.classAnnotation.getItem();
-        return annotationSet != null && !annotationSet.isEmpty();
-    }
-
     @Override
     public boolean isBlank() {
         return isEmpty();
     }
     public boolean isEmpty() {
-        return !hasClassAnnotation() &&
-                fieldsAnnotationMap.isEmpty() &&
+        AnnotationSet annotationSet = header.classAnnotation.getItem();
+        if (annotationSet != null && !annotationSet.isEmpty()) {
+            return false;
+        }
+        return fieldsAnnotationMap.isEmpty() &&
                 methodsAnnotationMap.isEmpty() &&
                 parametersAnnotationMap.isEmpty();
     }
@@ -117,35 +109,37 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     }
     public void link(Def<?> def) {
         if (def instanceof FieldDef) {
-            linkField((FieldDef) def);
-        }else if (def instanceof MethodDef) {
-            linkMethod((MethodDef) def);
+            fieldsAnnotationMap.link((FieldDef) def);
+        } else if (def instanceof MethodDef) {
+            methodsAnnotationMap.link((MethodDef) def);
         }
     }
-    public void linkField(FieldDef def) {
-        fieldsAnnotationMap.link(def);
-    }
-    public void linkMethod(MethodDef def) {
-        methodsAnnotationMap.link(def);
-        parametersAnnotationMap.link(def);
-    }
-    public void clear(Def<?> def) {
-        if (def instanceof FieldDef) {
-            fieldsAnnotationMap.remove((FieldDef) def);
-        } else if (def instanceof MethodDef) {
-            MethodDef methodDef = (MethodDef) def;
+    public void clear(DefIndex defIndex) {
+        if (defIndex instanceof ClassId) {
+            header.classAnnotation.setKey(null);
+        } else if (defIndex instanceof FieldDef) {
+            fieldsAnnotationMap.remove((FieldDef) defIndex);
+        } else if (defIndex instanceof MethodDef) {
+            MethodDef methodDef = (MethodDef) defIndex;
             methodsAnnotationMap.remove(methodDef);
             parametersAnnotationMap.remove(methodDef);
         }
     }
     public AnnotationSetKey get(DefIndex defIndex) {
+        if (defIndex instanceof ClassId) {
+            AnnotationSetKey key = (AnnotationSetKey) header.classAnnotation.getKey();
+            if (key == null) {
+                key = AnnotationSetKey.empty();
+            }
+            return key;
+        }
         Iterator<?> result;
         if (defIndex instanceof FieldDef) {
             result = fieldsAnnotationMap.getValueKeys((FieldDef) defIndex);
         } else if (defIndex instanceof MethodDef) {
             result = methodsAnnotationMap.getValueKeys((MethodDef) defIndex);
-        } else if (defIndex instanceof MethodParameter) {
-            return getParameter((MethodParameter) defIndex);
+        } else if (defIndex instanceof MethodParameterDef) {
+            return getParameter((MethodParameterDef) defIndex);
         } else {
             result = EmptyIterator.of();
         }
@@ -155,21 +149,73 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         if (value != null && value.isEmpty()) {
             value = null;
         }
-        if (defIndex instanceof FieldDef) {
+        if (defIndex instanceof ClassId) {
+            header.classAnnotation.setKey(value);
+        } else if (defIndex instanceof FieldDef) {
             fieldsAnnotationMap.put((FieldDef) defIndex, value);
         } else if (defIndex instanceof MethodDef) {
             methodsAnnotationMap.put((MethodDef) defIndex, value);
-        } else if (defIndex instanceof MethodParameter) {
-            setParameter((MethodParameter) defIndex, value);
+        } else if (defIndex instanceof MethodParameterDef) {
+            setParameter((MethodParameterDef) defIndex, value);
         }
     }
-    public AnnotationSetKey getParameter(MethodParameter parameter) {
+    public void remove(DefIndex defIndex) {
+        put(defIndex, null);
+    }
+    public AnnotationItemKey getAnnotation(DefIndex defIndex, TypeKey typeKey) {
+        AnnotationItem item = getAnnotationItem(defIndex, typeKey);
+        if (item != null) {
+            return item.getKey();
+        }
+        return null;
+    }
+    public Key getAnnotationValue(DefIndex defIndex, TypeKey typeKey, String name) {
+        AnnotationItem item = getAnnotationItem(defIndex, typeKey);
+        if (item != null) {
+            AnnotationElement element = item.getElement(name);
+            if (element != null) {
+                return element.getValue();
+            }
+        }
+        return null;
+    }
+    private AnnotationItem getAnnotationItem(DefIndex defIndex, TypeKey typeKey) {
+        if (defIndex instanceof ClassId) {
+            AnnotationSet set = header.classAnnotation.getItem();
+            if (set != null) {
+                return set.get(typeKey);
+            }
+            return null;
+        }
+        Iterator<AnnotationSet> iterator;
+        if (defIndex instanceof FieldDef) {
+            iterator = fieldsAnnotationMap.getValues((FieldDef) defIndex);
+        } else if (defIndex instanceof MethodDef) {
+            iterator = methodsAnnotationMap.getValues((MethodDef) defIndex);
+        } else if (defIndex instanceof MethodParameterDef) {
+            MethodParameterDef parameter = (MethodParameterDef) defIndex;
+            int index = parameter.getDefinitionIndex();
+            iterator = ComputeIterator.of(
+                    parametersAnnotationMap.getValues(parameter.getMethodDef()),
+                    group -> group.getItem(index));
+        } else {
+            iterator = EmptyIterator.of();
+        }
+        while (iterator.hasNext()) {
+            AnnotationItem item = iterator.next().get(typeKey);
+            if (item != null) {
+                return item;
+            }
+        }
+        return null;
+    }
+    public AnnotationSetKey getParameter(MethodParameterDef parameter) {
         int index = parameter.getDefinitionIndex();
         return AnnotationSetKey.combine(ComputeIterator.of(
                 parametersAnnotationMap.getValues(parameter.getMethodDef()),
                 group -> group.getItemKey(index)));
     }
-    public void setParameter(MethodParameter parameter, AnnotationSetKey key) {
+    public void setParameter(MethodParameterDef parameter, AnnotationSetKey key) {
         setParameters(
                 parameter.getMethodDef(),
                 getParameters(parameter.getMethodDef())
@@ -190,13 +236,17 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         parametersAnnotationMap.put(methodDef, key);
     }
     public boolean contains(DefIndex defIndex) {
+        if (defIndex instanceof ClassId) {
+            AnnotationSet set = header.classAnnotation.getItem();
+            return set != null && !set.isEmpty();
+        }
         if (defIndex instanceof FieldDef) {
             return fieldsAnnotationMap.contains((FieldDef) defIndex);
         } else if (defIndex instanceof MethodDef) {
             return methodsAnnotationMap.contains((MethodDef) defIndex);
-        } else if (defIndex instanceof MethodParameter) {
+        } else if (defIndex instanceof MethodParameterDef) {
             Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(
-                    ((MethodParameter) defIndex).getMethodDef());
+                    ((MethodParameterDef) defIndex).getMethodDef());
             int index = defIndex.getDefinitionIndex();
             while (iterator.hasNext()) {
                 AnnotationGroup groupBlock = iterator.next();

@@ -18,6 +18,8 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.common.DefIndex;
+import com.reandroid.dex.key.AnnotationsKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -26,7 +28,7 @@ import com.reandroid.utils.collection.FilterIterator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
+public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends AnnotationsList<?>>
         extends CountedBlockList<DirectoryEntry<DEFINITION, VALUE>>
         implements Iterable<DirectoryEntry<DEFINITION, VALUE>> {
 
@@ -49,7 +51,11 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         }
     }
     public void put(Key definitionKey, Key value) {
-        getOrCreateSingleEntry(definitionKey).setValue(value);
+        if (value == null) {
+            removeWithDefinitionKey(definitionKey);
+        } else {
+            getOrCreateSingleEntry(definitionKey).setValue(value);
+        }
     }
     public void add(DEFINITION definition, Key value) {
         if (!contains(definition, value)) {
@@ -93,6 +99,9 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         }
         return false;
     }
+    public void removeWithDefinitionKey(Key definitionKey) {
+        super.removeIf(entry -> entry.matchesDefinition(definitionKey));
+    }
     public void remove(DEFINITION definition) {
         super.removeIf(entry -> entry.equalsDefIndex(definition));
     }
@@ -113,7 +122,7 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
     public Iterator<VALUE> getValues(DEFINITION definition) {
         return ComputeIterator.of(getEntries(definition), DirectoryEntry::getValue);
     }
-    public Iterator<Key> getValueKeys(DEFINITION definition) {
+    public Iterator<AnnotationsKey<?>> getValueKeys(DEFINITION definition) {
         return ComputeIterator.of(getEntries(definition), DirectoryEntry::getValueKey);
     }
     public Iterator<VALUE> getValues() {

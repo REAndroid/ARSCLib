@@ -15,69 +15,60 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.data.MethodParameter;
+import com.reandroid.dex.data.MethodParameterDef;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.program.MethodParameterProgram;
-import com.reandroid.dex.program.ProgramElement;
+import com.reandroid.dex.program.MethodParameter;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-public class DexMethodParameter extends Dex implements AnnotatedDex, MethodParameterProgram {
+public class DexMethodParameter extends Dex implements AnnotatedDex, MethodParameter {
 
     private final DexMethod dexMethod;
-    private final MethodParameter parameter;
+    private final MethodParameterDef parameterDef;
 
-    public DexMethodParameter(DexMethod dexMethod, MethodParameter parameter) {
+    public DexMethodParameter(DexMethod dexMethod, MethodParameterDef parameterDef) {
         this.dexMethod = dexMethod;
-        this.parameter = parameter;
+        this.parameterDef = parameterDef;
     }
 
     @Override
     public TypeKey getKey() {
-        return getParameter().getKey();
+        return getProgramElement().getKey();
     }
 
     @Override
     public String getDebugName() {
-        return getParameter().getDebugName();
+        return getProgramElement().getDebugName();
     }
     @Override
     public void setDebugName(String name) {
-        getParameter().setDebugName(name);
+        getProgramElement().setDebugName(name);
     }
-    public DexClass getTypeClass(){
-        return getClassRepository().getDexClass(getType());
+    public TypeKey getType() {
+        return getKey();
     }
-    public TypeKey getType(){
-        return getParameter().getType();
+    @Override
+    public int getDefinitionIndex() {
+        return getProgramElement().getDefinitionIndex();
     }
-    public int getIndex(){
-        return getParameter().getDefinitionIndex();
+    @Override
+    public int getRegister() {
+        return getProgramElement().getRegister();
     }
+
     public DexMethod getDexMethod() {
         return dexMethod;
-    }
-    public MethodParameter getParameter() {
-        return parameter;
     }
 
     @Override
     public boolean uses(Key key) {
-        if(ObjectsUtil.equals(getType(), key)) {
+        if (ObjectsUtil.equals(getType(), key)) {
             return true;
         }
-        Iterator<DexAnnotation> iterator = getDexAnnotations();
-        while (iterator.hasNext()){
-            DexAnnotation dexAnnotation = iterator.next();
-            if(dexAnnotation.uses(key)){
-                return true;
-            }
-        }
-        return false;
+        return getAnnotation().uses(key);
     }
 
     @Override
@@ -87,26 +78,26 @@ public class DexMethodParameter extends Dex implements AnnotatedDex, MethodParam
 
     @Override
     public void removeSelf() {
-        getDexMethod().removeParameter(getIndex());
+        getDexMethod().removeParameter(getDefinitionIndex());
     }
     @Override
     public boolean isRemoved() {
         DexMethod dexMethod = getDexMethod();
-        return dexMethod.isRemoved() || !dexMethod.hasParameter(getIndex());
+        return dexMethod.isRemoved() || !dexMethod.hasParameter(getDefinitionIndex());
     }
 
     @Override
-    public ProgramElement getProgramElement() {
-        return getParameter();
+    public MethodParameterDef getProgramElement() {
+        return parameterDef;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getParameter().append(writer);
+        getProgramElement().append(writer);
     }
 
-    public static DexMethodParameter create(DexMethod dexMethod, MethodParameter parameter){
-        if(dexMethod != null && parameter != null){
+    public static DexMethodParameter create(DexMethod dexMethod, MethodParameterDef parameter) {
+        if (dexMethod != null && parameter != null) {
             return new DexMethodParameter(dexMethod, parameter);
         }
         return null;

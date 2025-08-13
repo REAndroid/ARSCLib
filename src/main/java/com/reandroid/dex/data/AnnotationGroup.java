@@ -24,7 +24,7 @@ import com.reandroid.utils.collection.IterableIterator;
 
 import java.util.Iterator;
 
-public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implements KeyReference {
+public class AnnotationGroup extends AnnotationsList<AnnotationSet> implements KeyReference {
 
     public AnnotationGroup() {
         super(SectionType.ANNOTATION_SET, UsageMarker.USAGE_ANNOTATION, null);

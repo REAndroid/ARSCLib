@@ -20,9 +20,8 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.dex.base.DexPositionAlign;
-import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.AnnotationsKey;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyList;
 import com.reandroid.dex.reference.IntegerDataReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.ObjectsUtil;
@@ -32,12 +31,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class IntegerDataItemList<T extends DataItem> extends DataItem implements Iterable<T> {
+public abstract class AnnotationsList<T extends DataItem> extends DataItem implements Iterable<T> {
 
     private final CountedBlockList<IntegerDataReference<T>> referenceList;
     private final DexPositionAlign positionAlign;
 
-    public IntegerDataItemList(SectionType<T> sectionType, int usageType, DexPositionAlign positionAlign) {
+    public AnnotationsList(SectionType<T> sectionType, int usageType, DexPositionAlign positionAlign) {
         super(3);
 
         this.positionAlign = positionAlign;
@@ -52,13 +51,9 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     }
 
     @Override
-    public KeyList<?> getKey() {
-        Key[] elements = new Key[size()];
-        getItemKeys(elements);
-        return checkKey(ArrayKey.create(elements));
-    }
+    public abstract AnnotationsKey<?> getKey();
     public void setKey(Key key) {
-        KeyList<?> keyList = (KeyList<?>) key;
+        AnnotationsKey<?> keyList = (AnnotationsKey<?>) key;
         int size = keyList.size();
         setSize(size);
         for (int i = 0; i < size; i++) {
@@ -91,10 +86,6 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         IntegerDataReference<T> item = createNext();
         item.setKey(key);
         return item.getItem();
-    }
-    public void addNewItem(T item) {
-        IntegerDataReference<T> reference = createNext();
-        reference.setItem(item);
     }
     public T addNewItem() {
         return createNext().getOrCreate();
@@ -201,7 +192,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        IntegerDataItemList<?> itemList = (IntegerDataItemList<?>)obj;
+        AnnotationsList<?> itemList = (AnnotationsList<?>)obj;
         int size = size();
         if (size != itemList.size()) {
             return false;

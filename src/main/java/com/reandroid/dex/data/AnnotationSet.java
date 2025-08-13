@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
+public class AnnotationSet extends AnnotationsList<AnnotationItem>
         implements KeyReference, SmaliFormat, PositionAlignedItem,
         FullRefresh, AnnotatedProgram {
 
@@ -209,6 +209,15 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
         return null;
     }
+    @Override
+    public Key getAnnotationValue(TypeKey typeKey, String name) {
+        DexValueBlock<?> value = getValue(typeKey, name);
+        if (value != null) {
+            return value.getKey();
+        }
+        return null;
+    }
+
     @Override
     public boolean removeAnnotation(TypeKey typeKey) {
         return remove(typeKey);

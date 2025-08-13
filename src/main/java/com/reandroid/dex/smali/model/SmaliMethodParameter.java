@@ -16,13 +16,13 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.program.MethodParameterProgram;
+import com.reandroid.dex.program.MethodParameter;
 import com.reandroid.dex.smali.*;
 import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
-public class SmaliMethodParameter extends SmaliDebug implements MethodParameterProgram, SmaliRegion {
+public class SmaliMethodParameter extends SmaliDebug implements MethodParameter, SmaliRegion {
 
     private final SmaliRegister smaliRegister;
     private StringKey name;
@@ -125,6 +125,7 @@ public class SmaliMethodParameter extends SmaliDebug implements MethodParameterP
             annotationSet.setParent(this);
         }
     }
+    @Override
     public int getDefinitionIndex() {
         SmaliMethod smaliMethod = getParentInstance(SmaliMethod.class);
         if (smaliMethod == null) {
@@ -137,17 +138,17 @@ public class SmaliMethodParameter extends SmaliDebug implements MethodParameterP
         return getDefinitionIndex(smaliMethod.isStatic(), protoKey);
     }
     public int getDefinitionIndex(boolean is_static, ProtoKey protoKey) {
-        int index = getRegisterNumber();
+        int index = getRegister();
         if (!is_static) {
             index = index - 1;
         }
         return protoKey.getParameterIndex(index);
     }
-    public int getRegisterNumber() {
+    public int getRegister() {
         return getSmaliRegister().getNumber();
     }
-    public void setRegisterNumber(int number) {
-        getSmaliRegister().setNumber(number);
+    public void setRegister(int register) {
+        getSmaliRegister().setNumber(register);
     }
 
     @Override

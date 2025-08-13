@@ -15,15 +15,18 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.common.DefIndex;
 import com.reandroid.dex.dalvik.DalvikSignature;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.DalvikSignatureKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.ParameterisedTypeKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.program.MethodParameterProgram;
+import com.reandroid.dex.program.MethodParameter;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -32,14 +35,23 @@ import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
-public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliRegion {
+public class MethodParameterDef implements DefIndex, MethodParameter, SmaliRegion {
 
     private final MethodDef methodDef;
     private final int index;
 
-    public MethodParameter(MethodDef methodDef, int index) {
+    public MethodParameterDef(MethodDef methodDef, int index) {
         this.methodDef = methodDef;
         this.index = index;
+    }
+
+    @Override
+    public TypeKey getKey() {
+        TypeId typeId = getTypeId();
+        if (typeId != null) {
+            return typeId.getKey();
+        }
+        return null;
     }
 
     @Override
@@ -75,21 +87,31 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
                 .getAnnotationsDirectory();
         return directory != null && directory.contains(this);
     }
+    @Override
+    public AnnotationItemKey getAnnotation(TypeKey typeKey) {
+        AnnotationsDirectory directory = getMethodDef()
+                .getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getAnnotation(this, typeKey);
+        }
+        return null;
+    }
+    @Override
+    public Key getAnnotationValue(TypeKey typeKey, String name) {
+        AnnotationsDirectory directory = getMethodDef()
+                .getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getAnnotationValue(this, typeKey, name);
+        }
+        return null;
+    }
 
     public void onRemoved() {
         clearAnnotations();
         clearDebugParameter();
     }
 
-    public TypeKey getType() {
-        TypeId typeId = getTypeId();
-        if (typeId != null) {
-            return typeId.getKey();
-        }
-        return null;
-    }
-
-    public TypeId getTypeId() {
+    private TypeId getTypeId() {
         ProtoId protoId = getMethodDef().getProtoId();
         if (protoId != null) {
             return protoId.getParameter(getDefinitionIndex());
@@ -104,7 +126,7 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
     public int getDefinitionIndex() {
         return index;
     }
-
+    @Override
     public int getRegister() {
         MethodDef methodDef = this.getMethodDef();
         int reg;
@@ -113,7 +135,7 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         } else {
             reg = 1;
         }
-        reg += methodDef.getKey().getRegister(getDefinitionIndex());
+        reg += methodDef.getProtoKey().getRegister(getDefinitionIndex());
         return reg;
     }
 
@@ -158,15 +180,6 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         DebugInfo debugInfo = getMethodDef().getDebugInfo();
         if (debugInfo != null) {
             return debugInfo.getDebugParameter(getDefinitionIndex());
-        }
-        return null;
-    }
-
-    @Override
-    public TypeKey getKey() {
-        TypeId typeId = getTypeId();
-        if (typeId != null) {
-            return typeId.getKey();
         }
         return null;
     }
@@ -217,7 +230,7 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         if (typeKey != null) {
             writer.appendComment(typeKey.getComment());
         } else {
-            writer.appendComment(getType().getTypeName());
+            writer.appendComment(getKey().getTypeName());
         }
         if (!has_annotation) {
             return;
@@ -241,7 +254,7 @@ public class MethodParameter implements DefIndex, MethodParameterProgram, SmaliR
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        MethodParameter parameter = (MethodParameter) obj;
+        MethodParameterDef parameter = (MethodParameterDef) obj;
         return index == parameter.index && this.getMethodDef() == parameter.getMethodDef();
     }
 

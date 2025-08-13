@@ -195,7 +195,7 @@ public class AnnotationGroupKey extends AnnotationsKey<AnnotationSetKey> {
         append(false, ProtoKey.create(TypeKey.TYPE_V, fakeParams), writer);
     }
     public void append(MethodProgram methodProgram, SmaliWriter writer) throws IOException {
-        append(methodProgram.isStatic(), methodProgram.getKey().getProto(), writer);
+        append(methodProgram.isStatic(), methodProgram.getProtoKey(), writer);
     }
     public void append(boolean is_static, ProtoKey protoKey, SmaliWriter writer) throws IOException {
         if (isBlank()) {

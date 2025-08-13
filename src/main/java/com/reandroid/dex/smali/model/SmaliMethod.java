@@ -19,7 +19,12 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -90,6 +95,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public SmaliRegistersCount getSmaliRegistersCount() {
         return smaliRegistersCount;
     }
+    @Override
     public ProtoKey getProtoKey() {
         return protoKey;
     }
@@ -100,9 +106,23 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public SmaliParamSet getParamSet() {
         return paramSet;
     }
+    @Override
+    public int getParametersCount() {
+        ProtoKey protoKey = getProtoKey();
+        if (protoKey != null) {
+            return protoKey.getParametersCount();
+        }
+        return getParamSet().size();
+    }
+    @Override
+    public SmaliMethodParameter getParameter(int i) {
+        return getParamSet().get(i);
+    }
+    @Override
     public Iterator<SmaliMethodParameter> getParameters() {
         return getParamSet().iterator();
     }
+
     public SmaliCodeSet getCodeSet() {
         return codeSet;
     }

@@ -18,6 +18,7 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.common.DefIndex;
 import com.reandroid.dex.common.EditableItem;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.IdDefinition;
@@ -26,6 +27,7 @@ import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.ProgramKey;
@@ -94,14 +96,30 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         AnnotationsDirectory directory = getAnnotationsDirectory();
         return directory != null && directory.contains(this);
     }
+    @Override
+    public AnnotationItemKey getAnnotation(TypeKey typeKey) {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getAnnotation(this, typeKey);
+        }
+        return null;
+    }
+    @Override
+    public Key getAnnotationValue(TypeKey typeKey, String name) {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getAnnotationValue(this, typeKey, name);
+        }
+        return null;
+    }
 
     @Override
     public Iterator<? extends Modifier> getModifiers() {
         return CombiningIterator.two(getAccessFlags(), getHiddenApiFlags());
     }
-    public Iterator<HiddenApiFlag> getHiddenApiFlags(){
+    public Iterator<HiddenApiFlag> getHiddenApiFlags() {
         HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
-        if(flagValue != null) {
+        if (flagValue != null) {
             return flagValue.iterator();
         }
         return EmptyIterator.of();
@@ -150,9 +168,9 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         this.hiddenApiFlagValue = hiddenApiFlagValue;
     }
 
-    public void removeSelf(){
+    public void removeSelf() {
         DefArray<Def<T>> array = getParentArray();
-        if(array != null){
+        if (array != null) {
             array.remove(this);
         }
     }
@@ -164,7 +182,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         T id = getId();
         return id == null || id.isRemoved();
     }
-    void onRemove(){
+    void onRemove() {
         HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
         if (flagValue != null) {
             this.linkHiddenApiFlagValueInternal(null);
@@ -177,58 +195,58 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     @Override
     public abstract ProgramKey getKey();
 
-    public void setKey(Key key){
+    public void setKey(Key key) {
         setItem(key);
     }
 
-    public AnnotationsDirectory getAnnotationsDirectory(){
+    public AnnotationsDirectory getAnnotationsDirectory() {
         ClassId classId = getClassId();
         if (classId != null) {
             return classId.getAnnotationsDirectory();
         }
         return null;
     }
-    public AnnotationsDirectory getOrCreateUniqueAnnotationsDirectory(){
+    public AnnotationsDirectory getOrCreateUniqueAnnotationsDirectory() {
         ClassId classId = getClassId();
-        if(classId != null){
+        if (classId != null) {
             return classId.getOrCreateUniqueAnnotationsDirectory();
         }
         return null;
     }
     public ClassId getClassId() {
         DefArray<Def<T>> array = getParentArray();
-        if(array != null){
+        if (array != null) {
             ClassId classId = array.getClassId();
-            if(classId != null){
+            if (classId != null) {
                 return classId;
             }
         }
         SectionList sectionList = getSectionList();
-        if(sectionList == null || sectionList.isReading()){
+        if (sectionList == null || sectionList.isReading()) {
             return null;
         }
         TypeKey defining = getDefining();
-        if(defining == null){
+        if (defining == null) {
             return null;
         }
         DexSectionPool<ClassId> pool = getPool(SectionType.CLASS_ID);
-        if(pool == null){
+        if (pool == null) {
             return null;
         }
         ClassId classId = pool.get(defining);
-        if(classId == null) {
+        if (classId == null) {
             return null;
         }
         ClassData classData = getClassData();
-        if(classData == null){
+        if (classData == null) {
             return null;
         }
         classData.setClassId(classId);
         return classId;
     }
-    public TypeKey getDefining(){
+    public TypeKey getDefining() {
         Key key = getKey();
-        if(key != null){
+        if (key != null) {
             return key.getDeclaring();
         }
         return null;
@@ -244,12 +262,12 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         accessFlags.set(value);
     }
     @Override
-    public T getId(){
+    public T getId() {
         return mDefId;
     }
     void setItem(Key key) {
         T item = getId();
-        if(item != null && key.equals(item.getKey())){
+        if (item != null && key.equals(item.getKey())) {
             return;
         }
         item = getOrCreateSection(sectionType).getOrCreate(key);
@@ -262,17 +280,17 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
 
     @Override
     public int getDefinitionIndex() {
-        if(!mCachedIndexUpdated){
+        if (!mCachedIndexUpdated) {
             mCachedIndexUpdated = true;
             mCachedIndex = calculateDefinitionIndex();
         }
         return mCachedIndex;
     }
-    private int calculateDefinitionIndex(){
+    private int calculateDefinitionIndex() {
         DefArray<?> parentArray = getParentArray();
-        if(parentArray != null){
+        if (parentArray != null) {
             Def<?> previous = parentArray.get(getIndex() - 1);
-            if(previous != null){
+            if (previous != null) {
                 return getRelativeIdValue() + previous.getDefinitionIndex();
             }
         }
@@ -280,17 +298,17 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     private int getPreviousIdIndex() {
         DefArray<?> parentArray = getParentArray();
-        if(parentArray != null){
+        if (parentArray != null) {
             Def<?> previous = parentArray.get(getIndex() - 1);
-            if(previous != null){
+            if (previous != null) {
                 return previous.getDefinitionIndex();
             }
         }
         return 0;
     }
-    private ClassData getClassData(){
+    private ClassData getClassData() {
         DefArray<Def<T>> array = getParentArray();
-        if(array != null){
+        if (array != null) {
             return array.getClassData();
         }
         return null;
@@ -305,9 +323,9 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         super.onReadBytes(reader);
         cacheItem();
     }
-    private void cacheItem(){
+    private void cacheItem() {
         this.mDefId = getSectionItem(sectionType, getDefinitionIndex());
-        if(this.mDefId != null){
+        if (this.mDefId != null) {
             this.mDefId.addUsageType(IdItem.USAGE_DEFINITION);
         }
     }
@@ -317,7 +335,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         updateIndex();
         updateHiddenApiFlag();
     }
-    private void updateIndex(){
+    private void updateIndex() {
         resetIndex();
         T item = this.mDefId;
         item = item.getReplace();
@@ -327,7 +345,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         relativeId.set(index);
         item.addUsageType(IdItem.USAGE_DEFINITION);
     }
-    void resetIndex(){
+    void resetIndex() {
         mCachedIndexUpdated = false;
     }
     private void updateHiddenApiFlag() {
@@ -337,10 +355,10 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         }
     }
 
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         Key key = getKey();
         Key key2 = key.replaceKey(search, replace);
-        if(key != key2){
+        if (key != key2) {
             setItem(key2);
         }
     }
@@ -350,11 +368,11 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
 
     }
 
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return SingleIterator.of(getId());
     }
 
-    public void merge(Def<?> def){
+    public void merge(Def<?> def) {
         setItem(def.getKey());
         setAccessFlagsValue(def.getAccessFlagsValue());
         HiddenApiFlagValue flagValue = def.getHiddenApiFlagValue();
@@ -368,7 +386,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
 
     @Override
     public int compareTo(Def<T> other) {
-        if(other == null){
+        if (other == null) {
             return -1;
         }
         return SectionTool.compareIdx(getId(), other.getId());

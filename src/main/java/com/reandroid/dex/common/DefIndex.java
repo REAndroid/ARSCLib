@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.data;
+package com.reandroid.dex.common;
 
 import com.reandroid.dex.key.ProgramKey;
 

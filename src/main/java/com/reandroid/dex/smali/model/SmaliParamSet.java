@@ -31,10 +31,10 @@ public class SmaliParamSet extends SmaliSet<SmaliMethodParameter> {
 
     public boolean isDuplicateRegister(SmaliMethodParameter parameter) {
         int size = size();
-        int number = parameter.getRegisterNumber();
+        int number = parameter.getRegister();
         for (int i = 0; i < size; i++) {
             SmaliMethodParameter p = get(i);
-            if (p != parameter && number == p.getRegisterNumber()) {
+            if (p != parameter && number == p.getRegister()) {
                 return true;
             }
         }

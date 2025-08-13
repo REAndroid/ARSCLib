@@ -19,6 +19,8 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.common.DefIndex;
+import com.reandroid.dex.key.AnnotationsKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
@@ -26,7 +28,7 @@ import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
-public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
+public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends AnnotationsList<?>>
         extends DexBlockItem
         implements BlockRefresh, Comparable<DirectoryEntry<?, ?>> {
 
@@ -142,7 +144,7 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         setDefinition(definition);
         setValue(value);
     }
-    public Key getValueKey() {
+    public AnnotationsKey<?> getValueKey() {
         VALUE value = getValue();
         if (value != null) {
             return value.getKey();
