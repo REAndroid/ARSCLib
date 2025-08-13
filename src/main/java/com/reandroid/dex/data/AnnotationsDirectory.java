@@ -111,7 +111,9 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         if (def instanceof FieldDef) {
             fieldsAnnotationMap.link((FieldDef) def);
         } else if (def instanceof MethodDef) {
-            methodsAnnotationMap.link((MethodDef) def);
+            MethodDef methodDef = (MethodDef) def;
+            methodsAnnotationMap.link(methodDef);
+            parametersAnnotationMap.link(methodDef);
         }
     }
     public void clear(DefIndex defIndex) {
