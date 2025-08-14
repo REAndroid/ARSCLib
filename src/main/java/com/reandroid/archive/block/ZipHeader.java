@@ -85,7 +85,7 @@ public class ZipHeader extends ZipBlock{
     }
 
     public static boolean isZip64Length(long length){
-        return (length == 0xffffffff || (length & 0xffffffff00000000L) != 0);
+        return (length == 0xffffffffL || (length >>> 32) != 0);
     }
     private static final int OFFSET_signature = 0;
 }
