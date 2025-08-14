@@ -41,8 +41,7 @@ public enum AttributeType {
     }
 
     public boolean isPlural(){
-        int i = id & 0xffff;
-        return i>=4 && i<=9;
+        return (id & 0xc) != 0;
     }
 
     public String getName(){
