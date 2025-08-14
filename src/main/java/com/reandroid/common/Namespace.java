@@ -26,7 +26,7 @@ public interface Namespace {
         return isValidUri(uri) && isValidPrefix(prefix);
     }
     static boolean isValidUri(String uri, int resourceId) {
-        int packageId = (resourceId >> 24 ) & 0xff;
+        int packageId = resourceId >>> 24;
         if(packageId == 0) {
             if(StringsUtil.isEmpty(uri)) {
                 return true;
@@ -98,7 +98,7 @@ public interface Namespace {
         if(resourceId == 0) {
             return null;
         }
-        int packageId = (resourceId >> 24) & 0xff;
+        int packageId = resourceId >>> 24;
         if(packageId == 0x1) {
             return PREFIX_ANDROID;
         }else if(packageId != 0){
@@ -111,7 +111,7 @@ public interface Namespace {
         if(resourceId == 0) {
             return null;
         }
-        int packageId = (resourceId >> 24) & 0xff;
+        int packageId = resourceId >>> 24;
         if(packageId == 0x1) {
             return URI_ANDROID;
         }else if(packageId != 0){
