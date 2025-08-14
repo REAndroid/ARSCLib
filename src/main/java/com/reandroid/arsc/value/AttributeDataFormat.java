@@ -159,11 +159,11 @@ public enum AttributeDataFormat {
     }
 
     public static AttributeDataFormat[] decodeValueTypes(int data){
-        data &= 0xffff;
+        data &= 0xff;
         if(data == 0){
             return null;
         }
-        if(data == 0xffff){
+        if(data == 0xff){
             return new AttributeDataFormat[]{AttributeDataFormat.ANY};
         }
         final int length = Integer.bitCount(data);
