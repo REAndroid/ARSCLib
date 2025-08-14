@@ -159,8 +159,10 @@ public enum AttributeDataFormat {
     }
 
     public static AttributeDataFormat[] decodeValueTypes(int data){
-        final int length = Integer.bitCount(data & 0xffff);
-        if(length == 0)return null;
+        data &= 0xffff;
+        if(data == 0) return null;
+        if(data == 0xffff) return new AttributeDataFormat[]{AttributeDataFormat.ANY};
+        final int length = Integer.bitCount(data);
         final AttributeDataFormat[] results = new AttributeDataFormat[length];
         for(int i = 0, j = 0; i < VALUE_TYPES.length - 1 && j < results.length; ++i)
             if(((data >> i) & 1) != 0) results[j++] = VALUE_TYPES[i];
