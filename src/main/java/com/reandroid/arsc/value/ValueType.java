@@ -53,20 +53,17 @@ public enum ValueType {
         return typeName;
     }
     public boolean isColor(){
-        return this == COLOR_ARGB8
-                || this == COLOR_RGB8
-                || this == COLOR_ARGB4
-                || this == COLOR_RGB4;
+        //a hack for color types check
+        return this.mByte >> 3 == 0b11;
     }
     public boolean isInteger(){
-        return this == DEC
-                || this == HEX;
+        //a hack for integer types check
+        return (this.mByte ^ 0x10) <= 1;
     }
     public boolean isReference(){
-        return this == REFERENCE
-                || this == ATTRIBUTE
-                || this == DYNAMIC_REFERENCE
-                || this == DYNAMIC_ATTRIBUTE;
+        //using bitset lookup to check reference types
+        final int bitmask = 0b110000110;
+        return (bitmask >> this.mByte & 1) == 1;
     }
 
     public static ValueType valueOf(byte b){
