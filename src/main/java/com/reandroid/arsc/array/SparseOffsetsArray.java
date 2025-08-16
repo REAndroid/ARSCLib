@@ -77,7 +77,8 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
         }else {
             int idx  = get(index);
             idx = idx & 0xffff;
-            offset = (offset >>> 2) << 18;
+            //use unsigned shifting to combine unsigning and division by 4
+            offset = (offset >>> 2) << 16;
             value = offset | idx;
         }
         super.put(index, value);
