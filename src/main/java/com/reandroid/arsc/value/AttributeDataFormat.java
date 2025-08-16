@@ -157,7 +157,10 @@ public enum AttributeDataFormat {
         }
         return result;
     }
-
+    /** Decodes value types ignoring {@link #ANY} */
+    public static AttributeDataFormat[] decodeValueTypes(byte data) {
+        return decodeValueTypes((int) data);
+    }
     public static AttributeDataFormat[] decodeValueTypes(int data) {
         if ((data & 0xffff) == 0xffff) {
             return new AttributeDataFormat[]{ANY};

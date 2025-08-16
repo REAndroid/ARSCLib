@@ -553,7 +553,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             lenBytes[3] = (byte) (high >> 8);
             lenBytes[2] = (byte) low;
             low = rem & 0xff;
-            high = (rem & 0xff00) >> 8;
+            high = rem >>> 8;
             lenBytes[1] = (byte) (high | 0x80);
             lenBytes[0] = (byte) low;
         } else {

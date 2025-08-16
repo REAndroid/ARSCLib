@@ -22,6 +22,7 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class StyleItemListEnd extends BlockItem implements BlockRefresh {
 
@@ -33,22 +34,15 @@ public class StyleItemListEnd extends BlockItem implements BlockRefresh {
     }
 
     private boolean updateSize() {
-        int size;
-        if (stylesCount.get() != 0) {
-            size = 8;
-        } else {
-            size = 0;
+        if(stylesCount.get() == 0){
+            setBytesLength(0, false);
+            return false;
         }
+
+        final int size = 8;
         setBytesLength(size, false);
-        if (size != 0) {
-            byte b = (byte) 0xff;
-            byte[] bytes = getBytesInternal();
-            for (int i = 0; i < size; i++) {
-                bytes[i] = b;
-            }
-            return true;
-        }
-        return false;
+        Arrays.fill(getBytesInternal(), 0, size, (byte) 0xff);
+        return true;
     }
     @Override
     public void refresh() {

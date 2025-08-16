@@ -311,7 +311,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public Iterator<Entry> getEntries(int resourceId, boolean skipNull){
 
-        final int packageId = (resourceId >> 24) & 0xff;
+        final int packageId = resourceId >>> 24;
         final int typeId = (resourceId >> 16) & 0xff;
         final int entryId = resourceId & 0xffff;
         return new IterableIterator<PackageBlock, Entry>(getAllPackages(packageId)) {

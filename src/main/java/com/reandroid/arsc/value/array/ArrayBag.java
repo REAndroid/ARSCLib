@@ -156,7 +156,7 @@
          while (iterator.hasNext()) {
              ResValueMap resValueMap = iterator.next();
              int name = resValueMap.getNameId();
-             int high = (name >> 16) & 0xffff;
+             int high = name >>> 16;
              if(high != 0x0100){
                  return false;
              }

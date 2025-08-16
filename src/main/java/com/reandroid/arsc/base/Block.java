@@ -148,7 +148,7 @@ public abstract class Block {
         if((offset + 4) > bytes.length){
             return;
         }
-        bytes[offset + 3]= (byte) (val >>> 24 & 0xff);
+        bytes[offset + 3]= (byte) (val >>> 24);
         bytes[offset + 2]= (byte) (val >>> 16 & 0xff);
         bytes[offset + 1]= (byte) (val >>> 8 & 0xff);
         bytes[offset]= (byte) (val & 0xff);
@@ -240,7 +240,7 @@ public abstract class Block {
         if((offset + 4) > bytes.length) {
             return;
         }
-        bytes[offset]= (byte) (value >>> 24 & 0xff);
+        bytes[offset]= (byte) (value >>> 24);
         bytes[offset + 1]= (byte) (value >>> 16 & 0xff);
         bytes[offset + 2]= (byte) (value >>> 8 & 0xff);
         bytes[offset + 3]= (byte) (value & 0xff);

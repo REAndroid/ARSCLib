@@ -261,7 +261,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier> {
         }
 
         int resourceId = (int) Long.decode(resourceIdStr).longValue();
-        int packageId = (resourceId >> 24) & 0xff;
+        int packageId = resourceId >>> 24;
         int typeId = (resourceId >> 16) & 0xff;
         int entryId = resourceId & 0xffff;
 

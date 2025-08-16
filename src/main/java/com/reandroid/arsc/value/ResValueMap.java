@@ -39,8 +39,8 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
     }
     public int getArrayIndex(){
         int name = getNameId();
-        int high = name & 0xffff0000;
-        if(high != 0x01000000 && high != 0x02000000){
+        int high = name >>> 16;
+        if(high != 0x0100 && high != 0x0200){
             return -1;
         }
         return name & 0xffff;

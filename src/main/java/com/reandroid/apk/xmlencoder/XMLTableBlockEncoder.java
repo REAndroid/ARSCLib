@@ -268,7 +268,7 @@ public class XMLTableBlockEncoder {
             logMessage("WARN: failed to resolve: " + ref);
             return;
         }
-        int packageId = (resourceId >> 24 ) & 0xff;
+        int packageId = resourceId >>> 24;
         this.mMainPackageId = packageId;
         logMessage("Main package id initialized: id = "
                 + HexUtil.toHex2((byte)packageId) + ", from: " + ref );

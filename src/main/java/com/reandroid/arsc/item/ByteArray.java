@@ -106,7 +106,7 @@ public class ByteArray extends BlockItem {
         if((offset+4)>bts.length){
             return;
         }
-        bts[offset+3]= (byte) (val >>> 24 & 0xff);
+        bts[offset+3]= (byte) (val >>> 24);
         bts[offset+2]= (byte) (val >>> 16 & 0xff);
         bts[offset+1]= (byte) (val >>> 8 & 0xff);
         bts[offset]= (byte) (val & 0xff);
