@@ -17,6 +17,7 @@ package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.sections.DexContainerBlock;
 
 public class DexContainerInfo extends CountAndOffsetV41 implements BlockRefresh {
 
@@ -40,13 +41,13 @@ public class DexContainerInfo extends CountAndOffsetV41 implements BlockRefresh 
         if (isNull()) {
             return;
         }
-        DexHeader dexHeader = getParentInstance(DexHeader.class);
-        if (dexHeader == null) {
+        DexContainerBlock containerBlock = getParentInstance(DexContainerBlock.class);
+        if (containerBlock == null) {
             return;
         }
-        setFileSize(dexHeader.getFileSize());
+        setFileSize(containerBlock.getFileSize());
 
-        setOffset(dexHeader.getOffset());
+        setOffset(getParentInstance(DexHeader.class).getOffset());
     }
     @Override
     public String toString() {

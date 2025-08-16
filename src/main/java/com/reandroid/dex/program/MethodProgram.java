@@ -17,16 +17,41 @@ package com.reandroid.dex.program;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
 
 import java.lang.annotation.ElementType;
+import java.util.Iterator;
 
 public interface MethodProgram extends AccessibleProgram {
 
     @Override
     MethodKey getKey();
+    MethodParameter getParameter(int i);
+    Iterator<? extends MethodParameter> getParameters();
     @Override
     default ElementType getElementType() {
         return ElementType.METHOD;
+    }
+    default int getParametersCount() {
+        ProtoKey protoKey = getProtoKey();
+        if (protoKey != null) {
+            return protoKey.getParametersCount();
+        }
+        return 0;
+    }
+    default ProtoKey getProtoKey() {
+        MethodKey key = getKey();
+        if (key != null) {
+            return key.getProto();
+        }
+        return null;
+    }
+    default String getName() {
+        MethodKey key = getKey();
+        if (key != null) {
+            return key.getName();
+        }
+        return null;
     }
 
     default boolean isConstructor() {

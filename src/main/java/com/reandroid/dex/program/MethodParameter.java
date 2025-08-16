@@ -15,9 +15,16 @@
  */
 package com.reandroid.dex.program;
 
+import com.reandroid.dex.key.TypeKey;
+
 import java.lang.annotation.ElementType;
 
-public interface MethodParameterProgram extends ProgramElement {
+public interface MethodParameter extends ProgramElement {
+
+    @Override
+    TypeKey getKey();
+    int getDefinitionIndex();
+    int getRegister();
 
     String getDebugName();
     void setDebugName(String name);

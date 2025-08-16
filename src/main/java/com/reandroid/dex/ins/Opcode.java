@@ -1452,7 +1452,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
 
         @Override
         public RegisterFormat getRegisterFormat() {
-            return RegisterFormat.WRITE_READ;
+            return RegisterFormat.READ_READ;
         }
         @Override
         public OperandType getOperandType() {

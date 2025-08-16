@@ -8,6 +8,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -76,6 +77,17 @@ public class DebugStartLocalExtended extends DebugStartLocal {
     public void fromSmali(Smali smali) {
         super.fromSmali(smali);
         setSignature(((SmaliDebugLocal)smali).getSignature());
+    }
+
+    @Override
+    int compareDetailElement(DebugElement element) {
+        int i = super.compareDetailElement(element);
+        if (i != 0) {
+            return i;
+        }
+        DebugStartLocalExtended debug = (DebugStartLocalExtended) element;
+        i = CompareUtil.compare(getSignatureKey(), debug.getSignatureKey());
+        return i;
     }
 
     @Override

@@ -15,8 +15,31 @@
  */
 package com.reandroid.utils.collection;
 
+import com.reandroid.utils.NumbersUtil;
+
 public class ArrayUtil {
 
+    public static void fill(Object[] elements, Object item) {
+        if (elements == null) {
+            return;
+        }
+        fill(elements, item, 0, elements.length);
+    }
+    public static void fill(Object[] elements, Object item, int start) {
+        if (elements == null) {
+            return;
+        }
+        fill(elements, item, start, elements.length - start);
+    }
+    public static void fill(Object[] elements, Object item, int start, int length) {
+        if (elements == null) {
+            return;
+        }
+        int end = NumbersUtil.min(start + length, elements.length);
+        for(int i = start; i < end; i++) {
+            elements[i] = item;
+        }
+    }
     public static void reverse(Object[] elements) {
         reverse(elements, 0, elements.length);
     }

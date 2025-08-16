@@ -17,28 +17,67 @@ package com.reandroid.dex.data;
 
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.ArrayKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.util.Iterator;
 
-public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implements KeyReference {
+public class AnnotationGroup extends AnnotationsList<AnnotationSet> implements KeyReference {
 
     public AnnotationGroup() {
         super(SectionType.ANNOTATION_SET, UsageMarker.USAGE_ANNOTATION, null);
     }
 
     @Override
-    public ArrayKey getKey() {
-        return (ArrayKey) checkKey(super.getKey());
+    public AnnotationGroupKey getKey() {
+        AnnotationGroupKey groupKey;
+        int size = size();
+        if (size == 0) {
+            groupKey = AnnotationGroupKey.empty();
+        } else {
+            AnnotationSetKey[] elements = new AnnotationSetKey[size];
+            getItemKeys(elements);
+            groupKey = AnnotationGroupKey.of(elements);
+        }
+        return checkKey(groupKey);
     }
+
     @Override
-    public void setKey(Key key){
+    public void setKey(Key key) {
         super.setKey(key);
     }
+
+    @Override
+    public AnnotationSetKey getItemKey(int i) {
+        return (AnnotationSetKey) super.getItemKey(i);
+    }
+
+    @Override
+    public AnnotationSet setItemKeyAt(int index, Key key) {
+        if (key != null && ((AnnotationSetKey) key).isEmpty()) {
+            key = null;
+        }
+        return super.setItemKeyAt(index, key);
+    }
+
+    @Override
+    public boolean isBlank() {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            AnnotationSet item = getItem(i);
+            if (item != null && !item.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean isEmptyAt(int i) {
+        AnnotationSet item = getItem(i);
+        return item == null || item.isEmpty();
+    }
+
     @Override
     public SectionType<AnnotationGroup> getSectionType() {
         return SectionType.ANNOTATION_GROUP;
@@ -46,7 +85,7 @@ public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implemen
     @Override
     void removeNulls() {
     }
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         for(AnnotationSet annotationSet : this){
             annotationSet.replaceKeys(search, replace);
         }
@@ -68,7 +107,18 @@ public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implemen
     }
 
     @Override
+    protected boolean elementsAreEqual(AnnotationSet t1, AnnotationSet t2) {
+        if (t1 == null) {
+            return t2 == null || t2.isEmpty();
+        }
+        if (t2 == null) {
+            return t1.isEmpty();
+        }
+        return t1.equals(t2);
+    }
+
+    @Override
     public String toString() {
-        return getKey().toString("\n");
+        return size() + " [" + StringsUtil.join(iterator(), ", ") + "]";
     }
 }

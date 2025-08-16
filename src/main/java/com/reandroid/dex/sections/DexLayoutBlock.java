@@ -55,17 +55,17 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         this.interfaceMap = new MultiMap<>();
     }
 
-    public int getVersion(){
+    public int getVersion() {
         return getHeader().getVersion();
     }
-    public void setVersion(int version){
+    public void setVersion(int version) {
         getHeader().setVersion(version);
     }
-    public Iterator<Marker> getMarkers(){
+    public Iterator<Marker> getMarkers() {
         return Marker.parse(getSection(SectionType.STRING_ID));
     }
 
-    public Iterator<ClassId> getExtendingOrImplementing(TypeKey typeKey){
+    public Iterator<ClassId> getExtendingOrImplementing(TypeKey typeKey) {
         Iterator<ClassId> iterator = CombiningIterator.two(getExtendingClassIds(typeKey),
                 getImplementationIds(typeKey));
         return new IterableIterator<ClassId, ClassId>(iterator) {
@@ -75,44 +75,44 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
             }
         };
     }
-    public Iterator<ClassId> getExtendingClassIds(TypeKey typeKey){
-        if(extendingClassMap.size() == 0){
+    public Iterator<ClassId> getExtendingClassIds(TypeKey typeKey) {
+        if (extendingClassMap.size() == 0) {
             loadExtendingClassMap();
         }
         return this.extendingClassMap.getAll(typeKey);
     }
-    public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass){
-        if(interfaceMap.size() == 0){
+    public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass) {
+        if (interfaceMap.size() == 0) {
             loadInterfacesMap();
         }
         return this.interfaceMap.getAll(interfaceClass);
     }
 
-    public void clear(){
+    public void clear() {
         extendingClassMap.clear();
         interfaceMap.clear();
         getSectionList().clear();
     }
-    private void loadExtendingClassMap(){
+    private void loadExtendingClassMap() {
         MultiMap<TypeKey, ClassId> superClassMap = this.extendingClassMap;
         superClassMap.clear();
         Section<ClassId> section = getSectionList().getSection(SectionType.CLASS_ID);
-        if(section == null) {
+        if (section == null) {
             return;
         }
         superClassMap.setInitialSize(section.getCount());
         for (ClassId classId : section) {
             TypeKey typeKey = classId.getSuperClassKey();
-            if(!DexUtils.isJavaFramework(typeKey.getTypeName())){
+            if (!DexUtils.isJavaFramework(typeKey.getTypeName())) {
                 superClassMap.put(typeKey, classId);
             }
         }
     }
-    private void loadInterfacesMap(){
+    private void loadInterfacesMap() {
         MultiMap<TypeKey, ClassId> interfaceMap = this.interfaceMap;
         interfaceMap.clear();
         Section<ClassId> section = getSectionList().getSection(SectionType.CLASS_ID);
-        if(section == null) {
+        if (section == null) {
             return;
         }
         for (ClassId classId : section) {
@@ -123,19 +123,19 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
             }
         }
     }
-    public Iterator<StringId> getStrings(){
+    public Iterator<StringId> getStrings() {
         return getItems(SectionType.STRING_ID);
     }
     public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
         Section<T1> section = getSectionList().getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.clonedIterator();
         }
         return EmptyIterator.of();
     }
     public<T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType) {
         Section<T1> section = getSectionList().getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.iterator();
         }
         return EmptyIterator.of();
@@ -201,7 +201,7 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         }
         return null;
     }
-    public void sortSection(SectionType<?>[] order){
+    public void sortSection(SectionType<?>[] order) {
         refresh();
         getSectionList().sortSection(order);
         refresh();
@@ -209,57 +209,57 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     public int clearEmptySections() {
         return getSectionList().clearEmptySections();
     }
-    public void clearPoolMap(SectionType<?> sectionType){
+    public void clearPoolMap(SectionType<?> sectionType) {
         getSectionList().clearPoolMap(sectionType);
     }
-    public void clearPoolMap(){
+    public void clearPoolMap() {
         extendingClassMap.clear();
         interfaceMap.clear();
         getSectionList().clearPoolMap();
     }
-    public boolean sortStrings(){
+    public boolean sortStrings() {
         return getSectionList().sortStrings();
     }
 
-    public <T1 extends SectionItem> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
+    public <T1 extends SectionItem> Iterator<T1> getAll(SectionType<T1> sectionType, Key key) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.getAll(key);
         }
         return EmptyIterator.of();
     }
-    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.removeEntries(filter);
         }
         return false;
     }
-    public <T1 extends SectionItem> boolean removeWithKeys(SectionType<T1> sectionType, Predicate<? super Key> filter){
+    public <T1 extends SectionItem> boolean removeWithKeys(SectionType<T1> sectionType, Predicate<? super Key> filter) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.removeWithKeys(filter);
         }
         return false;
     }
-    public <T1 extends SectionItem> boolean removeWithKey(SectionType<T1> sectionType, Key key){
+    public <T1 extends SectionItem> boolean removeWithKey(SectionType<T1> sectionType, Key key) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.remove(key);
         }
         return false;
     }
-    public <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key){
+    public <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.getSectionItem(key);
         }
         return null;
     }
-    public<T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType){
+    public<T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType) {
         return getSectionList().getSection(sectionType);
     }
-    public<T1 extends SectionItem> Section<T1> getOrCreateSection(SectionType<T1> sectionType){
+    public<T1 extends SectionItem> Section<T1> getOrCreateSection(SectionType<T1> sectionType) {
         return getSectionList().getOrCreateSection(sectionType);
     }
     public DexHeader getHeader() {
@@ -268,15 +268,29 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     public int getFileSize() {
         return getHeader().getFileSize();
     }
-    public SectionList getSectionList(){
+    public SectionList getSectionList() {
         return sectionList;
     }
-    public MapList getMapList(){
+    public MapList getMapList() {
         return getSectionList().getMapList();
     }
-    public boolean isEmpty(){
-        Section<ClassId> section = getSection(SectionType.CLASS_ID);
-        return section == null || section.getCount() == 0;
+    public boolean isEmpty() {
+        SectionList sectionList = getSectionList();
+        Section<?> section = sectionList.getOwnedSection(SectionType.CLASS_ID);
+        if (section != null && !section.isEmpty()) {
+            return false;
+        }
+        DexContainerBlock containerBlock = getDexContainerBlock();
+        if (containerBlock != null && containerBlock.isMultiLayout()) {
+            section = sectionList.getOwnedSection(SectionType.STRING_ID);
+            return section == null || section.isEmpty();
+        }
+        return false;
+    }
+    void transferSharedSectionsFrom(DexLayoutBlock layoutBlock) {
+        if (layoutBlock != this) {
+            this.getSectionList().transferSharedSectionsFrom(layoutBlock.getSectionList());
+        }
     }
     public void removeSelf() {
         DexContainerBlock containerBlock = getDexContainerBlock();
@@ -287,11 +301,11 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     public DexContainerBlock getDexContainerBlock() {
         return getParentInstance(DexContainerBlock.class);
     }
-    public boolean merge(MergeOptions options, ClassId classId){
+    public boolean merge(MergeOptions options, ClassId classId) {
         return getSectionList().merge(options, classId);
     }
-    public boolean merge(MergeOptions options, DexLayoutBlock layoutBlock){
-        if(layoutBlock == this){
+    public boolean merge(MergeOptions options, DexLayoutBlock layoutBlock) {
+        if (layoutBlock == this) {
             options.onMergeError(this, getSectionList(), "Can not merge dex file to self");
             return false;
         }
@@ -301,7 +315,7 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         return getSectionList().fromSmali(smaliClass);
     }
     @Override
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         BytesOutputStream outputStream = new BytesOutputStream(getFileSize());
         try {
             writeBytes(outputStream);
@@ -328,19 +342,24 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         this.mTag = tag;
     }
 
-    public static DexLayoutBlock createDefault(){
+    void initialize(SectionType<?> ... sectionTypes) {
+        SectionList sectionList = getSectionList();
+        MapList mapList = sectionList.getMapList();
+        mapList.getOrCreate(SectionType.HEADER);
+        mapList.getOrCreate(SectionType.MAP_LIST);
+        sectionList.ensureInitialized(sectionTypes);
+        sectionList.getMapList().linkHeader(sectionList.getHeader());
+    }
+    public static DexLayoutBlock createDefault(SectionType<?>[] sectionTypes) {
         DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
         SectionList sectionList = dexLayoutBlock.getSectionList();
         MapList mapList = sectionList.getMapList();
         mapList.getOrCreate(SectionType.HEADER);
         mapList.getOrCreate(SectionType.MAP_LIST);
-        SectionType<?>[] commonTypes = SectionType.getR8Order();
-        for(SectionType<?> sectionType : commonTypes){
+        for (SectionType<?> sectionType : sectionTypes) {
             sectionList.getOrCreateSection(sectionType);
         }
-
         sectionList.getMapList().linkHeader(sectionList.getHeader());
-
         return dexLayoutBlock;
     }
 }

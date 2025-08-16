@@ -88,12 +88,6 @@ public class DexLayout implements DexClassModule, Closeable,
     public int clearDuplicateData() {
         return getDexLayoutBlock().getSectionList().clearDuplicateData();
     }
-    public int clearUnused() {
-        return getDexLayoutBlock().getSectionList().clearUnused();
-    }
-    public void clearEmptySections() {
-        getDexLayoutBlock().clearEmptySections();
-    }
 
     public DexClassRepository getClassRepository() {
         return getDexFile();

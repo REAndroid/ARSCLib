@@ -20,6 +20,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugRegister;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
@@ -64,6 +65,12 @@ abstract class DebugRegisterNumber extends DebugElement {
         SmaliDebugElement smaliDebugElement = (SmaliDebugElement) smali;
         SmaliDebugRegister smaliDebugRegister = (SmaliDebugRegister) smaliDebugElement;
         setRegister(smaliDebugRegister.getRegister().getValue());
+    }
+
+    @Override
+    int compareDetailElement(DebugElement element) {
+        DebugRegisterNumber debug = (DebugRegisterNumber) element;
+        return CompareUtil.compare(getRegisterNumber(), debug.getRegisterNumber());
     }
 
     @Override

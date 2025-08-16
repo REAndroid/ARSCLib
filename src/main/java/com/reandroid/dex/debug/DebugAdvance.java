@@ -16,8 +16,11 @@
 package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Le128;
+import com.reandroid.dex.smali.SmaliWriter;
 
-public abstract class DebugAdvance extends DebugElement{
+import java.io.IOException;
+
+public abstract class DebugAdvance extends DebugElement {
 
     private final Le128 advance;
 
@@ -35,6 +38,14 @@ public abstract class DebugAdvance extends DebugElement{
     @Override
     public boolean isValid() {
         return !isRemoved() && getAdvance() != 0;
+    }
+    @Override
+    public boolean isVisible() {
+        return false;
+    }
+
+    @Override
+    public void appendExtra(SmaliWriter writer) throws IOException {
     }
 
     @Override

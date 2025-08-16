@@ -18,11 +18,25 @@ package com.reandroid.dex.id;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
-import com.reandroid.dex.common.*;
+import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.DefIndex;
+import com.reandroid.dex.common.IdDefinition;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.dalvik.DalvikEnclosing;
 import com.reandroid.dex.dalvik.DalvikMemberClass;
-import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.data.AnnotationsDirectory;
+import com.reandroid.dex.data.ClassData;
+import com.reandroid.dex.data.Def;
+import com.reandroid.dex.data.EncodedArray;
+import com.reandroid.dex.data.FieldDef;
+import com.reandroid.dex.data.MethodDef;
+import com.reandroid.dex.data.TypeList;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.ArrayValueKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.program.ClassProgram;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.reference.TypeListReference;
@@ -30,13 +44,17 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId>, Comparable<ClassId> {
+public class ClassId extends IdItem implements ClassProgram, 
+        IdDefinition<TypeId>, DefIndex, Comparable<ClassId> {
 
     private final ClassTypeId classTypeId;
     private final IndirectInteger accessFlagValue;
@@ -67,7 +85,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     }
 
     @Override
-    public void edit(){
+    public void edit() {
         this.editInternal(this);
     }
     @Override
@@ -78,34 +96,37 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     }
 
     @Override
-    public SectionType<ClassId> getSectionType(){
+    public SectionType<ClassId> getSectionType() {
         return SectionType.CLASS_ID;
     }
     @Override
-    public TypeKey getKey(){
+    public TypeKey getKey() {
         return checkKey(TypeKey.create(getName()));
     }
     @Override
-    public void setKey(Key key){
+    public void setKey(Key key) {
         TypeKey old = getKey();
-        if(Objects.equals(old, key)){
+        if (ObjectsUtil.equals(old, key)) {
             return;
         }
         this.classTypeId.setKey(key);
         keyChanged(old);
+    }
+    @Override
+    public int getDefinitionIndex() {
+        return getIndex();
     }
 
     @Override
     public AnnotationSetKey getAnnotation() {
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if (directory != null) {
-            return directory.getClassAnnotation();
+            return directory.get(this);
         }
         return AnnotationSetKey.empty();
     }
     @Override
     public void setAnnotation(AnnotationSetKey annotationSet) {
-        clearAnnotations();
         writeAnnotation(annotationSet);
     }
     @Override
@@ -116,35 +137,52 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     public boolean hasAnnotations() {
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if (directory != null) {
-            return directory.hasClassAnnotation();
+            return directory.contains(this);
         }
         return false;
     }
+    @Override
+    public AnnotationItemKey getAnnotation(TypeKey typeKey) {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getAnnotation(this, typeKey);
+        }
+        return null;
+    }
+    @Override
+    public Key getAnnotationValue(TypeKey typeKey, String name) {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getAnnotationValue(this, typeKey, name);
+        }
+        return null;
+    }
+
     private void writeAnnotation(AnnotationSetKey key) {
         if (key == null || key.isEmpty()) {
             if (hasAnnotations()) {
-                getOrCreateUniqueAnnotationsDirectory().setClassAnnotations((AnnotationSetKey )null);
+                getOrCreateUniqueAnnotationsDirectory().remove(this);
             }
         } else {
-            getOrCreateUniqueAnnotationsDirectory().setClassAnnotations(key);
+            getOrCreateUniqueAnnotationsDirectory().put(this, key);
         }
     }
-    public String getName(){
+    public String getName() {
         TypeId typeId = getId();
-        if(typeId != null){
+        if (typeId != null) {
             return typeId.getName();
         }
         return null;
     }
-    public void setName(String typeName){
+    public void setName(String typeName) {
         setKey(new TypeKey(typeName));
     }
 
-    public ClassTypeId getClassTypeId(){
+    public ClassTypeId getClassTypeId() {
         return classTypeId;
     }
     @Override
-    public TypeId getId(){
+    public TypeId getId() {
         return getClassTypeId().getItem();
     }
     @Override
@@ -155,34 +193,34 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     public void setAccessFlagsValue(int value) {
         accessFlagValue.set(value);
     }
-    public void setId(TypeId typeId){
+    public void setId(TypeId typeId) {
         this.classTypeId.setItem(typeId);
     }
-    public SuperClassId getSuperClassId(){
+    public SuperClassId getSuperClassId() {
         return superClassId;
     }
     public TypeId getSuperClassType() {
         return getSuperClassId().getItem();
     }
     @Override
-    public TypeKey getSuperClassKey(){
+    public TypeKey getSuperClassKey() {
         return getSuperClassId().getKey();
     }
-    public void setSuperClass(TypeKey typeKey){
+    public void setSuperClass(TypeKey typeKey) {
         this.superClassId.setKey(typeKey);
     }
-    public SourceFile getSourceFileReference(){
+    public SourceFile getSourceFileReference() {
         return sourceFile;
     }
     @Override
     public String getSourceFileName() {
         return getSourceFileReference().getString();
     }
-    public void setSourceFile(String sourceFile){
+    public void setSourceFile(String sourceFile) {
         getSourceFileReference().setString(sourceFile);
     }
 
-    public Iterator<TypeKey> getInstanceKeys(){
+    public Iterator<TypeKey> getInstanceKeys() {
         return CombiningIterator.singleOne(getSuperClassKey(), getInterfacesKey().iterator());
     }
     @Override
@@ -193,13 +231,13 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         }
         return typeListKey;
     }
-    public TypeList getInterfaceTypeList(){
+    public TypeList getInterfaceTypeList() {
         return interfaces.getItem();
     }
     public TypeListReference getInterfacesReference() {
         return this.interfaces;
     }
-    public void setInterfaces(TypeListKey typeListKey){
+    public void setInterfaces(TypeListKey typeListKey) {
         this.interfaces.setKey(typeListKey);
     }
 
@@ -251,24 +289,24 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         }
         return EmptyIterator.of();
     }
-    public AnnotationsDirectory getUniqueAnnotationsDirectory(){
+    public AnnotationsDirectory getUniqueAnnotationsDirectory() {
         return annotationsDirectory.getUniqueItem(this);
     }
-    public AnnotationsDirectory getOrCreateUniqueAnnotationsDirectory(){
+    public AnnotationsDirectory getOrCreateUniqueAnnotationsDirectory() {
         return annotationsDirectory.getOrCreateUniqueItem(this);
     }
-    public AnnotationsDirectory getAnnotationsDirectory(){
+    public AnnotationsDirectory getAnnotationsDirectory() {
         return annotationsDirectory.getItem();
     }
-    public void setAnnotationsDirectory(AnnotationsDirectory directory){
+    public void setAnnotationsDirectory(AnnotationsDirectory directory) {
         this.annotationsDirectory.setItem(directory);
     }
-    public ClassData getOrCreateClassData(){
+    public ClassData getOrCreateClassData() {
         ClassData classData = getClassData();
         if (classData != null) {
             return classData;
         }
-        Section<ClassData> section = getSection(SectionType.CLASS_DATA);
+        Section<ClassData> section = getOrCreateSection(SectionType.CLASS_DATA);
         classData = section.createItem();
         setClassData(classData);
         return classData;
@@ -280,16 +318,16 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         }
         return null;
     }
-    public ClassData getClassData(){
+    public ClassData getClassData() {
         ClassData data = classData.getItem();
         linkClassData(data);
         return data;
     }
-    public void setClassData(ClassData classData){
+    public void setClassData(ClassData classData) {
         this.classData.setItem(classData);
         linkClassData(classData);
     }
-    public EncodedArray getStaticValuesEncodedArray(){
+    public EncodedArray getStaticValuesEncodedArray() {
         EncodedArray encodedArray = staticValues.getItem();
         if (encodedArray != null) {
             encodedArray.addUniqueUser(this);
@@ -299,11 +337,11 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     public ArrayValueKey getStaticValues() {
         return (ArrayValueKey) staticValues.getKey();
     }
-    public void setStaticValues(ArrayValueKey staticValues){
+    public void setStaticValues(ArrayValueKey staticValues) {
         this.staticValues.setKey(staticValues);
         this.staticValues.addUniqueUser(this);
     }
-    public void setStaticValues(EncodedArray staticValues){
+    public void setStaticValues(EncodedArray staticValues) {
         this.staticValues.setItem(staticValues);
     }
 
@@ -323,7 +361,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         this.staticValues.refresh();
     }
     @Override
-    void cacheItems(){
+    void cacheItems() {
 
         this.classTypeId.pullItem();
         this.superClassId.pullItem();
@@ -339,8 +377,8 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
 
         linkClassData(this.classData.getItem());
     }
-    private void linkClassData(ClassData classData){
-        if(classData != null) {
+    private void linkClassData(ClassData classData) {
+        if (classData != null) {
             classData.setClassId(this);
         }
     }
@@ -360,25 +398,25 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         return super.isRemoved();
     }
 
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         classTypeId.replaceKeys(search, replace);
         superClassId.replaceKeys(search, replace);
         AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory != null){
+        if (directory != null) {
             directory = getUniqueAnnotationsDirectory();
             directory.replaceKeys(search, replace);
         }
         interfaces.replaceKeys(search, replace);
         ClassData classData = getClassData();
-        if(classData != null){
+        if (classData != null) {
             classData.replaceKeys(search, replace);
         }
     }
     @Override
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return listUsedIds().iterator();
     }
-    public ArrayCollection<IdItem> listUsedIds(){
+    public ArrayCollection<IdItem> listUsedIds() {
 
         ArrayCollection<IdItem> collection = new ArrayCollection<>(200);
         collection.add(classTypeId.getItem());
@@ -386,27 +424,27 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         collection.add(sourceFile.getItem());
         collection.addAll(interfaces.iterator());
         AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory != null){
+        if (directory != null) {
             collection.addAll(directory.usedIds());
         }
         ClassData classData = getClassData();
-        if(classData != null){
+        if (classData != null) {
             collection.addAll(classData.usedIds());
         }
         EncodedArray encodedArray = getStaticValuesEncodedArray();
-        if(encodedArray != null){
+        if (encodedArray != null) {
             collection.addAll(encodedArray.usedIds());
         }
         int size = collection.size();
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             IdItem idItem = collection.get(i);
             collection.addAll(idItem.usedIds());
         }
         return collection;
     }
 
-    public void merge(ClassId classId){
-        if(classId == this){
+    public void merge(ClassId classId) {
+        if (classId == this) {
             return;
         }
         accessFlagValue.set(classId.accessFlagValue.get());
@@ -415,7 +453,7 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         interfaces.setKey(classId.interfaces.getKey());
         annotationsDirectory.setKey(classId.annotationsDirectory.getKey());
         EncodedArray comingArray = classId.getStaticValuesEncodedArray();
-        if(comingArray != null){
+        if (comingArray != null) {
             EncodedArray encodedArray = staticValues.getOrCreate();
             encodedArray.merge(comingArray);
         }
@@ -433,10 +471,10 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
         setSourceFile(smaliClass.getSourceFileName());
         setInterfaces(smaliClass.getInterfacesKey());
 
-        if(smaliClass.hasClassData()) {
+        if (smaliClass.hasClassData()) {
             getOrCreateClassData().fromSmali(smaliClass);
         }
-        if(smaliClass.hasAnnotation()) {
+        if (smaliClass.hasAnnotation()) {
             setAnnotation(smaliClass.getAnnotationSetKey());
         }
     }
@@ -470,17 +508,17 @@ public class ClassId extends IdItem implements ClassProgram, IdDefinition<TypeId
     }
     @Override
     public int compareTo(ClassId classId) {
-        if(classId == null){
+        if (classId == null) {
             return -1;
         }
-        if(classId == this){
+        if (classId == this) {
             return 0;
         }
         return SectionTool.compareIdx(getId(), classId.getId());
     }
     @Override
-    public String toString(){
-        if(isReading()){
+    public String toString() {
+        if (isReading()) {
             return ".class " + getKey();
         }
         return SmaliWriter.toStringSafe(this);

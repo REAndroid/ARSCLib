@@ -46,7 +46,7 @@ public class Ins20bc extends Size4Ins {
 
     @Override
     public void setKey(Key key) {
-        setSectionType(SectionType.getSectionType(key));
+        setSectionType(SectionType.getIdSectionType(key));
         super.setKey(key);
     }
 

@@ -123,7 +123,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         iterator.exclude(getDexClass(typeKey));
         return iterator;
     }
-    default Iterator<DexClass> searchImplementations(TypeKey typeKey){
+    default Iterator<DexClass> searchImplementations(TypeKey typeKey) {
         UniqueIterator<DexClass> iterator = new UniqueIterator<>(
                 new IterableIterator<DexClassModule, DexClass>(getRootRepository().modules()) {
                     @Override
@@ -207,46 +207,49 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         Iterator<DexClassModule> iterator = modules();
         while (iterator.hasNext()) {
             T item = iterator.next().getItem(sectionType, key);
-            if(item != null){
+            if (item != null) {
                 return item;
             }
         }
         return null;
     }
-    default boolean contains(SectionType<?> sectionType, Key key){
+    default boolean contains(SectionType<?> sectionType, Key key) {
         return getItems(sectionType, key).hasNext();
     }
-    default boolean contains(Key key){
-        if(key == null){
+    default boolean contains(Key key) {
+        if (key == null) {
             return false;
         }
-        if(key instanceof StringKey){
+        if (key instanceof StringKey) {
             return contains(SectionType.STRING_ID, key);
         }
-        if(key instanceof TypeKey){
+        if (key instanceof TypeKey) {
             return contains(SectionType.TYPE_ID, key);
         }
-        if(key instanceof FieldKey){
+        if (key instanceof FieldKey) {
             return contains(SectionType.FIELD_ID, key);
         }
-        if(key instanceof ProtoKey){
+        if (key instanceof ProtoKey) {
             return contains(SectionType.PROTO_ID, key);
         }
-        if(key instanceof MethodKey){
+        if (key instanceof MethodKey) {
             return contains(SectionType.METHOD_ID, key);
         }
-        if(key instanceof TypeListKey){
+        if (key instanceof TypeListKey) {
             return contains(SectionType.TYPE_LIST, key);
         }
-        if(key instanceof MethodHandleKey){
+        if (key instanceof MethodHandleKey) {
             return contains(SectionType.METHOD_HANDLE, key);
         }
-        if(key instanceof CallSiteKey){
+        if (key instanceof CallSiteKey) {
             return contains(SectionType.CALL_SITE_ID, key);
+        }
+        if (key instanceof AnnotationGroupKey) {
+            return contains(SectionType.ANNOTATION_GROUP, key);
         }
         throw new IllegalArgumentException("Unknown key type: " + key.getClass() + ", '" + key + "'");
     }
-    default boolean containsClass(TypeKey key){
+    default boolean containsClass(TypeKey key) {
         return contains(SectionType.CLASS_ID, key);
     }
 
@@ -304,60 +307,60 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return sorted;
     }
 
-    default Iterator<DexClass> findUserClasses(Key key){
+    default Iterator<DexClass> findUserClasses(Key key) {
         return new UniqueIterator<>(getDexClasses(),
                 dexClass -> dexClass.uses(key));
     }
-    default Iterator<DexClass> getDexClasses(){
+    default Iterator<DexClass> getDexClasses() {
         return getDexClasses(null);
     }
-    default Iterator<DexClass> getDexClassesCloned(){
+    default Iterator<DexClass> getDexClassesCloned() {
         return getDexClassesCloned(null);
     }
-    default Iterator<DexClass> getPackageClasses(String packageName){
+    default Iterator<DexClass> getPackageClasses(String packageName) {
         return getPackageClasses(packageName, true);
     }
-    default Iterator<DexClass> getPackageClasses(String packageName, boolean includeSubPackages){
+    default Iterator<DexClass> getPackageClasses(String packageName, boolean includeSubPackages) {
         return getDexClasses(key -> key.isPackage(packageName, includeSubPackages));
     }
-    default DexMethod getDeclaredMethod(MethodKey methodKey){
+    default DexMethod getDeclaredMethod(MethodKey methodKey) {
         DexClass dexClass = getDexClass(methodKey.getDeclaring());
-        if(dexClass != null){
+        if (dexClass != null) {
             DexMethod dexMethod = dexClass.getDeclaredMethod(methodKey, false);
-            if(dexMethod == null) {
+            if (dexMethod == null) {
                 dexMethod = dexClass.getDeclaredMethod(methodKey, true);
             }
             return dexMethod;
         }
         return null;
     }
-    default DexMethod getDeclaredMethod(MethodKey methodKey, boolean ignoreReturnType){
+    default DexMethod getDeclaredMethod(MethodKey methodKey, boolean ignoreReturnType) {
         DexClass dexClass = getDexClass(methodKey.getDeclaring());
-        if(dexClass != null){
+        if (dexClass != null) {
             return dexClass.getDeclaredMethod(methodKey, ignoreReturnType);
         }
         return null;
     }
-    default DexField getDeclaredField(FieldKey fieldKey){
+    default DexField getDeclaredField(FieldKey fieldKey) {
         DexClass dexClass = getDexClass(fieldKey.getDeclaring());
-        if(dexClass != null){
+        if (dexClass != null) {
             return dexClass.getDeclaredField(fieldKey);
         }
         return null;
     }
-    default DexDeclaration getDexDeclaration(Key key){
-        if(key instanceof TypeKey){
+    default DexDeclaration getDexDeclaration(Key key) {
+        if (key instanceof TypeKey) {
             return getDexClass((TypeKey) key);
         }
-        if(key instanceof MethodKey){
+        if (key instanceof MethodKey) {
             return getDeclaredMethod((MethodKey) key);
         }
-        if(key instanceof FieldKey){
+        if (key instanceof FieldKey) {
             return getDeclaredField((FieldKey) key);
         }
         return null;
     }
-    default Iterator<DexMethod> getDeclaredMethods(){
+    default Iterator<DexMethod> getDeclaredMethods() {
         return new IterableIterator<DexClass, DexMethod>(getDexClasses()) {
             @Override
             public Iterator<DexMethod> iterator(DexClass dexClass) {
@@ -365,7 +368,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default Iterator<DexField> getDeclaredFields(){
+    default Iterator<DexField> getDeclaredFields() {
         return new IterableIterator<DexClass, DexField>(getDexClasses()) {
             @Override
             public Iterator<DexField> iterator(DexClass dexClass) {
@@ -373,7 +376,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default Iterator<IntegerReference> visitIntegers(){
+    default Iterator<IntegerReference> visitIntegers() {
         return new DexIntegerVisitor(this);
     }
 
@@ -410,13 +413,13 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return ArrayCollection.empty();
     }
 
-    default Iterator<FieldKey> findEquivalentFields(FieldKey fieldKey){
+    default Iterator<FieldKey> findEquivalentFields(FieldKey fieldKey) {
         DexClass defining = getDexClass(fieldKey.getDeclaring());
-        if(defining == null){
+        if (defining == null) {
             return EmptyIterator.of();
         }
         DexField dexField = defining.getField(fieldKey);
-        if(dexField == null){
+        if (dexField == null) {
             return EmptyIterator.of();
         }
         defining = dexField.getDexClass();
@@ -427,7 +430,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
                 dexClass -> {
                     FieldKey key = definingKey.changeDeclaring(dexClass.getKey());
                     DexField field = dexClass.getField(key);
-                    if(definingKey.equals(field.getKey())){
+                    if (field != null && definingKey.equals(field.getKey())) {
                         return key;
                     }
                     return null;
@@ -435,7 +438,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         );
         return CombiningIterator.two(SingleIterator.of(definingKey), subKeys);
     }
-    default Iterator<DexClass> getSuccessorClasses(TypeKey typeKey){
+    default Iterator<DexClass> getSuccessorClasses(TypeKey typeKey) {
         return new IterableIterator<DexClassModule, DexClass>(modules()) {
             @Override
             public Iterator<DexClass> iterator(DexClassModule element) {
@@ -443,9 +446,9 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey){
+    default Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey) {
         DexClass defining = getDexClass(methodKey.getDeclaring());
-        if(defining == null){
+        if (defining == null) {
             return EmptyIterator.of();
         }
         Iterator<DexMethod> iterator = defining.getMethods(methodKey);
@@ -462,7 +465,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     default Iterator<DexMethod> getMethods(MethodKey methodKey) {
         return ComputeIterator.of(findEquivalentMethods(methodKey), this::getDeclaredMethod);
     }
-    default Iterator<MethodId> getMethodIds(MethodKey methodKey){
+    default Iterator<MethodId> getMethodIds(MethodKey methodKey) {
         return new IterableIterator<MethodKey, MethodId>(findEquivalentMethods(methodKey)) {
             @Override
             public Iterator<MethodId> iterator(MethodKey element) {
@@ -479,18 +482,18 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default void clearMarkers(){
+    default void clearMarkers() {
         Iterator<Marker> iterator = getMarkers();
         while (iterator.hasNext()) {
             iterator.next().removeSelf();
         }
     }
-    default void setClassSourceFileAll(){
+    default void setClassSourceFileAll() {
         setClassSourceFileAll(SourceFile.SourceFile);
     }
-    default void setClassSourceFileAll(String sourceFile){
+    default void setClassSourceFileAll(String sourceFile) {
         Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             ClassId classId = iterator.next();
             classId.setSourceFile(sourceFile);
         }
