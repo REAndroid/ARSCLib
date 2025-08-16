@@ -41,6 +41,7 @@ public enum AttributeType {
     }
 
     public boolean isPlural(){
+        //a hack to detect plurals (they have id with 0xc bit set)
         return (id & 0xc) != 0;
     }
 
