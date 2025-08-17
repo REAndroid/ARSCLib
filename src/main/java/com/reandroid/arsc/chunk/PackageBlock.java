@@ -811,10 +811,10 @@ public class PackageBlock extends Chunk<PackageHeader>
         return builder.toString();
     }
     public static boolean isPackageId(int packageId){
-        return (byte)packageId > 0;
+        return packageId > 0 && packageId <= 0xff;
     }
     public static boolean isResourceId(int resourceId){
-        return (resourceId >>> 16) != 0;
+        return ((resourceId >> 24) & (byte) (resourceId >> 16)) != 0;
     }
 
     public static void changePackageId(ValueItem valueItem, int packageIdOld, int packageIdNew){
