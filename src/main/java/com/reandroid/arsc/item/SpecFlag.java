@@ -29,7 +29,7 @@ public class SpecFlag extends IndirectItem<SpecFlagsArray> {
         getBlockItem().getBytesInternal()[getOffset() + OFFSET_FLAG] = flag;
     }
     public void addFlagByte(byte flag){
-        flag = (byte) ((getFlagByte() & 0xff) | (flag & 0xff));
+        flag = (byte) ((getFlagByte() | flag) & 0xff);
         setFlagByte(flag);
     }
     public void addFlag(SpecBlock.Flag flag){

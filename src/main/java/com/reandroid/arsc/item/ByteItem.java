@@ -29,18 +29,13 @@ public class ByteItem extends BlockItem implements IntegerReference, DirectStrea
         return ((getByte()>>index) & 0x1) == 1;
     }
     public void putBit(int index, boolean bit){
-        int val= getByte();
-        int left=val>>index;
+        int b = getByte();
+        int one = 1 << index;
+        b &= ~one;
         if(bit){
-            left=left|0x1;
-        }else {
-            left=left & 0xFE;
+            b |= one;
         }
-        left=left<<index;
-        index=8-index;
-        int right=(0xFF>>index) & val;
-        val=left|right;
-        set((byte) val);
+        set((byte) b);
     }
     public void set(byte value) {
         getBytesInternal()[0] = value;

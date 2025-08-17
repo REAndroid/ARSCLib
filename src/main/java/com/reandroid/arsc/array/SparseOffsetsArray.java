@@ -66,7 +66,7 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
         if(value == NO_ENTRY){
             return value;
         }
-        value = (value >>> 16) & 0xffff;
+        value = value >>> 16;
         return value * 4;
     }
     @Override
@@ -77,9 +77,8 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
         }else {
             int idx  = get(index);
             idx = idx & 0xffff;
-            offset = offset & 0xffff;
-            offset = offset / 4;
-            offset = offset << 16;
+            //use unsigned shifting to combine unsigning and division by 4
+            offset = (offset >>> 2) << 16;
             value = offset | idx;
         }
         super.put(index, value);

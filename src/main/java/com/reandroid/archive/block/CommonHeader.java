@@ -378,7 +378,7 @@ public abstract class CommonHeader extends ZipHeader {
     }
 
     static boolean isZip64Value(long value){
-        return value == 0xffffffffL || (value & 0xffffffff00000000L) != 0;
+        return value == 0xffffffffL || (value >>> 32) != 0;
     }
     static boolean isZip64Value(int value){
         return value == 0xffffffff;

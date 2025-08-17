@@ -121,7 +121,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return ComputeIterator.of(getSpecTypePairs(), ResourceType::new);
     }
     public ResourceEntry getResource(int resourceId){
-        int packageId = (resourceId >> 24 ) & 0xff;
+        int packageId = resourceId >>> 24;
         if(packageId == 0){
             return null;
         }
@@ -141,7 +141,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         if(alias == 0 || alias == resourceId){
             return null;
         }
-        packageId = (alias >> 24 ) & 0xff;
+        packageId = alias >>> 24;
         if(packageId != getId()){
             return null;
         }
@@ -325,7 +325,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getEntries(resourceId, true);
     }
     public Iterator<Entry> getEntries(int resourceId, boolean skipNull){
-        int packageId = (resourceId >> 24) & 0xff;
+        int packageId = resourceId >>> 24;
         if(packageId != getId()){
             return EmptyIterator.of();
         }
@@ -557,7 +557,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
 
     public Entry getAnyEntry(int resourceId){
-        int packageId = (resourceId >> 24) & 0xff;
+        int packageId = resourceId >>> 24;
         if(packageId != getId()){
             return null;
         }
@@ -811,17 +811,10 @@ public class PackageBlock extends Chunk<PackageHeader>
         return builder.toString();
     }
     public static boolean isPackageId(int packageId){
-        if(packageId == 0){
-            return false;
-        }
         return packageId > 0 && packageId <= 0xff;
     }
     public static boolean isResourceId(int resourceId){
-        if(resourceId == 0){
-            return false;
-        }
-        return (resourceId & 0x00ff0000) != 0
-                && (resourceId & 0xff000000) != 0;
+        return ((resourceId >> 24) & (byte) (resourceId >> 16)) != 0;
     }
 
     public static void changePackageId(ValueItem valueItem, int packageIdOld, int packageIdNew){
@@ -835,7 +828,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         if(!isResourceId(resourceId)){
             return;
         }
-        int id = (resourceId >> 24) & 0xff;
+        int id = resourceId >>> 24;
         if(id != packageIdOld){
             return;
         }
@@ -853,7 +846,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         if(!isResourceId(resourceId)){
             return;
         }
-        int id = (resourceId >> 24) & 0xff;
+        int id = resourceId >>> 24;
         if(id != packageIdOld){
             return;
         }
@@ -867,7 +860,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         if(!isResourceId(resourceId)){
             return resourceId;
         }
-        int id = (resourceId >> 24) & 0xff;
+        int id = resourceId >>> 24;
         if(id != packageIdOld){
             return resourceId;
         }
@@ -925,7 +918,7 @@ public class PackageBlock extends Chunk<PackageHeader>
                 throw new XmlEncodeException("Invalid id value: " + element.getDebugText());
             }
             int resourceId = encodeResult.value;
-            int packageId = (resourceId >> 24) & 0xff;
+            int packageId = resourceId >>> 24;
             int i = packageBlock.getId();
             if(i == 0){
                 packageBlock.setId(packageId);

@@ -181,7 +181,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     // TODO: find a better way
     public int guessCurrentPackageId() {
         if (mGuessedPackageId == 0) {
-            mGuessedPackageId = ((getIconResourceId()>>24) & 0xff);
+            mGuessedPackageId = getIconResourceId() >>> 24;
         }
         return mGuessedPackageId;
     }
