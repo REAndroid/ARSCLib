@@ -200,8 +200,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         }
         SpecStringPool stringPool = packageBlock.getSpecStringPool();
         SpecString specString = stringPool.getOrCreate(name);
-        id = id & 0xffff;
-        entry = getOrCreateEntry((short) id);
+        entry = getOrCreateEntry(id & 0xffff);
         entry.setSpecReference(specString);
         return entry;
     }
@@ -226,11 +225,11 @@ public class TypeBlock extends Chunk<TypeHeader>
 
         SpecStringPool stringPool = packageBlock.getSpecStringPool();
         SpecString specString = stringPool.getOrCreate(name);
-        entry = getOrCreateEntry((short) id);
+        entry = getOrCreateEntry(id & 0xffff);
         entry.setSpecReference(specString);
         return entry;
     }
-    public Entry getOrCreateEntry(short entryId) {
+    public Entry getOrCreateEntry(int entryId) {
         return getEntryArray().getOrCreate(entryId);
     }
     public Entry getEntry(short entryId) {

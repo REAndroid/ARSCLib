@@ -15,8 +15,9 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.item.*;
-import com.reandroid.dex.base.DexBlockAlign;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -24,6 +25,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliInstructionOperand;
 import com.reandroid.dex.smali.model.SmaliPayloadArray;
+import com.reandroid.utils.NumberX;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
@@ -31,9 +33,8 @@ import com.reandroid.utils.collection.InstanceIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsArrayData extends PayloadData implements SmaliRegion {
+public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRegion {
 
-    private final DexBlockAlign blockAlign;
     private final InsArrayDataList entryList;
 
     public InsArrayData() {
@@ -43,13 +44,10 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         IntegerItem countReference = new IntegerItem();
         this.entryList = new InsArrayDataList(widthReference, countReference);
 
-        this.blockAlign = new DexBlockAlign(this.entryList);
-        this.blockAlign.setAlignment(2);
-
         addChild(1, widthReference);
         addChild(2, countReference);
         addChild(3, this.entryList);
-        addChild(4, this.blockAlign);
+        addChild(4, this.entryList.getAlignment());
     }
 
     public Iterator<InsFillArrayData> getInsFillArrayData() {
@@ -60,75 +58,121 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         insBlockList.link();
         return InstanceIterator.of(getExtraLines(), InsFillArrayData.class);
     }
+    @Override
     public int size(){
         return getEntryList().size();
     }
+    @Override
     public void setSize(int size) {
+        if (getWidth() == 0) {
+            size = 0;
+        }
+        Object lock = requestLock();
         getEntryList().setSize(size);
-        refreshAlignment();
+        releaseLock(lock);
+    }
+    public void ensureMinWidth(int width) {
+        if (width > getWidth()) {
+            setWidth(NumberX.toStandardWidth(width));
+        }
+    }
+    public void ensureMinSize(int size) {
+        if (size > size()) {
+            setSize(size);
+        }
     }
     public void clear() {
+        Object lock = requestLock();
         getEntryList().clear();
-        refreshAlignment();
+        releaseLock(lock);
     }
-    public boolean isEmpty() {
-        return getEntryList().isEmpty();
-    }
-    public LongReference get(int i) {
+    @Override
+    public ArrayDataEntry get(int i) {
         return getEntryList().get(i);
     }
-    public Iterator<LongReference> iterator() {
-        return ObjectsUtil.cast(getEntryList().iterator());
+    @Override
+    public Iterator<ArrayDataEntry> iterator() {
+        return ObjectsUtil.cast(getEntryList().clonedIterator());
     }
+
     public int getWidth() {
         return getEntryList().getWidth();
     }
     public void setWidth(int width) {
+        Object lock = requestLock();
         getEntryList().setWidth(width);
-        refreshAlignment();
+        releaseLock(lock);
     }
     public void put(int index, long value) {
-        int changed = size();
-        getEntryList().put(index, value);
-        if (changed != this.size()) {
-            refreshAlignment();
-        }
+        ensureMinSize(index + 1);
+        get(index).set(value);
     }
     public void addValue(long value) {
-        getEntryList().addValue(value);
-        refreshAlignment();
-    }
-    public void set(long[] values) {
-        getEntryList().clear();
-        addValues(values);
+        int index = size();
+        setSize(index + 1);
+        get(index).set(value);
     }
     public void addValues(long[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(values[i]);
+        }
     }
     public void addValues(int[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(values[i]);
+        }
     }
     public void addValues(short[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(values[i]);
+        }
     }
     public void addValues(byte[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(values[i]);
+        }
     }
     public void addValues(char[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(values[i]);
+        }
     }
     public void addValues(float[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        if (length != 0) {
+            ensureMinWidth(4);
+        }
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(Float.floatToIntBits(values[i]));
+        }
     }
     public void addValues(double[] values) {
-        getEntryList().addValues(values);
-        refreshAlignment();
+        int start = size();
+        int length = values.length;
+        if (length != 0) {
+            ensureMinWidth(8);
+        }
+        setSize(start + length);
+        for (int i = 0; i < length; i++) {
+            get(start + i).set(Double.doubleToLongBits(values[i]));
+        }
     }
     public long[] getValuesAsLong() {
         return getEntryList().getValues();
@@ -160,10 +204,6 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         return entryList;
     }
 
-    public void refreshAlignment() {
-        this.blockAlign.align(this);
-    }
-
     private TypeKey findNewArrayType() {
         Iterator<InsFillArrayData> iterator = getInsFillArrayData();
         while (iterator.hasNext()) {
@@ -189,7 +229,6 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     public void merge(Ins ins) {
         InsArrayData coming = (InsArrayData) ins;
         getEntryList().merge(coming.getEntryList());
-        refreshAlignment();
     }
 
     @Override
@@ -201,7 +240,6 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
         getEntryList().fromSmali((SmaliPayloadArray) smaliInstruction);
-        refreshAlignment();
     }
     @Override
     void toSmaliOperand(SmaliInstruction instruction) {
@@ -214,5 +252,29 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     void toSmaliEntries(SmaliInstruction instruction) {
         super.toSmaliEntries(instruction);
         getEntryList().toSmali((SmaliPayloadArray) instruction);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        InsArrayData arrayData = (InsArrayData) obj;
+        if (getIndex() != arrayData.getIndex()) {
+            return false;
+        }
+        if (getWidth() != arrayData.getWidth()) {
+            return false;
+        }
+        return entryList.equals(arrayData.entryList);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 31 + getIndex() * 31 + getWidth() * 31;
+        return hash + entryList.hashCode() * 31;
     }
 }

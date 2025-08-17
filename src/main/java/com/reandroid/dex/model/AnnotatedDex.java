@@ -15,14 +15,12 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.key.ProgramKey;
-import com.reandroid.dex.program.AnnotatedProgram;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ProgramKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.ProgramElement;
-import com.reandroid.utils.collection.ComputeIterator;
-
-import java.util.Iterator;
 
 public interface AnnotatedDex extends ProgramElement {
 
@@ -40,7 +38,14 @@ public interface AnnotatedDex extends ProgramElement {
     default void setAnnotation(AnnotationSetKey annotationSet) {
         getProgramElement().setAnnotation(annotationSet);
     }
-
+    @Override
+    default AnnotationItemKey getAnnotation(TypeKey typeKey) {
+        return getProgramElement().getAnnotation(typeKey);
+    }
+    @Override
+    default Key getAnnotationValue(TypeKey typeKey, String name) {
+        return getProgramElement().getAnnotationValue(typeKey, name);
+    }
     @Override
     default boolean hasAnnotations() {
         return getProgramElement().hasAnnotations();
@@ -48,38 +53,5 @@ public interface AnnotatedDex extends ProgramElement {
     @Override
     default void clearAnnotations() {
         getProgramElement().clearAnnotations();
-    }
-
-    default Iterator<DexAnnotation> getDexAnnotations() {
-        AnnotationSetKey annotation = getProgramElement().getAnnotation();
-        return ComputeIterator.of(annotation.getTypes(), this::getDexAnnotation);
-    }
-    default DexAnnotation getDexAnnotation(TypeKey typeKey) {
-        AnnotatedProgram annotatedProgram = getProgramElement();
-        if (annotatedProgram.hasAnnotation(typeKey)) {
-            return new DexAnnotation((Dex) this, annotatedProgram, typeKey);
-        }
-        return null;
-    }
-    default DexAnnotation getOrCreateDexAnnotation(TypeKey typeKey) {
-        AnnotatedProgram annotatedProgram = getProgramElement();
-        AnnotationSetKey annotationSetKey = annotatedProgram.getAnnotation();
-        if (!annotationSetKey.contains(typeKey)) {
-            annotationSetKey = annotationSetKey.getOrCreate(typeKey);
-            annotatedProgram.setAnnotation(annotationSetKey);
-        }
-        return new DexAnnotation((Dex) this, annotatedProgram, typeKey);
-    }
-
-    default DexAnnotationElement getDexAnnotationElement(TypeKey typeKey, String name){
-        DexAnnotation dexAnnotation = getDexAnnotation(typeKey);
-        if(dexAnnotation != null) {
-            return dexAnnotation.get(name);
-        }
-        return null;
-    }
-    default DexAnnotationElement getOrCreateDexAnnotationElement(TypeKey typeKey, String name) {
-        DexAnnotation annotation = getOrCreateDexAnnotation(typeKey);
-        return annotation.getOrCreate(name);
     }
 }

@@ -59,6 +59,11 @@ public class DexCatch extends DexCode {
     public void removeSelf(){
         getExceptionHandler().removeSelf();
     }
+    @Override
+    public boolean isRemoved() {
+        return getDexMethod().isRemoved() ||
+                getExceptionHandler().isRemoved();
+    }
 
     @Override
     public DexMethod getDexMethod() {

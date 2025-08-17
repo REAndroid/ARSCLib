@@ -15,31 +15,35 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.NumberBlock;
+import com.reandroid.dex.base.DexBlockAlign;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliPayloadArray;
 import com.reandroid.dex.smali.model.SmaliSet;
 import com.reandroid.dex.smali.model.SmaliValueX;
-import com.reandroid.utils.NumberX;
 import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDataEntry> {
+class InsArrayDataList extends CountedBlockList<ArrayDataEntry> {
 
     private final IntegerReference widthReference;
+    private final DexBlockAlign alignment;
 
     public InsArrayDataList(IntegerReference widthReference, IntegerReference countReference) {
-        super(new EntryCreator(widthReference), new WidthCheckingReference(widthReference, countReference));
+        super(ArrayDataEntry.newCreator(widthReference),
+                widthCheckingReference(widthReference, countReference));
         this.widthReference = widthReference;
+        this.alignment = new DexBlockAlign(this);
+        this.alignment.setAlignment(2);
     }
+    public DexBlockAlign getAlignment() {
+        return alignment;
+    }
+
 
     @Override
     public void setSize(int size) {
@@ -48,6 +52,7 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         if (size != countReference.get()) {
             countReference.set(size);
         }
+        getAlignment().align();
     }
 
     public int getWidth() {
@@ -62,88 +67,8 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
             for (int i = 0; i < size; i++) {
                 get(i).width(width);
             }
+            getAlignment().align();
         }
-    }
-    public void ensureWidth(int width) {
-        if (width > getWidth()) {
-            setWidth(NumberX.toStandardWidth(width));
-        }
-    }
-    public void put(int index, long value) {
-        ensureSize(index + 1);
-        get(index).set(value);
-    }
-    public void addValues(long[] values) {
-        int length = values.length;
-        int index = size();
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            long value = values[i];
-            ensureWidth(NumberX.widthOfSigned(value));
-            get(index + i).set(value);
-        }
-    }
-    public void addValues(int[] values) {
-        int length = values.length;
-        int index = size();
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            long value = values[i];
-            ensureWidth(NumberX.widthOfSigned(value));
-            get(index + i).set(value);
-        }
-    }
-    public void addValues(short[] values) {
-        int length = values.length;
-        int index = size();
-        ensureWidth(2);
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            get(index + i).set((long) values[i]);
-        }
-    }
-    public void addValues(byte[] values) {
-        int length = values.length;
-        int index = size();
-        ensureWidth(1);
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            get(index + i).set((long) values[i]);
-        }
-    }
-    public void addValues(char[] values) {
-        int length = values.length;
-        int index = size();
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            long value = values[i];
-            ensureWidth(NumberX.widthOfSigned(value));
-            get(index + i).set(value);
-        }
-    }
-    public void addValues(float[] values) {
-        int length = values.length;
-        int index = size();
-        ensureWidth(4);
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            long value = Float.floatToIntBits(values[i]);
-            get(index + i).set(value);
-        }
-    }
-    public void addValues(double[] values) {
-        int length = values.length;
-        int index = size();
-        ensureWidth(8);
-        setSize(index + length);
-        for (int i = 0; i < length; i++) {
-            long value = Double.doubleToLongBits(values[i]);
-            get(index + i).set(value);
-        }
-    }
-    public void addValue(long value) {
-        ensureWidth(NumberX.widthOfSigned(value));
-        createNext().set(value);
     }
     public long[] getValues() {
         int size = size();
@@ -206,8 +131,7 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         return size() == 0;
     }
     public void clear() {
-        clearChildes();
-        updateCountReference();
+        setSize(0);
     }
 
     public void fromSmali(SmaliPayloadArray smaliPayloadArray) {
@@ -218,7 +142,6 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         for (int i = 0; i < size; i++) {
             this.get(i).fromSmali(entries.get(i));
         }
-        updateCountReference();
     }
 
     public void toSmali(SmaliPayloadArray smaliPayloadArray) {
@@ -244,7 +167,6 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         for (int i = 0; i < size; i++) {
             this.get(i).merge(dataList.get(i));
         }
-        updateCountReference();
     }
 
     @Override
@@ -253,119 +175,23 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
                 + "\n  " + StringsUtil.join(iterator(), "\n  ");
     }
 
-    public static class ArrayDataEntry extends NumberBlock implements SmaliFormat {
-
-        public ArrayDataEntry(int width) {
-            super(width);
-        }
-
-        public void fromSmali(SmaliValueX smaliValueX) {
-            set(smaliValueX.getValueAsLong());
-        }
-        public SmaliValueX toSmali() {
-            return new SmaliValueX(width(), getLong());
-        }
-        @Override
-        public void append(SmaliWriter writer) throws IOException {
-            append(null, writer);
-        }
-        public void append(TypeKey arrayType, SmaliWriter writer) throws IOException {
-            writer.appendHex(width(), getLong());
-            appendFloatOrDoubleComment(arrayType, writer);
-        }
-        private void appendFloatOrDoubleComment(TypeKey arrayType, SmaliWriter writer) {
-            if (arrayType == null) {
-                return;
+    private static IntegerReference widthCheckingReference(IntegerReference width, IntegerReference reference) {
+        return new IntegerReference() {
+            @Override
+            public int get() {
+                if (width.get() == 0) {
+                    return 0;
+                }
+                return reference.get();
             }
-            long data = getLong();
-            if (data == 0) {
-                return;
+            @Override
+            public void set(int value) {
+                reference.set(value);
             }
-            TypeKey typeKey = arrayType.setArrayDimension(0);
-            if (TypeKey.TYPE_F.equals(typeKey)) {
-                float f = Float.intBitsToFloat((int) data);
-                writer.appendComment(f + "f");
-            } else if (TypeKey.TYPE_D.equals(typeKey)) {
-                double d = Double.longBitsToDouble(data);
-                writer.appendComment(Double.toString(d));
+            @Override
+            public String toString() {
+                return Integer.toString(get());
             }
-        }
-
-        public void merge(ArrayDataEntry entry) {
-            set(entry.getLong());
-        }
-
-        @Override
-        public int hashCode() {
-            return Block.hashCodeOf(getBytesInternal());
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (obj == null || obj.getClass() != this.getClass()) {
-                return false;
-            }
-            ArrayDataEntry other = (ArrayDataEntry) obj;
-            return Block.areEqual(this.getBytesInternal(), other.getBytesInternal());
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            String hex = toHexString();
-            builder.append(hex);
-            int width = width();
-            if (width == 1) {
-                builder.append('t');
-            } else if (width == 2) {
-                builder.append('S');
-            } else if (width == 8 && (getLong() & 0xffffffff80000000L) != 0) {
-                builder.append('L');
-            }
-            return builder.toString();
-        }
-    }
-
-    static class EntryCreator implements Creator<ArrayDataEntry> {
-
-        private final IntegerReference width;
-
-        public EntryCreator(IntegerReference width) {
-            this.width = width;
-        }
-
-        @Override
-        public ArrayDataEntry newInstance() {
-            return new ArrayDataEntry(this.width.get());
-        }
-    }
-    static class WidthCheckingReference implements IntegerReference {
-
-        private final IntegerReference width;
-        private final IntegerReference reference;
-
-        public WidthCheckingReference(IntegerReference width, IntegerReference reference) {
-            this.width = width;
-            this.reference = reference;
-        }
-        @Override
-        public int get() {
-            if (width.get() == 0) {
-                return 0;
-            }
-            return reference.get();
-        }
-
-        @Override
-        public void set(int value) {
-            reference.set(value);
-        }
-        @Override
-        public String toString() {
-            return Integer.toString(get());
-        }
+        };
     }
 }

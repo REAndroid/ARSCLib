@@ -26,8 +26,8 @@ import com.reandroid.utils.ObjectsUtil;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class InsSwitchPayload extends PayloadData
-        implements Iterable<InsSwitchPayload.SwitchEntry>, LabelsSet, SmaliRegion, SmaliFormat {
+public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadData<T>
+        implements LabelsSet, SmaliRegion, SmaliFormat {
 
     private InsSwitch insSwitch;
 
@@ -40,7 +40,7 @@ public abstract class InsSwitchPayload extends PayloadData
         super.updateTargetAddress();
         getSwitch().setTargetIns(this);
         getSwitch().updateTargetAddress();
-        for(InsSwitchPayload.SwitchEntry switchEntry : this) {
+        for(SwitchEntry switchEntry : this) {
             switchEntry.updateTargetAddress();
         }
     }
@@ -48,7 +48,7 @@ public abstract class InsSwitchPayload extends PayloadData
     @Override
     void linkTargetIns() {
         super.linkTargetIns();
-        for(InsSwitchPayload.SwitchEntry switchEntry : this) {
+        for(SwitchEntry switchEntry : this) {
             switchEntry.getTargetIns();
         }
     }
@@ -56,7 +56,7 @@ public abstract class InsSwitchPayload extends PayloadData
     @Override
     void unLinkTargetIns() {
         super.unLinkTargetIns();
-        for(InsSwitchPayload.SwitchEntry switchEntry : this) {
+        for(SwitchEntry switchEntry : this) {
             switchEntry.setTargetIns(null);
         }
     }
@@ -156,42 +156,5 @@ public abstract class InsSwitchPayload extends PayloadData
         instructionList.remove(packedSwitch);
         instructionList.remove(this);
         insBlockList.unlinkLocked(lock);
-    }
-    public interface SwitchEntry extends IntegerReference, Label, SmaliFormat {
-        InsSwitchPayload getPayload();
-        @Override
-        default boolean isRemoved() {
-            return getPayload().isRemoved();
-        }
-        default void updateTargetAddress() {
-            Ins target = getTargetIns();
-            setTargetAddress(target.getAddress());
-        }
-        default void addEquivalentIfEq(int constRegister) {
-            InsSwitch insSwitch = getPayload().getSwitch();
-            InstructionList instructionList = insSwitch.getInstructionList();
-
-            Ins targetIns = getTargetIns();
-
-            Ins constNumberIns = (Ins) instructionList.createConstIntegerAt(
-                    insSwitch.getIndex() + 1,
-                    constRegister,
-                    get());
-
-
-            Ins22t insIfEq = Opcode.IF_EQ.newInstance();
-            insIfEq.setRegister(0, insSwitch.getRegister());
-            insIfEq.setRegister(1, constRegister);
-            insIfEq.setTargetIns(targetIns);
-            instructionList.add(constNumberIns.getIndex() + 1, insIfEq);
-            insIfEq.setTargetIns(targetIns);
-        }
-        default Ins findTargetIns() {
-            InsBlockList insBlockList = getPayload().getInsBlockList();
-            if(insBlockList != null) {
-                return insBlockList.getAtAddress(getTargetAddress());
-            }
-            return null;
-        }
     }
 }

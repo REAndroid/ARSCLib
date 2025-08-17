@@ -70,6 +70,11 @@ public abstract class DexDeclaration extends Dex implements AccessibleDex {
     public abstract ProgramKey getKey();
     public abstract IdItem getId();
     public abstract DexClass getDexClass();
+    @Override
+    public boolean isRemoved() {
+        IdDefinition<?> definition = getDefinition();
+        return definition == null || definition.isRemoved();
+    }
 
     public Iterator<? extends Modifier> getAccessFlags(){
         return getDefinition().getAccessFlags();

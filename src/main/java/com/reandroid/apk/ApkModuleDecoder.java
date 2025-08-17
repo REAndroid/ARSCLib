@@ -39,6 +39,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     private final ApkModule apkModule;
     private final Set<String> mDecodedPaths;
     private DexDecoder mDexDecoder;
+    private DexProfileDecoder mDexProfileDecoder;
     private boolean mLogErrors;
     private DecodeFilter mDecodeFilter;
 
@@ -57,6 +58,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
         decodeResourceTable(mainDirectory);
         decodeDexFiles(mainDirectory);
         extractRootFiles(mainDirectory);
+        decodeDexProfile(mainDirectory);
         decodePathMap(mainDirectory);
         dumpSignatures(mainDirectory);
     }
@@ -72,6 +74,12 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
             }
             extractRootFile(rootDir, inputSource);
             addDecodedPath(inputSource.getAlias());
+        }
+    }
+    public void decodeDexProfile(File mainDirectory) throws IOException {
+        DexProfileDecoder decoder = getDexProfileDecoder();
+        if (decoder != null) {
+            decoder.decodeDexProfile(apkModule, mainDirectory);
         }
     }
     public void decodeDexInfo(File mainDirectory)
@@ -129,6 +137,13 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     }
     public void setDexDecoder(DexDecoder dexDecoder) {
         this.mDexDecoder = dexDecoder;
+    }
+
+    public DexProfileDecoder getDexProfileDecoder() {
+        return mDexProfileDecoder;
+    }
+    public void setDexProfileDecoder(DexProfileDecoder dexProfileDecoder) {
+        this.mDexProfileDecoder = dexProfileDecoder;
     }
 
     public void sanitizeFilePaths(){

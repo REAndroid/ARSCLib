@@ -120,7 +120,7 @@ public class SmaliWriterSetting {
         this.resourceIdComment = resourceIdComment;
     }
     public void setResourceIdComment(PackageBlock packageBlock) {
-        this.setResourceIdComment(new ResourceIdComment.ResourceTableComment(packageBlock));
+        this.setResourceIdComment(ResourceIdComment.of(packageBlock));
     }
 
     public void writeMethodComment(SmaliWriter writer, MethodKey methodKey) throws IOException {

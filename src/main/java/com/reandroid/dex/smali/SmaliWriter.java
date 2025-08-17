@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
@@ -285,8 +286,38 @@ public class SmaliWriter implements Appendable, Closeable {
             comment.append(' ');
             columnNumber += 1;
         }
-        comment.append(text);
-        columnNumber += text.length();
+        int column = comment.length();
+        escapeCommentCharacters(comment, text);
+        column = comment.length() - column;
+        columnNumber += column;
+    }
+    private void escapeCommentCharacters(StringBuilder builder, String text) {
+        int length = text.length();
+        for (int i = 0; i < length; i++) {
+            char c = text.charAt(i);
+            if (c == '\n') {
+                builder.append('\\');
+                builder.append('n');
+            } else if (c == '\t') {
+                builder.append('\\');
+                builder.append('t');
+            } else if (c == '\r') {
+                builder.append('\\');
+                builder.append('r');
+            } else if (c == '\b') {
+                builder.append('\\');
+                builder.append('b');
+            } else if (c == '\f') {
+                builder.append('\\');
+                builder.append('f');
+            } else if (c == ' ') {
+                builder.append(' ');
+            } else if (c < ' ' || !Character.isDefined(c)) {
+                DexUtils.encodeToHexChar(builder, c);
+            } else {
+                builder.append(c);
+            }
+        }
     }
     public Appendable getCommentAppender() {
         if (!isEnableComments()) {
@@ -467,11 +498,22 @@ public class SmaliWriter implements Appendable, Closeable {
         return stringWriter.toString();
     }
     public static String toStringSafe(SmaliFormat smaliFormat) {
+        return toStringSafe(smaliFormat, true);
+    }
+    public static String toStringSafe(SmaliFormat smaliFormat, boolean comment) {
         if (smaliFormat == null) {
             return "# null";
         }
         StringWriter stringWriter = new StringWriter();
         SmaliWriter writer = new SmaliWriter(stringWriter);
+        if (!comment) {
+            SmaliWriterSetting setting = writer.getWriterSetting();
+            if (setting == null) {
+                setting = new SmaliWriterSetting();
+                setting.setEnableComments(false);
+                writer.setWriterSetting(setting);
+            }
+        }
         try {
             smaliFormat.append(writer);
             writer.close();

@@ -52,7 +52,7 @@ public class SpecialSection<T extends SpecialItem> extends Section<T> {
         position = array.updatePositionedItemOffsets(position);
         updateNextSection(position);
     }
-    public ParallelIntegerPair getCountAndOffset(){
+    public ParallelIntegerPair getCountAndOffset() {
         return getItemArray().getCountAndOffset();
     }
 

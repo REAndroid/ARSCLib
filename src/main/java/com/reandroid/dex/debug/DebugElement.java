@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class DebugElement extends FixedDexContainerWithTool implements ExtraLine {
+    
     private final ByteItem elementType;
     private int address;
     private int lineNumber;
@@ -59,48 +60,51 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     }
     @Override
     public void setTargetIns(Ins targetIns) {
-        if(targetIns != this.targetIns) {
+        if (targetIns != this.targetIns) {
             this.targetIns = targetIns;
-            if(targetIns != null) {
+            if (targetIns != null) {
                 targetIns.addExtraLine(this);
             }
         }
     }
 
-    public void removeSelf(){
+    public void removeSelf() {
         DebugSequence debugSequence = getDebugSequence();
-        if(debugSequence != null){
+        if (debugSequence != null) {
             debugSequence.remove(this);
         }
     }
-    public boolean isValid(){
+    public boolean isValid() {
         return !isRemoved();
     }
+    public boolean isVisible() {
+        return isValid();
+    }
 
-    int getAddressDiff(){
+    int getAddressDiff() {
         return 0;
     }
-    void setAddressDiff(int diff){
-        if(diff == 0){
+    void setAddressDiff(int diff) {
+        if (diff == 0) {
             return;
         }
         DebugAdvancePc advancePc = getOrCreateDebugAdvancePc();
-        if(advancePc != null) {
+        if (advancePc != null) {
             advancePc.setAddressDiff(diff);
         }
     }
-    int getLineDiff(){
+    int getLineDiff() {
         return 0;
     }
-    void setLineDiff(int diff){
+    void setLineDiff(int diff) {
     }
 
     public boolean isRemoved() {
         return getDebugSequence() == null;
     }
-    DebugSequence getDebugSequence(){
+    DebugSequence getDebugSequence() {
         DebugSequence debugSequence = getParent(DebugSequence.class);
-        if(debugSequence != null && debugSequence.isRemoved()) {
+        if (debugSequence != null && debugSequence.isRemoved()) {
             return null;
         }
         return debugSequence;
@@ -115,23 +119,23 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         DebugElement element = this;
         while (element.updateTargetAddress(address)) {
             element = element.getNext();
-            if(element == null) {
+            if (element == null) {
                 return;
             }
             address = address + element.getAddressDiff();
         }
     }
     private boolean updateTargetAddress(int address) {
-        if(address == getTargetAddress()){
+        if (address == getTargetAddress()) {
             return false;
         }
         DebugElement previous = getPrevious();
         int diff;
-        if(previous == null){
+        if (previous == null) {
             diff = address;
-        }else {
+        } else {
             diff = address - previous.getTargetAddress();
-            if(diff < 0){
+            if (diff < 0) {
                 diff = 0;
             }
         }
@@ -141,96 +145,96 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     }
     private DebugElement getPrevious() {
         int index = getIndex();
-        if(index <= 0) {
+        if (index <= 0) {
             return null;
         }
         DebugSequence sequence = getDebugSequence();
-        if(sequence != null){
+        if (sequence != null) {
             return sequence.get(index - 1);
         }
         return null;
     }
     private DebugElement getNext() {
         int index = getIndex();
-        if(index < 0) {
+        if (index < 0) {
             return null;
         }
         DebugSequence sequence = getDebugSequence();
-        if(sequence != null){
+        if (sequence != null) {
             return sequence.get(index + 1);
         }
         return null;
     }
-    private DebugAdvancePc getOrCreateDebugAdvancePc(){
+    private DebugAdvancePc getOrCreateDebugAdvancePc() {
         DebugAdvancePc advancePc = getDebugAdvancePc();
-        if(advancePc != null){
+        if (advancePc != null) {
             return advancePc;
         }
         DebugSequence debugSequence = getDebugSequence();
-        if(debugSequence != null){
+        if (debugSequence != null) {
             advancePc = debugSequence.createAtPosition(DebugElementType.ADVANCE_PC, getIndex());
         }
         return advancePc;
     }
-    private DebugAdvancePc getDebugAdvancePc(){
+    private DebugAdvancePc getDebugAdvancePc() {
         DebugSequence debugSequence = getDebugSequence();
-        if(debugSequence != null){
+        if (debugSequence != null) {
             DebugElement element = debugSequence.get(getIndex() - 1);
-            if(element instanceof DebugAdvanceLine){
+            if (element instanceof DebugAdvanceLine) {
                 element = debugSequence.get(element.getIndex() - 1);
             }
-            if(element instanceof DebugAdvancePc){
+            if (element instanceof DebugAdvancePc) {
                 return (DebugAdvancePc) element;
             }
         }
         return null;
     }
-    int getLineNumber(){
+    int getLineNumber() {
         return lineNumber;
     }
-    void setLineNumber(int lineNumber){
+    void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
     }
 
-    int getFlag(){
+    int getFlag() {
         int flag = elementType.get();
-        if(flag > 0x0A){
+        if (flag > 0x0A) {
             flag = 0x0A;
         }
         return flag;
     }
-    int getFlagOffset(){
+    int getFlagOffset() {
         int offset = elementType.get();
-        if(offset < 0x0A){
+        if (offset < 0x0A) {
             return 0;
         }
         return offset - 0x0A;
     }
-    void setFlagOffset(int offset){
+    void setFlagOffset(int offset) {
         int flag = getFlag();
-        if(flag < 0x0A){
-            if(offset == 0){
+        if (flag < 0x0A) {
+            if (offset == 0) {
                 return;
             }
             throw new IllegalArgumentException("Can not set offset for: " + getElementType());
         }
-        if(offset < 0 || offset > 0xF5){
+        if (offset < 0 || offset > 0xF5) {
             throw new DexException("Value out of range should be [0 - 245]: " + offset + ", prev = " + getFlagOffset());
         }
         int value = flag + offset;
         elementType.set((byte) value);
     }
     public abstract DebugElementType<?> getElementType();
-    public SmaliDirective getSmaliDirective(){
+    public SmaliDirective getSmaliDirective() {
         return getElementType().getSmaliDirective();
     }
-    void cacheValues(DebugSequence debugSequence, DebugElement previous){
+    void cacheValues(DebugSequence debugSequence, DebugElement previous) {
         int line;
         int address;
-        if(previous == null){
+        if (previous == null) {
             address = 0;
             line = debugSequence.getLineStart();
-        }else {
+        } else {
             address = previous.getTargetAddress();
             line = previous.getLineNumber();
         }
@@ -239,19 +243,19 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         this.address = address;
         this.lineNumber = line;
     }
-    void updateValues(DebugSequence debugSequence, DebugElement previous){
-        if(previous == this){
+    void updateValues(DebugSequence debugSequence, DebugElement previous) {
+        if (previous == this) {
             return;
         }
-        if(previous != null && previous.getParent() == null){
+        if (previous != null && previous.getParent() == null) {
             return;
         }
         int line;
         int address;
-        if(previous == null){
+        if (previous == null) {
             address = 0;
             line = debugSequence.getLineStart();
-        }else {
+        } else {
             address = previous.getTargetAddress();
             line = previous.getLineNumber();
         }
@@ -260,41 +264,41 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         setAddressDiff(addressDiff);
         setLineDiff(lineDiff);
     }
-    void onPreRemove(DebugSequence debugSequence){
+    void onPreRemove(DebugSequence debugSequence) {
         transferLineOffset(debugSequence);
     }
-    private void transferLineOffset(DebugSequence debugSequence){
+    private void transferLineOffset(DebugSequence debugSequence) {
         int diff = getLineDiff();
-        if(diff == 0){
+        if (diff == 0) {
             return;
         }
         DebugElement prev = debugSequence.get(getIndex() - 1);
-        if(prev == null){
+        if (prev == null) {
             debugSequence.setLineStart(debugSequence.getLineStart() + diff);
             return;
         }
         int available = 245 - prev.getLineDiff();
-        if(available > 0){
-            if(diff > available){
+        if (available > 0) {
+            if (diff > available) {
                 prev.setLineDiff(prev.getLineDiff() + available);
                 diff = diff - available;
-            }else {
+            } else {
                 prev.setLineDiff(prev.getLineDiff() + diff);
                 diff = 0;
             }
         }
-        if(diff == 0){
+        if (diff == 0) {
             return;
         }
         DebugElement next = debugSequence.get(getIndex() + 1);
-        if(next == null){
+        if (next == null) {
             return;
         }
         available = 245 - next.getLineDiff();
-        if(available > 0){
-            if(diff > available){
+        if (available > 0) {
+            if (diff > available) {
                 next.setLineDiff(prev.getLineDiff() + available);
-            }else {
+            } else {
                 next.setLineDiff(prev.getLineDiff() + diff);
             }
         }
@@ -308,7 +312,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        if(isValid()) {
+        if (isValid()) {
             getSmaliDirective().append(writer);
         }
     }
@@ -332,16 +336,30 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         return CompareUtil.compare(getIndex(), element.getIndex());
     }
 
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return EmptyIterator.of();
     }
-    public void merge(DebugElement element){
+    public void merge(DebugElement element) {
         this.elementType.set(element.elementType.getByte());
     }
     public void fromSmali(Smali smali) {
         setTargetAddress(((SmaliDebugElement) smali).getAddress());
     }
 
+    public int compareElement(DebugElement element) {
+        int i = CompareUtil.compare(getFlag(), element.getFlag());
+        if (i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getTargetAddress(), element.getTargetAddress());
+        if (i != 0) {
+            return i;
+        }
+        return compareDetailElement(element);
+    }
+    int compareDetailElement(DebugElement element) {
+        return 0;
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

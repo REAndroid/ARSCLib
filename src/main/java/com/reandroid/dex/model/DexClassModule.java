@@ -55,6 +55,14 @@ public interface DexClassModule extends DexClassRepository {
     <T extends SectionItem> Section<T> getOrCreateSection(SectionType<T> sectionType);
 
     @Override
+    default <T extends SectionItem> T getItem(SectionType<T> sectionType, int id) {
+        Section<T> section = getSection(sectionType);
+        if (section != null) {
+            return section.get(id);
+        }
+        return null;
+    }
+    @Override
     default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key) {
         Section<T> section = getSection(sectionType);
         if (section != null) {
@@ -76,10 +84,6 @@ public interface DexClassModule extends DexClassRepository {
             return section.getCount();
         }
         return 0;
-    }
-    @Override
-    default int getDexClassesCount() {
-        return getCount(SectionType.CLASS_ID);
     }
 
     void addMarker(Marker marker);

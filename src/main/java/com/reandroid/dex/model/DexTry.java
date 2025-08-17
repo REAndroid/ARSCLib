@@ -147,6 +147,12 @@ public class DexTry extends DexCode {
     public void removeSelf(){
         getTryItem().removeSelf();
     }
+    @Override
+    public boolean isRemoved() {
+        return getDexMethod().isRemoved() ||
+                getTryItem().isRemoved();
+    }
+
     public TryItem getTryItem() {
         return tryItem;
     }

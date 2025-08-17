@@ -17,6 +17,7 @@ package com.reandroid.dex.program;
 
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
 import java.util.function.Predicate;
@@ -28,9 +29,7 @@ public interface AnnotatedProgram {
     void clearAnnotations();
 
     default void addAnnotation(AnnotationItemKey annotation) {
-        AnnotationSetKey key = getAnnotation()
-                .add(annotation);
-        setAnnotation(key);
+        setAnnotation(getAnnotation().add(annotation));
     }
     default boolean removeAnnotationIf(Predicate<? super AnnotationItemKey> predicate) {
         AnnotationSetKey key = getAnnotation();
@@ -50,6 +49,13 @@ public interface AnnotatedProgram {
     }
     default AnnotationItemKey getAnnotation(TypeKey typeKey) {
         return getAnnotation().get(typeKey);
+    }
+    default Key getAnnotationValue(TypeKey typeKey, String name) {
+        AnnotationItemKey annotation = getAnnotation(typeKey);
+        if (annotation != null) {
+            return annotation.getValue(name);
+        }
+        return null;
     }
 
     default boolean removeAnnotation(TypeKey typeKey) {

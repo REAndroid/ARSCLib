@@ -17,6 +17,13 @@ package com.reandroid.utils;
 
 // implemented from http://www.libpng.org/pub/png/spec/1.2/PNG-CRCAppendix.html
 
+import com.reandroid.utils.io.FileUtil;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
 public class Crc32 extends Checksum {
 
     private static final long[] CRC_TABLE;
@@ -71,5 +78,41 @@ public class Crc32 extends Checksum {
         }
         this.mCrc = c;
         this.mLength += length;
+    }
+
+    public static long of(byte[] bytes) {
+        return of(bytes, 0, bytes.length);
+    }
+    public static long of(byte[] bytes, int offset, int length) {
+        Crc32 crc32 = new Crc32();
+        crc32.update(bytes, offset, length);
+        return crc32.getValue();
+    }
+    public static long of(File file) throws IOException {
+        if (!file.isFile()) {
+            throw new FileNotFoundException("No such file: " + file);
+        }
+        long length = file.length();
+        long fiftyMega = 50L * 1024 * 1024;
+        if (length > fiftyMega) {
+            length = -1;
+        }
+        return of((int) length, FileUtil.inputStream(file));
+    }
+    public static long of(InputStream stream) throws IOException {
+        return of(-1, stream);
+    }
+    public static long of(int bufferSize, InputStream stream) throws IOException {
+        if ((bufferSize & 0xff000000) != 0) {
+            bufferSize = 4 * 1024 * 1024; // 4MB
+        }
+        byte[] buffer = new byte[bufferSize];
+        int length;
+        Crc32 crc32 = new Crc32();
+        while ((length = stream.read(buffer, 0, bufferSize)) != -1) {
+            crc32.update(buffer, 0, length);
+        }
+        stream.close();
+        return crc32.getValue();
     }
 }

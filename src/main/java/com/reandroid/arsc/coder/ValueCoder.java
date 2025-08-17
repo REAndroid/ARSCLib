@@ -78,7 +78,7 @@ public class ValueCoder {
         }
         TableBlock tableBlock = packageBlock.getTableBlock();
         ResourceEntry resourceEntry = tableBlock.getResource(packageBlock, resourceId);
-        if(resourceEntry != null){
+        if(resourceEntry != null && resourceEntry.isDefined()){
             return resourceEntry.buildReference(packageBlock, referenceType);
         }
         return decodeUnknownResourceId(referenceType == ValueType.REFERENCE, resourceId);

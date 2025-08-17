@@ -26,7 +26,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
+public class AnnotationSetKey extends AnnotationsKey<AnnotationItemKey> {
 
     private static final AnnotationSetKey EMPTY = new AnnotationSetKey(EMPTY_ARRAY);
 
@@ -146,6 +146,32 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
     }
 
     @Override
+    public AnnotationSetKey merge(AnnotationsKey<? extends AnnotationItemKey> item) {
+        if (item == null || item == this || item.isEmpty()) {
+            return this;
+        }
+        if (this.isEmpty()) {
+            return (AnnotationSetKey) item;
+        }
+        AnnotationSetKey result = this;
+        int size = item.size();
+        for (int i = 0; i < size; i++) {
+            result = result.add(item.get(i));
+        }
+        return result;
+    }
+    @Override
+    public AnnotationSetKey merge(int i, AnnotationItemKey item) {
+        return add(item);
+    }
+    public AnnotationSetKey addAll(Iterator<? extends AnnotationItemKey> iterator) {
+        AnnotationSetKey result = this;
+        while (iterator.hasNext()) {
+            result = result.add(iterator.next());
+        }
+        return result;
+    }
+    @Override
     public AnnotationSetKey add(AnnotationItemKey item) {
         if (item == null) {
             return this;
@@ -224,33 +250,6 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
         }
     }
 
-    @Override
-    public int compareTo(Object obj) {
-        if (obj == this) {
-            return 0;
-        }
-        if (!(obj instanceof AnnotationSetKey)) {
-            return 0;
-        }
-        return compareElements((AnnotationSetKey) obj);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof AnnotationSetKey)) {
-            return false;
-        }
-        return equalsElements((AnnotationSetKey) obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return getHashCode();
-    }
-
     public static AnnotationSetKey empty() {
         return EMPTY;
     }
@@ -281,23 +280,11 @@ public class AnnotationSetKey extends KeyList<AnnotationItemKey> {
         }
         return createKey(elements.toArrayFill(new Key[elements.size()]));
     }
-    public static AnnotationSetKey combined(Iterator<AnnotationSetKey> iterator) {
-        ArrayCollection<AnnotationItemKey> elements = null;
+    public static AnnotationSetKey combine(Iterator<AnnotationSetKey> iterator) {
+        AnnotationSetKey result = empty();
         while (iterator.hasNext()) {
-            AnnotationSetKey key = iterator.next();
-            if (!key.isEmpty()) {
-                if (elements == null) {
-                    if (!iterator.hasNext()) {
-                        return key;
-                    }
-                    elements = new ArrayCollection<>();
-                }
-                elements.addAll(key.iterator());
-            }
+            result = result.merge(iterator.next());
         }
-        if (elements == null) {
-            return empty();
-        }
-        return createKey(elements.toArrayFill(new Key[elements.size()]));
+        return result;
     }
 }

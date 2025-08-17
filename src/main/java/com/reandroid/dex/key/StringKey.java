@@ -76,7 +76,11 @@ public class StringKey implements Key{
         boolean unicodeDetected = DexUtils.encodeString(writer, getString());
         writer.append('"');
         if (enableComment && unicodeDetected && writer.isCommentUnicodeStrings()) {
-            DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
+            String value = getString();
+            if (value.length() > 250) {
+                value = value.substring(0, 250);
+            }
+            writer.appendComment("'" + value + "'");
         }
     }
     public void appendSimpleName(SmaliWriter writer) throws IOException {

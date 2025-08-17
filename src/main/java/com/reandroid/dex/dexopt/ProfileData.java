@@ -13,11 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.data;
+package com.reandroid.dex.dexopt;
 
-import com.reandroid.dex.key.ProgramKey;
+import com.reandroid.json.JSONConvert;
+import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
 
-public interface DefIndex {
-    int getDefinitionIndex();
-    ProgramKey getKey();
+public interface ProfileData extends LinkableProfileItem, JSONConvert<JSONObject> {
+    String getName();
+    void setName(String name);
+    boolean isInitialized();
+    void setInitialized(boolean initialized);
+
+    default boolean equalsName(String name) {
+        return ObjectsUtil.equals(getName(), name);
+    }
 }

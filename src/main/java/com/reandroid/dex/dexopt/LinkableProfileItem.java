@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.program;
+package com.reandroid.dex.dexopt;
 
-import java.lang.annotation.ElementType;
+import com.reandroid.dex.model.DexFile;
 
-public interface MethodParameterProgram extends ProgramElement {
+import java.util.Iterator;
 
-    String getDebugName();
-    void setDebugName(String name);
+public interface LinkableProfileItem {
+    void link(DexFile dexFile);
+    void update(DexFile dexFile);
 
-    @Override
-    default ElementType getElementType() {
-        return ElementType.PARAMETER;
+    static void linkAll(DexFile dexFile, Iterator<? extends LinkableProfileItem> iterator) {
+        while (iterator.hasNext()) {
+            iterator.next().link(dexFile);
+        }
+    }
+    static void updateAll(DexFile dexFile, Iterator<? extends LinkableProfileItem> iterator) {
+        while (iterator.hasNext()) {
+            iterator.next().update(dexFile);
+        }
     }
 }

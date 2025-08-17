@@ -20,15 +20,45 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.NumberIntegerReference;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.common.SectionItem;
+import com.reandroid.dex.data.AnnotationGroup;
+import com.reandroid.dex.data.AnnotationItem;
+import com.reandroid.dex.data.AnnotationSet;
+import com.reandroid.dex.data.AnnotationsDirectory;
+import com.reandroid.dex.data.ClassData;
+import com.reandroid.dex.data.CodeItem;
+import com.reandroid.dex.data.DebugInfo;
+import com.reandroid.dex.data.EncodedArray;
+import com.reandroid.dex.data.HiddenApiRestrictions;
+import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.data.TypeList;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.id.*;
-import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.id.CallSiteId;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.FieldId;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.id.MethodHandleId;
+import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.id.ProtoId;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.CallSiteKey;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodHandleKey;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 
 public abstract class SectionType<T extends SectionItem> implements Creator<T> {
@@ -132,6 +162,11 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
+            public boolean isSharedSection() {
+                return true;
+            }
+
+            @Override
             public int getReferenceType() {
                 return 0;
             }
@@ -152,6 +187,12 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             public boolean isDataSection() {
                 return true;
             }
+
+            @Override
+            public boolean isSharedSection() {
+                return true;
+            }
+
             @Override
             public StringDataSection createSection(IntegerPair countAndOffset){
                 return new StringDataSection(countAndOffset, this);
@@ -630,6 +671,9 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
     public boolean isSpecialSection(){
         return false;
     }
+    public boolean isSharedSection() {
+        return false;
+    }
     public Section<T> createSection(IntegerPair countAndOffset){
         return null;
     }
@@ -694,7 +738,7 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         }
     }
 
-    public static SectionType<? extends IdItem> getSectionType(Key key) {
+    public static SectionType<? extends IdItem> getIdSectionType(Key key) {
         if (key instanceof StringKey) {
             return STRING_ID;
         }
@@ -717,6 +761,23 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             return CALL_SITE_ID;
         }
         return null;
+    }
+
+    public static SectionType<?> getSectionType(Key key) {
+        SectionType<?> type = null;
+        if (key != null) {
+            type = getIdSectionType(key);
+            if (type == null) {
+                if (key instanceof AnnotationItemKey) {
+                    type = ANNOTATION_ITEM;
+                } else if (key instanceof AnnotationSetKey) {
+                    type = ANNOTATION_SET;
+                } else if (key instanceof AnnotationGroupKey) {
+                    type = ANNOTATION_GROUP;
+                }
+            }
+        }
+        return type;
     }
 
     public static Iterator<SectionType<?>> getSectionTypes(){
@@ -743,6 +804,47 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
     public static Iterator<SectionType<?>> getIdSectionTypes() {
         return ArrayIterator.of(R8_ORDER, SectionType::isIdSection);
+    }
+
+    public static Predicate<SectionType<?>> exceptDebug() {
+        return except(SectionType.DEBUG_INFO);
+    }
+    public static Predicate<SectionType<?>> exceptDebugCodeAnnotations() {
+        return except(
+                DEBUG_INFO,
+                CODE,
+                ANNOTATION_ITEM,
+                ANNOTATION_SET,
+                ANNOTATION_GROUP,
+                ANNOTATION_DIRECTORY
+        );
+    }
+    public static Predicate<SectionType<?>> minimal() {
+        return except(
+                DEBUG_INFO,
+                CODE,
+                ANNOTATION_ITEM,
+                ANNOTATION_SET,
+                ANNOTATION_GROUP,
+                ANNOTATION_DIRECTORY,
+                ENCODED_ARRAY,
+                METHOD_HANDLE,
+                CALL_SITE_ID,
+                HIDDEN_API
+        );
+    }
+    public static Predicate<SectionType<?>> except(SectionType<?> ... types) {
+        if (types == null || types.length == 0) {
+            return CollectionUtil.getAcceptAll();
+        }
+        return sectionType -> {
+            for (SectionType<?> type : types) {
+                if (sectionType == type) {
+                    return false;
+                }
+            }
+            return true;
+        };
     }
 
 

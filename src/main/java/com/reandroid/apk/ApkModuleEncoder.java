@@ -32,6 +32,7 @@ import java.util.List;
 
 public abstract class ApkModuleEncoder extends ApkModuleCoder{
     private DexEncoder mDexEncoder;
+    private DexProfileEncoder mDexProfileEncoder;
     public ApkModuleEncoder(){
         super();
     }
@@ -43,6 +44,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         loadUncompressedFiles(mainDirectory);
         buildResources(mainDirectory);
         encodeDexFiles(mainDirectory);
+        encodeDexProfile(mainDirectory);
         scanRootDir(mainDirectory);
         restorePathMap(mainDirectory);
         restoreSignatures(mainDirectory);
@@ -153,6 +155,12 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
             apkModule.addAll(dexList);
         }
     }
+    public void encodeDexProfile(File mainDirectory) throws IOException {
+        DexProfileEncoder encoder = getDexProfileEncoder();
+        if (encoder != null) {
+            encoder.encodeDexProfile(mainDirectory);
+        }
+    }
 
     public DexEncoder getRawDexEncoder() {
         DexFileRawEncoder dexFileRawEncoder = new DexFileRawEncoder();
@@ -164,6 +172,13 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     }
     public void setDexEncoder(DexEncoder dexEncoder) {
         this.mDexEncoder = dexEncoder;
+    }
+
+    public DexProfileEncoder getDexProfileEncoder() {
+        return mDexProfileEncoder;
+    }
+    public void setDexProfileEncoder(DexProfileEncoder dexProfileEncoder) {
+        this.mDexProfileEncoder = dexProfileEncoder;
     }
 
     void loadArchiveInfo(File mainDirectory) throws IOException {

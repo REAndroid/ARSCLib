@@ -355,6 +355,13 @@ public class TryItem extends FixedDexContainerWithTool implements
             tryBlock.remove(this);
         }
     }
+    public boolean isRemoved() {
+        if (getParent() == null) {
+            return true;
+        }
+        TryBlock tryBlock = getTryBlock();
+        return tryBlock == null || tryBlock.getParent() == null;
+    }
     public void remove(ExceptionHandler handler){
         if(handler == null){
             return;

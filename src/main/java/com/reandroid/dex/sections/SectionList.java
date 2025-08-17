@@ -25,19 +25,24 @@ import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.common.SectionTool;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.model.SmaliClass;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class SectionList extends FixedBlockContainer
@@ -46,20 +51,15 @@ public class SectionList extends FixedBlockContainer
 
     private final IntegerReference baseOffset;
     private final DexHeader dexHeader;
-    private final Section<DexHeader> dexHeaderSection;
-    private final BlockList<IdSection<?>> idSectionList;
-    private final BlockList<DataSection<?>> dataSectionList;
-    private final Section<MapList> mapListSection;
+    private final BlockList<Section<?>> sectionArray;
     private final Map<SectionType<?>, Section<?>> typeMap;
     private final MapList mapList;
 
-    private boolean mReading;
-
     public SectionList() {
-        super(4);
+        super(1);
 
-        this.idSectionList = new BlockList<>();
-        this.dataSectionList = new BlockList<>();
+        BlockList<Section<?>> sectionArray = new BlockList<>();
+        this.sectionArray = sectionArray;
 
         DexHeader dexHeader = new DexHeader();
         this.baseOffset = dexHeader.getOffsetReference();
@@ -68,19 +68,16 @@ public class SectionList extends FixedBlockContainer
                 .HEADER.createSpecialSection(baseOffset);
         dexHeaderSection.add(dexHeader);
 
-        this.dexHeaderSection = dexHeaderSection;
-
         Section<MapList> mapListSection = SectionType.MAP_LIST.createSpecialSection(dexHeader.map);
         MapList mapList = new MapList(dexHeader.map);
         mapListSection.add(mapList);
-        this.mapListSection = mapListSection;
+
+        sectionArray.add(dexHeaderSection);
+        sectionArray.add(mapListSection);
 
         this.typeMap = new HashMap<>();
 
-        addChild(0, dexHeaderSection);
-        addChild(1, idSectionList);
-        addChild(2, dataSectionList);
-        addChild(3, mapListSection);
+        addChild(0, sectionArray);
 
         this.dexHeader = dexHeader;
         this.mapList = mapList;
@@ -89,61 +86,45 @@ public class SectionList extends FixedBlockContainer
         typeMap.put(SectionType.MAP_LIST, mapListSection);
     }
 
-    public int shrink(){
+    public int shrink() {
         int result = 0;
         while (true) {
-            int count = clearUnused();
-            if(count == 0){
-                break;
-            }
-            result += count;
-        }
-        while (true) {
             int count = clearDuplicateData();
-            if(count == 0){
+            if (count == 0) {
                 break;
             }
             result += count;
-            result += clearUnused();
         }
         result += clearEmptySections();
         return result;
     }
-    public int clearDuplicateData(){
+    public int clearDuplicateData() {
         refresh();
         int result = 0;
         SectionType<?>[] remove = SectionType.getRemoveOrderList();
         for (SectionType<?> sectionType : remove) {
             Section<?> section = getSection(sectionType);
-            if(section == null){
-                continue;
+            if (section != null) {
+                result += section.clearDuplicates();
             }
-            int count = section.getPool().clearDuplicates();
-            result += count;
-            if(count == 0){
-                continue;
-            }
-            section.refresh();
         }
-        if(result != 0){
+        if (result != 0) {
             refresh();
         }
         return result;
     }
     public int clearUnused() {
-        clearUsageTypes();
-        refresh();
         int result = 0;
         SectionType<?>[] remove = SectionType.getRemoveOrderList();
         for (SectionType<?> sectionType : remove) {
             Section<?> section = getSection(sectionType);
-            if(section != null){
+            if (section != null) {
                 result += section.clearUnused();
             }
         }
         return result;
     }
-    public int clearEmptySections(){
+    public int clearEmptySections() {
         int result = 0;
         List<Section<?>> sections = CollectionUtil.toList(getSections());
         for (Section<?> section : sections) {
@@ -153,12 +134,6 @@ public class SectionList extends FixedBlockContainer
             }
         }
         return result;
-    }
-    private void clearUsageTypes(){
-        Iterator<Section<?>> iterator = getSections();
-        while (iterator.hasNext()) {
-            iterator.next().clearUsageTypes();
-        }
     }
 
     @Override
@@ -172,18 +147,18 @@ public class SectionList extends FixedBlockContainer
         readSections(reader, null);
     }
     void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
-        mReading = true;
         int position = reader.getPosition();
         DexHeader header = getHeader();
         header.getOffsetReference().set(position);
         readSpecialSections(reader);
         readBody(reader, filter);
         reader.seek(position + header.getFileSize());
-        mReading = false;
     }
     private void readSpecialSections(BlockReader reader) throws IOException {
         getSection(SectionType.HEADER).readBytes(reader);
         getSection(SectionType.MAP_LIST).readBytes(reader);
+        ensureMapList(getSection(SectionType.HEADER));
+        ensureMapList(getSection(SectionType.MAP_LIST));
     }
     private void readBody(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
         MapItem[] mapItemList = mapList.getBodyReaderSorted();
@@ -195,12 +170,7 @@ public class SectionList extends FixedBlockContainer
                 loadSection(mapItem, reader);
             }
         }
-
-        idSectionList.trimToSize();
-        dataSectionList.trimToSize();
-
-        idSectionList.sort(getOffsetComparator());
-        dataSectionList.sort(getOffsetComparator());
+        sectionArray.sort(getOffsetComparator());
         mapList.linkHeader(dexHeader);
     }
     private void loadSection(MapItem mapItem, BlockReader reader) throws IOException {
@@ -209,35 +179,69 @@ public class SectionList extends FixedBlockContainer
             section = mapItem.createNewSection();
             add(section);
         }
-        section.readBytes(reader);
+        if (ownsSection(section)) {
+            section.readBytes(reader);
+        } else {
+            ensureMapList(section);
+        }
     }
     @Override
-    public boolean isReading(){
-        return mReading;
+    public boolean isReading() {
+        DexContainerBlock containerBlock = getDexContainerBlock();
+        if (containerBlock != null) {
+            return containerBlock.isReading();
+        }
+        return true;
+    }
+    public DexContainerBlock getDexContainerBlock() {
+        DexLayoutBlock layoutBlock = getLayoutBlock();
+        if (layoutBlock != null) {
+            return layoutBlock.getDexContainerBlock();
+        }
+        return ObjectsUtil.getNull();
+    }
+    public DexLayoutBlock getLayoutBlock() {
+        return getParentInstance(DexLayoutBlock.class);
     }
 
-    public<T1 extends SectionItem> Section<T1> add(Section<T1> section){
+    public<T1 extends SectionItem> Section<T1> add(Section<T1> section) {
         SectionType<T1> sectionType = section.getSectionType();
         Section<T1> existing = getSection(sectionType);
-
         if (existing == section) {
             return existing;
         }
-
         if (existing != null) {
             throw new IllegalArgumentException("Already contains section type: "
                     + sectionType + ", existing = " + existing
                     + ", section = " + section);
         }
-
-        if (sectionType.isIdSection()) {
-            idSectionList.add((IdSection<?>) section);
-        } else if (sectionType.isDataSection()) {
-            dataSectionList.add((DataSection<?>) section);
+        BlockList<Section<?>> sectionArray = this.sectionArray;
+        int size = sectionArray.size();
+        int index;
+        if (sectionType == SectionType.HEADER) {
+            index = 0;
+        } else if (sectionType == SectionType.MAP_LIST) {
+            index = sectionArray.size();
+        } else if (section.getOffset() == 0) {
+            index = 1;
+            for (int i = 1; i < size; i++) {
+                SectionType<?> current = sectionArray.get(i).getSectionType();
+                if ((sectionType.isIdSection() && current.isIdSection()) ||
+                        (sectionType.isDataSection() && current.isDataSection())) {
+                    index ++;
+                }
+            }
         } else {
-            throw new IllegalArgumentException("Unknown section type: "
-                    + sectionType + ", " + section);
+            index = 1;
+            int offset = section.getOffset();
+            for (int i = 1; i < size; i++) {
+                int current = sectionArray.get(i).getOffset();
+                if (offset > current) {
+                    index ++;
+                }
+            }
         }
+        sectionArray.add(index, section);
         typeMap.put(section.getSectionType(), section);
         return section;
     }
@@ -248,119 +252,146 @@ public class SectionList extends FixedBlockContainer
         return mapList;
     }
 
-    public void remove(Section<?> section){
-        if(section == null){
+    public void remove(Section<?> section) {
+        if (section == null) {
             return;
         }
         SectionType<?> sectionType = section.getSectionType();
-        if(typeMap.remove(sectionType) != section){
+        if (typeMap.remove(sectionType) != section) {
             return;
         }
         section.onRemove(this);
-        if(sectionType.isDataSection()){
-            dataSectionList.remove((DataSection<?>) section);
-        }else if(sectionType.isIdSection()){
-            idSectionList.remove((IdSection<?>) section);
-        }
+        sectionArray.remove(section);
     }
-    public void clear(){
+    private Section<?> cut(Section<?> section) {
+        if (sectionArray.remove(section)) {
+            typeMap.remove(section.getSectionType());
+            return section;
+        }
+        return null;
+    }
+    public void clear() {
         Iterator<Section<?>> iterator = getSections();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Section<?> section = iterator.next();
             section.onRemove(this);
         }
-        idSectionList.clearChildes();
-        dataSectionList.clearChildes();
+        sectionArray.clearChildes();
         typeMap.clear();
     }
-    public void clearPoolMap(SectionType<?> sectionType){
+    public void clearPoolMap(SectionType<?> sectionType) {
         Section<?> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             section.clearPoolMap();
         }
     }
-    public void clearPoolMap(){
-        for(Section<?> section : this){
+    public void clearPoolMap() {
+        for(Section<?> section : this) {
             section.clearPoolMap();
         }
     }
-    public void sortSection(SectionType<?>[] order){
+    public void sortSection(SectionType<?>[] order) {
         //WARN: DO NOT CALL refresh() HERE
-        idSectionList.sort(SectionType.comparator(order, Section::getSectionType));
-        dataSectionList.sort(SectionType.comparator(order, Section::getSectionType));
-        mapList.sortMapItems(order);
+        sectionArray.sort(SectionType.comparator(order, Section::getSectionType));
+        mapList.sort();
     }
     @Override
-    public void refreshFull(){
+    public void refreshFull() {
         SectionType<?>[] sortOrder = SectionType.getSortSectionsOrder();
-        for(SectionType<?> sectionType : sortOrder){
+        for(SectionType<?> sectionType : sortOrder) {
             Section<?> section = getSection(sectionType);
-            if(section != null){
+            if (section != null) {
                 section.refreshFull();
             }
         }
-        clearUnused();
         clearDuplicateData();
         if (clearEmptySections() != 0) {
             refresh();
         }
     }
-    public boolean sortStrings(){
-        boolean result = false;
-        Section<StringData> stringDataSection = getSection(SectionType.STRING_DATA);
-        if(stringDataSection != null){
-            result = stringDataSection.sort();
-        }
-        if(sortItems(SectionType.STRING_ID)){
+    public boolean sortStrings() {
+        boolean result = sortItems(SectionType.STRING_DATA);
+        if (sortItems(SectionType.STRING_ID)) {
             result = true;
         }
-        if(sortItems(SectionType.TYPE_ID)){
+        if (sortItems(SectionType.TYPE_ID)) {
             result = true;
         }
-        if(sortItems(SectionType.PROTO_ID)){
+        if (sortItems(SectionType.PROTO_ID)) {
             result = true;
         }
-        if(sortItems(SectionType.FIELD_ID)){
+        if (sortItems(SectionType.FIELD_ID)) {
             result = true;
         }
-        if(sortItems(SectionType.METHOD_ID)){
+        if (sortItems(SectionType.METHOD_ID)) {
             result = true;
         }
-        if(sortItems(SectionType.CLASS_ID)){
+        if (sortItems(SectionType.CLASS_ID)) {
+            result = true;
+        }
+        if (sortItems(SectionType.ANNOTATION_SET)) {
             result = true;
         }
         return result;
     }
-    private boolean sortItems(SectionType<?> sectionType){
+    private boolean sortItems(SectionType<?> sectionType) {
         Section<?> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.sort();
         }
         return false;
     }
-    public<T1 extends SectionItem> T1 getLoaded(SectionType<T1> sectionType, Key key){
+    public<T1 extends SectionItem> T1 getLoaded(SectionType<T1> sectionType, Key key) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.getSectionItem(key);
         }
         return null;
     }
-    @SuppressWarnings("unchecked")
     @Override
-    public<T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType){
-        return (Section<T1>) typeMap.get(sectionType);
+    public<T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType) {
+        if (sectionType != null) {
+            Section<T1> section = getOwnedSection(sectionType);
+            if (section == null && sectionType.isSharedSection()) {
+                section = getForeignSection(sectionType);
+            }
+            return section;
+        }
+        return null;
+    }
+    private <T1 extends SectionItem> Section<T1> getForeignSection(SectionType<T1> sectionType) {
+        DexContainerBlock containerBlock = getDexContainerBlock();
+        if (containerBlock != null) {
+            Iterator<SectionList> iterator = containerBlock.getSectionLists();
+            while (iterator.hasNext()) {
+                SectionList sectionList = iterator.next();
+                if (sectionList != this) {
+                    Section<T1> section = sectionList.getOwnedSection(sectionType);
+                    if (section != null) {
+                        return section;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    <T1 extends SectionItem> Section<T1> getOwnedSection(SectionType<T1> sectionType) {
+        return ObjectsUtil.cast(typeMap.get(sectionType));
+    }
+    private boolean ownsSection(Section<?> section) {
+        return section != null && section.getParent(this.getClass()) == this;
     }
     @Override
     public SectionList getSectionList() {
         return this;
     }
     @Override
-    public<T1 extends SectionItem> Section<T1> getOrCreateSection(SectionType<T1> sectionType){
+    public<T1 extends SectionItem> Section<T1> getOrCreateSection(SectionType<T1> sectionType) {
         Section<T1> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section;
         }
-        if(sectionType == SectionType.MAP_LIST || sectionType == SectionType.HEADER){
+        if (sectionType == SectionType.MAP_LIST || sectionType == SectionType.HEADER) {
             return null;
         }
         MapList mapList = getMapList();
@@ -373,77 +404,64 @@ public class SectionList extends FixedBlockContainer
         }
         return section;
     }
+    void ensureInitialized(SectionType<?> ... sectionTypes) {
+        if (isReading() || sectionTypes == null || sectionTypes.length == 0) {
+            return;
+        }
+        for (SectionType<?> type : sectionTypes) {
+            if (type != null) {
+                ensureMapList(getOrCreateSection(type));
+            }
+        }
+        getMapList().linkHeader(getHeader());
+    }
+    private void ensureMapList(Section<?> section) {
+        SectionType<?> sectionType = section.getSectionType();
+        MapList mapList = getMapList();
+        MapItem mapItem;
+        if (isReading()) {
+            mapItem = mapList.get(sectionType);
+        } else {
+            mapItem = mapList.getOrCreate(sectionType);
+        }
+        section.addCountAndOffset(mapItem.getCountAndOffset());
+    }
 
-    public int indexOf(Section<?> section){
-        if(section == dexHeaderSection){
-            return 0;
-        }
-        if(section == mapListSection){
-            return getCount() - 1;
-        }
-        if (section == idSectionList.get(section.getIndex())){
-            return 1 + section.getIndex();
-        }
-        if (section == dataSectionList.get(section.getIndex())){
-            return 1 + idSectionList.size() + section.getIndex();
-        }
-        return -1;
+    public int indexOf(Section<?> section) {
+        return sectionArray.indexOf(section);
     }
     @Override
     public Section<?> get(int i) {
-        if(i == 0){
-            return dexHeaderSection;
-        }
-        if(i == getCount() - 1){
-            return mapListSection;
-        }
-        if(i <= idSectionList.size()){
-            return idSectionList.get(i - 1);
-        }
-        return dataSectionList.get(i - 1 - idSectionList.size());
+        return sectionArray.get(i);
     }
 
-    public boolean contains(Key key){
-        if(key == null){
+    public boolean contains(Key key) {
+        if (key == null) {
             return false;
         }
-        if(key instanceof StringKey){
-            return contains(SectionType.STRING_ID, key);
-        }
-        if(key instanceof TypeKey){
-            return contains(SectionType.TYPE_ID, key);
-        }
-        if(key instanceof FieldKey){
-            return contains(SectionType.FIELD_ID, key);
-        }
-        if(key instanceof ProtoKey){
-            return contains(SectionType.PROTO_ID, key);
-        }
-        if(key instanceof MethodKey){
-            return contains(SectionType.METHOD_ID, key);
-        }
-        if(key instanceof TypeListKey){
-            return contains(SectionType.TYPE_LIST, key);
+        SectionType<?> sectionType = SectionType.getSectionType(key);
+        if (sectionType != null) {
+            return contains(sectionType, key);
         }
         throw new IllegalArgumentException("Unknown key type: " + key.getClass() + ", '" + key + "'");
     }
-    private boolean contains(SectionType<?> sectionType, Key key){
+    private boolean contains(SectionType<?> sectionType, Key key) {
         Section<?> section = getSection(sectionType);
-        if(section != null){
+        if (section != null) {
             return section.contains(key);
         }
         return false;
     }
 
-    public void keyChangedInternal(SectionItem item, SectionType<?> sectionType, Key oldKey){
+    public void keyChangedInternal(SectionItem item, SectionType<?> sectionType, Key oldKey) {
         Section<?> section = getSection(sectionType);
-        if(section == null){
+        if (section == null) {
             return;
         }
         section.keyChanged(item, oldKey);
-        if(sectionType == SectionType.TYPE_ID){
+        if (sectionType == SectionType.TYPE_ID) {
             ClassId classId = getLoaded(SectionType.CLASS_ID, oldKey);
-            if(classId != null){
+            if (classId != null) {
                 // getKey() call triggers keyChanged event
                 classId.getKey();
             }
@@ -451,17 +469,18 @@ public class SectionList extends FixedBlockContainer
         }
     }
     public Iterator<Section<?>> getSections() {
-        return new CombiningIterator<>(getIdSections(), getDataSections());
+        return sectionArray.arrayIterator();
     }
     public Iterator<IdSection<?>> getIdSections() {
-        return idSectionList.iterator();
-    }
-    public Iterator<DataSection<?>> getDataSections() {
-        return dataSectionList.iterator();
+        return ObjectsUtil.cast(sectionArray.iterator(IdSection.class));
     }
     @Override
-    public int getCount(){
-        return 2 + idSectionList.size() + dataSectionList.size();
+    public int getCount() {
+        return sectionArray.size();
+    }
+    public Iterator<Section<?>> getSharedSections() {
+        return CollectionUtil.copyOf(sectionArray.iterator(
+                section -> section.getSectionType().isSharedSection()));
     }
     @Override
     public Iterator<Section<?>> iterator() {
@@ -471,40 +490,55 @@ public class SectionList extends FixedBlockContainer
     public IntegerReference getOffsetReference() {
         return baseOffset;
     }
+    void transferSharedSectionsFrom(SectionList sectionList) {
+        if (sectionList !=  this) {
+            Iterator<Section<?>> iterator = sectionList.getSharedSections();
+            while (iterator.hasNext()) {
+                transferSharedSection(sectionList, iterator.next());
+            }
+        }
+    }
+    private void transferSharedSection(SectionList sectionList, Section<?> section) {
+        section = sectionList.cut(section);
+        if (section != null) {
+            this.add(section);
+            section.addCountAndOffset(mapList.get(section.getSectionType()).getCountAndOffset());
+        }
+    }
 
     private boolean canAddAll(Collection<IdItem> idItemCollection) {
         int reserveSpace = 200;
         Iterator<IdSection<?>> idSections = getIdSections();
-        while (idSections.hasNext()){
+        while (idSections.hasNext()) {
             IdSection<?> section = idSections.next();
-            if(!section.canAddAll(idItemCollection, reserveSpace)){
+            if (!section.canAddAll(idItemCollection, reserveSpace)) {
                 return false;
             }
         }
         return true;
     }
-    public boolean merge(MergeOptions options, ClassId classId){
-        if(classId == null){
+    public boolean merge(MergeOptions options, ClassId classId) {
+        if (classId == null) {
             options.onMergeError(getParentInstance(DexLayoutBlock.class), classId, "Null class id");
             return false;
         }
-        if(classId.getParent() == null){
+        if (classId.getParent() == null) {
             options.onMergeError(getParentInstance(DexLayoutBlock.class), classId, "Destroyed class id");
             return false;
         }
-        if(classId.getParent(SectionList.class) == this){
+        if (classId.getParent(SectionList.class) == this) {
             options.onMergeError(getParentInstance(DexLayoutBlock.class), classId, "Class id is on same section");
             return false;
         }
-        if(options.skipMerging(classId, classId.getKey())){
+        if (options.skipMerging(classId, classId.getKey())) {
             return false;
         }
-        if(contains(SectionType.CLASS_ID, classId.getKey())){
+        if (contains(SectionType.CLASS_ID, classId.getKey())) {
             options.onDuplicate(classId);
             return false;
         }
         ArrayCollection<IdItem> collection = classId.listUsedIds();
-        if(!canAddAll(collection)){
+        if (!canAddAll(collection)) {
             options.onDexFull(getParentInstance(DexLayoutBlock.class), classId);
             return false;
         }
@@ -512,23 +546,23 @@ public class SectionList extends FixedBlockContainer
 
         ClassId myClass = mySection.getOrCreate(classId.getKey());
         myClass.merge(classId);
-        if(options.relocateClass()){
+        if (options.relocateClass()) {
             classId.removeSelf();
         }
         options.onMergeSuccess(classId, classId.getKey());
         return true;
     }
-    public boolean merge(MergeOptions options, SectionList sectionList){
-        if(sectionList == this){
+    public boolean merge(MergeOptions options, SectionList sectionList) {
+        if (sectionList == this) {
             options.onMergeError(getParentInstance(DexLayoutBlock.class), sectionList, "Can not merge with self");
             return false;
         }
-        if(sectionList.getParent() == null){
+        if (sectionList.getParent() == null) {
             options.onMergeError(getParentInstance(DexLayoutBlock.class), sectionList, "Destroyed section list");
             return false;
         }
         Section<ClassId> comingSection = sectionList.getSection(SectionType.CLASS_ID);
-        if(comingSection == null || comingSection.getCount() == 0){
+        if (comingSection == null || comingSection.getCount() == 0) {
             return false;
         }
         boolean mergedOnce = false;
@@ -536,18 +570,18 @@ public class SectionList extends FixedBlockContainer
         Section<ClassId> mySection = getOrCreateSection(SectionType.CLASS_ID);
         BlockListArray<ClassId> comingArray = comingSection.getItemArray();
         int size = comingArray.size() - 1;
-        for (int i = size; i >= 0; i--){
+        for (int i = size; i >= 0; i--) {
             ClassId coming = comingArray.get(i);
             TypeKey key = coming.getKey();
-            if(options.skipMerging(coming, key)){
+            if (options.skipMerging(coming, key)) {
                 continue;
             }
-            if(mySection.contains(key)){
+            if (mySection.contains(key)) {
                 options.onDuplicate(coming);
                 continue;
             }
             ArrayCollection<IdItem> collection = coming.listUsedIds();
-            if(!canAddAll(collection)){
+            if (!canAddAll(collection)) {
                 mergedAll = false;
                 options.onDexFull(this.getParentInstance(DexLayoutBlock.class), coming);
                 break;
@@ -555,18 +589,18 @@ public class SectionList extends FixedBlockContainer
             ClassId classId = mySection.getOrCreate(coming.getKey());
             classId.merge(coming);
             options.onMergeSuccess(coming, key);
-            if(options.relocateClass()){
+            if (options.relocateClass()) {
                 coming.removeSelf();
             }
             mergedOnce = true;
         }
-        if(comingSection.getCount() == 0){
+        if (comingSection.getCount() == 0) {
             SectionList comingSectionSectionList = comingSection.getSectionList();
             DexLayoutBlock dexLayoutBlock = comingSectionSectionList
                     .getParentInstance(DexLayoutBlock.class);
             dexLayoutBlock.clear();
         }
-        if(mergedOnce){
+        if (mergedOnce) {
             sortStrings();
             refresh();
         }
@@ -579,10 +613,10 @@ public class SectionList extends FixedBlockContainer
     }
     private static<T1 extends Section<?>> Comparator<T1> getOffsetComparator() {
         return (section1, section2) -> {
-            if(section1 == section2){
+            if (section1 == section2) {
                 return 0;
             }
-            if(section1 == null){
+            if (section1 == null) {
                 return 1;
             }
             return section1.compareOffset(section2);

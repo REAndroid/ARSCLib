@@ -129,9 +129,7 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
     }
 
     public void clearEmptySections() {
-        for (DexLayout dexLayout : this) {
-            dexLayout.clearEmptySections();
-        }
+        getContainerBlock().clearEmptySections();
     }
     public Iterator<DexInstruction> getDexInstructions() {
         return new IterableIterator<DexLayout, DexInstruction>(iterator()) {
@@ -170,10 +168,15 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
         }
         return result;
     }
-    public int clearUnused(){
-        int result = 0;
-        for(DexLayout dexLayout : this){
-            result += dexLayout.clearUnused();
+    public int clearUnused() {
+        return getContainerBlock().clearUnused();
+    }
+
+    @Override
+    public int shrink() {
+        int result = clearUnused();
+        for (DexLayout layout : this) {
+            result += layout.shrink();
         }
         return result;
     }
@@ -270,7 +273,9 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             for (int i = 0; i < size; i++) {
                 File file = layoutDir.get(i);
                 DexLayout layout = getOrCreateAt(i);
+                System.err.println(file);
                 layout.parseSmaliDirectory(file);
+                shrink();
             }
         } else {
             getOrCreateFirst().parseSmaliDirectory(dir);
@@ -290,7 +295,7 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             int size = size();
             for(int i = 0; i < size; i++) {
                 DexLayout dexLayout = getLayout(i);
-                String name = "layout" + i;
+                String name = DexLayout.DIRECTORY_PREFIX + i;
                 File dir = new File(root, name);
                 dexLayout.writeSmali(writer, dir);
             }
@@ -327,7 +332,7 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             return false;
         }
         String name = dir.getName();
-        String prefix = "layout";
+        String prefix = DexLayout.DIRECTORY_PREFIX;
         if (!name.startsWith(prefix)) {
             return false;
         }
@@ -463,7 +468,9 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
         return read(dexBytes, null);
     }
     public static DexFile read(File file) throws IOException {
-        return read(file, null);
+        DexFile dexFile = read(file, null);
+        dexFile.setSimpleName(file.getName());
+        return dexFile;
     }
     public static DexFile read(InputStream inputStream) throws IOException {
         return read(inputStream, null);
@@ -477,7 +484,9 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
         return read(new BlockReader(dexBytes), filter);
     }
     public static DexFile read(File file, Predicate<SectionType<?>> filter) throws IOException {
-        return read(new BlockReader(file), filter);
+        DexFile dexFile = read(new BlockReader(file), filter);
+        dexFile.setSimpleName(file.getName());
+        return dexFile;
     }
     public static DexFile read(InputStream inputStream, Predicate<SectionType<?>> filter) throws IOException {
         return read(new BlockReader(inputStream), filter);

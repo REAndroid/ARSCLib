@@ -23,6 +23,7 @@ import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
     }
     public void setName(String name){
         if(name == null || name.length() == 0){
-            setItem((StringId) null);
+            setItem(null);
         }else {
             setKey(new StringKey(name));
         }
@@ -77,6 +78,23 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
     }
     public void merge(DebugParameter parameter){
         setKey(parameter.getKey());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != getClass()) {
+            return false;
+        }
+        DebugParameter parameter = (DebugParameter) obj;
+        return ObjectsUtil.equals(getKey(), parameter.getKey());
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsUtil.hash(getKey());
     }
 
     @Override

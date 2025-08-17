@@ -420,12 +420,25 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         return methodDef;
     }
 
+    @Override
+    public int getParametersCount() {
+        return getDefinition().getParametersCount();
+    }
+    @Override
+    public DexMethodParameter getParameter(int i) {
+        return DexMethodParameter.create(this, getDefinition().getParameter(i));
+    }
+    @Override
     public Iterator<DexMethodParameter> getParameters() {
         return ComputeIterator.of(getDefinition().getParameters(),
                 parameter -> DexMethodParameter.create(DexMethod.this, parameter));
     }
+
     public void removeParameter(int index) {
         getDefinition().removeParameter(index);
+    }
+    public boolean hasParameter(int index) {
+        return getDefinition().hasParameter(index);
     }
 
     @Override

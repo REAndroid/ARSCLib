@@ -21,10 +21,15 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.id.*;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.TryBlock;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
@@ -33,12 +38,14 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArraySupplierIterator;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class MethodDef extends Def<MethodId> implements MethodProgram {
 
@@ -51,7 +58,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
 
     @Override
-    public MethodKey getKey(){
+    public MethodKey getKey() {
         MethodId id = getId();
         if (id != null) {
             return id.getKey();
@@ -64,47 +71,48 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         return ElementType.METHOD;
     }
 
+    @Override
     public String getName() {
         MethodId methodId = getId();
-        if(methodId != null) {
+        if (methodId != null) {
             return methodId.getName();
         }
         return null;
     }
     public void setName(String name) {
-        if(Objects.equals(getName(), name)){
+        if (ObjectsUtil.equals(getName(), name)) {
             return;
         }
         getId().setName(name);
     }
-    public int getParametersCount(){
+    @Override
+    public ProtoKey getProtoKey() {
         MethodId methodId = getId();
-        if(methodId != null){
+        if (methodId != null) {
+            return methodId.getProto();
+        }
+        return null;
+    }
+    @Override
+    public int getParametersCount() {
+        MethodId methodId = getId();
+        if (methodId != null) {
             return methodId.getParametersCount();
         }
         return 0;
     }
-    public int getParameterRegistersCount(){
-        MethodId methodId = getId();
-        if(methodId != null){
-            int count = methodId.getParameterRegistersCount();
-            if(!isStatic()){
-                count = count + 1;
-            }
-            return count;
-        }
-        return 0;
-    }
-    public MethodParameter getParameter(int index){
-        if(index < 0 || index >= getParametersCount()){
+    @Override
+    public MethodParameterDef getParameter(int index) {
+        if (index < 0 || index >= getParametersCount()) {
             return null;
         }
-        return new MethodParameter(this, index);
+        return new MethodParameterDef(this, index);
     }
-    public Iterator<MethodParameter> getParameters() {
-        return ArraySupplierIterator.of(new ArraySupplier<MethodParameter>() {
+    @Override
+    public Iterator<MethodParameterDef> getParameters() {
+        return ArraySupplierIterator.of(new ArraySupplier<MethodParameterDef>() {
             @Override
-            public MethodParameter get(int i) {
+            public MethodParameterDef get(int i) {
                 return MethodDef.this.getParameter(i);
             }
             @Override
@@ -113,106 +121,139 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
             }
         });
     }
+    public int getParameterRegistersCount() {
+        MethodId methodId = getId();
+        if (methodId != null) {
+            int count = methodId.getParameterRegistersCount();
+            if (!isStatic()) {
+                count = count + 1;
+            }
+            return count;
+        }
+        return 0;
+    }
+    public boolean hasParameter(int index) {
+        return index >= 0 && index < getParametersCount();
+    }
+    public AnnotationGroupKey getParametersAnnotation() {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory != null) {
+            return directory.getParameters(this);
+        }
+        return AnnotationGroupKey.empty();
+    }
+    public void setParametersAnnotation(AnnotationGroupKey key) {
+        if (key == null || key.isBlank()) {
+            AnnotationsDirectory directory = getAnnotationsDirectory();
+            if (directory != null) {
+                directory = getOrCreateUniqueAnnotationsDirectory();
+                directory.setParameters(this, key);
+            }
+        } else {
+            getOrCreateUniqueAnnotationsDirectory()
+                    .setParameters(this, key);
+        }
+    }
 
     @Override
     void onRemove() {
         CodeItem codeItem = codeOffset.getItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.setMethodDef(null);
             this.codeOffset.setItem(null);
         }
         super.onRemove();
     }
 
-    public void removeParameter(int index){
-        MethodParameter parameter = getParameter(index);
-        if(parameter == null){
+    public void removeParameter(int index) {
+        MethodParameterDef parameter = getParameter(index);
+        if (parameter == null) {
             return;
         }
         parameter.onRemoved();
         MethodKey methodKey = getKey();
-        if(methodKey == null){
+        if (methodKey == null) {
             return;
         }
         methodKey = methodKey.removeParameter(index);
         setItem(methodKey);
     }
-    public void setDebugInfo(DebugInfo debugInfo){
+    public void setDebugInfo(DebugInfo debugInfo) {
         CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.setDebugInfo(debugInfo);
         }
     }
-    public DebugInfo getDebugInfo(){
+    public DebugInfo getDebugInfo() {
         CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             return codeItem.getDebugInfo();
         }
         return null;
     }
-    public DebugInfo getOrCreateDebugInfo(){
+    public DebugInfo getOrCreateDebugInfo() {
         return getOrCreateCodeItem().getOrCreateDebugInfo();
     }
-    public ProtoId getProtoId(){
+    public ProtoId getProtoId() {
         MethodId methodId = getId();
-        if(methodId != null){
+        if (methodId != null) {
             return methodId.getProtoId();
         }
         return null;
     }
     public Iterator<Ins> getInstructions() {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
+        if (instructionList != null) {
             return instructionList.iterator();
         }
         return EmptyIterator.of();
     }
     public Ins getInstruction(int i) {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
+        if (instructionList != null) {
             return instructionList.get(i);
         }
         return null;
     }
     public Ins getInstructionAt(int address) {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
+        if (instructionList != null) {
             return instructionList.getAtAddress(address);
         }
         return null;
     }
     public int getInstructionsCount() {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
+        if (instructionList != null) {
             return instructionList.getCount();
         }
         return 0;
     }
 
-    public InstructionList getOrCreateInstructionList(){
+    public InstructionList getOrCreateInstructionList() {
         return getOrCreateCodeItem().getInstructionList();
     }
-    public InstructionList getInstructionList(){
+    public InstructionList getInstructionList() {
         CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             return codeItem.getInstructionList();
         }
         return null;
     }
-    public TryBlock getTryBlock(){
+    public TryBlock getTryBlock() {
         CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             return codeItem.getTryBlock();
         }
         return null;
     }
-    public TryBlock getOrCreateTryBlock(){
+    public TryBlock getOrCreateTryBlock() {
         return getOrCreateCodeItem().getOrCreateTryBlock();
     }
-    public CodeItem getOrCreateCodeItem(){
+    public CodeItem getOrCreateCodeItem() {
         CodeItem current = codeOffset.getItem();
         CodeItem codeItem = codeOffset.getOrCreateUniqueItem(this);
-        if(current == null){
+        if (current == null) {
             codeItem.setMethodDef(this);
             int registers = getParameterRegistersCount();
             codeItem.setRegistersCount(registers);
@@ -220,25 +261,25 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         }
         return codeItem;
     }
-    public CodeItem getCodeItem(){
+    public CodeItem getCodeItem() {
         CodeItem codeItem = codeOffset.getItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.setMethodDef(this);
         }
         return codeItem;
     }
-    public void clearCode(){
+    public void clearCode() {
         codeOffset.setItem(null);
     }
-    public void clearDebug(){
+    public void clearDebug() {
         CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.removeDebugInfo();
         }
     }
-    private void linkCodeItem(){
+    private void linkCodeItem() {
         CodeItem codeItem = codeOffset.getItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.addUniqueUser(this);
             codeItem.setMethodDef(this);
         }
@@ -279,21 +320,21 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         writer.setCurrentRegistersTable(null);
     }
     @Override
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         super.replaceKeys(search, replace);
         CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
+        if (codeItem != null) {
             codeItem.replaceKeys(search, replace);
         }
     }
 
     @Override
-    public void edit(){
+    public void edit() {
         CodeItem shared = codeOffset.getItem();
         CodeItem unique = codeOffset.getUniqueItem(this);
-        if(unique != null) {
+        if (unique != null) {
             unique.setMethodDef(this);
-            if(shared != unique) {
+            if (shared != unique) {
                 unique.edit();
                 shared.getInstructionList()
                         .onEditing(unique.getInstructionList());
@@ -307,10 +348,10 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
 
     @Override
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         Iterator<IdItem> iterator;
         CodeItem codeItem = getCodeItem();
-        if(codeItem == null){
+        if (codeItem == null) {
             iterator = EmptyIterator.of();
         }else {
             iterator = codeItem.usedIds();
@@ -318,11 +359,11 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         return CombiningIterator.singleOne(getId(), iterator);
     }
     @Override
-    public void merge(Def<?> def){
+    public void merge(Def<?> def) {
         super.merge(def);
         MethodDef comingMethod = (MethodDef) def;
         CodeItem comingCode = comingMethod.getCodeItem();
-        if(comingCode != null){
+        if (comingCode != null) {
             this.codeOffset.setKey(comingCode.getKey());
         }
     }
@@ -332,25 +373,26 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         setKey(smaliMethod.getKey());
         setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
         addHiddenApiFlags(smaliMethod.getHiddenApiFlags());
-        if(smaliMethod.hasInstructions()){
+        if (smaliMethod.hasInstructions()) {
             getOrCreateCodeItem().fromSmali(smaliMethod);
         }
-        if(smaliMethod.hasAnnotation()){
+        if (smaliMethod.hasAnnotation()) {
             setAnnotation(smaliMethod.getAnnotationSetKey());
         }
         Iterator<SmaliMethodParameter> iterator = smaliMethod.getParameters();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             SmaliMethodParameter smaliMethodParameter = iterator.next();
             int index = smaliMethodParameter.getDefinitionIndex();
-            if(index < 0){
+            if (index < 0) {
                 MethodKey methodKey = smaliMethod.getKey();
                 throw new RuntimeException("Parameter out of range, class = " +
                         methodKey.getDeclaring() + ", method = " + methodKey.getName() +
                         methodKey.getProto() + "\n" + smaliMethodParameter);
             }
-            MethodParameter parameter = getParameter(index);
-            parameter.fromSmali(smaliMethodParameter);
+            MethodParameterDef parameter = getParameter(index);
+            parameter.fromSmali(smaliMethodParameter, false);
         }
+        setParametersAnnotation(smaliMethod.getParameterAnnotations());
         linkCodeItem();
     }
 
@@ -360,7 +402,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         smaliMethod.setKey(getKey());
         smaliMethod.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
         smaliMethod.setHiddenApiFlags(getHiddenApiFlags());
-        smaliMethod.setAnnotation(getAnnotationKeys());
+        smaliMethod.setAnnotation(getAnnotation());
         CodeItem codeItem = getCodeItem();
         if (codeItem != null) {
             codeItem.toSmali(smaliMethod);
@@ -375,7 +417,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
 
     @Override
     public String toString() {
-        if(isReading()){
+        if (isReading()) {
             return getSmaliDirective() + " " +
                     Modifier.toString(getModifiers()) +
                     getKey();

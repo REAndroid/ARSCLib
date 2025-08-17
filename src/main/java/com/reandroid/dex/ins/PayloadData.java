@@ -24,7 +24,8 @@ import com.reandroid.dex.smali.model.SmaliInstruction;
 
 import java.util.Iterator;
 
-public abstract class PayloadData extends Ins implements SmaliRegion {
+public abstract class PayloadData<T extends PayloadEntry> extends Ins
+        implements SmaliRegion, Iterable<T> {
 
     public PayloadData(int childesCount, Opcode<?> opcode) {
         super(childesCount + 1, opcode);
@@ -33,6 +34,27 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
         addChild(0, opcodeItem);
     }
 
+    @Override
+    public abstract Iterator<T> iterator();
+    public abstract T get(int index);
+    public abstract int size();
+    public abstract void setSize(int size);
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    Object requestLock() {
+        InsBlockList insBlockList = getInsBlockList();
+        if (insBlockList != null) {
+            return insBlockList.linkLocked();
+        }
+        return null;
+    }
+    void releaseLock(Object lock) {
+        if (lock != null) {
+            getInsBlockList().unlinkLocked(lock);
+        }
+    }
     void updateNopAlignment() {
         InstructionList instructionList = getInstructionList();
         if(instructionList == null) {
@@ -71,7 +93,6 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
     @Override
     public abstract void fromSmali(SmaliInstruction smaliInstruction);
 
-
     @Override
     void toSmaliOperand(SmaliInstruction instruction) {
         super.toSmaliOperand(instruction);
@@ -92,7 +113,7 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
         if(obj == null || getClass() != obj.getClass()){
             return false;
         }
-        PayloadData payloadData = (PayloadData) obj;
+        PayloadData<?> payloadData = (PayloadData<?>) obj;
         if(getIndex() != payloadData.getIndex()){
             return false;
         }
@@ -103,4 +124,5 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
     public int hashCode() {
         return Block.hashCodeOf(getChildes()) + getIndex();
     }
+
 }

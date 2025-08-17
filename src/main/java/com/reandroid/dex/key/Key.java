@@ -38,9 +38,6 @@ public interface Key extends Comparable<Object>, SmaliFormat {
     default Key replaceKey(Key search, Key replace){
         return this;
     }
-    default boolean isPrimitiveKey() {
-        return false;
-    }
 
     default void append(SmaliWriter writer) throws IOException{
         writer.append(toString());

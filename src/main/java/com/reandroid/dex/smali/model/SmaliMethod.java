@@ -19,7 +19,12 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -40,7 +45,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     private final SmaliRegistersCount smaliRegistersCount;
     private final SmaliCodeSet codeSet;
 
-    public SmaliMethod(){
+    public SmaliMethod() {
         super();
         this.paramSet = new SmaliParamSet();
         this.smaliRegistersCount = new SmaliRegistersCount();
@@ -52,9 +57,9 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     }
 
     @Override
-    public MethodKey getKey(){
+    public MethodKey getKey() {
         TypeKey typeKey = getDefining();
-        if(typeKey != null) {
+        if (typeKey != null) {
             return getKey(typeKey);
         }
         return null;
@@ -68,22 +73,29 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public MethodKey getKey(TypeKey declaring) {
         return MethodKey.create(declaring, getName(), getProtoKey());
     }
+    public boolean hasParameterAnnotations() {
+        return getParamSet().hasParameterAnnotations();
+    }
+    public AnnotationGroupKey getParameterAnnotations() {
+        return getParamSet().getParameterAnnotations(this);
+    }
 
-    public boolean hasInstructions(){
+    public boolean hasInstructions() {
         return getInstructions().hasNext();
     }
-    public Iterator<SmaliInstruction> getInstructions(){
+    public Iterator<SmaliInstruction> getInstructions() {
         return getCodeSet().getInstructions();
     }
-    public boolean hasDebugElements(){
+    public boolean hasDebugElements() {
         return getDebugElements().hasNext();
     }
-    public Iterator<SmaliDebugElement> getDebugElements(){
+    public Iterator<SmaliDebugElement> getDebugElements() {
         return getCodeSet().getDebugElements();
     }
     public SmaliRegistersCount getSmaliRegistersCount() {
         return smaliRegistersCount;
     }
+    @Override
     public ProtoKey getProtoKey() {
         return protoKey;
     }
@@ -94,13 +106,27 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public SmaliParamSet getParamSet() {
         return paramSet;
     }
-    public Iterator<SmaliMethodParameter> getParameters(){
+    @Override
+    public int getParametersCount() {
+        ProtoKey protoKey = getProtoKey();
+        if (protoKey != null) {
+            return protoKey.getParametersCount();
+        }
+        return getParamSet().size();
+    }
+    @Override
+    public SmaliMethodParameter getParameter(int i) {
+        return getParamSet().get(i);
+    }
+    @Override
+    public Iterator<SmaliMethodParameter> getParameters() {
         return getParamSet().iterator();
     }
+
     public SmaliCodeSet getCodeSet() {
         return codeSet;
     }
-    public Iterator<SmaliCodeTryItem> getTryItems(){
+    public Iterator<SmaliCodeTryItem> getTryItems() {
         return getCodeSet().getTryItems();
     }
 
@@ -121,7 +147,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
             getSmaliRegistersCount().append(writer);
         }
         getParamSet().append(writer);
-        if(hasAnnotation()){
+        if (hasAnnotation()) {
             writer.newLine();
             getAnnotationSet().append(writer);
         }
@@ -139,7 +165,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         setName(StringKey.readSimpleName(reader, '('));
         parseProto(reader);
         reader.skipWhitespacesOrComment();
-        while (parseNoneCode(reader)){
+        while (parseNoneCode(reader)) {
             reader.skipWhitespacesOrComment();
         }
         getCodeSet().parse(reader);
@@ -151,16 +177,16 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
-        if(directive == SmaliDirective.LOCALS ||
+        if (directive == SmaliDirective.LOCALS ||
                 directive == SmaliDirective.REGISTERS) {
             getSmaliRegistersCount().parse(reader);
             return true;
         }
-        if(directive == SmaliDirective.ANNOTATION){
+        if (directive == SmaliDirective.ANNOTATION) {
             getOrCreateSmaliAnnotationSet().parse(reader);
             return true;
         }
-        if(directive == SmaliDirective.PARAM){
+        if (directive == SmaliDirective.PARAM) {
             getParamSet().parse(reader);
             return true;
         }
@@ -180,7 +206,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public int getParameterRegistersCount() {
         int count = isStatic() ? 0 : 1;
         ProtoKey protoKey = getProtoKey();
-        if(protoKey != null){
+        if (protoKey != null) {
             count += protoKey.getParameterRegistersCount();
         }
         return count;
@@ -205,7 +231,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public String toDebugString() {
         StringBuilder builder = new StringBuilder();
         TypeKey typeKey = getDefining();
-        if(typeKey != null){
+        if (typeKey != null) {
             builder.append(typeKey);
             builder.append(", ");
         }
