@@ -339,10 +339,17 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
         }
     }
     public static boolean isResXmlBlock(HeaderBlock headerBlock){
-        if(headerBlock==null){
+        if (headerBlock == null) {
             return false;
         }
         ChunkType chunkType=headerBlock.getChunkType();
-        return chunkType==ChunkType.XML;
+        if (chunkType != ChunkType.XML) {
+            return false;
+        }
+        int headerSize = headerBlock.getHeaderSize();
+        if (headerSize < 8) {
+            return false;
+        }
+        return headerBlock.getChunkSize() > headerSize;
     }
 }
