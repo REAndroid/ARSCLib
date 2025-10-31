@@ -22,6 +22,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
@@ -145,6 +146,31 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
             }
         }
         return null;
+    }
+    public void mergeApplicationElements(AndroidManifestBlock other) {
+        if (other == null) {
+            return;
+        }
+        ResXmlElement otherApplication = other.getApplicationElement();
+        if (otherApplication == null) {
+            return;
+        }
+        ResXmlElement thisApplication = getOrCreateApplicationElement();
+        
+        Iterator<ResXmlElement> elements = otherApplication.getElements();
+        while (elements.hasNext()) {
+            ResXmlElement otherElement = elements.next();
+            String tagName = otherElement.getName();
+            if (TAG_meta_data.equals(tagName)) {
+                String nameValue = getAndroidNameValue(otherElement);
+                if (VALUE_com_android_dynamic_apk_fused_modules.equals(nameValue)) {
+                    continue;
+                }
+            }
+            JSONObject json = otherElement.toJson();
+            ResXmlElement newElement = thisApplication.newElement();
+            newElement.fromJson(json);
+        }
     }
     public void addFusedModuleNames(String ... names) {
         if (names == null || names.length == 0) {
