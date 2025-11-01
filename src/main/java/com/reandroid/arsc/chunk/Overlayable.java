@@ -173,7 +173,10 @@ public class Overlayable extends Chunk<OverlayableHeader> implements
             return;
         }
         setName(overlayable.getName());
-        setActor(overlayable.getActor());
+        String incomingActor = overlayable.getActor();
+        if(incomingActor != null){
+            setActor(incomingActor);
+        }
         for(OverlayablePolicy policy : overlayable) {
             OverlayablePolicy exist = getByFlag(policy.getFlags());
             if (exist == null) {
