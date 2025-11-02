@@ -29,4 +29,7 @@ public interface Attribute extends Node, NamedNode{
     default Object getAttributeValue(){
         return getValueAsString();
     }
+    default int getNameId() {
+        return 0;
+    }
 }
