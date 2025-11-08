@@ -15,12 +15,10 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.*;
 import com.reandroid.xml.base.Attribute;
 import com.reandroid.xml.base.Document;
 import com.reandroid.xml.base.Element;
@@ -37,46 +35,19 @@ public class XMLPath implements Predicate<NamedNode> {
     public static final int TYPE_ELEMENT = ObjectsUtil.of(0);
     public static final int TYPE_ATTRIBUTE = ObjectsUtil.of(1);
     public static final String ANY_NAME = ObjectsUtil.of("*");
+    public static final String ANY_ELEMENT_PATH = ObjectsUtil.of("**");
 
     private final XMLPath parent;
     private final String name;
     private final int nameId;
     private final int type;
 
-    private XMLPath(XMLPath parent, String name, int nameId, int type) throws InvalidPathException {
+    XMLPath(XMLPath parent, String name, int nameId, int type) throws InvalidPathException {
         this.parent = parent;
         this.name = name;
         this.nameId = nameId;
         this.type = type;
         if (parent != null && parent.type() == TYPE_ATTRIBUTE) {
-            throw new InvalidPathException("Attribute can not have child");
-        }
-        if (parent == null && type == TYPE_ATTRIBUTE) {
-            throw new InvalidPathException("Null parent for attribute");
-        }
-    }
-    private XMLPath(XMLPath parent, String name) throws InvalidPathException {
-        int type = TYPE_ATTRIBUTE;
-        int i = name.lastIndexOf(';');
-        if (i < 0) {
-            i = name.lastIndexOf('/');
-            type = TYPE_ELEMENT;
-        }
-        if (i < 0) {
-            throw new InvalidPathException("Name should start with / or ;");
-        }
-        this.type = type;
-        String simpleName = name.substring(i + 1);
-        this.name = simpleName;
-        this.nameId = decodeNameId(simpleName);
-        XMLPath thisPrent;
-        if (i > 0) {
-            thisPrent = new XMLPath(parent, name.substring(0, i));
-        } else {
-            thisPrent = parent;
-        }
-        this.parent = thisPrent;
-        if (thisPrent != null && thisPrent.type == TYPE_ATTRIBUTE) {
             throw new InvalidPathException("Attribute can not have child");
         }
     }
@@ -168,7 +139,7 @@ public class XMLPath implements Predicate<NamedNode> {
         return new XMLPath(getParent(), name, getNameId(), type());
     }
     public XMLPath parse(String childPath) throws InvalidPathException {
-        return new XMLPath(this, childPath);
+        return parse(this, childPath);
     }
     public XMLPath attribute(String name) throws InvalidPathException {
         validateSimpleName(name);
@@ -191,7 +162,22 @@ public class XMLPath implements Predicate<NamedNode> {
         if (c != '/') {
             name = "/" + name;
         }
-        return new XMLPath(this, name);
+        return parse(this, name);
+    }
+    public XMLPath alternate(String name) throws InvalidPathException {
+        return CombinedPath.combined(this,
+                new XMLPath(getParent(), name, 0, type()));
+    }
+    public XMLPath alternate(int id) throws InvalidPathException {
+        return CombinedPath.combined(this,
+                new XMLPath(getParent(), encodeId(id), id, type()));
+    }
+    protected boolean matchesName(int depth, NamedNode namedNode) {
+        if (namedNode == null) {
+            return false;
+        }
+        XMLPath xmlPath = getPath(depth);
+        return xmlPath != null && xmlPath.matchesName(namedNode);
     }
     protected boolean matchesName(NamedNode namedNode) {
         if (namedNode == null || type() != typeOf(namedNode)) {
@@ -209,17 +195,59 @@ public class XMLPath implements Predicate<NamedNode> {
         }
         return name.equals(namedNode.getName());
     }
+    public boolean isAnyName() {
+        return ANY_NAME.equals(getName());
+    }
+    public boolean containsAnyNae() {
+        XMLPath parent = this;
+        while (parent != null) {
+            if (parent.isAnyName()) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
+    }
+    public boolean isAnyElementPath() {
+        return type() == TYPE_ELEMENT && ANY_ELEMENT_PATH.equals(getName());
+    }
+    public boolean containsAnyElementPath() {
+        XMLPath parent = this;
+        while (parent != null) {
+            if (parent.isAnyElementPath()) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
+    }
     @Override
     public boolean test(NamedNode namedNode) {
-        int depth = depth();
-        NamedNode parentNode = namedNode;
-        for (int i = 0; i <= depth; i++) {
-            if (!getPath(i).matchesName(parentNode)) {
-                return false;
-            }
-            parentNode = getParentNode(parentNode);
+        if (namedNode == null) {
+            return false;
         }
-        return parentNode == null;
+        if (isAnyElementPath()) {
+            XMLPath parent = getParent();
+            if (parent == null) {
+                return true;
+            }
+            NamedNode parentNode = namedNode;
+            while (parentNode != null) {
+                if (parent.test(parentNode)) {
+                    return true;
+                }
+                parentNode = getParentNode(parentNode);
+            }
+            return false;
+        }
+        if (!matchesName(namedNode)) {
+            return false;
+        }
+        XMLPath parent = getParent();
+        if (parent != null) {
+            return parent.test(getParentNode(namedNode));
+        }
+        return true;
     }
     public boolean contains(Document<?> document) {
         return findFirst(document) != null;
@@ -230,20 +258,61 @@ public class XMLPath implements Predicate<NamedNode> {
     public<T extends NamedNode> T findFirst(Document<?> document) {
         return CollectionUtil.getFirst(find(document));
     }
+    public<T extends NamedNode> T findFirst(Element<?> element) {
+        return CollectionUtil.getFirst(find(element));
+    }
     public<T extends NamedNode> Iterator<T> find(Document<?> document) {
         if (document == null) {
             return EmptyIterator.of();
         }
-        return ObjectsUtil.cast(find(SingleIterator.of(document.getDocumentElement()), depth()));
+        return find(document.getDocumentElement());
     }
-    private Iterator<NamedNode> find(Iterator<NamedNode> iterator, int depth) {
-        XMLPath path = getPath(depth);
-        iterator = FilterIterator.of(iterator, path::matchesName);
-        if (depth == 0 || !iterator.hasNext()) {
+    public<T extends NamedNode> Iterator<T> find(Element<?> element) {
+        if (element == null) {
+            return EmptyIterator.of();
+        }
+        if (type() == TYPE_ATTRIBUTE && getParent() == null) {
+            return findAll(element.getAttributes());
+        }
+        return findAll(SingleIterator.of(element));
+    }
+    public<E extends NamedNode, T extends NamedNode> Iterator<T> findAll(Iterator<E> iterator) {
+        return ObjectsUtil.cast(search(ObjectsUtil.cast(iterator)));
+    }
+    private Iterator<NamedNode> search(Iterator<NamedNode> iterator) {
+        if (containsAnyElementPath()) {
+            iterator = new IterableIterator<NamedNode, NamedNode>(iterator) {
+                @Override
+                public Iterator<NamedNode> iterator(NamedNode node) {
+                    if (node instanceof Element) {
+                        return RecursiveIterator.of(node, n ->
+                                        ((Element<?>) n).iterator(Element.class));
+                    }
+                    return SingleIterator.of(node);
+                }
+            };
+            if (type() == TYPE_ATTRIBUTE) {
+                iterator = new IterableIterator<NamedNode, NamedNode>(iterator) {
+                    @Override
+                    public Iterator<NamedNode> iterator(NamedNode node) {
+                        if (node instanceof Element) {
+                            return ObjectsUtil.cast(((Element<?>) node).getAttributes());
+                        }
+                        return SingleIterator.of(node);
+                    }
+                };
+            }
+            return FilterIterator.of(iterator, this);
+        }
+        return this.search(iterator, depth(), 0);
+    }
+    private Iterator<NamedNode> search(Iterator<NamedNode> iterator, int depth, int depthEnd) {
+        iterator = FilterIterator.of(iterator, namedNode -> matchesName(depth, namedNode));
+        if (depth == depthEnd || !iterator.hasNext()) {
             return iterator;
         }
         int nextDepth = depth - 1;
-        boolean attribute = nextDepth == 0 && this.type() == TYPE_ATTRIBUTE;
+        boolean attribute = nextDepth == depthEnd && this.type() == TYPE_ATTRIBUTE;
         iterator = new IterableIterator<NamedNode, NamedNode>(iterator) {
             @Override
             public Iterator<NamedNode> iterator(NamedNode namedNode) {
@@ -254,9 +323,41 @@ public class XMLPath implements Predicate<NamedNode> {
                 return ObjectsUtil.cast(element.iterator(Element.class));
             }
         };
-        return this.find(iterator, nextDepth);
+        return this.search(iterator, nextDepth, depthEnd);
     }
-
+    protected boolean equalsName(XMLPath xmlPath) {
+        if (xmlPath == null) {
+            return false;
+        }
+        if (xmlPath == this) {
+            return true;
+        }
+        if (!(this instanceof CombinedPath) && (xmlPath instanceof CombinedPath)) {
+            return xmlPath.equalsName(this);
+        }
+        if (this.type() != xmlPath.type()) {
+            return false;
+        }
+        int id = this.getNameId();
+        if (id != 0) {
+            return id == xmlPath.getNameId();
+        }
+        return this.getName().equals(xmlPath.getName());
+    }
+    protected int compareName(XMLPath path) {
+        int id1 = getNameId();
+        int id2 = path.getNameId();
+        if (id1 != 0) {
+            if (id2 == 0) {
+                return -1;
+            }
+            return CompareUtil.compare(id1, id2);
+        }
+        if (id2 != 0) {
+            return 1;
+        }
+        return this.getName().compareTo(path.getName());
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -276,7 +377,7 @@ public class XMLPath implements Predicate<NamedNode> {
     public int hashCode() {
         int hash = 31 + getNameId();
         hash = hash * 31 + type();
-        hash = hash * 31 + ObjectsUtil.hash(parent, name);
+        hash = hash * 31 + ObjectsUtil.hash(getParent(), getName());
         return hash;
     }
 
@@ -310,7 +411,7 @@ public class XMLPath implements Predicate<NamedNode> {
             throw new InvalidPathException("Invalid name id: " + simpleName, e);
         }
     }
-    private static String encodeId(int id) {
+    static String encodeId(int id) {
         long l = id & 0xffffffffL;
         return "@0x" + Long.toHexString(l);
     }
@@ -333,11 +434,43 @@ public class XMLPath implements Predicate<NamedNode> {
         return new XMLPath(node);
     }
     public static XMLPath compile(String path) throws InvalidPathException {
-        return new XMLPath(null, path);
+        return parse(null, path);
+    }
+    public static XMLPath compile(XMLPath parent, String path) throws InvalidPathException {
+        return parse(parent, path);
     }
     public static XMLPath newElement(String name) throws InvalidPathException {
         validateSimpleName(name);
         return new XMLPath(null, name, 0, TYPE_ELEMENT);
+    }
+    private static XMLPath parse(XMLPath parent, String name) throws InvalidPathException {
+        int type = TYPE_ATTRIBUTE;
+        int i = name.lastIndexOf(';');
+        if (i < 0) {
+            i = name.lastIndexOf('/');
+            type = TYPE_ELEMENT;
+        }
+        if (i < 0) {
+            throw new InvalidPathException("Name should start with / or ;");
+        }
+        String simpleName = name.substring(i + 1);
+        if (i > 0) {
+            parent = parse(parent, name.substring(0, i));
+        }
+        if (parent != null && parent.type() == TYPE_ATTRIBUTE) {
+            throw new InvalidPathException("Attribute can not have child");
+        }
+        if (simpleName.indexOf('|') > 0) {
+            String[] elementNames = StringsUtil.split(simpleName, '|');
+            int length = elementNames.length;
+            XMLPath[] elements = new XMLPath[length];
+            for (int j = 0; j < length; j++) {
+                String element = elementNames[j];
+                elements[j] = new XMLPath(parent, element, decodeNameId(element), type);
+            }
+            return CombinedPath.combined(elements);
+        }
+        return new XMLPath(parent, simpleName, decodeNameId(simpleName), type);
     }
     private static void validateSimpleName(String name) throws InvalidPathException {
         if (name == null) {
@@ -354,6 +487,146 @@ public class XMLPath implements Predicate<NamedNode> {
         return simpleName.indexOf('/') >= 0 || simpleName.indexOf(';') >= 0;
     }
 
+    static class CombinedPath extends XMLPath {
+
+        private final XMLPath[] elements;
+
+        CombinedPath(XMLPath parent, XMLPath[] elements) throws InvalidPathException {
+            super(parent, combineNames(elements), 0, elements[0].type());
+            this.elements = elements;
+        }
+
+        public XMLPath[] elements() {
+            return elements;
+        }
+
+        @Override
+        protected boolean matchesName(NamedNode namedNode) {
+            if (namedNode == null) {
+                return false;
+            }
+            for (XMLPath xmlPath : elements()) {
+                if (xmlPath.matchesName(namedNode)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        @Override
+        protected boolean matchesName(int depth, NamedNode namedNode) {
+            if (namedNode == null) {
+                return false;
+            }
+            for (XMLPath xmlPath : elements()) {
+                if (xmlPath.matchesName(depth, namedNode)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        protected boolean equalsName(XMLPath xmlPath) {
+            if (super.equalsName(xmlPath)) {
+                return true;
+            }
+            for (XMLPath path : elements()) {
+                if (path.equalsName(xmlPath)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean test(NamedNode namedNode) {
+            for (XMLPath path : elements()) {
+                if (path.test(namedNode)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static XMLPath combined(XMLPath ... paths) {
+            validatePaths(paths);
+            if (paths.length == 1) {
+                return paths[0];
+            }
+            int depth = paths[0].depth();
+            XMLPath result = null;
+            for (int i = depth; i >= 0; i--) {
+                result = new CombinedPath(result, getAtDepth(paths, i));
+            }
+            return result;
+        }
+        private static XMLPath[] getAtDepth(XMLPath[] paths, int depth) {
+            int length = paths.length;
+            List<XMLPath> results = new ArrayCollection<>(length);
+            for (int i = 0; i < length; i++) {
+                addIfAbsent(results, paths[i].getPath(depth));
+            }
+            results.sort(XMLPath::compareName);
+            length = results.size();
+            return results.toArray(new XMLPath[length]);
+        }
+        private static void addIfAbsent(List<XMLPath> pathList, XMLPath xmlPath) {
+            if (xmlPath instanceof CombinedPath) {
+                XMLPath[] elements = ((CombinedPath) xmlPath).elements();
+                for (XMLPath element : elements) {
+                    addIfAbsent(pathList, element);
+                }
+            } else if (xmlPath != null) {
+                int size = pathList.size();
+                for (int i = 0; i < size; i++) {
+                    if (pathList.get(i).equalsName(xmlPath)) {
+                        return;
+                    }
+                }
+                pathList.add(xmlPath);
+            }
+        }
+        private static String combineNames(XMLPath[] paths) {
+            StringBuilder builder = new StringBuilder();
+            int length = paths.length;
+            for (int i = 0; i < length; i++) {
+                if (i != 0) {
+                    builder.append('|');
+                }
+                XMLPath path = paths[i];
+                int id = path.getNameId();
+                if (id != 0) {
+                    builder.append(XMLPath.encodeId(id));
+                } else {
+                    builder.append(path.getName());
+                }
+            }
+            return builder.toString();
+        }
+        private static void validatePaths(XMLPath ... paths) throws InvalidPathException {
+            if (paths == null || paths.length == 0) {
+                throw new InvalidPathException("Paths can not be empty");
+            }
+            int length = paths.length;
+            if (length == 1) {
+                return;
+            }
+            XMLPath xmlPath = paths[0];
+            int depth = xmlPath.depth();
+            int type = xmlPath.type();
+            for (int i = 1; i < length; i++) {
+                xmlPath = paths[i];
+                if (xmlPath.depth() != depth) {
+                    throw new InvalidPathException("Can not combine different depth paths: "
+                            + depth + " vs " + xmlPath.depth());
+                }
+                if (xmlPath.type() != type) {
+                    throw new InvalidPathException("Can not combine different type paths: "
+                            + type + " vs " + xmlPath.type());
+                }
+            }
+        }
+    }
     public static class InvalidPathException extends RuntimeException {
         public InvalidPathException(String message) {
             super(message);
