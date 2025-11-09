@@ -25,16 +25,22 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.formatters.SequentialLabelFactory;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 public class SmaliWriter implements Appendable, Closeable {
 
     private Writer writer;
+    private OutputStream outputStream;
     private int indent;
     private int lineNumber;
     private int columnNumber;
@@ -71,8 +77,18 @@ public class SmaliWriter implements Appendable, Closeable {
             setting.writeMethodComment(this, methodKey);
         }
     }
+    public void setWriter(File file) throws IOException {
+        setWriter(FileUtil.outputStream(file));
+    }
+    public void setWriter(OutputStream outputStream) {
+        setWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+        this.outputStream = outputStream;
+    }
     public void setWriter(Writer writer) {
         this.reset();
+        if (writer != this.writer) {
+            this.outputStream = null;
+        }
         this.writer = writer;
     }
 
@@ -446,6 +462,11 @@ public class SmaliWriter implements Appendable, Closeable {
         flushComment();
         this.writer = null;
         writer.close();
+        OutputStream outputStream = this.outputStream;
+        this.outputStream = null;
+        if (outputStream != null) {
+            outputStream.close();
+        }
     }
     public void reset() {
         this.indent = 0;
