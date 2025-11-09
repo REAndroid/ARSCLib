@@ -121,6 +121,9 @@ public class MethodKey implements ProgramKey {
     public int getParameterRegistersCount(){
         return getProto().getParameterRegistersCount();
     }
+    public boolean isObjectMethod() {
+        return isObjectMethod(this);
+    }
     @Override
     public Iterator<Key> mentionedKeys() {
         return CombiningIterator.singleTwo(
@@ -426,21 +429,38 @@ public class MethodKey implements ProgramKey {
         return create(declaring, name, protoKey);
     }
 
-    public static final MethodKey STATIC_CONSTRUCTOR = new MethodKey(
-            TypeKey.OBJECT, "<clinit>",
-            ProtoKey.emptyParameters(TypeKey.TYPE_V));
+    public static boolean isObjectMethod(MethodKey methodKey) {
+        if (methodKey == null) {
+            return false;
+        }
+        int p = methodKey.getParametersCount();
+        if (p > 2) {
+            return false;
+        }
+        if (p == 2) {
+            return WAIT_J_I.equalsNameAndParameters(methodKey);
+        }
+        if (p == 1) {
+            return EQUALS.equalsNameAndParameters(methodKey) ||
+                    WAIT_J.equalsNameAndParameters(methodKey);
+        }
+        String name = methodKey.getName();
+        return TO_STRING.equalsName(name) ||
+                HASHCODE.equalsName(name) ||
+                GET_CLASS.equalsName(name) ||
+                CLONE.equalsName(name) ||
+                CONSTRUCTOR.equalsName(name) ||
+                CONSTRUCTOR_STATIC.equalsName(name) ||
+                FINALIZE.equalsName(name) ||
+                WAIT.equalsName(name) ||
+                NOTIFY.equalsName(name) ||
+                NOTIFY_ALL.equalsName(name);
+    }
 
-    public static final MethodKey EQUALS = new MethodKey(
-            TypeKey.OBJECT, "equals",
-            ProtoKey.create(TypeKey.TYPE_Z, TypeKey.OBJECT));
 
-    public static final MethodKey HASHCODE = new MethodKey(
-            TypeKey.OBJECT, "hashCode",
-            ProtoKey.emptyParameters(TypeKey.TYPE_I));
-
-    public static final MethodKey TO_STRING = new MethodKey(
-            TypeKey.OBJECT, "toString",
-            ProtoKey.emptyParameters(TypeKey.STRING));
+    public static final MethodKey CLONE = new MethodKey(
+            TypeKey.OBJECT, "clone",
+            ProtoKey.emptyParameters(TypeKey.OBJECT));
 
     public static final MethodKey CONSTRUCTOR = new MethodKey(
             TypeKey.OBJECT, "<init>",
@@ -449,4 +469,44 @@ public class MethodKey implements ProgramKey {
     public static final MethodKey CONSTRUCTOR_STATIC = new MethodKey(
             TypeKey.OBJECT, "<clinit>",
             ProtoKey.emptyParameters(TypeKey.TYPE_V));
+
+    public static final MethodKey EQUALS = new MethodKey(
+            TypeKey.OBJECT, "equals",
+            ProtoKey.create(TypeKey.TYPE_Z, TypeKey.OBJECT));
+
+    public static final MethodKey FINALIZE = new MethodKey(
+            TypeKey.OBJECT, "finalize",
+            ProtoKey.emptyParameters(TypeKey.TYPE_V));
+
+    public static final MethodKey GET_CLASS = new MethodKey(
+            TypeKey.OBJECT, "getClass",
+            ProtoKey.emptyParameters(TypeKey.CLASS));
+
+    public static final MethodKey HASHCODE = new MethodKey(
+            TypeKey.OBJECT, "hashCode",
+            ProtoKey.emptyParameters(TypeKey.TYPE_I));
+
+    public static final MethodKey NOTIFY = new MethodKey(
+            TypeKey.OBJECT, "notify",
+            ProtoKey.emptyParameters(TypeKey.TYPE_V));
+
+    public static final MethodKey NOTIFY_ALL = new MethodKey(
+            TypeKey.OBJECT, "notifyAll",
+            ProtoKey.emptyParameters(TypeKey.TYPE_V));
+
+    public static final MethodKey TO_STRING = new MethodKey(
+            TypeKey.OBJECT, "toString",
+            ProtoKey.emptyParameters(TypeKey.STRING));
+
+    public static final MethodKey WAIT = new MethodKey(
+            TypeKey.OBJECT, "wait",
+            ProtoKey.emptyParameters(TypeKey.TYPE_V));
+
+    public static final MethodKey WAIT_J = new MethodKey(
+            TypeKey.OBJECT, "wait",
+            ProtoKey.create(TypeKey.TYPE_V, TypeKey.TYPE_J));
+
+    public static final MethodKey WAIT_J_I = new MethodKey(
+            TypeKey.OBJECT, "wait",
+            ProtoKey.create(TypeKey.TYPE_V, TypeKey.TYPE_J, TypeKey.TYPE_I));
 }
