@@ -127,7 +127,7 @@ public class RClass extends DexClass {
         }
         DalvikInnerClass dalvikInnerClass = DalvikInnerClass.getOrCreate(this);
         dalvikInnerClass.setName(inner);
-        dalvikInnerClass.setAccessFlags(getAccessFlagsValue());
+        dalvikInnerClass.setAccessFlagsValue(getAccessFlagsValue());
     }
     private void ensureDalvikEnclosingClass() {
         TypeKey typeKey = getKey();
