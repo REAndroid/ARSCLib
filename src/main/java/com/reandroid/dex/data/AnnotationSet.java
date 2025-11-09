@@ -33,9 +33,9 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliAnnotationItem;
 import com.reandroid.dex.smali.model.SmaliAnnotationSet;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
@@ -175,7 +175,7 @@ public class AnnotationSet extends AnnotationsList<AnnotationItem>
         sort();
     }
     public boolean sort() {
-        return super.sort(CollectionUtil.getComparator());
+        return super.sort(CompareUtil.getComparableComparator());
     }
 
 

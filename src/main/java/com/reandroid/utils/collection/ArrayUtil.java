@@ -19,6 +19,36 @@ import com.reandroid.utils.NumbersUtil;
 
 public class ArrayUtil {
 
+    public static void fill(byte[] elements, byte item) {
+        if (elements == null) {
+            return;
+        }
+        fill(elements, item, 0, elements.length);
+    }
+    public static void fill(byte[] elements, byte item, int start, int length) {
+        if (elements == null) {
+            return;
+        }
+        int end = NumbersUtil.min(start + length, elements.length);
+        for(int i = start; i < end; i++) {
+            elements[i] = item;
+        }
+    }
+    public static void fill(char[] elements, char item) {
+        if (elements == null) {
+            return;
+        }
+        fill(elements, item, 0, elements.length);
+    }
+    public static void fill(char[] elements, char item, int start, int length) {
+        if (elements == null) {
+            return;
+        }
+        int end = NumbersUtil.min(start + length, elements.length);
+        for(int i = start; i < end; i++) {
+            elements[i] = item;
+        }
+    }
     public static void fill(Object[] elements, Object item) {
         if (elements == null) {
             return;
