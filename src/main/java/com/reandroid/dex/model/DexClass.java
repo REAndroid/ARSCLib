@@ -18,19 +18,36 @@ package com.reandroid.dex.model;
 import com.reandroid.common.ReflectionUtil;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.dalvik.DalvikInnerClass;
-import com.reandroid.dex.data.*;
+import com.reandroid.dex.data.ClassData;
+import com.reandroid.dex.data.FieldDef;
+import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.program.ClassProgram;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.model.SmaliMethod;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.InstanceIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.utils.collection.UniqueIterator;
 import com.reandroid.utils.io.FileUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -141,11 +158,27 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         }
         return null;
     }
+    public DexField getDeclaredField(FieldKey fieldKey, boolean ignoreType) {
+        if (ignoreType) {
+            return getDeclaredField(fieldKey.getName());
+        }
+        return getDeclaredField(fieldKey);
+    }
     public DexField getDeclaredField(FieldKey fieldKey) {
         Iterator<DexField> iterator = getDeclaredFields();
         while (iterator.hasNext()) {
             DexField dexField = iterator.next();
             if (fieldKey.equalsIgnoreDeclaring(dexField.getKey())) {
+                return dexField;
+            }
+        }
+        return null;
+    }
+    public DexField getDeclaredField(String name) {
+        Iterator<DexField> iterator = getDeclaredFields();
+        while (iterator.hasNext()) {
+            DexField dexField = iterator.next();
+            if (ObjectsUtil.equals(dexField.getName(), name)) {
                 return dexField;
             }
         }
