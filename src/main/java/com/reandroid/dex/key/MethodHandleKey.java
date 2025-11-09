@@ -31,7 +31,7 @@ public class MethodHandleKey implements Key{
     private final MethodHandleType handleType;
     private final Key member;
 
-    public MethodHandleKey(MethodHandleType handleType, Key member){
+    private MethodHandleKey(MethodHandleType handleType, Key member){
         this.handleType = handleType;
         this.member = member;
     }
@@ -115,6 +115,12 @@ public class MethodHandleKey implements Key{
         return getHandleType() + "@" + getMember();
     }
 
+    public static MethodHandleKey create(MethodHandleType handleType, Key member) {
+        if (handleType != null && member != null) {
+            return new MethodHandleKey(handleType, member);
+        }
+        return null;
+    }
     public static MethodHandleKey read(SmaliReader reader) throws IOException {
         MethodHandleType handleType = MethodHandleType.read(reader);
         if (handleType == null) {

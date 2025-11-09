@@ -54,7 +54,7 @@ public class MethodHandleId extends IdItem implements Comparable<MethodHandleId>
 
     @Override
     public MethodHandleKey getKey() {
-        return checkKey(new MethodHandleKey(getHandleType(), getMember()));
+        return checkKey(MethodHandleKey.create(getHandleType(), getMember()));
     }
     @Override
     public void setKey(Key key) {
