@@ -314,6 +314,8 @@ public class SmaliWriter implements Appendable, Closeable {
                 builder.append(' ');
             } else if (c < ' ' || !Character.isDefined(c)) {
                 DexUtils.encodeToHexChar(builder, c);
+            } else if (c == '\u0085' || c == '\u2028' || c == '\u2029') {
+                DexUtils.encodeToHexChar(builder, c);
             } else {
                 builder.append(c);
             }
