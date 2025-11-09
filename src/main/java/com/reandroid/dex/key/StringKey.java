@@ -51,6 +51,10 @@ public class StringKey implements Key{
     }
 
     @Override
+    public String asObject() {
+        return getString();
+    }
+    @Override
     public TypeKey getDeclaring() {
         return null;
     }

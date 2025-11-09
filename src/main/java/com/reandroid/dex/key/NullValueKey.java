@@ -29,6 +29,10 @@ public class NullValueKey implements Key {
     }
 
     @Override
+    public Object asObject() {
+        return null;
+    }
+    @Override
     public int compareTo(Object obj) {
         if (obj == null) {
             return -1;

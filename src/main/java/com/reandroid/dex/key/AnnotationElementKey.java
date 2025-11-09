@@ -69,6 +69,11 @@ public class AnnotationElementKey implements Key {
     }
 
     @Override
+    public Object asObject() {
+        return getValue().asObject();
+    }
+
+    @Override
     public AnnotationElementKey replaceKey(Key search, Key replace) {
         if (this.equals(search)) {
             return (AnnotationElementKey) replace;

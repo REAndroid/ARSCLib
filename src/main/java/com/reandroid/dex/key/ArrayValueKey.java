@@ -128,6 +128,10 @@ public class ArrayValueKey extends ArrayKey<Key> {
         return (ArrayValueKey) super.set(i, item);
     }
     @Override
+    public ArrayValueKey setSize(int i, Key item) {
+        return (ArrayValueKey) super.setSize(i, item);
+    }
+    @Override
     public ArrayValueKey sort(Comparator<? super Key> comparator) {
         return (ArrayValueKey) super.sort(comparator);
     }

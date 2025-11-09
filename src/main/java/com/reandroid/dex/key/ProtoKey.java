@@ -9,6 +9,7 @@ import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class ProtoKey implements Key {
 
@@ -94,6 +95,19 @@ public class ProtoKey implements Key {
             results[i] = parameters.get(i - 1).shorty();
         }
         return new String(results);
+    }
+    public String getDetailedShorty() {
+        return getDetailedShorty(null);
+    }
+    public String getDetailedShorty(Predicate<TypeKey> platformPredicate) {
+        StringBuilder builder = new StringBuilder();
+        getReturnType().appendDetailedShorty(builder, platformPredicate);
+        TypeListKey parameters = getParameters();
+        int size = parameters.size();
+        for (int i = 0; i < size; i++) {
+            parameters.get(i).appendDetailedShorty(builder, platformPredicate);
+        }
+        return builder.toString();
     }
     public int getParameterRegistersCount(){
         int result = 0;

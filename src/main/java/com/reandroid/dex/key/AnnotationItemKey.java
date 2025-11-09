@@ -28,6 +28,8 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements Key, Iterable<AnnotationElementKey> {
@@ -178,6 +180,18 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
         TypeKey typeKey = getType();
         return ComputeIterator.of(iterator(), elementKey -> elementKey.toMethod(typeKey));
     }
+
+    @Override
+    public Map<String, Object> asObject() {
+        int size = size();
+        Map<String, Object> results = new LinkedHashMap<>(size);
+        for (int i = 0; i < size; i++) {
+            AnnotationElementKey element = get(i);
+            results.put(element.getName(), element.asObject());
+        }
+        return results;
+    }
+
     @Override
     public AnnotationItemKey replaceKey(Key search, Key replace) {
         if (this.equals(search)) {

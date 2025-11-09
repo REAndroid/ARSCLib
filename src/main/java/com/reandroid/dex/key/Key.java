@@ -35,6 +35,9 @@ public interface Key extends Comparable<Object>, SmaliFormat {
     default Iterator<? extends Key> mentionedKeys() {
         throw new RuntimeException("Method 'mentionedKeys()' Not implemented for: " + getClass());
     }
+    default Object asObject() {
+        return this.toString();
+    }
     default Key replaceKey(Key search, Key replace){
         return this;
     }
@@ -90,4 +93,5 @@ public interface Key extends Comparable<Object>, SmaliFormat {
     String DALVIK_accessFlags = ObjectsUtil.of("accessFlags");
     String DALVIK_name = ObjectsUtil.of("name");
     String DALVIK_value = ObjectsUtil.of("value");
+    String DALVIK_names = ObjectsUtil.of("names");
 }

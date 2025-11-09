@@ -17,6 +17,7 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
@@ -85,6 +86,21 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
             }
         }
         return false;
+    }
+    public KeyList<T> setSize(int size, Key item) {
+        if (size == size() || item == null) {
+            return this;
+        }
+        Key[] elements = this.elements;
+        int length = NumbersUtil.min(size, elements.length);
+        Key[] result = newArray(size);
+        for (int i = 0; i < length; i++) {
+            result[i] = elements[i];
+        }
+        for (int i = length; i < size; i++) {
+            result[i] = item;
+        }
+        return newInstance(result);
     }
     public KeyList<T> set(int i, T item) {
         if (ObjectsUtil.equals(item, get(i))) {
@@ -260,15 +276,23 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return new Key[length];
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+    public Object asObject() {
+        int size = size();
+        Object[] results = new Object[size];
+        for (int i = 0; i < size; i++) {
+            results[i] = get(i).asObject();
+        }
+        return results;
+    }
+
     @Override
     public KeyList<T> replaceKey(Key search, Key replace) {
         if (this.equals(search)) {
-            return (KeyList<T>) replace;
+            return ObjectsUtil.cast(replace);
         }
         return replaceElements(search, replace);
     }
-    @SuppressWarnings("unchecked")
     KeyList<T> replaceElements(Key search, Key replace) {
         KeyList<T> result = this;
         int size = result.size();
@@ -277,7 +301,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
             if (item == null) {
                 continue;
             }
-            item = (T) item.replaceKey(search, replace);
+            item = ObjectsUtil.cast(item.replaceKey(search, replace));
             result = result.set(i, item);
         }
         return result;
