@@ -56,7 +56,7 @@ public class StaticFieldDefArray extends FieldDefArray {
         if (classId == null) {
             return false;
         }
-        MethodKey methodKey = MethodKey.STATIC_CONSTRUCTOR.changeDeclaring(
+        MethodKey methodKey = MethodKey.CONSTRUCTOR_STATIC.changeDeclaring(
                 fieldKey.getDeclaring());
         MethodDef methodDef = (MethodDef) classId.getDef(methodKey);
         if (methodDef == null) {

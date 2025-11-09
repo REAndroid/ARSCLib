@@ -107,7 +107,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return InstanceIterator.of(mentioned, TypeKey.class);
     }
     public DexMethod getStaticConstructor() {
-        MethodKey methodKey = MethodKey.STATIC_CONSTRUCTOR
+        MethodKey methodKey = MethodKey.CONSTRUCTOR_STATIC
                 .changeDeclaring(getDefining());
         return getDeclaredMethod(methodKey);
     }
