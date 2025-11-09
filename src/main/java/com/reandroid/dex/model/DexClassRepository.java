@@ -24,12 +24,30 @@ import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.SourceFile;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationGroupKey;
+import com.reandroid.dex.key.CallSiteKey;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodHandleKey;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeKeyReference;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.utils.collection.UniqueIterator;
 
 import java.util.Iterator;
 import java.util.List;
@@ -308,7 +326,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     }
 
     default Iterator<DexClass> findUserClasses(Key key) {
-        return new UniqueIterator<>(getDexClasses(),
+        return UniqueIterator.of(getDexClasses(),
                 dexClass -> dexClass.uses(key));
     }
     default Iterator<DexClass> getDexClasses() {
@@ -338,6 +356,13 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         DexClass dexClass = getDexClass(methodKey.getDeclaring());
         if (dexClass != null) {
             return dexClass.getDeclaredMethod(methodKey, ignoreReturnType);
+        }
+        return null;
+    }
+    default DexField getDeclaredField(FieldKey fieldKey, boolean ignoreType) {
+        DexClass dexClass = getDexClass(fieldKey.getDeclaring());
+        if (dexClass != null) {
+            return dexClass.getDeclaredField(fieldKey, ignoreType);
         }
         return null;
     }
@@ -447,20 +472,34 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         };
     }
     default Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey) {
+        return findEquivalentMethods(methodKey, true);
+    }
+    default Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey, boolean recursive) {
+        if (methodKey == null) {
+            return EmptyIterator.of();
+        }
         DexClass defining = getDexClass(methodKey.getDeclaring());
         if (defining == null) {
             return EmptyIterator.of();
         }
         Iterator<DexMethod> iterator = defining.getMethods(methodKey);
-        return new IterableIterator<DexMethod, MethodKey>(iterator) {
+        Iterator<MethodKey> results = new IterableIterator<DexMethod, MethodKey>(iterator) {
             @Override
             public Iterator<MethodKey> iterator(DexMethod element) {
                 element = element.getDeclared();
-                MethodKey definingKey = element.getKey();
-                return CombiningIterator.two(SingleIterator.of(definingKey),
+                return CombiningIterator.singleOne(element.getKey(),
                         element.getOverridingKeys());
             }
         };
+        if (recursive) {
+            results = UniqueIterator.of(new IterableIterator<MethodKey, MethodKey>(results) {
+                @Override
+                public Iterator<MethodKey> iterator(MethodKey element) {
+                    return findEquivalentMethods(element, false);
+                }
+            });
+        }
+        return results;
     }
     default Iterator<DexMethod> getMethods(MethodKey methodKey) {
         return ComputeIterator.of(findEquivalentMethods(methodKey), this::getDeclaredMethod);
