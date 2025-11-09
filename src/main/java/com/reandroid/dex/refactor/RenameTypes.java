@@ -27,6 +27,7 @@ import com.reandroid.dex.key.TypeKeyReference;
 import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
@@ -109,9 +110,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey> {
                     "Non root package name should end with '/': " + packageName);
         }
     }
-    public void add(DexClassRepository classRepository, TypeKey search, TypeKey replace) {
-        add(classRepository, new KeyPair<>(search, replace));
-    }
+    @Override
     public void add(DexClassRepository classRepository, KeyPair<TypeKey, TypeKey> keyPair) {
         if (validateAndAdd(classRepository, keyPair)) {
             if (renameInnerClasses) {
@@ -151,6 +150,9 @@ public class RenameTypes extends Rename<TypeKey, TypeKey> {
 
     @Override
     public int apply(DexClassRepository classRepository) {
+        if (isEmpty()) {
+            return 0;
+        }
         this.renamedStrings.clear();
         buildRenameMap();
         if (stringMap.isEmpty()) {
@@ -365,6 +367,11 @@ public class RenameTypes extends Rename<TypeKey, TypeKey> {
     @Override
     public List<KeyPair<TypeKey, TypeKey>> toList() {
         return super.toList(CompareUtil.getInverseComparator());
+    }
+
+    @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.CLASS;
     }
 
     public static final int DEFAULT_ARRAY_DEPTH = ObjectsUtil.of(3);

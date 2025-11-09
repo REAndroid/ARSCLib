@@ -18,14 +18,30 @@ package com.reandroid.dex.refactor;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.model.DexClassRepository;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliParser;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public abstract class Rename<T extends Key, R extends Key> {
+public abstract class Rename<T extends Key, R extends Key>
+        implements SmaliFormat, SmaliParser {
 
     private final Map<KeyPair<?, ?>, KeyPair<T, R>> keyPairMap;
     private final Map<KeyPair<?, ?>, KeyPair<T, R>> flippedKeyMap;
@@ -39,18 +55,33 @@ public abstract class Rename<T extends Key, R extends Key> {
         this.lockedFlippedKeys = new HashSet<>();
     }
 
+    public abstract void add(DexClassRepository classRepository, KeyPair<T, R> keyPair);
+
+    public void add(DexClassRepository classRepository, T search, R replace) {
+        add(classRepository, new KeyPair<>(search, replace));
+    }
     public void add(T search, R replace) {
         add(new KeyPair<>(search, replace));
     }
-    public void add(KeyPair<T, R> keyPair){
+    public void add(KeyPair<T, R> keyPair) {
         addToSet(keyPair);
     }
-    public void addAll(Collection<KeyPair<T, R>> keyPairs){
+    public void addAll(Collection<KeyPair<T, R>> keyPairs) {
         this.addAll(keyPairs.iterator());
     }
-    public void addAll(Iterator<KeyPair<T, R>> iterator){
-        while (iterator.hasNext()){
+    public void addAll(Iterator<KeyPair<T, R>> iterator) {
+        while (iterator.hasNext()) {
             add(iterator.next());
+        }
+    }
+    public void addAll(DexClassRepository classRepository, Collection<KeyPair<T, R>> keyPairs) {
+        if (keyPairs != null) {
+            addAll(classRepository, keyPairs.iterator());
+        }
+    }
+    public void addAll(DexClassRepository classRepository, Iterator<KeyPair<T, R>> iterator) {
+        while (iterator.hasNext()) {
+            add(classRepository, iterator.next());
         }
     }
     private void addToSet(KeyPair<T, R> keyPair) {
@@ -108,9 +139,9 @@ public abstract class Rename<T extends Key, R extends Key> {
             lockKey(p2, p2.flip());
         }
     }
-    public boolean isLocked(KeyPair<T, R> keyPair) {
+    public boolean isLocked(KeyPair<?, ?> keyPair) {
         if (keyPair != null) {
-            KeyPair<R, T> flip = keyPair.flip();
+            KeyPair<?, ?> flip = keyPair.flip();
             return lockedKeys.contains(keyPair) ||
                     lockedFlippedKeys.contains(keyPair) ||
                     lockedKeys.contains(flip) ||
@@ -148,10 +179,27 @@ public abstract class Rename<T extends Key, R extends Key> {
         lockedFlippedKeys.clear();
     }
 
+    public boolean isEmpty() {
+        return size() == 0 && lockedSize() == 0;
+    }
     public int size() {
         return keyPairMap.size();
     }
+    public int lockedSize() {
+        return lockedKeys.size();
+    }
 
+    public boolean contains(KeyPair<?, ?> keyPair) {
+        if (keyPair != null) {
+            return contains(keyPair.getFirst()) ||
+                    contains(keyPair.getSecond()) ||
+                    isLocked(keyPair);
+        }
+        return false;
+    }
+    public boolean contains(Key key) {
+        return get(key) != null || getFlipped(key) != null;
+    }
     public KeyPair<T, R> get(Key search) {
         return keyPairMap.get(new KeyPair<>(search, null));
     }
@@ -211,13 +259,164 @@ public abstract class Rename<T extends Key, R extends Key> {
     }
 
     public abstract int apply(DexClassRepository classRepository);
+    public int apply(Rename<?, ?> rename) {
+        if (this.isEmpty() || rename.isEmpty()) {
+            return 0;
+        }
+        List<? extends KeyPair<?, ?>> list = rename.toList();
+        int result = 0;
+        for (KeyPair<?, ?> keyPair : list) {
+            KeyPair<?, ?> renamedPair = apply(keyPair);
+            if (renamedPair != keyPair) {
+                rename.replace(keyPair, renamedPair);
+                result ++;
+            }
+        }
+        return result;
+    }
+    public KeyPair<?, ?> apply(KeyPair<?, ?> keyPair) {
+        Key first = keyPair.getFirst();
+        Key first2 = this.renameKey(first);
+        Key second = keyPair.getSecond();
+        Key second2 = this.renameKey(second);
+        if (first != first2 || second != second2) {
+            keyPair = new KeyPair<>(first2, second2);
+        }
+        return keyPair;
+    }
+    private void replace(KeyPair<?, ?> keyPair, KeyPair<?, ?> replace) {
+        if (keyPairMap.remove(keyPair) != null) {
+            flippedKeyMap.remove(keyPair.flip());
+            add(ObjectsUtil.cast(replace));
+        }
+    }
+    protected Key renameKey(Key key) {
+        Iterator<? extends Key> iterator = CollectionUtil.uniqueOf(key.mentionedKeys());
+        while (iterator.hasNext()) {
+            Key mentioned = iterator.next();
+            Key replace = getReplace(mentioned);
+            if (replace != null) {
+                key = key.replaceKey(mentioned, replace);
+            }
+        }
+        return key;
+    }
+    public KeyPair<T, R> mergeRename(KeyPair<T, R> lower) {
+        KeyPair<T, R> renamed = get(lower.getSecond());
+        if (renamed != null && !renamed.equalsBoth(lower)) {
+            return new KeyPair<>(lower.getFirst(), renamed.getSecond());
+        }
+        return lower;
+    }
 
     public Set<KeyPair<T, R>> getKeyPairSet() {
         return ObjectsUtil.cast(keyPairMap.keySet());
     }
 
+    public abstract SmaliDirective getSmaliDirective();
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        SmaliDirective directive = getSmaliDirective();
+        directive.append(writer);
+        writer.appendComment("size = " + size());
+        int locked = lockedSize();
+        if (locked != 0) {
+            writer.appendComment("locked = " + locked, false);
+        }
+        writer.indentPlus();
+        List<KeyPair<T, R>> keyPairList = toList();
+        for (KeyPair<T, R> keyPair : keyPairList) {
+            writer.newLine();
+            keyPair.append(writer);
+        }
+        List<KeyPair<T, R>> lockedKeyPairList = listLocked();
+        for (KeyPair<T, R> keyPair : lockedKeyPairList) {
+            writer.newLine();
+            writer.appendComment(keyPair.toString());
+        }
+        writer.indentMinus();
+        directive.appendEnd(writer);
+        writer.newLine();
+    }
+
+    @Override
+    public void parse(SmaliReader reader) throws IOException {
+        parse(null, reader);
+    }
+    public void parse(DexClassRepository classRepository, SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        if (reader.finished()) {
+            return;
+        }
+        SmaliDirective directive = getSmaliDirective();
+        if (directive.isEnd(reader)) {
+            directive.skipEnd(reader);
+            return;
+        }
+        SmaliParseException.expect(reader, directive);
+        reader.skipWhitespacesOrComment();
+        while (!directive.isEnd(reader)) {
+            KeyPair<T, R> keyPair = KeyPair.read(directive, reader);
+            if (classRepository == null) {
+                add(keyPair);
+            } else {
+                add(classRepository, keyPair);
+            }
+            reader.skipWhitespacesOrComment();
+        }
+        SmaliParseException.expect(reader, directive, true);
+    }
+
+    public void writeSmali(File file) throws IOException {
+        SmaliWriter writer = new SmaliWriter();
+        writer.setWriter(file);
+        append(writer);
+        writer.close();
+    }
+
+    public String toSmaliString() {
+        return SmaliWriter.toStringSafe(this);
+    }
     @Override
     public String toString() {
-        return StringsUtil.join(toList(), '\n');
+        return size() + "/" + lockedSize();
+    }
+
+    public static Rename<?, ?> read(SmaliReader reader) throws IOException {
+        return read(null, null, reader);
+    }
+    public static Rename<?, ?> read(RenameFactory renameFactory,  DexClassRepository classRepository, SmaliReader reader) throws IOException {
+        if (renameFactory == null) {
+            renameFactory = RenameFactory.DEFAULT_FACTORY;
+        }
+        reader.skipWhitespacesOrComment();
+        SmaliDirective directive = SmaliDirective.parse(reader, false);
+        if (directive == null) {
+            throw new SmaliParseException(
+                    "Expecting rename directives (.class, .field, .method ...)", reader);
+        }
+        if (directive.isEnd(reader)) {
+            throw new SmaliParseException("Unexpected end", reader);
+        }
+        Rename<?, ?> rename = renameFactory.createRename(directive);
+        if (rename == null) {
+            throw new SmaliParseException("Unknown rename directive", reader);
+        }
+        rename.parse(classRepository, reader);
+        return rename;
+    }
+
+    public static Rename<?, ?> createRenameFor(SmaliDirective directive) {
+        if (directive == SmaliDirective.CLASS) {
+            return new RenameTypes();
+        }
+        if (directive == SmaliDirective.FIELD) {
+            return new RenameFields();
+        }
+        if (directive == SmaliDirective.METHOD) {
+            return new RenameMethods();
+        }
+        return null;
     }
 }

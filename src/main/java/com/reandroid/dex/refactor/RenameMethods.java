@@ -23,9 +23,15 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class RenameMethods extends Rename<MethodKey, MethodKey> {
 
@@ -36,17 +42,25 @@ public class RenameMethods extends Rename<MethodKey, MethodKey> {
     public void add(DexClassRepository classRepository, MethodKey search, String replace) {
         add(classRepository, search, search.changeName(replace));
     }
-    public void add(DexClassRepository classRepository, MethodKey search, MethodKey replace) {
-        KeyPair<MethodKey, MethodKey> start = new KeyPair<>(search, replace);
-        if (!start.isValid() || isLocked(start)) {
+    @Override
+    public void add(DexClassRepository classRepository, KeyPair<MethodKey, MethodKey> keyPair) {
+        if (!keyPair.isValid() || isLocked(keyPair)) {
+            return;
+        }
+        MethodKey search = keyPair.getFirst();
+        if (search.isObjectMethod()) {
+            return;
+        }
+        MethodKey replace = keyPair.getSecond();
+        if (replace.isObjectMethod()) {
             return;
         }
         if (containsDeclaration(classRepository, replace)) {
-            lock(start);
+            lock(keyPair);
             return;
         }
         List<KeyPair<MethodKey, MethodKey>> list = new ArrayCollection<>();
-        list.add(start);
+        list.add(keyPair);
         Iterator<MethodKey> iterator = classRepository.findEquivalentMethods(search);
         while (iterator.hasNext()) {
             MethodKey equivalent = iterator.next();
@@ -64,6 +78,9 @@ public class RenameMethods extends Rename<MethodKey, MethodKey> {
 
     @Override
     public int apply(DexClassRepository classRepository) {
+        if (isEmpty()) {
+            return 0;
+        }
         List<KeyPair<MethodKey, MethodKey>> list = toList();
         int count = applyToMethodIds(classRepository, list);
         count += applyToAnnotations(classRepository, list);
@@ -138,5 +155,10 @@ public class RenameMethods extends Rename<MethodKey, MethodKey> {
     @Override
     protected boolean containsDeclaration(DexClassRepository classRepository, MethodKey replaceKey) {
         return classRepository.getDeclaredMethod(replaceKey, false) != null;
+    }
+
+    @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.METHOD;
     }
 }

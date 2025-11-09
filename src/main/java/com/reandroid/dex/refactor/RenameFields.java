@@ -20,9 +20,11 @@ import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 
 public class RenameFields extends Rename<FieldKey, FieldKey> {
 
@@ -33,9 +35,14 @@ public class RenameFields extends Rename<FieldKey, FieldKey> {
     public void add(DexClassRepository classRepository, FieldKey search, String replace) {
         add(classRepository, search, search.changeName(replace));
     }
-    public void add(DexClassRepository classRepository, FieldKey search, FieldKey replace) {
-        KeyPair<FieldKey, FieldKey> start = new KeyPair<>(search, replace);
-        if (!start.isValid() || isLocked(start) || !search.getType().equals(replace.getType())) {
+    @Override
+    public void add(DexClassRepository classRepository, KeyPair<FieldKey, FieldKey> start) {
+        if (!start.isValid() || isLocked(start)) {
+            return;
+        }
+        FieldKey search = start.getFirst();
+        FieldKey replace = start.getSecond();
+        if (!search.getType().equals(replace.getType())) {
             return;
         }
         if (containsDeclaration(classRepository, replace)) {
@@ -61,6 +68,9 @@ public class RenameFields extends Rename<FieldKey, FieldKey> {
 
     @Override
     public int apply(DexClassRepository classRepository) {
+        if (isEmpty()) {
+            return 0;
+        }
         List<KeyPair<FieldKey, FieldKey>> list = toList();
         return applyToFieldIds(classRepository, list);
     }
@@ -82,6 +92,11 @@ public class RenameFields extends Rename<FieldKey, FieldKey> {
 
     @Override
     protected boolean containsDeclaration(DexClassRepository classRepository, FieldKey replaceKey) {
-        return classRepository.getDeclaredField(replaceKey) != null;
+        return classRepository.getDeclaredField(replaceKey, true) != null;
     }
+    @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.FIELD;
+    }
+
 }
