@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.dalvik;
 
+import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
@@ -34,11 +35,23 @@ public class DalvikAnnotation {
         return getAnnotatedProgram().getAnnotation(getAnnotationType());
     }
     public void setKey(AnnotationItemKey key) {
-        if (!getAnnotationType().equals(key.getType())) {
-            throw new IllegalArgumentException("Different annotation type: "
-                    + getAnnotationType() + ", " + key.getType());
+        if (key == null) {
+            getAnnotatedProgram().removeAnnotation(getAnnotationType());
+        } else {
+            if (!getAnnotationType().equals(key.getType())) {
+                throw new IllegalArgumentException("Different annotation type: "
+                        + getAnnotationType() + ", " + key.getType());
+            }
+            getAnnotatedProgram().addAnnotation(key);
         }
-        getAnnotatedProgram().addAnnotation(key);
+    }
+    public AnnotationItemKey getOrCreateKey() {
+        AnnotationItemKey key = getKey();
+        if (key == null) {
+            key = AnnotationItemKey.create(AnnotationVisibility.SYSTEM, getAnnotationType());
+            setKey(key);
+        }
+        return key;
     }
     public TypeKey getAnnotationType() {
         return annotationType;
@@ -46,16 +59,30 @@ public class DalvikAnnotation {
     public AnnotatedProgram getAnnotatedProgram() {
         return annotatedProgram;
     }
+    public void removeSelf() {
+        getAnnotatedProgram().removeAnnotation(getAnnotationType());
+    }
+    public boolean isRemoved() {
+        return !getAnnotatedProgram().hasAnnotation(getAnnotationType());
+    }
 
     Key readValue(String name) {
-        return getKey().getValue(name);
+        AnnotationItemKey key = getKey();
+        if (key != null) {
+            return key.getValue(name);
+        }
+        return null;
     }
     void writeValue(String name, Key value) {
-        setKey(getKey().add(name, value));
+        setKey(getOrCreateKey().add(name, value));
     }
 
     @Override
     public String toString() {
-        return getKey().toString();
+        AnnotationItemKey key = getKey();
+        if (key == null) {
+            return "# REMOVED";
+        }
+        return key.toString();
     }
 }

@@ -17,27 +17,42 @@ package com.reandroid.dex.dalvik;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.AnnotationVisibility;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationElementKey;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.NullValueKey;
+import com.reandroid.dex.key.PrimitiveKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.AccessibleItem;
 import com.reandroid.dex.program.AnnotatedProgram;
 
-import java.util.Iterator;
+import java.lang.annotation.ElementType;
 
-public class DalvikInnerClass extends DalvikAnnotation {
+public class DalvikInnerClass extends DalvikAnnotation implements AccessibleItem {
 
     private DalvikInnerClass(AnnotatedProgram annotatedProgram) {
         super(annotatedProgram, TypeKey.DALVIK_InnerClass);
     }
 
-    public Iterator<AccessFlag> getAccessFlags() {
-        return AccessFlag.valuesOfClass(getAccessFlagsValue());
-    }
+    @Override
     public int getAccessFlagsValue() {
-        PrimitiveKey key = (PrimitiveKey) readValue(Key.DALVIK_accessFlags);
-        return (int) key.getValueAsLong();
+        Key key = readValue(Key.DALVIK_accessFlags);
+        if (key instanceof PrimitiveKey) {
+            return (int)((PrimitiveKey) key).getValueAsLong();
+        }
+        return 0;
     }
-    public void setAccessFlags(int flags) {
+    @Override
+    public void setAccessFlagsValue(int flags) {
         writeValue(Key.DALVIK_accessFlags, PrimitiveKey.of(flags));
     }
+
+    @Override
+    public ElementType getElementType() {
+        return ElementType.TYPE;
+    }
+
     public String getName() {
         Key key = readValue(Key.DALVIK_name);
         if (key instanceof StringKey) {
