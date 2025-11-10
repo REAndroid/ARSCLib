@@ -10,18 +10,24 @@ import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLFactory;
+import com.reandroid.xml.XMLPath;
 import com.reandroid.xml.XMLUtil;
 import com.reandroid.xml.base.Document;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.Iterator;
 
 public class ResXmlDocument extends ResXmlDocumentOrElement implements
@@ -94,6 +100,78 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
 
     private ResXmlDocument getParentDocument() {
         return getParentInstance(ResXmlDocument.class);
+    }
+
+    public boolean removeAttributes(XMLPath xmlPath) {
+        if (!xmlPath.isAttribute()) {
+            throw new IllegalArgumentException("Path is not a type of attribute: " + xmlPath);
+        }
+        Iterator<ResXmlAttribute> iterator = xmlPath.findAll(getElements());
+        iterator = CollectionUtil.copyOf(iterator);
+        boolean result = false;
+        while (iterator.hasNext()) {
+            ResXmlAttribute attribute = iterator.next();
+            attribute.removeSelf();
+            result = true;
+        }
+        return result;
+    }
+    public boolean removeElements(XMLPath xmlPath) {
+        Iterator<ResXmlElement> iterator;
+        if (xmlPath.isAttribute()) {
+            Iterator<ResXmlAttribute> attributes = xmlPath.findAll(getElements());
+            iterator = ComputeIterator.of(attributes, ResXmlAttribute::getParentElement);
+        } else {
+            iterator = xmlPath.findAll(getElements());
+        }
+        iterator = CollectionUtil.copyOf(iterator);
+        boolean result = false;
+        while (iterator.hasNext()) {
+            ResXmlElement element = iterator.next();
+            element.removeSelf();
+            result = true;
+        }
+        return result;
+    }
+    public ResXmlElement newChildElement(XMLPath xmlPath) {
+        if (xmlPath.containsAnyPathOrName()) {
+            throw new IllegalArgumentException("invalid path: " + xmlPath);
+        }
+        if (!xmlPath.isElement()) {
+            return newChildElement(xmlPath.getParent());
+        }
+        String name = xmlPath.getName();
+        XMLPath parent = xmlPath.getParent();
+        if (parent != null) {
+            return getOrCreateChildElement(parent)
+                    .newElement(name);
+        }
+        if (this instanceof ResXmlDocument) {
+            return getOrCreateElement(name);
+        }
+        return newElement(name);
+    }
+    public ResXmlElement getOrCreateChildElement(XMLPath xmlPath) {
+        if (xmlPath.containsAnyPathOrName()) {
+            throw new IllegalArgumentException("invalid path: " + xmlPath);
+        }
+        if (!xmlPath.isElement()) {
+            return newChildElement(xmlPath.getParent());
+        }
+        ResXmlElement element = null;
+        int depth = xmlPath.depth();
+        int i = depth;
+        while (i >= 0) {
+            XMLPath path = xmlPath.getPath(i);
+            String name = path.getName();
+            if (i == depth) {
+                element = this.getOrCreateElement(name);
+            } else {
+                element = element.getOrCreateElement(name);
+            }
+            i --;
+        }
+        return element;
     }
 
     @Override

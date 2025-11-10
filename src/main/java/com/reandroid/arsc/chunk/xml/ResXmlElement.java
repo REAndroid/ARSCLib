@@ -357,6 +357,15 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     public ResXmlAttribute searchAttribute(String namespace, String name) {
         return getAttributeArray().searchAttribute(namespace, name);
     }
+    public boolean hasAttribute(int resourceId) {
+        return getAttributeArray().searchAttributeByResourceId(resourceId) != null;
+    }
+    public boolean hasAttribute(String name) {
+        return getAttributeArray().searchAttributeByName(name) != null;
+    }
+    public boolean hasAttribute(String namespace, String name) {
+        return getAttributeArray().searchAttribute(namespace, name) != null;
+    }
 
     public ResXmlAttribute getIdAttribute() {
         return getStartElement().getIdAttributePosition().getAttribute();

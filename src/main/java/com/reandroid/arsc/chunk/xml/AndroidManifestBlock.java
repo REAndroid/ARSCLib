@@ -28,6 +28,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.xml.XMLPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,26 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     public AndroidManifestBlock() {
         super();
         super.getStringPool().setUtf8(false);
+    }
+
+    public ResXmlElement getOrCreateNamedElement(XMLPath xmlPath, String value) {
+        ResXmlElement element = getNamedElement(xmlPath, value);
+        if (element == null) {
+            element = newChildElement(xmlPath);
+            element.getOrCreateAndroidAttribute(NAME_name, ID_name)
+                    .setValueAsString(value);
+        }
+        return element;
+    }
+    public ResXmlElement getNamedElement(XMLPath xmlPath, String value) {
+        Iterator<ResXmlElement> iterator = xmlPath.find(this);
+        while (iterator.hasNext()) {
+            ResXmlElement element = iterator.next();
+            if (value.equals(getAndroidNameValue(element))) {
+                return element;
+            }
+        }
+        return null;
     }
     public ApkFile.ApkType guessApkType() {
         if (isSplit()) {
