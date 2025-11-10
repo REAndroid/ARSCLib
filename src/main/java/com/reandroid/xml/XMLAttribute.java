@@ -116,6 +116,9 @@ public class XMLAttribute extends XMLNode implements Attribute {
         }
         return value;
     }
+    public Object getValueAsEncoded() {
+        return decodeValue(getValueAsString(true));
+    }
     void setFrom(XMLAttribute xmlAttribute) {
         set(xmlAttribute.getName(true),
                 xmlAttribute.getValueAsString(false));
@@ -213,5 +216,31 @@ public class XMLAttribute extends XMLNode implements Attribute {
     @Override
     public String toString() {
         return getName(true) + "=\"" + getValueAsString() + "\"";
+    }
+
+    static Object decodeValue(String str) {
+        if (str == null) {
+            return null;
+        }
+        if (str.equalsIgnoreCase("true") ) {
+            return Boolean.TRUE;
+        }
+        if (str.equalsIgnoreCase("false")) {
+            return Boolean.FALSE;
+        }
+        if (str.endsWith("f")) {
+            try {
+                return Float.parseFloat(str);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        if (str.startsWith("0x")) {
+            try {
+                Long l = Long.decode(str);
+                return l.intValue();
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return str;
     }
 }

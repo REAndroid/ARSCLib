@@ -114,7 +114,7 @@ public class XMLPathTest {
                 1, applicationElementsLabelAttributeList.size());
 
         XMLPath altPath = XMLPath
-                .compile("/manifest/application").alternate("package")
+                .compile("/manifest|ddd/application").alternate("package")
                 .element("activity").alternate("meta-data").alternate("service");
         XMLPath altPath2 = XMLPath.compile(altPath.getPath());
 
@@ -146,6 +146,28 @@ public class XMLPathTest {
         Assert.assertEquals("anyNameAttributeUnderApplication",
                 19, anyNameAttributeUnderApplication.size());
 
+        XMLPath xmlPath = XMLPath.compile("/manifest/application/activity;name")
+                .value("com.test.TestActivity1");
+        List<XMLAttribute> activityNameList = xmlPath.list(document);
+        Assert.assertEquals("activityNameList",
+                1, activityNameList.size());
+
+        XMLPath xmlPath2 = XMLPath.compile("/manifest/application/activity;name=\"com.test.TestActivity1\"");
+        List<XMLAttribute> activityNameList2 = xmlPath2.list(document);
+        Assert.assertEquals("activityNameList2",
+                1, activityNameList2.size());
+
+        XMLPath xmlPath3 = XMLPath.compile("/manifest/application/activity;name")
+                .value("com.test.TestActivity1")
+                .alternateValue("com.test.TestActivity2");
+        List<XMLAttribute> activityNameList3 = xmlPath3.list(document);
+        Assert.assertEquals("activityNameList3",
+                2, activityNameList3.size());
+
+        XMLPath xmlPath4 = XMLPath.compile("/manifest/application/activity;exported=true");
+        List<XMLAttribute> activityNameList4 = xmlPath4.list(document);
+        Assert.assertEquals("activityNameList4",
+                1, activityNameList4.size());
     }
     @Test
     public void testWithResXmlDocument() {
