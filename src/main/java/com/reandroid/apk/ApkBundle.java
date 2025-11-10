@@ -28,9 +28,11 @@ import java.util.*;
 
 public class ApkBundle implements Closeable {
     private final Map<String, ApkModule> mModulesMap;
+    private AndroidManifestBlockMerger mManifestMerger;
     private APKLogger apkLogger;
     public ApkBundle(){
         this.mModulesMap=new HashMap<>();
+        this.mManifestMerger = new AndroidManifestBlockMerger();
     }
 
     public ApkModule mergeModules() throws IOException {
@@ -50,6 +52,11 @@ public class ApkBundle implements Closeable {
             base = getLargestTableModule();
         }
         result.merge(base, force);
+        AndroidManifestBlockMerger manifestMerger = getManifestMerger();
+        if (manifestMerger != null) {
+            manifestMerger.reset();
+            manifestMerger.initializeBase(result.getAndroidManifest());
+        }
         ApkSignatureBlock signatureBlock = null;
         for(ApkModule module:moduleList){
             ApkSignatureBlock asb = module.getApkSignatureBlock();
@@ -63,6 +70,9 @@ public class ApkBundle implements Closeable {
                 signatureBlock = asb;
             }
             result.merge(module, force);
+            if (manifestMerger != null) {
+                manifestMerger.merge(module.getAndroidManifest());
+            }
         }
 
         result.setApkSignatureBlock(signatureBlock);
@@ -75,6 +85,14 @@ public class ApkBundle implements Closeable {
         result.getZipEntryMap().autoSortApkFiles();
         return result;
     }
+
+    public AndroidManifestBlockMerger getManifestMerger() {
+        return mManifestMerger;
+    }
+    public void setManifestMerger(AndroidManifestBlockMerger mManifestMerger) {
+        this.mManifestMerger = mManifestMerger;
+    }
+
     private String generateMergedModuleName(){
         Set<String> moduleNames=mModulesMap.keySet();
         String merged="merged";

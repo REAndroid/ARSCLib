@@ -83,6 +83,7 @@ public interface AndroidManifest {
     int ID_icon = ObjectsUtil.of(0x01010002);
     int ID_id = ObjectsUtil.of(0x010100d0);
     int ID_isFeatureSplit = ObjectsUtil.of(0x0101055b);
+    int ID_isolatedSplits = ObjectsUtil.of(0x0101054b);
     int ID_isSplitRequired = ObjectsUtil.of(0x01010591);
     int ID_label = ObjectsUtil.of(0x01010001);
     int ID_maxSdkVersion = ObjectsUtil.of(0x01010271);
@@ -113,6 +114,7 @@ public interface AndroidManifest {
     String NAME_id = ObjectsUtil.of("id");
     String NAME_installLocation = ObjectsUtil.of("installLocation");
     String NAME_isFeatureSplit = ObjectsUtil.of("isFeatureSplit");
+    String NAME_isolatedSplits = ObjectsUtil.of("isolatedSplits");
     String NAME_isSplitRequired = ObjectsUtil.of("isSplitRequired");
     String NAME_label = ObjectsUtil.of("label");
     String NAME_maxSdkVersion = ObjectsUtil.of("maxSdkVersion");
@@ -146,12 +148,14 @@ public interface AndroidManifest {
     String TAG_package = ObjectsUtil.of("package");
     String TAG_permission = ObjectsUtil.of("permission");
     String TAG_provider = ObjectsUtil.of("provider");
+    String TAG_queries = ObjectsUtil.of("queries");
     String TAG_receiver = ObjectsUtil.of("receiver");
     String TAG_service = ObjectsUtil.of("service");
     String TAG_uses_feature = ObjectsUtil.of("uses-feature");
     String TAG_uses_library = ObjectsUtil.of("uses-library");
     String TAG_uses_permission = ObjectsUtil.of("uses-permission");
     String TAG_uses_sdk = ObjectsUtil.of("uses-sdk");
+    String TAG_uses_split = ObjectsUtil.of("uses-split");
 
     String VALUE_android_intent_action_MAIN = ObjectsUtil.of("android.intent.action.MAIN");
     String VALUE_com_android_dynamic_apk_fused_modules = ObjectsUtil.of("com.android.dynamic.apk.fused.modules");
