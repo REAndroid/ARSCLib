@@ -656,17 +656,6 @@ public class XMLPath implements Predicate<NamedNode> {
             }
             return false;
         }
-        protected boolean matchesNameX(int depth, NamedNode namedNode) {
-            if (namedNode == null) {
-                return false;
-            }
-            for (XMLPath xmlPath : elements()) {
-                if (xmlPath.matchesName(depth, namedNode)) {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         @Override
         protected boolean equalsName(XMLPath xmlPath) {
