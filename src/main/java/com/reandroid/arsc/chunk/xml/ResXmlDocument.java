@@ -146,9 +146,6 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
             return getOrCreateChildElement(parent)
                     .newElement(name);
         }
-        if (this instanceof ResXmlDocument) {
-            return getOrCreateElement(name);
-        }
         return newElement(name);
     }
     public ResXmlElement getOrCreateChildElement(XMLPath xmlPath) {

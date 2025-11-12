@@ -16,6 +16,7 @@
 package com.reandroid.app;
 
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.XMLPath;
 
 @SuppressWarnings("unused")
 public interface AndroidManifest {
@@ -163,6 +164,12 @@ public interface AndroidManifest {
     String FILE_NAME = ObjectsUtil.of("AndroidManifest.xml");
     String FILE_NAME_BIN = ObjectsUtil.of("AndroidManifest.xml.bin");
     String FILE_NAME_JSON = ObjectsUtil.of("AndroidManifest.xml.json");
+
+    XMLPath PATH_MANIFEST = XMLPath.newElement(TAG_manifest);
+    XMLPath PATH_APPLICATION = PATH_MANIFEST.element(TAG_application);
+    XMLPath PATH_APPLICATION_META_DATA = PATH_APPLICATION.element(TAG_meta_data);
+    XMLPath PATH_APPLICATION_META_DATA_NAME = PATH_APPLICATION.element(TAG_meta_data)
+            .attribute(ID_name);
 
     String EMPTY_MANIFEST_TAG = ObjectsUtil.of("x");
 
