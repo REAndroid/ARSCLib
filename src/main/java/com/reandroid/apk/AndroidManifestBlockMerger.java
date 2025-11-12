@@ -17,37 +17,29 @@ package com.reandroid.apk;
 
 import com.reandroid.app.AndroidManifest;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.XMLPath;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 public class AndroidManifestBlockMerger {
 
     private boolean mEnabled;
-    private boolean mBuildFusedModules;
     private AndroidManifestBlockSplitSanitizer mSplitSanitizer;
 
-    private final List<String> fusedModuleNameList;
     private final Set<XMLPath> excludePaths;
 
     private AndroidManifestBlock baseManifest;
 
     public AndroidManifestBlockMerger() {
         this.mEnabled = true;
-        this.mBuildFusedModules = true;
         this.mSplitSanitizer = new AndroidManifestBlockSplitSanitizer();
 
-        this.fusedModuleNameList = new ArrayCollection<>();
         this.excludePaths = CollectionUtil.asHashSet(
-                XMLPath.compile("/manifest/uses-split"),
-                XMLPath.compile("/manifest/uses-split")
+                AndroidManifest.PATH_MANIFEST.element(AndroidManifest.TAG_uses_split)
         );
     }
 
@@ -56,8 +48,6 @@ public class AndroidManifestBlockMerger {
             throw new IllegalArgumentException("Base manifest already initialized");
         }
         this.baseManifest = base;
-        addFusedModuleName("base");
-        this.addFusedModules(base);
         AndroidManifestBlockSplitSanitizer sanitizer = getSplitSanitizer();
         if (sanitizer != null) {
             sanitizer.sanitize(base);
@@ -67,10 +57,6 @@ public class AndroidManifestBlockMerger {
 
     public AndroidManifestBlockMerger setEnabled(boolean enabled) {
         this.mEnabled = enabled;
-        return this;
-    }
-    public AndroidManifestBlockMerger setBuildFusedModules(boolean buildFusedModules) {
-        this.mBuildFusedModules = buildFusedModules;
         return this;
     }
     public AndroidManifestBlockMerger exclude(XMLPath xmlPath) {
@@ -83,15 +69,11 @@ public class AndroidManifestBlockMerger {
     }
     public AndroidManifestBlockMerger reset() {
         this.baseManifest = null;
-        this.fusedModuleNameList.clear();
         return this;
     }
 
     public boolean isEnabled() {
         return mEnabled;
-    }
-    public boolean isBuildFusedModules() {
-        return mBuildFusedModules;
     }
     public AndroidManifestBlock getBaseManifestBlock() {
         return baseManifest;
@@ -108,11 +90,7 @@ public class AndroidManifestBlockMerger {
         if (split == base) {
             return false;
         }
-        boolean fusedUpdated = addFusedModules(split);
         boolean result = mergeManifestElement(split.getManifestElement());
-        if (fusedUpdated) {
-            commitFusedModules();
-        }
         AndroidManifestBlockSplitSanitizer sanitizer = getSplitSanitizer();
         if (sanitizer != null) {
             result = sanitizer.sanitize(base) || result;
@@ -142,8 +120,6 @@ public class AndroidManifestBlockMerger {
             ResXmlElement element = iterator.next();
             if (element.hasAttribute(AndroidManifest.ID_name)) {
                 result = addNamedElement(element) || result;
-            } else {
-
             }
         }
         return result;
@@ -194,52 +170,6 @@ public class AndroidManifestBlockMerger {
             throw new IllegalArgumentException("Base manifest not initialized");
         }
         return baseManifest;
-    }
-    private void commitFusedModules() {
-        if (!isBuildFusedModules()) {
-            return;
-        }
-        List<String> fusedModuleNameList = this.fusedModuleNameList;
-        int size = fusedModuleNameList.size();
-        if (size == 0 || (size == 1 && fusedModuleNameList.contains("base"))) {
-            return;
-        }
-        ResXmlElement element = getBaseManifestBlock()
-                .getOrCreateNamedElement(XMLPath.compile("/manifest/application/meta-data"),
-                AndroidManifest.VALUE_com_android_dynamic_apk_fused_modules);
-        ResXmlAttribute attribute = element.getOrCreateAndroidAttribute(
-                AndroidManifest.NAME_value,
-                AndroidManifest.ID_value);
-        attribute.setValueAsString(StringsUtil.join(fusedModuleNameList, ","));
-    }
-    private boolean addFusedModules(AndroidManifestBlock manifestBlock) {
-        boolean result = false;
-        if (isBuildFusedModules()) {
-            result = addFusedModuleName(manifestBlock.getSplit());
-            result = addFusedModuleNames(manifestBlock.getFusedModuleNames()) || result;
-        }
-        return result;
-    }
-    private boolean addFusedModuleNames(String[] names) {
-        boolean result = false;
-        if (names != null) {
-            for (String name : names) {
-                result = addFusedModuleName(name) || result;
-            }
-        }
-        return result;
-    }
-    private boolean addFusedModuleName(String name) {
-        if (StringsUtil.isEmpty(name)) {
-            return false;
-        }
-        if (name.indexOf(',') >= 0) {
-            return addFusedModuleNames(StringsUtil.split(name, ','));
-        } else if (!fusedModuleNameList.contains(name)) {
-            fusedModuleNameList.add(name);
-            return true;
-        }
-        return false;
     }
     private static boolean containsNamedManifestChild(String tag) {
         return AndroidManifest.TAG_application.equals(tag) ||
