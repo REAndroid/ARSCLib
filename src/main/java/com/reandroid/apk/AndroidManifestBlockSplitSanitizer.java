@@ -16,8 +16,15 @@
 package com.reandroid.apk;
 
 import com.reandroid.app.AndroidManifest;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
+import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.xml.XMLPath;
 
 import java.util.Set;
@@ -27,14 +34,10 @@ public class AndroidManifestBlockSplitSanitizer {
     private boolean mEnabled;
     private final Set<XMLPath> removeAttributeList;
     private final Set<XMLPath> removeElementList;
+    private final XMLPath splitsPath;
 
     public AndroidManifestBlockSplitSanitizer() {
         this.mEnabled = true;
-
-        XMLPath manifest = XMLPath.newElement(AndroidManifest.TAG_manifest);
-        XMLPath application = manifest.element(AndroidManifest.TAG_application);
-        XMLPath appMetaData = application.element(AndroidManifest.TAG_meta_data);
-        XMLPath appMetaDataName = appMetaData.attribute(AndroidManifest.ID_name);
 
         this.removeAttributeList = CollectionUtil.asHashSet(
                 XMLPath.newElement(XMLPath.ANY_ELEMENT_PATH)
@@ -51,12 +54,16 @@ public class AndroidManifestBlockSplitSanitizer {
                         .alternate(AndroidManifest.NAME_isSplitRequired)
         );
 
+        XMLPath appMetaDataName = AndroidManifest.PATH_APPLICATION_META_DATA_NAME;
+
+        this.splitsPath = appMetaDataName.value("com.android.vending.splits");
+
         this.removeElementList = CollectionUtil.asHashSet(
-                manifest.element(AndroidManifest.TAG_uses_split),
-                appMetaDataName.value("com.android.vending.splits.required"),
-                appMetaDataName.value("com.android.vending.splits"),
-                appMetaDataName.value("com.android.stamp.source"),
-                appMetaDataName.value("com.android.stamp.type")
+                AndroidManifest.PATH_MANIFEST.element(AndroidManifest.TAG_uses_split),
+                appMetaDataName.alternateValue("com.android.vending.splits.required"),
+                appMetaDataName.alternateValue("com.android.stamp.source"),
+                appMetaDataName.alternateValue("com.android.stamp.type"),
+                appMetaDataName.alternateValue("com.android.vending.derived.apk.id")
         );
     }
 
@@ -77,6 +84,19 @@ public class AndroidManifestBlockSplitSanitizer {
         return mEnabled;
     }
 
+    public boolean sanitize(ApkModule apkModule) {
+        if (!isEnabled()) {
+            return false;
+        }
+        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
+        if (manifestBlock == null) {
+            return false;
+        }
+        boolean result = sanitize(manifestBlock);
+        result = deleteSplitsXml(apkModule, manifestBlock) || result;
+        apkModule.setExtractNativeLibs(manifestBlock.isExtractNativeLibs());
+        return result;
+    }
     public boolean sanitize(AndroidManifestBlock manifestBlock) {
         if (!isEnabled()) {
             return false;
@@ -89,7 +109,35 @@ public class AndroidManifestBlockSplitSanitizer {
         result = removeElements(manifestBlock) || result;
         return result;
     }
-
+    private boolean deleteSplitsXml(ApkModule apkModule, AndroidManifestBlock manifestBlock) {
+        ResXmlElement element = manifestBlock.getNamedElement(AndroidManifest.PATH_APPLICATION_META_DATA,
+                "com.android.vending.splits");
+        if (element == null) {
+            return false;
+        }
+        ResXmlAttribute attribute = element.searchAttributeByResourceId(AndroidManifest.ID_resource);
+        if (attribute == null) {
+            attribute = element.searchAttributeByResourceId(AndroidManifest.ID_value);
+        }
+        if (attribute == null || attribute.getValueType() != ValueType.REFERENCE) {
+            return false;
+        }
+        TableBlock tableBlock = apkModule.getTableBlock();
+        if (tableBlock == null) {
+            return false;
+        }
+        ResourceEntry resourceEntry = tableBlock.getResource(attribute.getData());
+        if (resourceEntry == null) {
+            return false;
+        }
+        element.removeSelf();
+        String path = CollectionUtil.getFirst(ComputeIterator.of(
+                resourceEntry.iterator(true), Entry::getValueAsString));
+        if (path != null) {
+            return apkModule.removeResFile(path, false);
+        }
+        return true;
+    }
     private boolean removeAttributes(AndroidManifestBlock manifestBlock) {
         boolean results = false;
         for (XMLPath path : removeAttributeList) {

@@ -74,6 +74,9 @@ public class ApkBundle implements Closeable {
                 manifestMerger.merge(module.getAndroidManifest());
             }
         }
+        if (manifestMerger != null) {
+            manifestMerger.sanitize(result);
+        }
 
         result.setApkSignatureBlock(signatureBlock);
 

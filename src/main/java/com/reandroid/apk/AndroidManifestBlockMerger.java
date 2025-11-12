@@ -48,10 +48,6 @@ public class AndroidManifestBlockMerger {
             throw new IllegalArgumentException("Base manifest already initialized");
         }
         this.baseManifest = base;
-        AndroidManifestBlockSplitSanitizer sanitizer = getSplitSanitizer();
-        if (sanitizer != null) {
-            sanitizer.sanitize(base);
-        }
         return this;
     }
 
@@ -91,14 +87,24 @@ public class AndroidManifestBlockMerger {
             return false;
         }
         boolean result = mergeManifestElement(split.getManifestElement());
-        AndroidManifestBlockSplitSanitizer sanitizer = getSplitSanitizer();
-        if (sanitizer != null) {
-            result = sanitizer.sanitize(base) || result;
+        if (base.isExtractNativeLibs() == null) {
+            Boolean extractNativeLibs = split.isExtractNativeLibs();
+            if (extractNativeLibs != null) {
+                base.setExtractNativeLibs(extractNativeLibs);
+                result = true;
+            }
         }
         if (result) {
             base.refresh();
         }
         return result;
+    }
+    public boolean sanitize(ApkModule apkModule) {
+        AndroidManifestBlockSplitSanitizer sanitizer = getSplitSanitizer();
+        if (sanitizer != null) {
+            return sanitizer.sanitize(apkModule);
+        }
+        return false;
     }
     private boolean mergeManifestElement(ResXmlElement manifest) {
         boolean result = false;
