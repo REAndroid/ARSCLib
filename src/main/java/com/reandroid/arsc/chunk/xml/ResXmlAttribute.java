@@ -651,14 +651,14 @@ public class ResXmlAttribute extends AttributeValue implements
         super.merge(valueItem);
         ResXmlAttribute coming = (ResXmlAttribute) valueItem;
         setName(coming.getName(false), coming.getNameId());
-        setNamespace(coming.getNamespace());
+        setNamespace(coming.getUri(), coming.getPrefix());
     }
 
     @Override
     public void mergeWithName(ResourceMergeOption mergeOption, ValueItem valueItem) {
         super.mergeWithName(mergeOption, valueItem);
         ResXmlAttribute attribute = (ResXmlAttribute) valueItem;
-        setNamespace(attribute.getNamespace());
+        setNamespace(attribute.getUri(), attribute.getPrefix());
     }
 
     @Override
