@@ -204,7 +204,11 @@ public class XMLPath implements Predicate<NamedNode> {
         return new XMLPath(getParent(), getName(), getNameId(), type(), value);
     }
     public XMLPath alternateValue(Object value) throws InvalidPathException {
-        if (this.getValue() == null) {
+        Object obj = this.getValue();
+        if (ObjectsUtil.equals(obj, value)) {
+            return this;
+        }
+        if (obj == null) {
             return value(value);
         }
         return CombinedPath.combined(this,
