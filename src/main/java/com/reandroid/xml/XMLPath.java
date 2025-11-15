@@ -103,6 +103,9 @@ public class XMLPath implements Predicate<NamedNode> {
         int i = 0;
         while (i != depth) {
             path = path.getParent();
+            if (path == null) {
+                return null;
+            }
             i ++;
         }
         return path;
