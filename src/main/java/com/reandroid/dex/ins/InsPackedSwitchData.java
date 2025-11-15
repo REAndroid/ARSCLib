@@ -23,7 +23,6 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliInstructionOperand;
 import com.reandroid.dex.smali.model.SmaliPayloadPackedSwitch;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
@@ -151,7 +150,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
-        writer.append(HexUtil.toHex(firstKey.get(), 1));
+        writer.appendHex(getFirstKey());
         writer.indentPlus();
         elements.append(writer);
         writer.indentMinus();

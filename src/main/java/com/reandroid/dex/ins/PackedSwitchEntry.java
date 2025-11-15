@@ -72,14 +72,14 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
         writer.newLine();
         writer.appendLabelName(getLabelName());
         int value = this.get();
-        writer.appendComment(HexUtil.toHex(value, 1));
+        writer.appendComment(HexUtil.toSignedHex(value));
         writer.appendResourceIdComment(value);
     }
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
         writer.appendLabelName(getLabelName());
-        writer.appendComment(HexUtil.toHex(get(), 1));
+        writer.appendComment(HexUtil.toSignedHex(get()));
     }
 
     @Override
