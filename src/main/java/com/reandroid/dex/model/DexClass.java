@@ -118,7 +118,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
             @SuppressWarnings("unchecked")
             @Override
             public Iterator<Key> iterator(Key element) {
-                return (Iterator<Key>) element.mentionedKeys();
+                return (Iterator<Key>) element.contents();
             }
         };
         return InstanceIterator.of(mentioned, TypeKey.class);

@@ -228,10 +228,10 @@ public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements 
     }
 
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
+    public Iterator<? extends Key> contents() {
         return CombiningIterator.singleTwo(
                 getType(),
-                super.mentionedKeys(),
+                super.contents(),
                 getMethods());
     }
 

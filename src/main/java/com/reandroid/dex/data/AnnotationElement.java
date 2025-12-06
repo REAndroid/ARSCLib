@@ -16,11 +16,19 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.common.IdUsageIterator;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationElementKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.StringUle128Reference;
 import com.reandroid.dex.smali.model.SmaliAnnotationElement;
 import com.reandroid.dex.smali.model.SmaliValue;
@@ -29,33 +37,43 @@ import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public class AnnotationElement extends DataItem implements KeyReference,
-        Comparable<AnnotationElement>, SmaliFormat {
+public class AnnotationElement extends FixedBlockContainer implements 
+        KeyReference, IdUsageIterator, Comparable<AnnotationElement>, SmaliFormat {
 
     private final StringUle128Reference elementName;
+
+    private AnnotationElementKey mLastKey;
 
     public AnnotationElement() {
         super(2);
         this.elementName = new StringUle128Reference(StringId.USAGE_METHOD_NAME);
-        addChildBlock(0, elementName);
+        addChild(0, elementName);
     }
 
     @Override
-    public AnnotationElementKey getKey(){
-        return AnnotationElementKey.create(getName(), getValue());
+    public AnnotationElementKey getKey() {
+        AnnotationElementKey lastKey = mLastKey;
+        StringKey name = getNameKey();
+        Key value = getValue();
+        if (lastKey == null || !lastKey.equals(name, value)) {
+            lastKey = AnnotationElementKey.create(name, value);
+            this.mLastKey = lastKey;
+        }
+        return lastKey;
     }
     @Override
     public void setKey(Key key) {
         AnnotationElementKey elementKey = (AnnotationElementKey) key;
-        setName(elementKey.getName());
+        setName(elementKey.getNameKey());
         setValue(elementKey.getValue());
     }
+
     public Key getValue() {
         DexValueBlock<?> valueBlock = getValueBlock();
         if (valueBlock != null) {
@@ -68,51 +86,48 @@ public class AnnotationElement extends DataItem implements KeyReference,
         setValue(valueBlock);
         valueBlock.setKey(value);
     }
-    public DexValueBlock<?> getValueBlock(){
-        return (DexValueBlock<?>) getChildBlockAt(1);
+    public DexValueBlock<?> getValueBlock() {
+        return (DexValueBlock<?>) getChildes()[1];
     }
 
-    @SuppressWarnings("unchecked")
-    public<T1 extends DexValueBlock<?>> T1 getValue(DexValueType<T1> valueType){
+    public<T1 extends DexValueBlock<?>> T1 getOrCreateValue(DexValueType<T1> valueType) {
         DexValueBlock<?> value = getValueBlock();
-        if(value != null && value.is(valueType)){
-            return (T1) value;
-        }
-        return null;
-    }
-    @SuppressWarnings("unchecked")
-    public<T1 extends DexValueBlock<?>> T1 getOrCreateValue(DexValueType<T1> valueType){
-        DexValueBlock<?> value = getValueBlock();
-        if(value == null || value == NullValue.PLACE_HOLDER || value.getValueType() != valueType){
+        if (value == null || value == NullValue.PLACE_HOLDER || value.getValueType() != valueType) {
             value = valueType.newInstance();
             setValue(value);
         }
-        return (T1) value;
+        return ObjectsUtil.cast(value);
     }
-    public void setValue(DexValueBlock<?> dexValue){
-        addChildBlock(1, dexValue);
+    public void setValue(DexValueBlock<?> dexValue) {
+        addChild(1, dexValue);
     }
-    public boolean is(DexValueType<?> valueType){
+    public boolean is(DexValueType<?> valueType) {
         return getValueType() == valueType;
     }
     public boolean is(MethodKey methodKey) {
         return methodKey != null &&
                 methodKey.equalsIgnoreReturnType(getMethodKey());
     }
-    public DexValueType<?> getValueType(){
+    public DexValueType<?> getValueType() {
         DexValueBlock<?> value = getValueBlock();
-        if(value != null){
+        if (value != null) {
             return value.getValueType();
         }
         return null;
     }
-    public String getName(){
+    public String getName() {
         return elementName.getString();
     }
-    public void setName(String name){
+    public StringKey getNameKey() {
+        return elementName.getKey();
+    }
+    public void setName(String name) {
         elementName.setString(name);
     }
-    public StringId getNameId(){
+    public void setName(StringKey name) {
+        elementName.setKey(name);
+    }
+    public StringId getNameId() {
         return elementName.getItem();
     }
 
@@ -124,23 +139,23 @@ public class AnnotationElement extends DataItem implements KeyReference,
         value.onReadBytes(reader);
     }
 
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         getValueBlock().replaceKeys(search, replace);
     }
     @Override
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return CombiningIterator.singleOne(getNameId(), getValueBlock().usedIds());
     }
-    public void merge(AnnotationElement element){
-        if(element == this){
+    public void merge(AnnotationElement element) {
+        if (element == this) {
             return;
         }
-        setName(element.getName());
+        setName(element.getNameKey());
         DexValueBlock<?> coming = element.getValueBlock();
         DexValueBlock<?> value = getOrCreateValue(coming.getValueType());
         value.merge(coming);
     }
-    public void fromSmali(SmaliAnnotationElement element){
+    public void fromSmali(SmaliAnnotationElement element) {
         setName(element.getName());
         SmaliValue smaliValue = element.getValue();
         DexValueBlock<?> value = getOrCreateValue(smaliValue.getValueType());
@@ -148,32 +163,42 @@ public class AnnotationElement extends DataItem implements KeyReference,
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(getName());
+        StringKey name = getNameKey();
+        if (name == null) {
+            writer.appendComment("Error: null element name");
+            return;
+        }
+        DexValueBlock<?> valueBlock = getValueBlock();
+        if (valueBlock == null) {
+            writer.appendComment("Error: null element value block");
+            return;
+        }
+        name.appendSimpleName(writer);
         writer.append(" = ");
-        getValueBlock().append(writer);
+        valueBlock.append(writer);
     }
 
 
     @Override
     public int compareTo(AnnotationElement other) {
-        if(other == null){
+        if (other == null) {
             return -1;
         }
-        if(other == this){
+        if (other == this) {
             return 0;
         }
         return SectionTool.compareIdx(getNameId(), other.getNameId());
     }
-    public TypeKey getDataTypeKey(){
+    public TypeKey getDataTypeKey() {
         DexValueBlock<?> valueBlock = getValueBlock();
-        if(valueBlock != null){
+        if (valueBlock != null) {
             return valueBlock.getDataTypeKey();
         }
         return null;
     }
-    public TypeKey getParentType(){
+    public TypeKey getParentType() {
         AnnotationItem parent = getParentInstance(AnnotationItem.class);
-        if(parent != null){
+        if (parent != null) {
             return parent.getType();
         }
         return null;
@@ -185,36 +210,23 @@ public class AnnotationElement extends DataItem implements KeyReference,
 
     @Override
     public Iterator<Key> usedKeys() {
-        return CombiningIterator.singleOne(getMethodKey(), super.usedKeys());
+        return CombiningIterator.singleOne(getMethodKey(), IdUsageIterator.super.usedKeys());
     }
     @Override
     public int hashCode() {
-        int hash = 1;
-        Object obj = getName();
-        hash = hash * 31;
-        if(obj != null){
-            hash += obj.hashCode();
-        }
-        obj = getValueBlock();
-        hash = hash * 31;
-        if(obj != null){
-            hash = hash + obj.hashCode();
-        }
-        return hash;
+        return ObjectsUtil.hash(getNameKey(), getValueBlock());
     }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-        if (obj == null || getClass() != obj.getClass()) {
+        if (!(obj instanceof AnnotationElement)) {
             return false;
         }
         AnnotationElement element = (AnnotationElement) obj;
-        if(!Objects.equals(getName(), element.getName())){
-            return false;
-        }
-        return Objects.equals(getValueBlock(), element.getValueBlock());
+        return ObjectsUtil.equals(getNameKey(), element.getNameKey()) && 
+                ObjectsUtil.equals(getValueBlock(), element.getValueBlock());
     }
 
     @Override

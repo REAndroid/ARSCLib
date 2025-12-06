@@ -85,7 +85,7 @@ public class UnusedAnnotationCleaner extends UnusedCleaner<DexClass> {
     private void subtractUnused(Set<TypeKey> targetAnnotations, DexInstruction userInstruction) {
         Key key = userInstruction.getKey();
         if(key != null) {
-            Iterator<? extends Key> iterator = key.mentionedKeys();
+            Iterator<? extends Key> iterator = key.contents();
             while (iterator.hasNext()) {
                 TypeKey typeKey = iterator.next().getDeclaring();
                 targetAnnotations.remove(typeKey);

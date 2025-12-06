@@ -27,12 +27,12 @@ import java.util.Iterator;
 public interface Key extends Comparable<Object>, SmaliFormat {
 
     default boolean uses(Key key) {
-        return this.equals(key) || CollectionUtil.contains(mentionedKeys(), key);
+        return this.equals(key) || CollectionUtil.contains(contents(), key);
     }
     default TypeKey getDeclaring() {
         return null;
     }
-    default Iterator<? extends Key> mentionedKeys() {
+    default Iterator<? extends Key> contents() {
         throw new RuntimeException("Method 'mentionedKeys()' Not implemented for: " + getClass());
     }
     default Object asObject() {

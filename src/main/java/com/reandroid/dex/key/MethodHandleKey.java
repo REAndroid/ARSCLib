@@ -49,8 +49,8 @@ public class MethodHandleKey implements Key{
     }
 
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
-        return getMember().mentionedKeys();
+    public Iterator<? extends Key> contents() {
+        return getMember().contents();
     }
 
     @Override

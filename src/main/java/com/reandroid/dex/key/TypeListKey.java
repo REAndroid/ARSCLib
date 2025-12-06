@@ -117,7 +117,7 @@ public class TypeListKey extends KeyList<TypeKey> {
     }
     public static TypeListKey create(Key ... keys) {
         keys = removeNulls(keys);
-        if (keys == EMPTY_ARRAY) {
+        if (keys.length == 0) {
             return empty();
         }
         return new TypeListKey(keys);

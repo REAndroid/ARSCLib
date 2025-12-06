@@ -67,9 +67,9 @@ public class ClassId extends IdItem implements ClassProgram,
 
     public ClassId() {
         super(SIZE);
-        int offset = -4;
+        int offset = 0;
         
-        this.classTypeId = new ClassTypeId(this, offset += 4);
+        this.classTypeId = new ClassTypeId(this, offset);
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
         this.superClassId = new SuperClassId(this, offset += 4);
         this.interfaces = new TypeListReference(this, offset += 4, USAGE_INTERFACE);
@@ -101,7 +101,12 @@ public class ClassId extends IdItem implements ClassProgram,
     }
     @Override
     public TypeKey getKey() {
-        return checkKey(TypeKey.create(getName()));
+        TypeId typeId = getId();
+        TypeKey typeKey = null;
+        if (typeId != null) {
+            typeKey = typeId.getKey();
+        }
+        return checkKey(typeKey);
     }
     @Override
     public void setKey(Key key) {
@@ -167,6 +172,7 @@ public class ClassId extends IdItem implements ClassProgram,
             getOrCreateUniqueAnnotationsDirectory().put(this, key);
         }
     }
+    @Deprecated
     public String getName() {
         TypeId typeId = getId();
         if (typeId != null) {
@@ -174,6 +180,7 @@ public class ClassId extends IdItem implements ClassProgram,
         }
         return null;
     }
+    @Deprecated
     public void setName(String typeName) {
         setKey(new TypeKey(typeName));
     }

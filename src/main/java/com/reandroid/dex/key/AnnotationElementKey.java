@@ -22,7 +22,6 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
@@ -30,19 +29,19 @@ import java.util.Iterator;
 
 public class AnnotationElementKey implements Key {
 
-    private final String name;
+    private final StringKey name;
     private final Key value;
 
-    private AnnotationElementKey(String name, Key value) {
+    private AnnotationElementKey(StringKey name, Key value) {
         this.name = name;
         this.value = value;
     }
 
     public String getName() {
-        return name;
+        return name.getString();
     }
     public StringKey getNameKey() {
-        return StringKey.create(getName());
+        return name;
     }
     public Key getValue() {
         return value;
@@ -92,19 +91,11 @@ public class AnnotationElementKey implements Key {
         return result;
     }
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
-        Key value = getValue();
-        Iterator<? extends Key> valueMentions;
-        if (value == null) {
-            valueMentions = EmptyIterator.of();
-        } else {
-            valueMentions = value.mentionedKeys();
-        }
-        return CombiningIterator.singleThree(
+    public Iterator<? extends Key> contents() {
+        return CombiningIterator.singleTwo(
                 this,
                 SingleIterator.of(getNameKey()),
-                SingleIterator.of(value),
-                valueMentions);
+                getValue().contents());
     }
 
     @Override
@@ -116,13 +107,16 @@ public class AnnotationElementKey implements Key {
             return StringsUtil.compareToString(this, obj);
         }
         AnnotationElementKey elementKey = (AnnotationElementKey) obj;
-        int i = CompareUtil.compare(getName(), elementKey.getName());
+        int i = CompareUtil.compare(getNameKey(), elementKey.getNameKey());
         if (i == 0) {
             i = CompareUtil.compare(getValue(), elementKey.getValue());
         }
         return i;
     }
 
+    public boolean equals(StringKey name, Key value) {
+        return getNameKey().equals(name) && getValue().equals(value);
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -154,6 +148,12 @@ public class AnnotationElementKey implements Key {
     }
 
     public static AnnotationElementKey create(String name, Key value) {
+        if (name == null) {
+            return null;
+        }
+        return create(StringKey.create(name), value);
+    }
+    public static AnnotationElementKey create(StringKey name, Key value) {
         if (name == null) {
             return null;
         }

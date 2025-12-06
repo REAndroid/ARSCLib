@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.key;
 
-public interface TypeKeyReference {
-    TypeKey getTypeKey();
-    void setTypeKey(TypeKey typeKey);
+public interface TypeKeyReference extends KeyReference {
+    @Override
+    TypeKey getKey();
+    @Override
+    void setKey(Key typeKey);
 }

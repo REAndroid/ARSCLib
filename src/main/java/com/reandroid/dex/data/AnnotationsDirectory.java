@@ -174,7 +174,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public Key getAnnotationValue(DefIndex defIndex, TypeKey typeKey, String name) {
         AnnotationItem item = getAnnotationItem(defIndex, typeKey);
         if (item != null) {
-            AnnotationElement element = item.getElement(name);
+            AnnotationElement element = item.get(name);
             if (element != null) {
                 return element.getValue();
             }

@@ -6,6 +6,7 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.ObjectsUtil;
 
 public class SectionItem extends BlockItem implements EditableItem, SectionTool, UsageMarker {
 
@@ -66,15 +67,17 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
     public void onRemovedInternal() {
     }
 
-    @SuppressWarnings("unchecked")
     protected <T1 extends Key> T1 checkKey(T1 newKey){
-        Key lastKey = this.mLastKey;
+        T1 lastKey = getLastKey();
         if(lastKey == null || !lastKey.equals(newKey)){
             this.mLastKey = newKey;
             keyChanged(lastKey);
             lastKey = newKey;
         }
-        return (T1) lastKey;
+        return lastKey;
+    }
+    protected <T1 extends Key> T1 getLastKey() {
+        return ObjectsUtil.cast(mLastKey);
     }
     protected void keyChanged(Key oldKey){
         if(oldKey == null){
@@ -125,29 +128,6 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
     }
     public void removeSelf(){
         throw new RuntimeException("Not implemented");
-    }
-    public boolean equalsKey(SectionItem sectionItem){
-        if(sectionItem == this){
-            return true;
-        }
-        if(sectionItem == null || getSectionType() != sectionItem.getSectionType()){
-            return false;
-        }
-        Key key = getKey();
-        if(key == null){
-            return false;
-        }
-        return key.equals(sectionItem.getKey());
-    }
-    public boolean equalsKey(Key key){
-        if(key == null){
-            return false;
-        }
-        Key myKey = getKey();
-        if(myKey == null){
-            return false;
-        }
-        return myKey.equals(key);
     }
     public boolean isBlank() {
         return isRemoved();

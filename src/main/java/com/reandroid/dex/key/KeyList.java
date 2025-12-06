@@ -307,13 +307,13 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return result;
     }
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
+    public Iterator<? extends Key> contents() {
         return CombiningIterator.singleOne(
                 this,
                 new IterableIterator<T, Key>(iterator()) {
                     @Override
                     public Iterator<Key> iterator(T element) {
-                        return ObjectsUtil.cast(element.mentionedKeys());
+                        return ObjectsUtil.cast(element.contents());
                     }
                 });
     }

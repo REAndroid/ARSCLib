@@ -16,7 +16,12 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.dex.data.TypeList;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IdItemIndirectShortReference;
 import com.reandroid.dex.reference.IndirectStringReference;
@@ -128,7 +133,14 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
     }
     @Override
     public MethodKey getKey() {
-        return checkKey(MethodKey.create(getDefining(), getNameKey(), getProto()));
+        TypeKey declaring = getDefining();
+        StringKey name = getNameKey();
+        ProtoKey proto = getProto();
+        MethodKey lastKey = getLastKey();
+        if (lastKey != null && lastKey.equals(declaring, name, proto)) {
+            return lastKey;
+        }
+        return checkKey(MethodKey.create(declaring, name, proto));
     }
     @Override
     public void setKey(Key key){

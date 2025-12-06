@@ -16,7 +16,11 @@
 package com.reandroid.dex.dalvik;
 
 import com.reandroid.dex.common.AnnotationVisibility;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationElementKey;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.NullValueKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.program.ClassProgram;
 
@@ -34,10 +38,11 @@ public class DalvikEnclosingClass extends DalvikEnclosing<TypeKey> {
     }
     public static DalvikEnclosingClass getOrCreate(AnnotatedProgram annotatedProgram) {
         if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_EnclosingClass)) {
-            Key key;
+            Key key = null;
             if (annotatedProgram instanceof ClassProgram) {
-                key = ((ClassProgram) annotatedProgram).getKey();
-            } else {
+                key = ((ClassProgram) annotatedProgram).getKey().getEnclosingClass();
+            }
+            if (key == null) {
                 key = NullValueKey.INSTANCE;
             }
             annotatedProgram.addAnnotation(AnnotationItemKey.create(

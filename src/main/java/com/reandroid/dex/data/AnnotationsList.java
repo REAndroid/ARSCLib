@@ -60,6 +60,18 @@ public abstract class AnnotationsList<T extends DataItem> extends DataItem imple
             setItemKeyAt(i, keyList.get(i));
         }
     }
+    boolean equalsKey(AnnotationsKey<?> keyList) {
+        int size = keyList.size();
+        if (size != size()) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            if (!ObjectsUtil.equals(getItemKey(i), keyList.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
     public int size() {
         return referenceList.size();
     }

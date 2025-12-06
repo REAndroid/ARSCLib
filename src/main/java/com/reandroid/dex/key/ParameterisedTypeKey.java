@@ -155,7 +155,7 @@ public class ParameterisedTypeKey implements Key {
         return new IterableIterator<TypeKey, TypeKey>(iterator) {
             @Override
             public Iterator<TypeKey> iterator(TypeKey element) {
-                return element.mentionedKeys();
+                return element.types();
             }
         };
     }
@@ -195,7 +195,7 @@ public class ParameterisedTypeKey implements Key {
     }
 
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
+    public Iterator<? extends Key> contents() {
         return getTypes();
     }
 

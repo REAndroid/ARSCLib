@@ -67,8 +67,18 @@ public class AnnotationSet extends AnnotationsList<AnnotationItem>
 
     @Override
     public AnnotationSetKey getKey() {
-        AnnotationItemKey[] elements = new AnnotationItemKey[size()];
-        getItemKeys(elements);
+        AnnotationSetKey lastKey = getLastKey();
+        if (lastKey != null && equalsKey(lastKey)) {
+            return lastKey;
+        }
+        int size = size();
+        AnnotationItemKey[] elements;
+        if (size == 0) {
+            elements = null;
+        } else {
+            elements = new AnnotationItemKey[size];
+            getItemKeys(elements);
+        }
         return checkKey(AnnotationSetKey.of(elements));
     }
     @Override
@@ -93,7 +103,7 @@ public class AnnotationSet extends AnnotationsList<AnnotationItem>
     public AnnotationElement getElement(TypeKey typeKey, String name){
         AnnotationItem annotationItem = get(typeKey);
         if(annotationItem != null){
-            return annotationItem.getElement(name);
+            return annotationItem.get(name);
         }
         return null;
     }
@@ -137,13 +147,13 @@ public class AnnotationSet extends AnnotationsList<AnnotationItem>
     }
     private AnnotationItem addNew(TypeKey type, String name){
         AnnotationItem item = getOrCreate(type);
-        item.getOrCreateElement(name);
+        item.getOrCreate(name);
         return item;
     }
     public AnnotationItem get(TypeKey type, String name){
         for (AnnotationItem item : this) {
             if (type.equals(item.getType())
-                    && item.containsName(name)) {
+                    && item.contains(name)) {
                 return item;
             }
         }

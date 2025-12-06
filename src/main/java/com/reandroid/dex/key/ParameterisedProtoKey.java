@@ -87,8 +87,8 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
     }
 
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
-        return super.mentionedKeys();
+    public Iterator<? extends Key> contents() {
+        return super.contents();
     }
 
     void buildSignature(DalvikSignatureBuilder builder) {

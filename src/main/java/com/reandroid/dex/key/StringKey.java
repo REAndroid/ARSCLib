@@ -59,7 +59,7 @@ public class StringKey implements Key{
         return null;
     }
     @Override
-    public Iterator<Key> mentionedKeys() {
+    public Iterator<Key> contents() {
         return CombiningIterator.singleOne(
                 getDeclaring(),
                 SingleIterator.of(this));

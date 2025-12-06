@@ -15,35 +15,45 @@
  */
 package com.reandroid.dex.refactor;
 
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.utils.ObjectsUtil;
 
 public interface RenameFactory {
-    Rename<?, ?> createRename(SmaliDirective directive);
+    <T extends Key> Rename<T> createRename(SmaliDirective directive);
 
-    RenameFactory DEFAULT_FACTORY = directive -> {
-        if (directive == SmaliDirective.CLASS) {
-            return new RenameTypes();
+    RenameFactory DEFAULT_FACTORY = new RenameFactory() {
+        @Override
+        public <T extends Key> Rename<T> createRename(SmaliDirective directive) {
+            Rename<?> result = null;
+            if (directive == SmaliDirective.CLASS) {
+                result = new RenameTypes();
+            }
+            if (directive == SmaliDirective.FIELD) {
+                result = new RenameFields();
+            }
+            if (directive == SmaliDirective.METHOD) {
+                result = new RenameMethods();
+            }
+            return ObjectsUtil.cast(result);
         }
-        if (directive == SmaliDirective.FIELD) {
-            return new RenameFields();
-        }
-        if (directive == SmaliDirective.METHOD) {
-            return new RenameMethods();
-        }
-        return null;
     };
-    RenameFactory RENAME_INNER_CLASSES_FACTORY = directive -> {
-        if (directive == SmaliDirective.CLASS) {
-            RenameTypes renameTypes = new RenameTypes();
-            renameTypes.setRenameInnerClasses(true);
-            return renameTypes;
+    RenameFactory RENAME_INNER_CLASSES_FACTORY = new RenameFactory() {
+        @Override
+        public <T extends Key> Rename<T> createRename(SmaliDirective directive) {
+            Rename<?> result = null;
+            if (directive == SmaliDirective.CLASS) {
+                RenameTypes renameTypes = new RenameTypes();
+                renameTypes.setRenameInnerClasses(true);
+                result = renameTypes;
+            }
+            if (directive == SmaliDirective.FIELD) {
+                result = new RenameFields();
+            }
+            if (directive == SmaliDirective.METHOD) {
+                result = new RenameMethods();
+            }
+            return ObjectsUtil.cast(result);
         }
-        if (directive == SmaliDirective.FIELD) {
-            return new RenameFields();
-        }
-        if (directive == SmaliDirective.METHOD) {
-            return new RenameMethods();
-        }
-        return null;
     };
 }

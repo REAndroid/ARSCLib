@@ -32,15 +32,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?, ?>> {
+public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?>> {
 
-    private final ArrayCollection<Rename<?, ?>> renameList;
+    private final ArrayCollection<Rename<?>> renameList;
 
     public RenameBatch() {
         this.renameList = new ArrayCollection<>();
     }
     public boolean isEmpty() {
-        for (Rename<?, ?> rename : this) {
+        for (Rename<?> rename : this) {
             if (!rename.isEmpty()) {
                 return false;
             }
@@ -50,32 +50,32 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
     public int size() {
         return renameList.size();
     }
-    public Rename<?, ?> get(int i) {
+    public Rename<?> get(int i) {
         return renameList.get(i);
     }
-    public void add(Rename<?, ?> rename) {
+    public void add(Rename<?> rename) {
         if (rename != null && !renameList.containsExact(rename)) {
             renameList.add(rename);
         }
     }
-    public void addAll(Iterable<? extends Rename<?, ?>> iterable) {
+    public void addAll(Iterable<? extends Rename<?>> iterable) {
         if (iterable != null && iterable != this) {
             addAll(iterable.iterator());
         }
     }
-    public void addAll(Iterator<? extends Rename<?, ?>> iterator) {
+    public void addAll(Iterator<? extends Rename<?>> iterator) {
         while (iterator.hasNext()) {
             add(iterator.next());
         }
     }
     @Override
-    public Iterator<Rename<?, ?>> iterator() {
+    public Iterator<Rename<?>> iterator() {
         return renameList.clonedIterator();
     }
-    public Iterator<Rename<?, ?>> iterator(SmaliDirective directive) {
+    public Iterator<Rename<?>> iterator(SmaliDirective directive) {
         return FilterIterator.of(iterator(), rename -> rename.getSmaliDirective() == directive);
     }
-    public void removeIf(Predicate<Rename<?, ?>> predicate) {
+    public void removeIf(Predicate<Rename<?>> predicate) {
         renameList.removeIf(predicate);
     }
     public void removeEmptyRenames() {
@@ -83,21 +83,21 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
     }
     public int totalSize() {
         int result = 0;
-        for (Rename<?, ?> rename : this) {
+        for (Rename<?> rename : this) {
             result += rename.size();
         }
         return result;
     }
     public int totalLockedSize() {
         int result = 0;
-        for (Rename<?, ?> rename : this) {
+        for (Rename<?> rename : this) {
             result += rename.lockedSize();
         }
         return result;
     }
     public int sizeOf(SmaliDirective directive) {
         int result = 0;
-        Iterator<Rename<?, ?>> iterator = iterator(directive);
+        Iterator<Rename<?>> iterator = iterator(directive);
         while (iterator.hasNext()) {
             result += iterator.next().size();
         }
@@ -105,7 +105,7 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
     }
     public int sizeOfLocked(SmaliDirective directive) {
         int result = 0;
-        Iterator<Rename<?, ?>> iterator = iterator(directive);
+        Iterator<Rename<?>> iterator = iterator(directive);
         while (iterator.hasNext()) {
             result += iterator.next().lockedSize();
         }
@@ -119,11 +119,20 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
         result.removeEmptyRenames();
         return result;
     }
-    private Rename<?, ?> getMerged(SmaliDirective directive) {
-        Rename<?, ?> result = RenameFactory.DEFAULT_FACTORY.createRename(directive);
-        Iterator<Rename<?, ?>> iterator = iterator(directive);
+    public RenameBatch flip() {
+        RenameBatch result = new RenameBatch();
+        for (Rename<?> rename : this) {
+            rename = rename.flip();
+            result.apply(rename);
+            result.add(rename);
+        }
+        return result.merge();
+    }
+    private Rename<?> getMerged(SmaliDirective directive) {
+        Rename<?> result = RenameFactory.DEFAULT_FACTORY.createRename(directive);
+        Iterator<Rename<?>> iterator = iterator(directive);
         while (iterator.hasNext()) {
-            Rename<?, ?> rename = iterator.next();
+            Rename<?> rename = iterator.next();
             List<? extends KeyPair<?, ?>> list = rename.toList();
             for (KeyPair<?, ?> keyPair : list) {
                 KeyPair<?, ?> merged = getMerged(directive, keyPair);
@@ -135,7 +144,7 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
         return result;
     }
     private KeyPair<?, ?> getMerged(SmaliDirective directive, KeyPair<?, ?> keyPair) {
-        for (Rename<?, ?> rename : this) {
+        for (Rename<?> rename : this) {
             SmaliDirective renameDirective = rename.getSmaliDirective();
             if (directive != SmaliDirective.CLASS && renameDirective == SmaliDirective.CLASS) {
                 keyPair = rename.apply(keyPair);
@@ -159,7 +168,7 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
         writer.appendComment("methods = " + sizeOf(SmaliDirective.METHOD) + "/"
                 + sizeOfLocked(SmaliDirective.METHOD), false);
         writer.newLine();
-        for (Rename<?, ?> rename : this) {
+        for (Rename<?> rename : this) {
             if (!rename.isEmpty()) {
                 rename.append(writer);
                 writer.newLine();
@@ -169,10 +178,26 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?,
 
     public int apply(DexClassRepository classRepository) {
         int result = 0;
-        for (Rename<?, ?> rename : this) {
+        for (Rename<?> rename : this) {
             result += rename.apply(classRepository);
         }
         return result;
+    }
+    public int apply(Rename<?> rename) {
+        if (this.isEmpty() || rename.isEmpty()) {
+            return 0;
+        }
+        int result = 0;
+        for (Rename<?> r : this) {
+            result += r.apply(rename);
+        }
+        return result;
+    }
+    public KeyPair<?, ?> apply(KeyPair<?, ?> keyPair) {
+        for (Rename<?> r : this) {
+            keyPair = r.apply(keyPair);
+        }
+        return keyPair;
     }
     @Override
     public void parse(SmaliReader reader) throws IOException {

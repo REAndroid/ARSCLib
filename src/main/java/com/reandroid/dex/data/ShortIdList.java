@@ -75,6 +75,21 @@ public class ShortIdList<T extends IdItem> extends DataItem
         }
         keyChanged(old);
     }
+    protected boolean equalsKey(KeyList<?> keyList) {
+        if (keyList == null || keyList.isEmpty()) {
+            return isEmpty();
+        }
+        int size = this.size();
+        if (size != keyList.size()) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            if (!ObjectsUtil.equals(getItemKey(i), keyList.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
     public int size() {
         return referenceList.size();
     }

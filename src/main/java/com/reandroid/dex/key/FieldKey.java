@@ -84,7 +84,7 @@ public class FieldKey implements ProgramKey {
     }
 
     @Override
-    public Iterator<Key> mentionedKeys() {
+    public Iterator<Key> contents() {
         return CombiningIterator.singleThree(
                 FieldKey.this,
                 SingleIterator.of(getDeclaring()),
@@ -95,17 +95,14 @@ public class FieldKey implements ProgramKey {
     @Override
     public FieldKey replaceKey(Key search, Key replace) {
         FieldKey result = this;
-        if(search.equals(result)) {
+        if (search.equals(result)) {
             return (FieldKey) replace;
         }
-        if(search.equals(result.getDeclaring())){
-            result = result.changeDeclaring((TypeKey) replace);
-        }
+        result = result.changeDeclaring(getDeclaring().replaceKey(search, replace));
+        result = result.changeType(getType().replaceKey(search, replace));
+
         if (replace instanceof StringKey && search.equals(result.getNameKey())) {
             result = result.changeName((StringKey) replace);
-        }
-        if (replace instanceof TypeKey && search.equals(result.getType())) {
-            result = result.changeType((TypeKey) replace);
         }
         return result;
     }
@@ -201,6 +198,11 @@ public class FieldKey implements ProgramKey {
             return true;
         }
         return getType().equals(other.getType());
+    }
+    public boolean equals(TypeKey declaring, StringKey name, TypeKey type) {
+        return getDeclaring().equals(declaring) &&
+                getNameKey().equals(name) &&
+                getType().equals(type);
     }
     @Override
     public boolean equals(Object obj) {

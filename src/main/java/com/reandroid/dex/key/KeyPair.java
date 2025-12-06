@@ -108,12 +108,18 @@ public class KeyPair<T1 extends Key, T2 extends Key>
             key = NullValueKey.INSTANCE;
         }
         key.append(writer);
+        writer.append(' ');
         writer.append('=');
+        writer.append(' ');
         key = getSecond();
         if (key == null) {
             key = NullValueKey.INSTANCE;
         }
         key.append(writer);
+    }
+
+    public KeyPair<T1, T2> dualChecking() {
+        return new DualChecking<>(this);
     }
 
     @Override
@@ -156,7 +162,7 @@ public class KeyPair<T1 extends Key, T2 extends Key>
     }
     @Override
     public String toString() {
-        return getFirst() + "=" + getSecond();
+        return getFirst() + " = " + getSecond();
     }
 
     public static KeyPair<?, ?> parse(String text) {
@@ -183,27 +189,37 @@ public class KeyPair<T1 extends Key, T2 extends Key>
     }
     public static KeyPair<?, ?> read(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
-        Key first = KeyUtil.readKey(reader);
+        Key first = PackageKey.readOrNull(reader);
+        if (first == null) {
+            first = KeyUtil.readKey(reader);
+        }
         reader.skipWhitespaces();
         SmaliParseException.expect(reader, '=');
-        reader.skipWhitespaces();
+        reader.skipWhitespacesOrComment();
         if (reader.finished()) {
             throw new SmaliParseException(
                     "Finished reading but expecting second key", reader);
         }
-        Key second = KeyUtil.readKey(reader);
+        Key second = PackageKey.readOrNull(reader);
+        if (second == null) {
+            second = KeyUtil.readKey(reader);
+        }
         if (first == NullValueKey.INSTANCE) {
             first = null;
         }
         if (second == NullValueKey.INSTANCE) {
             second = null;
         }
-        return new KeyPair<>(first, second);
+        KeyPair<Key, Key> pair = new KeyPair<>(first, second);
+        if (first instanceof PackageKey || second instanceof PackageKey) {
+            pair = pair.dualChecking();
+        }
+        return pair;
     }
     public static<T extends Key, R extends Key> KeyPair<T, R> read(SmaliDirective directive, SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         Key first = readKey(directive, reader);
-        reader.skipWhitespaces();
+        reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, '=');
         reader.skipWhitespaces();
         Key second = readKey(directive, reader);
@@ -213,12 +229,20 @@ public class KeyPair<T1 extends Key, T2 extends Key>
         if (second == NullValueKey.INSTANCE) {
             second = null;
         }
-        return ObjectsUtil.cast(new KeyPair<>(first, second));
+        KeyPair<Key, Key> pair = new KeyPair<>(first, second);
+        if (first instanceof PackageKey || second instanceof PackageKey) {
+            pair = pair.dualChecking();
+        }
+        return ObjectsUtil.cast(pair);
     }
     private static Key readKey(SmaliDirective directive, SmaliReader reader) throws IOException {
         if (reader.finished()) {
             throw new SmaliParseException(
                     "Finished reading", reader);
+        }
+        Key key = PackageKey.readOrNull(reader);
+        if (key != null) {
+            return key;
         }
         if (reader.get() == 'n') {
             return NullValueKey.read(reader);
@@ -245,5 +269,57 @@ public class KeyPair<T1 extends Key, T2 extends Key>
         ArrayCollection<KeyPair<E2, E1>> results = new ArrayCollection<>(list.size());
         results.addAll(KeyPair.flip(list.iterator()));
         return results;
+    }
+
+    public static class DualChecking<T1 extends Key, T2 extends Key> extends KeyPair<T1, T2> {
+
+        private final KeyPair<T1, T2> mBase;
+
+        public DualChecking(KeyPair<T1, T2> base) {
+            this.mBase = base;
+        }
+
+        public KeyPair<T1, T2> getBase() {
+            return mBase;
+        }
+        @Override
+        public T1 getFirst() {
+            return getBase().getFirst();
+        }
+        @Override
+        public T2 getSecond() {
+            return getBase().getSecond();
+        }
+        @Override
+        public void setFirst(T1 first) {
+            getBase().setFirst(first);
+        }
+        @Override
+        public void setSecond(T2 second) {
+            getBase().setSecond(second);
+        }
+
+        @Override
+        public KeyPair<T1, T2> dualChecking() {
+            return this;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof KeyPair)) {
+                return false;
+            }
+            KeyPair<?, ?> keyPair = (KeyPair<?, ?>) obj;
+            return ObjectsUtil.equals(getFirst(), keyPair.getFirst()) &&
+                    ObjectsUtil.equals(getFirst(), keyPair.getFirst());
+        }
+
+        @Override
+        public int hashCode() {
+            return ObjectsUtil.hash(getFirst(), getSecond());
+        }
     }
 }

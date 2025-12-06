@@ -26,7 +26,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 import java.util.Iterator;
 import java.util.List;
 
-public class RenameFields extends Rename<FieldKey, FieldKey> {
+public class RenameFields extends Rename<FieldKey> {
 
     public RenameFields() {
         super();

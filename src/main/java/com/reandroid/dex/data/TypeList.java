@@ -37,6 +37,10 @@ public class TypeList extends ShortIdList<TypeId> implements KeyReference, Posit
 
     @Override
     public TypeListKey getKey() {
+        TypeListKey lastKey = getLastKey();
+        if (lastKey != null && equalsKey(lastKey)) {
+            return lastKey;
+        }
         TypeKey[] elements = new TypeKey[size()];
         getItemKeys(elements);
         return checkKey(TypeListKey.create(elements));

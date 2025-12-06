@@ -125,11 +125,11 @@ public class MethodKey implements ProgramKey {
         return isObjectMethod(this);
     }
     @Override
-    public Iterator<Key> mentionedKeys() {
+    public Iterator<Key> contents() {
         return CombiningIterator.singleTwo(
                 MethodKey.this,
                 CombiningIterator.singleOne(getDeclaring(), SingleIterator.of(getNameKey())),
-                getProto().mentionedKeys());
+                getProto().contents());
     }
 
     public MethodKey replaceTypes(Function<TypeKey, TypeKey> function) {
@@ -156,16 +156,14 @@ public class MethodKey implements ProgramKey {
     @Override
     public MethodKey replaceKey(Key search, Key replace) {
         MethodKey result = this;
-        if(search.equals(result)) {
+        if (search.equals(result)) {
             return (MethodKey) replace;
         }
-        if(search.equals(result.getDeclaring())){
-            result = result.changeDeclaring((TypeKey) replace);
-        }
-        if(replace instanceof StringKey && search.equals(result.getNameKey())){
+        result = result.changeDeclaring(getDeclaring().replaceKey(search, replace));
+        result = result.changeProto(getProto().replaceKey(search, replace));
+        if (replace instanceof StringKey && search.equals(result.getNameKey())) {
             result = result.changeName((StringKey) replace);
         }
-        result = result.changeProto(getProto().replaceKey(search, replace));
         return result;
     }
 
@@ -340,6 +338,11 @@ public class MethodKey implements ProgramKey {
         return true;
     }
 
+    public boolean equals(TypeKey declaring, StringKey name, ProtoKey proto) {
+        return getDeclaring().equals(declaring) &&
+                getNameKey().equals(name) &&
+                getProto().equals(proto);
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

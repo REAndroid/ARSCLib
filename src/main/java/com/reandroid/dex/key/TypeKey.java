@@ -34,6 +34,7 @@ public class TypeKey implements ProgramKey {
 
     private final String typeName;
     private String simpleName;
+    private PackageKey packageKey;
 
     public TypeKey(String typeName) {
         this.typeName = typeName;
@@ -128,19 +129,43 @@ public class TypeKey implements ProgramKey {
         }
         return TypeKey.create(main);
     }
-    @Override
-    public Iterator<TypeKey> mentionedKeys() {
+    public Iterator<TypeKey> types() {
         Iterator<TypeKey> iterator = SingleIterator.of(this);
         if (isTypeArray()) {
             iterator = CombiningIterator.singleOne(getDeclaring(), iterator);
         }
         return iterator;
     }
+    @Override
+    public Iterator<Key> contents() {
+        return CombiningIterator.two(types(), SingleIterator.of(getPackage()));
+    }
 
     @Override
-    public Key replaceKey(Key search, Key replace) {
-        if (search.equals(this)) {
-            return replace;
+    public TypeKey replaceKey(Key search, Key replace) {
+        if (search instanceof TypeKey) {
+            if (search.equals(this)) {
+                return (TypeKey) replace;
+            }
+            int array = getArrayDimension();
+            if (array != 0) {
+                TypeKey typeKey = setArrayDimension(0);
+                if (!typeKey.isPrimitive()) {
+                    TypeKey update = typeKey.replaceKey(search, replace);
+                    if (typeKey != update) {
+                        return update.setArrayDimension(array);
+                    }
+                }
+            }
+        } else if (search instanceof PackageKey) {
+            PackageKey packageKey = getPackage();
+            if (packageKey != null) {
+                PackageKey update = packageKey.replaceKey(search, replace);
+                if (packageKey != update) {
+                    return update.type(getSimpleName())
+                            .setArrayDimension(getArrayDimension());
+                }
+            }
         }
         return this;
     }
@@ -204,6 +229,22 @@ public class TypeKey implements ProgramKey {
     public boolean isInnerName() {
         return getSimpleInnerName() != null;
     }
+
+    public PackageKey getPackage() {
+        PackageKey packageKey = this.packageKey;
+        if (packageKey == null) {
+            packageKey = PackageKey.of(this);
+            this.packageKey = packageKey;
+        }
+        return packageKey;
+    }
+    public TypeKey setPackage(PackageKey packageKey) {
+        if (packageKey.equals(getPackage())) {
+            return this;
+        }
+        return packageKey.type(getSimpleName())
+                .setArrayDimension(getArrayDimension());
+    }
     public String getPackageName() {
         return DexUtils.getPackageName(getTypeName());
     }
@@ -234,6 +275,14 @@ public class TypeKey implements ProgramKey {
             return this;
         }
         return setPackage(packageName, packageName.replace(from, to));
+    }
+    public TypeKey renamePackage(PackageKey from, PackageKey to) {
+        PackageKey packageKey = getPackage();
+        PackageKey result = packageKey.replace(from, to);
+        if (packageKey == result) {
+            return this;
+        }
+        return result.type(getSimpleName()).setArrayDimension(getArrayDimension());
     }
     public TypeKey setPackage(String packageName) {
         return setPackage(getPackageName(), packageName);
@@ -269,6 +318,19 @@ public class TypeKey implements ProgramKey {
             return name.startsWith(packageName);
         }
         return name.equals(packageName);
+    }
+    public boolean isPackage(PackageKey packageKey, boolean checkSubPackage) {
+        if (packageKey == null) {
+            return false;
+        }
+        PackageKey key = getPackage();
+        if (key == null) {
+            return false;
+        }
+        if (checkSubPackage) {
+            return key.contains(packageKey);
+        }
+        return key.equals(packageKey);
     }
     public boolean startsWith(String prefix) {
         return getTypeName().startsWith(prefix);
@@ -380,20 +442,6 @@ public class TypeKey implements ProgramKey {
         writer.append(getTypeName());
     }
 
-    public int compareInnerFirst(TypeKey other) {
-        if (this.equals(other)) {
-            return 0;
-        }
-        String name1 = this.getSimpleName();
-        String name2 = other.getSimpleName();
-        int diff = StringsUtil.diffStart(name1, name2);
-        if (diff > 0 && name1.charAt(diff) == '$' && diff > name1.lastIndexOf('/') + 1) {
-            return CompareUtil.compare(name2, name1);
-        }
-        name1 = this.getTypeName();
-        name2 = other.getTypeName();
-        return CompareUtil.compare(name1, name2);
-    }
     public boolean equalsPackage(TypeKey typeKey) {
         if (typeKey == this) {
             return true;
@@ -426,6 +474,9 @@ public class TypeKey implements ProgramKey {
         }
         TypeKey key = (TypeKey) obj;
         return CompareUtil.compare(getTypeName(), key.getTypeName());
+    }
+    public boolean equalsName(String typeName) {
+        return getTypeName().equals(typeName);
     }
     @Override
     public boolean equals(Object obj) {
@@ -684,13 +735,6 @@ public class TypeKey implements ProgramKey {
     }
 
 
-    public static TypeKey parseSignature(String type) {
-        if (DexUtils.isTypeOrSignature(type)) {
-            return new TypeKey(type);
-        }
-        return null;
-    }
-
     static class PrimitiveTypeKey extends TypeKey {
         private final String sourceName;
 
@@ -739,6 +783,31 @@ public class TypeKey implements ProgramKey {
         @Override
         public boolean isInnerName() {
             return false;
+        }
+
+        @Override
+        public boolean isPackage(PackageKey packageKey, boolean checkSubPackage) {
+            return false;
+        }
+        @Override
+        public PackageKey getPackage() {
+            return null;
+        }
+        @Override
+        public TypeKey replaceKey(Key search, Key replace) {
+            if (equals(search)) {
+                return (TypeKey) replace;
+            }
+            return this;
+        }
+
+        @Override
+        public Iterator<TypeKey> types() {
+            return SingleIterator.of(this);
+        }
+        @Override
+        public Iterator<Key> contents() {
+            return SingleIterator.of(this);
         }
     }
 

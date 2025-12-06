@@ -26,6 +26,7 @@ import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.AccessibleItem;
 import com.reandroid.dex.program.AnnotatedProgram;
+import com.reandroid.dex.program.ClassProgram;
 
 import java.lang.annotation.ElementType;
 
@@ -81,11 +82,21 @@ public class DalvikInnerClass extends DalvikAnnotation implements AccessibleItem
     }
     public static DalvikInnerClass getOrCreate(AnnotatedProgram annotatedProgram) {
         if (!annotatedProgram.hasAnnotation(TypeKey.DALVIK_InnerClass)) {
+            Key name = null;
+            int accessFlags = 0;
+            if (annotatedProgram instanceof ClassProgram) {
+                ClassProgram classProgram = (ClassProgram) annotatedProgram;
+                name = StringKey.create(classProgram.getKey().getSimpleInnerName());
+                accessFlags = classProgram.getAccessFlagsValue();
+            }
+            if (name == null) {
+                name = NullValueKey.INSTANCE;
+            }
             annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_InnerClass,
-                    AnnotationElementKey.create(Key.DALVIK_accessFlags, PrimitiveKey.of(0)),
-                    AnnotationElementKey.create(Key.DALVIK_name, NullValueKey.INSTANCE)
+                    AnnotationElementKey.create(Key.DALVIK_accessFlags, PrimitiveKey.of(accessFlags)),
+                    AnnotationElementKey.create(Key.DALVIK_name, name)
                     )
             );
         }

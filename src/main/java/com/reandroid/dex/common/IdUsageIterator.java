@@ -30,7 +30,7 @@ public interface IdUsageIterator {
             @SuppressWarnings("unchecked")
             @Override
             public Iterator<Key> iterator(IdItem element) {
-                return (Iterator<Key>) element.getKey().mentionedKeys();
+                return (Iterator<Key>) element.getKey().contents();
             }
         };
     }
