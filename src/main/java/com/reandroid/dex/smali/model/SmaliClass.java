@@ -184,6 +184,7 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, SmaliDirective.CLASS);
         setAccessFlags(AccessFlag.parse(reader));
+        setOrigin(reader.getCurrentOrigin(false));
         setKey(TypeKey.read(reader));
         while (parseNext(reader)) {
             reader.skipWhitespacesOrComment();

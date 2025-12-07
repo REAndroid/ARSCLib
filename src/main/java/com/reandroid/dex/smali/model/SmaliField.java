@@ -154,6 +154,10 @@ public class SmaliField extends SmaliDef implements FieldProgram {
         setName(StringKey.readSimpleName(reader, ':'));
         reader.skip(1);
         setType(TypeKey.read(reader));
+        if (reader.checkInterned(getKey())) {
+            throw new IOException(reader.getCurrentOrigin(false) + " Field "
+                    + getKey() + " has already been interned");
+        }
         parseValue(reader);
         parseAnnotationSet(reader);
     }

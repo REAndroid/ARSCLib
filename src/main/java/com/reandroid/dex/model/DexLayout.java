@@ -301,6 +301,10 @@ public class DexLayout implements DexClassModule, Closeable,
             reader.setOrigin(Origin.createNew(file));
             SmaliClass smaliClass = new SmaliClass();
             smaliClass.parse(reader);
+            if (containsClass(smaliClass.getKey())) {
+                throw new IOException(smaliClass.getOrigin() + " Class: "
+                        + smaliClass.getKey() + " has already been interned");
+            }
             layout.fromSmali(smaliClass);
         }
         sort();

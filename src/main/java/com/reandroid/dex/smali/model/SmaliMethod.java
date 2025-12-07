@@ -164,6 +164,10 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         setHiddenApiFlags(HiddenApiFlag.parse(reader));
         setName(StringKey.readSimpleName(reader, '('));
         parseProto(reader);
+        if (reader.checkInterned(getKey())) {
+            throw new IOException(reader.getCurrentOrigin(false) + " Method "
+                    + getKey() + " has already been interned");
+        }
         reader.skipWhitespacesOrComment();
         while (parseNoneCode(reader)) {
             reader.skipWhitespacesOrComment();
