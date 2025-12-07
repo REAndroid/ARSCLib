@@ -128,9 +128,15 @@ public class FileChannelInputStream extends InputStream {
             is_last = true;
         }
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, length);
-        bufferLength = fileChannel.read(byteBuffer);
+        FileChannel fileChannel = this.fileChannel;
+        int bufferLength = 0;
+        int read;
+        while (bufferLength < length && (read = fileChannel.read(byteBuffer)) >= 0) {
+            bufferLength = bufferLength + read;
+        }
+        this.bufferLength = bufferLength;
         bufferPosition = 0;
-        if(is_last){
+        if (is_last) {
             closeAuto();
         }
     }
