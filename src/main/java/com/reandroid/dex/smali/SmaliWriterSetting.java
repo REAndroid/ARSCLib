@@ -29,7 +29,6 @@ import java.util.List;
 
 public class SmaliWriterSetting {
 
-    private SmaliFileNameFactory fileNameFactory;
     private ResourceIdComment resourceIdComment;
     private List<MethodComment> methodCommentList;
     private List<ClassComment> classCommentList;
@@ -46,18 +45,6 @@ public class SmaliWriterSetting {
         this.localRegistersCount = true;
         this.enableComments = true;
         this.maximumCommentLines = 500;
-    }
-
-    public SmaliFileNameFactory getFileNameFactory() {
-        SmaliFileNameFactory factory = this.fileNameFactory;
-        if (factory == null) {
-            factory = SmaliFileNameFactory.newInstance();
-            this.fileNameFactory = factory;
-        }
-        return factory;
-    }
-    public void setFileNameFactory(SmaliFileNameFactory fileNameFactory) {
-        this.fileNameFactory = fileNameFactory;
     }
 
     public boolean isSequentialLabel() {

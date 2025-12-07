@@ -59,6 +59,10 @@ public class SmaliWriter implements Appendable, Closeable {
         this();
         this.writer = writer;
     }
+    public SmaliWriter(SmaliWriterSetting setting) {
+        this();
+        this.writerSetting = setting;
+    }
     public SmaliWriter() {
         this.lineNumber = 1;
         this.state_new_line = true;
@@ -403,13 +407,6 @@ public class SmaliWriter implements Appendable, Closeable {
         this.writerSetting = writerSetting;
     }
 
-    public SmaliFileNameFactory getFileNameFactory() {
-        SmaliWriterSetting setting = getWriterSetting();
-        if (setting != null) {
-            return setting.getFileNameFactory();
-        }
-        return SmaliFileNameFactory.INSTANCE;
-    }
     public boolean isLocalRegistersCount() {
         SmaliWriterSetting setting = getWriterSetting();
         if (setting != null) {

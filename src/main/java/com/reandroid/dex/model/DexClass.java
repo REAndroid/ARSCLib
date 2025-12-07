@@ -45,7 +45,6 @@ import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.HashSet;
@@ -601,7 +600,6 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getClassData();
         getId().append(writer);
     }
 
@@ -647,11 +645,8 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         dexField.getDefinition().fromSmali(smaliField);
         return dexField;
     }
-    public void writeSmali(SmaliWriter writer, File dir) throws IOException {
-        File file = writer.getFileNameFactory().toFile(dir, getKey());
-        FileUtil.ensureParentDirectory(file);
-        FileWriter fileWriter = new FileWriter(file);
-        writer.setWriter(fileWriter);
+    public void writeSmali(SmaliWriter writer, File file) throws IOException {
+        writer.setWriter(file);
         append(writer);
         writer.close();
     }

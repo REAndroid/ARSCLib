@@ -502,12 +502,12 @@ public class ClassId extends IdItem implements ClassProgram,
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
+        ClassData classData = getClassData();
         getClassTypeId().append(writer);
         getSuperClassId().append(writer);
         getSourceFileReference().append(writer);
         getInterfacesKey().appendInterfaces(writer);
         getAnnotation().appendClass(writer);
-        ClassData classData = getClassData();
         if (classData != null) {
             writer.newLine();
             classData.append(writer);

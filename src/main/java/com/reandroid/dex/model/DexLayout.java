@@ -25,8 +25,10 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.*;
+import com.reandroid.dex.smali.SmaliFileNameFactory;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
@@ -330,9 +332,25 @@ public class DexLayout implements DexClassModule, Closeable,
         return create(classId);
     }
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
-        Iterator<DexClass> iterator = getDexClasses();
+        SmaliFileNameFactory fileNameFactory = new SmaliFileNameFactory(root);
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
         while (iterator.hasNext()) {
-            iterator.next().writeSmali(writer, root);
+            ClassId classId = iterator.next();
+            File file = fileNameFactory.getUniqueFilenameForClass(classId.getKey());
+            writer.setWriter(file);
+            classId.append(writer);
+            writer.close();
+        }
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        SmaliFileNameFactory fileNameFactory = new SmaliFileNameFactory(root);
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
+        while (iterator.hasNext()) {
+            ClassId classId = iterator.next();
+            SmaliWriter writer = new SmaliWriter(writerSetting);
+            writer.setWriter(fileNameFactory.getUniqueFilenameForClass(classId.getKey()));
+            classId.append(writer);
+            writer.close();
         }
     }
 

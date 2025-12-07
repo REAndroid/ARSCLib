@@ -19,6 +19,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
@@ -293,11 +294,30 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             }
         } else {
             int size = size();
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 DexLayout dexLayout = getLayout(i);
                 String name = DexLayout.DIRECTORY_PREFIX + i;
                 File dir = new File(root, name);
                 dexLayout.writeSmali(writer, dir);
+            }
+        }
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        requireNotClosed();
+        DexFileInfo fileInfo = DexFileInfo.fromDex(this);
+        fileInfo.saveToDirectory(root);
+        if (!isMultiLayout()) {
+            DexLayout first = getFirst();
+            if (first != null) {
+                first.writeSmali(writerSetting, root);
+            }
+        } else {
+            int size = size();
+            for (int i = 0; i < size; i++) {
+                DexLayout dexLayout = getLayout(i);
+                String name = DexLayout.DIRECTORY_PREFIX + i;
+                File dir = new File(root, name);
+                dexLayout.writeSmali(writerSetting, dir);
             }
         }
     }

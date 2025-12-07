@@ -33,6 +33,7 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionArray;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyList;
@@ -667,6 +668,12 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
         for(DexFile dexFile : this) {
             dexFile.writeSmali(writer, root);
+        }
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        for (DexFile dexFile : this) {
+            File dir = new File(root, dexFile.buildSmaliDirectoryName());
+            dexFile.writeSmali(writerSetting, dir);
         }
     }
 
