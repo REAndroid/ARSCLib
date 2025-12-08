@@ -294,6 +294,7 @@ public class DexLayout implements DexClassModule, Closeable,
         FileByteSource byteSource = new FileByteSource();
         SmaliReader reader = new SmaliReader(byteSource);
         DexLayoutBlock layout = getDexLayoutBlock();
+        Section<ClassId> classIdSection = null;
         while (iterator.hasNext()) {
             reader.reset();
             File file = iterator.next();
@@ -301,7 +302,10 @@ public class DexLayout implements DexClassModule, Closeable,
             reader.setOrigin(Origin.createNew(file));
             SmaliClass smaliClass = new SmaliClass();
             smaliClass.parse(reader);
-            if (containsClass(smaliClass.getKey())) {
+            if (classIdSection == null) {
+                classIdSection = getSection(SectionType.CLASS_ID);
+            }
+            if (classIdSection != null && classIdSection.contains(smaliClass.getKey())) {
                 throw new IOException(smaliClass.getOrigin() + " Class: "
                         + smaliClass.getKey() + " has already been interned");
             }
@@ -335,6 +339,7 @@ public class DexLayout implements DexClassModule, Closeable,
         ClassId classId = getDexLayoutBlock().fromSmali(smaliClass);
         return create(classId);
     }
+    @Deprecated
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
         SmaliFileNameFactory fileNameFactory = new SmaliFileNameFactory(root);
         Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);

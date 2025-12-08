@@ -274,7 +274,6 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             for (int i = 0; i < size; i++) {
                 File file = layoutDir.get(i);
                 DexLayout layout = getOrCreateAt(i);
-                System.err.println(file);
                 layout.parseSmaliDirectory(file);
                 shrink();
             }
@@ -282,6 +281,7 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             getOrCreateFirst().parseSmaliDirectory(dir);
         }
     }
+    @Deprecated
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
         requireNotClosed();
         root = new File(root, buildSmaliDirectoryName());

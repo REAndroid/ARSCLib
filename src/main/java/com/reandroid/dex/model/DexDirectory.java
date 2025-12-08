@@ -665,10 +665,9 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         this.clearExternalTypeKeyReferences();
     }
 
+    @Deprecated
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
-        for(DexFile dexFile : this) {
-            dexFile.writeSmali(writer, root);
-        }
+        writeSmali(writer.getWriterSetting(), root);
     }
     public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
         for (DexFile dexFile : this) {
