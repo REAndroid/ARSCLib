@@ -667,12 +667,22 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
 
     @Deprecated
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
-        writeSmali(writer.getWriterSetting(), root);
-    }
-    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        SmaliWriterSetting writerSetting = writer.getWriterSetting();
         for (DexFile dexFile : this) {
             File dir = new File(root, dexFile.buildSmaliDirectoryName());
             dexFile.writeSmali(writerSetting, dir);
+        }
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        writeSmali(writerSetting, root, null);
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root,
+                           Predicate<? super DexFile> predicate) throws IOException {
+        for (DexFile dexFile : this) {
+            if (predicate == null || predicate.test(dexFile)) {
+                File dir = new File(root, dexFile.buildSmaliDirectoryName());
+                dexFile.writeSmali(writerSetting, dir);
+            }
         }
     }
 
