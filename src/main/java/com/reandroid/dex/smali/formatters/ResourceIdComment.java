@@ -19,6 +19,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -43,7 +44,7 @@ public interface ResourceIdComment extends SmaliComment {
 
         private final PackageBlock packageBlock;
         private final TableBlock tableBlock;
-        private final Locale locale;
+        private final ResConfig localeConfig;
         private final Map<Integer, Object> mCachedComment;
         private final Object mNoComment;
 
@@ -53,7 +54,10 @@ public interface ResourceIdComment extends SmaliComment {
             if (locale == null) {
                 locale = new Locale("en");
             }
-            this.locale = locale;
+            ResConfig resConfig = new ResConfig();
+            resConfig.setLanguage(locale.getLanguage());
+            resConfig.setRegion(locale.getLanguage());
+            this.localeConfig = resConfig;
             this.mCachedComment = new HashMap<>();
             this.mNoComment = new Object();
         }
@@ -71,7 +75,7 @@ public interface ResourceIdComment extends SmaliComment {
                 writer.appendComment(comment);
             }
         }
-        private String getComment(int resourceId) {
+        private synchronized String getComment(int resourceId) {
             Integer id = resourceId;
             Map<Integer, Object> map = this.mCachedComment;
             Object obj = map.get(id);
@@ -104,7 +108,7 @@ public interface ResourceIdComment extends SmaliComment {
             if ("id".equals(resourceEntry.getType())) {
                 return ref;
             }
-            Entry entry = resourceEntry.forLocale(this.locale);
+            Entry entry = resourceEntry.getMatchingOrAny(this.localeConfig);
             if (entry == null) {
                 return ref;
             }
