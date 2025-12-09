@@ -56,7 +56,7 @@ public interface ResourceIdComment extends SmaliComment {
             }
             ResConfig resConfig = new ResConfig();
             resConfig.setLanguage(locale.getLanguage());
-            resConfig.setRegion(locale.getLanguage());
+            resConfig.setRegion(locale.getCountry());
             this.localeConfig = resConfig;
             this.mCachedComment = new HashMap<>();
             this.mNoComment = new Object();
