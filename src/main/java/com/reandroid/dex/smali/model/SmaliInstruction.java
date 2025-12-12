@@ -35,15 +35,15 @@ public class SmaliInstruction extends SmaliCode{
 
     private int address;
 
-    public SmaliInstruction(){
+    public SmaliInstruction() {
         super();
         this.opcode = Opcode.NOP;
         this.registerSet = SmaliRegisterSet.NO_REGISTER_SET;
         this.operand = SmaliInstructionOperand.NO_OPERAND;
     }
-    public SmaliInstruction(Opcode<?> opcode){
+    public SmaliInstruction(Opcode<?> opcode) {
         super();
-        if(opcode == null) {
+        if (opcode == null) {
             throw new NullPointerException();
         }
         this.opcode = opcode;
@@ -56,16 +56,16 @@ public class SmaliInstruction extends SmaliCode{
         }
     }
 
-    public Key getKey(){
+    public Key getKey() {
         SmaliInstructionOperand operand = getOperand();
-        if(operand instanceof SmaliInstructionOperand.SmaliKeyOperand){
+        if (operand instanceof SmaliInstructionOperand.SmaliKeyOperand) {
             return ((SmaliInstructionOperand.SmaliKeyOperand) operand).getKey();
         }
         return null;
     }
-    public Key getKey2(){
+    public Key getKey2() {
         SmaliInstructionOperand operand = getOperand();
-        if(operand instanceof SmaliInstructionOperand.SmaliDualKeyOperand) {
+        if (operand instanceof SmaliInstructionOperand.SmaliDualKeyOperand) {
             return ((SmaliInstructionOperand.SmaliDualKeyOperand) operand).getKey2();
         }
         return null;
@@ -77,10 +77,10 @@ public class SmaliInstruction extends SmaliCode{
     }
     public long getDataAsLong() {
         SmaliInstructionOperand operand = getOperand();
-        if(operand instanceof SmaliInstructionOperand.SmaliHexOperand){
+        if (operand instanceof SmaliInstructionOperand.SmaliHexOperand) {
             return operand.getValueAsLong();
         }
-        if(operand instanceof SmaliInstructionOperand.SmaliLabelOperand){
+        if (operand instanceof SmaliInstructionOperand.SmaliLabelOperand) {
             return ((int)operand.getValueAsLong()) - getAddress();
         }
         return 0;
@@ -92,28 +92,28 @@ public class SmaliInstruction extends SmaliCode{
         this.address = address;
     }
 
-    public int getCodeUnits(){
+    public int getCodeUnits() {
         return getOpcode().size() / 2;
     }
-    public Register getRegister(){
+    public Register getRegister() {
         return getRegister(0);
     }
-    public Register getRegister(int i){
+    public Register getRegister(int i) {
         return getRegisterSet().getRegister(i);
     }
-    public int getRegistersCount(){
+    public int getRegistersCount() {
         return getRegisterSet().size();
     }
-    public RegistersTable getRegistersTable(){
+    public RegistersTable getRegistersTable() {
         SmaliRegisterSet registerSet = getRegisterSet();
-        if(registerSet != null){
+        if (registerSet != null) {
             return registerSet.getRegistersTable();
         }
         return null;
     }
     public void setRegistersTable(RegistersTable registersTable) {
         SmaliRegisterSet registerSet = getRegisterSet();
-        if(registerSet != null){
+        if (registerSet != null) {
             registerSet.setRegistersTable(registersTable);
         }
     }
@@ -122,7 +122,7 @@ public class SmaliInstruction extends SmaliCode{
     }
     public void setRegisterSet(SmaliRegisterSet registerSet) {
         this.registerSet = registerSet;
-        if(registerSet != null){
+        if (registerSet != null) {
             registerSet.setParent(this);
         }
     }
@@ -134,16 +134,16 @@ public class SmaliInstruction extends SmaliCode{
     }
     public void setOperand(SmaliInstructionOperand operand) {
         this.operand = operand;
-        if(operand != null){
+        if (operand != null) {
             operand.setParent(this);
         }
     }
-    public OperandType getOperandType(){
+    public OperandType getOperandType() {
         return getOperand().getOperandType();
     }
     public boolean hasLabelOperand(SmaliLabel label) {
         SmaliInstructionOperand operand = getOperand();
-        if(!(operand instanceof SmaliInstructionOperand.SmaliLabelOperand)){
+        if (!(operand instanceof SmaliInstructionOperand.SmaliLabelOperand)) {
             return false;
         }
         SmaliInstructionOperand.SmaliLabelOperand smaliLabelOperand = (SmaliInstructionOperand.SmaliLabelOperand) operand;
@@ -164,9 +164,9 @@ public class SmaliInstruction extends SmaliCode{
     private void initRegisterSet(Opcode<?> opcode) {
         RegisterFormat format = opcode.getRegisterFormat();
         SmaliRegisterSet registerSet;
-        if(format == RegisterFormat.NONE){
+        if (format == RegisterFormat.NONE) {
             registerSet = SmaliRegisterSet.NO_REGISTER_SET;
-        }else {
+        } else {
             registerSet = new SmaliRegisterSet(format);
         }
         setRegisterSet(registerSet);
@@ -174,19 +174,19 @@ public class SmaliInstruction extends SmaliCode{
     private void initOperand(Opcode<?> opcode) throws IOException {
         OperandType operandType = opcode.getOperandType();
         SmaliInstructionOperand operand;
-        if(operandType == OperandType.NONE){
+        if (operandType == OperandType.NONE) {
             operand = SmaliInstructionOperand.NO_OPERAND;
-        }else if(operandType == OperandType.HEX){
+        } else if (operandType == OperandType.HEX) {
             operand = new SmaliInstructionOperand.SmaliHexOperand();
-        }else if(operandType == OperandType.KEY){
-            operand = new SmaliInstructionOperand.SmaliKeyOperand();
-        }else if(operandType == OperandType.DUAL_KEY){
-            operand = new SmaliInstructionOperand.SmaliDualKeyOperand();
-        }else if(operandType == OperandType.LABEL){
+        } else if (operandType.hasSectionId2()) {
+            operand = new SmaliInstructionOperand.SmaliDualKeyOperand(operandType);
+        } else if (operandType.hasSectionId()) {
+            operand = new SmaliInstructionOperand.SmaliKeyOperand(operandType);
+        } else if (operandType == OperandType.LABEL) {
             operand = new SmaliInstructionOperand.SmaliLabelOperand();
-        }else if(operandType == OperandType.DECIMAL){
+        } else if (operandType == OperandType.DECIMAL) {
             operand = new SmaliInstructionOperand.SmaliDecimalOperand();
-        }else {
+        } else {
             throw new IOException("Unknown operand type: " + operandType
                     + ", opcode = " + opcode);
         }
@@ -196,17 +196,17 @@ public class SmaliInstruction extends SmaliCode{
     @Override
     public void append(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
-        if(opcode == null){
+        if (opcode == null) {
             return;
         }
         writer.newLine();
         opcode.append(writer);
         SmaliRegisterSet registerSet = getRegisterSet();
-        if(registerSet != null){
+        if (registerSet != null) {
             registerSet.append(writer);
         }
-        if(opcode.getRegisterFormat() != RegisterFormat.NONE &&
-                opcode.getOperandType() != OperandType.NONE){
+        if (opcode.getRegisterFormat() != RegisterFormat.NONE &&
+                opcode.getOperandType() != OperandType.NONE) {
             writer.append(", ");
         }
         getOperand().append(writer);
@@ -219,8 +219,8 @@ public class SmaliInstruction extends SmaliCode{
         Opcode<?> opcode = parseOpcode(reader);
         getRegisterSet().parse(reader);
 
-        if(opcode.getRegisterFormat() != RegisterFormat.NONE &&
-                opcode.getOperandType() != OperandType.NONE){
+        if (opcode.getRegisterFormat() != RegisterFormat.NONE &&
+                opcode.getOperandType() != OperandType.NONE) {
             reader.skipWhitespacesOrComment();
             SmaliParseException.expect(reader, ',');
             reader.skipWhitespacesOrComment();

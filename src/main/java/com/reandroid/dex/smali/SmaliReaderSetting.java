@@ -13,35 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.ins;
+package com.reandroid.dex.smali;
 
-public class Ins31i extends Size6Ins implements RegistersSet {
-    public Ins31i(Opcode<?> opcode) {
-        super(opcode);
-    }
+public class SmaliReaderSetting {
 
-    @Override
-    public int getRegistersCount() {
-        return 1;
-    }
-    @Override
-    public final void setRegistersCount(int count) {
-    }
-    @Override
-    public int getRegister(int index) {
-        return getByteUnsigned(1);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setByte(1, value);
+    private boolean fixGoto = true;
+    private boolean validateRegisters = true;
+
+    public SmaliReaderSetting() {
+
     }
 
-    @Override
-    public int getData() {
-        return getInteger();
+    public boolean isFixGoto() {
+        return fixGoto;
     }
-    @Override
-    public void setData(int data) {
-        setInteger(data);
+    public void setFixGoto(boolean fixGoto) {
+        this.fixGoto = fixGoto;
+    }
+
+    public boolean isValidateRegisters() {
+        return validateRegisters;
+    }
+    public void setValidateRegisters(boolean validateRegisters) {
+        this.validateRegisters = validateRegisters;
     }
 }

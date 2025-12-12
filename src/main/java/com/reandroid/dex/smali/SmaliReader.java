@@ -38,12 +38,33 @@ public class SmaliReader {
     private Origin origin;
 
     private Set<Key> internedItems;
+    private SmaliReaderSetting readerSetting;
 
     public SmaliReader(ByteSource byteSource) {
         this.byteSource = byteSource;
     }
     public SmaliReader(byte[] bytes) {
         this(ByteSource.of(bytes));
+    }
+
+    public SmaliReaderSetting getReaderSetting() {
+        SmaliReaderSetting readerSetting = this.readerSetting;
+        if (readerSetting == null) {
+            readerSetting = new SmaliReaderSetting();
+            this.readerSetting = readerSetting;
+        }
+        return readerSetting;
+    }
+    public void setReaderSetting(SmaliReaderSetting setting) {
+        this.readerSetting = setting;
+    }
+    public boolean isFixGoto() {
+        SmaliReaderSetting readerSetting = this.readerSetting;
+        return readerSetting == null || readerSetting.isFixGoto();
+    }
+    public boolean isValidateRegisters() {
+        SmaliReaderSetting readerSetting = this.readerSetting;
+        return readerSetting == null || readerSetting.isValidateRegisters();
     }
 
     public void reset() {

@@ -398,17 +398,17 @@ public class SizeXIns extends Ins {
         OperandType operandType = instruction.getOperandType();
         if (operandType == OperandType.HEX) {
             ((SmaliInstructionOperand.SmaliHexOperand)operand).setNumber(getData());
-        } else if (operandType == OperandType.KEY) {
+        } else if (operandType.hasSectionId2()) {
+            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey(getKey());
+            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey2(
+                    ((DualKeyReference)this).getKey2());
+        } else if (operandType.hasSectionId()) {
             ((SmaliInstructionOperand.SmaliKeyOperand)operand).setKey(getKey());
         } else if (operandType == OperandType.LABEL) {
             SmaliLabel smaliLabel = ((SmaliInstructionOperand.SmaliLabelOperand) operand)
                     .getLabel();
             Label label = (Label) this;
             smaliLabel.setLabelName(label.getLabelName());
-        } else if (operandType == OperandType.DUAL_KEY) {
-            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey(getKey());
-            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey2(
-                    ((DualKeyReference)this).getKey2());
         }
     }
     @Override

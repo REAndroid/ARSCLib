@@ -174,10 +174,12 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         }
         getCodeSet().parse(reader);
         SmaliParseException.expect(reader, getSmaliDirective(), true);
-        runFixes();
+        runFixes(reader);
     }
-    private void runFixes() {
-        new SmaliGotoFix(this).apply();
+    private void runFixes(SmaliReader reader) {
+        if (reader.isFixGoto()) {
+            new SmaliGotoFix(this).apply();
+        }
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);

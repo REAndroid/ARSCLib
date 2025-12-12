@@ -38,13 +38,6 @@ public class Ins22x extends Ins22 {
             setShort(2, value);
         }
     }
-    @Override
-    public int getRegisterLimit(int index){
-        if(index == 0) {
-            return 0xff;
-        }
-        return 0xffff;
-    }
 
     @Override
     void appendOperand(SmaliWriter writer) {

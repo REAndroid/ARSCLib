@@ -118,9 +118,46 @@ public abstract class SmaliInstructionOperand extends Smali {
         @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
             reader.skipSpaces();
+            int position = reader.position();
             SmaliValueNumber<?> value = SmaliValueNumber.createNumber(reader);
             setNumberValue(value);
             value.parse(reader);
+            validate(opcode, reader, position);
+        }
+        private void validate(Opcode<?> opcode, SmaliReader reader, int position) throws IOException {
+            if (opcode == Opcode.CONST_WIDE) {
+                return;
+            }
+            long value = getValueAsLong();
+            if (value >= -0x8 && value <= 0x7) {
+                return;
+            }
+            if (opcode == Opcode.CONST_4) {
+                throw new IOException(reader.getOrigin(position) + " Invalid literal value: " + value + ". Must be between -8 and 7, inclusive.");
+            } else if (opcode == Opcode.CONST_16 || opcode == Opcode.CONST_WIDE_16) {
+                if ((value & 0xffffffffffff0000L) != 0) {
+                    if (value < -0x8000 || value > 0x7fff) {
+                        throw new IOException(reader.getOrigin(position) + " " + value + " cannot fit into a short");
+                    }
+                }
+            } else if (opcode == Opcode.CONST_HIGH16) {
+                if ((value & 0xffffL) != 0) {
+                    throw new IOException(reader.getOrigin(position) + "Invalid literal value: "
+                            + value + ". Low 16 bits must be zeroed out");
+                }
+                if (value < -0x80000000 || value > 0x7fffffff) {
+                    throw new IOException(reader.getOrigin(position) + " " + value + " cannot fit into an int");
+                }
+            } else if (opcode == Opcode.CONST_WIDE_HIGH16) {
+                if ((value & 0xffffffffffffL) != 0) {
+                    throw new IOException(reader.getOrigin(position) + " Invalid literal value: "
+                            + value + ". Low 48 bits must be zeroed out");
+                }
+            } else if (opcode == Opcode.CONST || opcode == Opcode.CONST_WIDE_32) {
+                if (value < -0x80000000 || value > 0x7fffffff) {
+                    throw new IOException(reader.getOrigin(position) + " " + value + " cannot fit into an int");
+                }
+            }
         }
         @Override
         public boolean equals(Object obj) {
@@ -188,10 +225,12 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
     }
     public static class SmaliKeyOperand extends SmaliInstructionOperand implements KeyReference {
+        private final OperandType operandType;
         private Key key;
 
-        public SmaliKeyOperand(){
+        public SmaliKeyOperand(OperandType operandType){
             super();
+            this.operandType = operandType;
         }
         @Override
         public Key getKey() {
@@ -209,7 +248,7 @@ public abstract class SmaliInstructionOperand extends Smali {
 
         @Override
         public OperandType getOperandType() {
-            return OperandType.KEY;
+            return operandType;
         }
 
         @Override
@@ -264,8 +303,8 @@ public abstract class SmaliInstructionOperand extends Smali {
 
         private Key key2;
 
-        public SmaliDualKeyOperand() {
-            super();
+        public SmaliDualKeyOperand(OperandType operandType) {
+            super(operandType);
         }
 
         @Override
@@ -275,11 +314,6 @@ public abstract class SmaliInstructionOperand extends Smali {
         @Override
         public void setKey2(Key key) {
             this.key2 = key;
-        }
-
-        @Override
-        public OperandType getOperandType() {
-            return OperandType.DUAL_KEY;
         }
 
         @Override

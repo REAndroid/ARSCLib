@@ -84,9 +84,14 @@ public class SmaliValueInteger extends SmaliValueNumber<Integer>{
         reader.skipSpaces();
         int position = reader.position();
         int i;
-        try{
-            i = HexUtil.parseHexInteger(reader.readStringForNumber());
-        }catch (NumberFormatException ex){
+        try {
+            String num = reader.readStringForNumber();
+            if (num.indexOf('x') > 0) {
+                i = HexUtil.parseHexInteger(num);
+            } else {
+                i = Integer.parseInt(num);
+            }
+        } catch (NumberFormatException ex) {
             reader.position(position);
             throw new SmaliParseException("Invalid hex integer", reader);
         }

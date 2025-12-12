@@ -110,10 +110,6 @@ public class Ins4rcc extends Size8Ins implements RegistersSet, DualKeyReference 
             setShort(4, value);
         }
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xffff;
-    }
 
     @Override
     public SectionType<ProtoId> getSectionType2() {

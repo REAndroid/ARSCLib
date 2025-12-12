@@ -38,10 +38,6 @@ public class Ins3rmi extends Size6Ins implements RegistersSet {
             setShort(4, value);
         }
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xffff;
-    }
 
     @Override
     public String toString() {

@@ -97,10 +97,6 @@ public class Ins45cc extends Size8Ins implements RegistersSet, DualKeyReference 
             setNibble(2, value);
         }
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0x0f;
-    }
 
     @Override
     public int getData(){

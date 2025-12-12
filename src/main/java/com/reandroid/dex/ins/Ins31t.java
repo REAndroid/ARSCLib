@@ -41,10 +41,6 @@ public class Ins31t extends Size6Ins implements RegistersSet, Label{
     public void setRegister(int index, int value) {
         setByte(1, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
-    }
 
     @Override
     public int getData(){

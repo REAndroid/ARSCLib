@@ -26,15 +26,35 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class SmaliValueChar extends SmaliValue{
+public class SmaliValueChar extends SmaliValueNumber<Integer> {
 
     private char value;
 
-    public SmaliValueChar(){
+    public SmaliValueChar() {
         super();
     }
 
-    public char getValue(){
+    @Override
+    public Integer getNumber() {
+        return (int) getValue();
+    }
+    @Override
+    public void setNumber(Integer number) {
+        int i = number;
+        setValue((char) i);
+    }
+
+    @Override
+    public int getWidth() {
+        return 2;
+    }
+
+    @Override
+    public long getValueAsLong() {
+        return getValue();
+    }
+
+    public char getValue() {
         return value;
     }
     public void setValue(char value) {
@@ -42,7 +62,7 @@ public class SmaliValueChar extends SmaliValue{
     }
 
     @Override
-    public Key getKey() {
+    public PrimitiveKey getKey() {
         return PrimitiveKey.of(getValue());
     }
     @Override
@@ -61,22 +81,22 @@ public class SmaliValueChar extends SmaliValue{
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipSpaces();
-        if(reader.read() != '\''){
+        if (reader.read() != '\'') {
             reader.skip(-1);
             throw new SmaliParseException("Missing start \"'\"", reader);
         }
         char ch = reader.readASCII();
-        if(ch == '\\'){
+        if (ch == '\\') {
             ch = reader.readASCII();
-            if(ch == 'u'){
-                try{
+            if (ch == 'u') {
+                try {
                     int i = HexUtil.parseHex(reader.readString(4));
                     ch = (char) i;
-                }catch (NumberFormatException ex){
+                } catch (NumberFormatException ex) {
                     reader.skip(-4);
                     throw new SmaliParseException("Invalid four-char hex encoded char", reader);
                 }
-            }else {
+            } else {
                 switch (ch) {
                     case 'b':
                         ch = '\b';
@@ -97,7 +117,7 @@ public class SmaliValueChar extends SmaliValue{
             }
         }
         setValue(ch);
-        if(reader.read() != '\''){
+        if (reader.read() != '\'') {
             reader.skip(-2);
             throw new SmaliParseException("Missing end \"'\"", reader);
         }

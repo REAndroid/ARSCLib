@@ -68,6 +68,9 @@ public class SmaliSet<T extends Smali> extends Smali{
     public int indexOf(T smali) {
         return body.indexOf(smali);
     }
+    public int indexOfIdentity(T smali) {
+        return body.indexOfExact(smali);
+    }
     public T get(int i) {
         return body.get(i);
     }

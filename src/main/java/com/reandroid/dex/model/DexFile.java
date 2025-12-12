@@ -18,6 +18,7 @@ package com.reandroid.dex.model;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.sections.*;
+import com.reandroid.dex.smali.SmaliReaderSetting;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.utils.CompareUtil;
@@ -262,8 +263,10 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
     public void write(OutputStream outputStream) throws IOException {
         getContainerBlock().writeBytes(outputStream);
     }
-
     public void parseSmaliDirectory(File dir) throws IOException {
+        parseSmaliDirectory(null, dir);
+    }
+    public void parseSmaliDirectory(SmaliReaderSetting readerSetting, File dir) throws IOException {
         File fileInfo = new File(dir, DexFileInfo.FILE_NAME);
         if (fileInfo.isFile()) {
             DexFileInfo.readJson(fileInfo).applyTo(this);
@@ -274,11 +277,11 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
             for (int i = 0; i < size; i++) {
                 File file = layoutDir.get(i);
                 DexLayout layout = getOrCreateAt(i);
-                layout.parseSmaliDirectory(file);
+                layout.parseSmaliDirectory(readerSetting, file);
                 shrink();
             }
         } else {
-            getOrCreateFirst().parseSmaliDirectory(dir);
+            getOrCreateFirst().parseSmaliDirectory(readerSetting, dir);
         }
     }
     @Deprecated

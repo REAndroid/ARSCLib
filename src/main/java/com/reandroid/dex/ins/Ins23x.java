@@ -38,10 +38,6 @@ public class Ins23x extends Size4Ins implements RegistersSet {
     public void setRegister(int index, int value) {
         setByte(1 + index, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
-    }
 
     @Override
     void appendOperand(SmaliWriter writer) {

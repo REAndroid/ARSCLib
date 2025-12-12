@@ -45,10 +45,6 @@ public class Ins35ms extends Size6Ins implements RegistersSet {
             setNibble(2, value);
         }
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0x0f;
-    }
 
     @Override
     public int getData(){

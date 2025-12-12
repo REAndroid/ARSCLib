@@ -29,10 +29,6 @@ public class Ins22b extends Ins22 implements RegistersSet {
     public void setRegister(int index, int value) {
         setByte(1 + index, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
-    }
 
     @Override
     public int getData(){

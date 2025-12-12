@@ -39,10 +39,6 @@ public class Ins32x extends Size6Ins implements RegistersSet{
     public void setRegister(int index, int value) {
         setShort(2 + index * 2, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xffff;
-    }
 
     @Override
     public int getData(){

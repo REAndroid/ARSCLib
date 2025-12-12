@@ -39,8 +39,4 @@ public class InsConstWideHigh16 extends Ins21lh implements ConstNumberLong{
         setRegister(0, register);
     }
 
-    @Override
-    public boolean isWideRegisterAt(int index) {
-        return true;
-    }
 }

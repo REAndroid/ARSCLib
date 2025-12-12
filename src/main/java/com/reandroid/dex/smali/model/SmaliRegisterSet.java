@@ -36,8 +36,8 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         super();
         this.format = format;
     }
-    public SmaliRegisterSet(){
-        this(RegisterFormat.READ);
+    public SmaliRegisterSet() {
+        this(RegisterFormat.READ16);
     }
 
     public RegistersTable getRegistersTable() {
