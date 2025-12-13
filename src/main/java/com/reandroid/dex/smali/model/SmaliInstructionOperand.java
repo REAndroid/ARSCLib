@@ -17,7 +17,16 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.OperandType;
 import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.CallSiteKey;
+import com.reandroid.dex.key.DualKeyReference;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.key.MethodHandleKey;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -28,7 +37,7 @@ import java.io.IOException;
 
 public abstract class SmaliInstructionOperand extends Smali {
 
-    public SmaliInstructionOperand(){
+    public SmaliInstructionOperand() {
         super();
     }
 
@@ -38,16 +47,14 @@ public abstract class SmaliInstructionOperand extends Smali {
     public abstract void append(SmaliWriter writer) throws IOException;
 
     @Override
-    public final void parse(SmaliReader reader) throws IOException {
-        throw new RuntimeException("Must call parse(Opcode, SmaliReader)");
-    }
+    public abstract void parse(SmaliReader reader) throws IOException;
     public abstract void parse(Opcode<?> opcode, SmaliReader reader) throws IOException;
 
     public static class SmaliLabelOperand extends SmaliInstructionOperand {
 
         private final SmaliLabel label;
 
-        public SmaliLabelOperand(){
+        public SmaliLabelOperand() {
             super();
             this.label = new SmaliLabel();
             this.label.setParent(this);
@@ -73,6 +80,10 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
+        public void parse(SmaliReader reader) throws IOException {
+            getLabel().parse(reader);
+        }
+        @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
             getLabel().parse(reader);
         }
@@ -81,7 +92,7 @@ public abstract class SmaliInstructionOperand extends Smali {
 
         private SmaliValueNumber<?> valueNumber;
 
-        public SmaliHexOperand(){
+        public SmaliHexOperand() {
             super();
             valueNumber = new SmaliValueInteger();
         }
@@ -95,7 +106,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
         public void setNumberValue(SmaliValueNumber<?> valueNumber) {
             this.valueNumber = valueNumber;
-            if(valueNumber != null){
+            if (valueNumber != null) {
                 valueNumber.setParent(this);
             }
         }
@@ -116,6 +127,10 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
+        public void parse(SmaliReader reader) throws IOException {
+            parse(null, reader);
+        }
+        @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
             reader.skipSpaces();
             int position = reader.position();
@@ -125,7 +140,7 @@ public abstract class SmaliInstructionOperand extends Smali {
             validate(opcode, reader, position);
         }
         private void validate(Opcode<?> opcode, SmaliReader reader, int position) throws IOException {
-            if (opcode == Opcode.CONST_WIDE) {
+            if (opcode == null || opcode == Opcode.CONST_WIDE) {
                 return;
             }
             long value = getValueAsLong();
@@ -178,7 +193,7 @@ public abstract class SmaliInstructionOperand extends Smali {
     public static class SmaliDecimalOperand extends SmaliInstructionOperand {
         private int number;
 
-        public SmaliDecimalOperand(){
+        public SmaliDecimalOperand() {
             super();
         }
 
@@ -204,6 +219,11 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
+        public void parse(SmaliReader reader) throws IOException {
+            reader.skipSpaces();
+            setNumber(reader.readInteger());
+        }
+        @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
             reader.skipSpaces();
             setNumber(reader.readInteger());
@@ -228,7 +248,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         private final OperandType operandType;
         private Key key;
 
-        public SmaliKeyOperand(OperandType operandType){
+        public SmaliKeyOperand(OperandType operandType) {
             super();
             this.operandType = operandType;
         }
@@ -254,30 +274,38 @@ public abstract class SmaliInstructionOperand extends Smali {
         @Override
         public void append(SmaliWriter writer) throws IOException {
             Key key = getKey();
-            if(key != null){
+            if (key != null) {
                 key.append(writer);
             }
+        }
+
+        @Override
+        public void parse(SmaliReader reader) throws IOException {
+            setKey(parseKey(getOperandType().getSectionType(), reader));
         }
         @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
             setKey(parseKey(opcode.getSectionType(), reader));
         }
+
         Key parseKey(SectionType<?> sectionType, SmaliReader reader) throws IOException {
             Key key;
-            if(sectionType == SectionType.STRING_ID){
+            if (sectionType == SectionType.STRING_ID) {
                 key = StringKey.read(reader);
-            }else if(sectionType == SectionType.TYPE_ID){
+            } else if (sectionType == SectionType.TYPE_ID) {
                 key = TypeKey.read(reader);
-            }else if(sectionType == SectionType.FIELD_ID){
+            } else if (sectionType == SectionType.FIELD_ID) {
                 key = FieldKey.read(reader);
-            }else if(sectionType == SectionType.PROTO_ID){
+            } else if (sectionType == SectionType.PROTO_ID) {
                 key = ProtoKey.read(reader);
-            }else if(sectionType == SectionType.METHOD_ID){
+            } else if (sectionType == SectionType.METHOD_ID) {
                 key = MethodKey.read(reader);
-            }else if(sectionType == SectionType.CALL_SITE_ID){
+            } else if (sectionType == SectionType.CALL_SITE_ID) {
                 key = CallSiteKey.read(reader);
-            }else {
-                throw new SmaliParseException("Invalid key", reader);
+            } else if (sectionType == SectionType.METHOD_HANDLE) {
+                key = MethodHandleKey.read(reader);
+            } else {
+                throw new SmaliParseException("Undefined section type: " + sectionType, reader);
             }
             return key;
         }
@@ -325,6 +353,15 @@ public abstract class SmaliInstructionOperand extends Smali {
                 key.append(writer);
             }
         }
+
+        @Override
+        public void parse(SmaliReader reader) throws IOException {
+            super.parse(reader);
+            reader.skipWhitespaces();
+            SmaliParseException.expect(reader, ',');
+            reader.skipWhitespaces();
+            setKey2(parseKey(getOperandType().getSectionType2(), reader));
+        }
         @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
             super.parse(opcode, reader);
@@ -365,6 +402,11 @@ public abstract class SmaliInstructionOperand extends Smali {
 
         @Override
         public void append(SmaliWriter writer) {
+        }
+
+        @Override
+        public void parse(SmaliReader reader) {
+            reader.skipSpaces();
         }
         @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) {
