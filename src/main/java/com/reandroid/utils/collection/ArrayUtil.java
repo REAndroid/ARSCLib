@@ -19,6 +19,24 @@ import com.reandroid.utils.NumbersUtil;
 
 public class ArrayUtil {
 
+    public static boolean areEqual(int[] items1, int[] items2) {
+        if (items1 == items2) {
+            return true;
+        }
+        if (items1 == null || items2 == null) {
+            return false;
+        }
+        int length = items1.length;
+        if (length != items2.length) {
+            return false;
+        }
+        for (int i = 0; i < length; i++) {
+            if (items1[i] != items2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
     public static void fill(byte[] elements, byte item) {
         if (elements == null) {
             return;
