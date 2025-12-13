@@ -22,6 +22,7 @@ import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.header.DexVersion;
+import com.reandroid.utils.collection.ArrayUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.File;
@@ -157,6 +158,36 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
 
     @Override
     public void refreshFull() {
+        int[] checkSums = getCheckSums();
+        boolean multiContainer = checkSums.length > 1;
+        int repeat = size();
+        for (int i = 0; i < repeat; i++) {
+            refreshFullLayouts();
+            if (multiContainer) {
+                int[] changed = getCheckSums();
+                if (ArrayUtil.areEqual(checkSums, changed)) {
+                    break;
+                }
+                refresh();
+                checkSums = changed;
+                changed = getCheckSums();
+                if (ArrayUtil.areEqual(checkSums, changed)) {
+                    break;
+                }
+                checkSums = changed;
+            }
+        }
+    }
+    private int[] getCheckSums() {
+        int size = size();
+        int[] results = new int[size];
+        for (int i = 0; i < size; i++) {
+            DexLayoutBlock layoutBlock = get(i);
+            results[i] = layoutBlock.getHeader().checksum.getValue();
+        }
+        return results;
+    }
+    private void refreshFullLayouts() {
         clearUnused();
         clearEmptyLayouts();
         for (DexLayoutBlock layoutBlock : this) {
