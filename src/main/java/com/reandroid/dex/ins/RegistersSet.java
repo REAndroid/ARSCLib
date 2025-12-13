@@ -62,4 +62,29 @@ public interface RegistersSet {
         setRegistersCount(last);
         return true;
     }
+
+    RegistersSet NO_REGISTERS = new RegistersSet() {
+        @Override
+        public int getRegistersCount() {
+            return 0;
+        }
+        @Override
+        public void setRegistersCount(int count) {
+        }
+        @Override
+        public int getRegister(int index) {
+            return -1;
+        }
+        @Override
+        public void setRegister(int index, int value) {
+        }
+        @Override
+        public int getRegister() {
+            return -1;
+        }
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+    };
 }

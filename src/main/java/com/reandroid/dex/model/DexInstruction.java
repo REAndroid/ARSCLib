@@ -65,9 +65,12 @@ public class DexInstruction extends DexCode {
     }
 
     public boolean usesRegister(int register) {
-        int count = getRegistersCount();
+        RegistersSet registersSet = getRegistersSet();
+        int count = registersSet.getRegistersCount();
+        RegisterFormat format = getRegisterFormat();
         for (int i = 0; i < count; i++) {
-            if (register == getRegister(i)) {
+            int r = registersSet.getRegister(i);
+            if (register == r || (register == (r + 1) && format.isWide(i))) {
                 return true;
             }
         }
@@ -75,9 +78,14 @@ public class DexInstruction extends DexCode {
     }
     public boolean usesRegister(int register, RegisterType type) {
         RegisterFormat format = getOpcode().getRegisterFormat();
-        int count = getRegistersCount();
+        RegistersSet registersSet = getRegistersSet();
+        int count = registersSet.getRegistersCount();
         for (int i = 0; i < count; i++) {
-            if (register == getRegister(i) && type.is(format.get(i))) {
+            if (!type.is(format.get(i))) {
+                continue;
+            }
+            int r = registersSet.getRegister(i);
+            if (register == r || (register == (r + 1) && format.isWide(i))) {
                 return true;
             }
         }
@@ -116,26 +124,12 @@ public class DexInstruction extends DexCode {
         jumbo.setSectionId(stringId);
         return DexInstruction.create(getDexMethod(), jumbo);
     }
-    /**
-     * Use: getKeyAsField
-     * */
-    @Deprecated
-    public FieldKey getFieldKey() {
-        return getKeyAsField();
-    }
     public FieldKey getKeyAsField() {
         IdItem idItem = getIdSectionEntry();
         if (idItem instanceof FieldId) {
             return ((FieldId) idItem).getKey();
         }
         return null;
-    }
-    /**
-     * Use: getKeyAsMethod
-     * */
-    @Deprecated
-    public MethodKey getMethodKey() {
-        return getKeyAsMethod();
     }
     public MethodKey getKeyAsMethod() {
         IdItem idItem = getIdSectionEntry();
@@ -164,16 +158,22 @@ public class DexInstruction extends DexCode {
         }
         return null;
     }
+    public RegisterFormat getRegisterFormat() {
+        return getOpcode().getRegisterFormat();
+    }
+    public RegistersSet getRegistersSet() {
+        Ins ins = getIns();
+        if (ins instanceof RegistersSet) {
+            return (RegistersSet) ins;
+        }
+        return RegistersSet.NO_REGISTERS;
+    }
     public int getRegister(int i) {
         if (i < 0) {
             return -1;
         }
-        Ins ins = getIns();
-        if (ins instanceof RegistersSet) {
-            RegistersSet registersSet = (RegistersSet) ins;
-            if (i >= registersSet.getRegistersCount()) {
-                return -1;
-            }
+        RegistersSet registersSet = getRegistersSet();
+        if (i < registersSet.getRegistersCount()) {
             return registersSet.getRegister(i);
         }
         return -1;
@@ -415,14 +415,14 @@ public class DexInstruction extends DexCode {
         DexInstruction previous = getPrevious();
         while (previous != null) {
             Opcode<?> opcode = previous.getOpcode();
-            if (opcode.isMover() && previous.getRegister(0) == register) {
+            if (opcode.isMove() && previous.getRegister(0) == register) {
                 register = previous.getRegister(1);
             } else {
-                RegisterFormat format = opcode.getRegisterFormat();
+                RegisterFormat registerFormat = opcode.getRegisterFormat();
                 int size = previous.getRegistersCount();
                 for (int i = 0; i < size; i++) {
                     if (register == previous.getRegister(i) &&
-                            RegisterType.READ.is(format.get(i))) {
+                            RegisterType.READ.is(registerFormat.get(i))) {
                         if (predicate.test(previous)) {
                             return previous;
                         }
@@ -444,7 +444,7 @@ public class DexInstruction extends DexCode {
         DexInstruction previous = getPrevious();
         while (previous != null) {
             Opcode<?> opcode = previous.getOpcode();
-            if (opcode.isMover() && previous.getRegister(1) == register) {
+            if (opcode.isMove() && previous.getRegister(1) == register) {
                 register = previous.getRegister(0);
             } else {
                 RegisterFormat format = opcode.getRegisterFormat();

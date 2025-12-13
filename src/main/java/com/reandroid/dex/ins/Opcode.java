@@ -20,6 +20,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.OperandType;
 import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliReader;
@@ -319,7 +320,6 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         OpcodeFormat.Format12x format12xRw4WRead4W = new OpcodeFormat.Format12x(RegisterFormat.RW4W_READ4W);
         OpcodeFormat.Format20bc format20bc = new OpcodeFormat.Format20bc();
 
-        OpcodeFormat.FormatConst16 formatConst16 = new OpcodeFormat.FormatConst16();
         OpcodeFormat.Format21c format21cType = new OpcodeFormat.Format21c(OperandType.TYPE);
         OpcodeFormat.Format21c format21cField = new OpcodeFormat.Format21c(OperandType.FIELD);
         OpcodeFormat.Format21c format21cFieldRead = new OpcodeFormat.Format21c(RegisterFormat.READ8, OperandType.FIELD);
@@ -964,7 +964,6 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         this.opcodeFormat = opcodeFormat;
     }
 
-
     public int getValue() {
         return value;
     }
@@ -975,100 +974,94 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         return name;
     }
     public boolean hasOutRegisters() {
-        SectionType<?> sectionType = getSectionType();
-        if (sectionType == SectionType.METHOD_ID || sectionType == SectionType.CALL_SITE_ID) {
-            return true;
-        }
-        return this == FILLED_NEW_ARRAY || this == FILLED_NEW_ARRAY_RANGE;
+        return getRegisterFormat().isOut();
     }
-    public boolean isFieldAccess() {
-        return getSectionType() == SectionType.FIELD_ID;
+    public boolean isConstString() {
+        int value = this.value;
+        return value == 0x1a || value == 0x1b;
     }
-    public boolean isFieldGet() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        return getName().charAt(1) == 'g';
+    public boolean isArrayOp() {
+        int value = this.value;
+        return value >= 0x44 && value <= 0x51;
     }
-    public boolean isFieldPut() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        return getName().charAt(1) == 'p';
+    public boolean isFieldOp() {
+        int value = this.value;
+        return value >= 0x52 && value <= 0x6d;
     }
-    public boolean isFieldAccessStatic() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        return getName().charAt(0) == 's';
-    }
-    public boolean isFieldAccessInstance() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        return getName().charAt(0) == 'i';
-    }
-    public boolean isFieldStaticGet() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        String name = getName();
-        return name.charAt(0) == 's' && name.charAt(1) == 'g';
-    }
-    public boolean isFieldStaticPut() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        String name = getName();
-        return name.charAt(0) == 's' && name.charAt(1) == 'p';
+    public boolean isFieldInstanceOp() {
+        int value = this.value;
+        return value >= 0x52 && value <= 0x5f;
     }
     public boolean isFieldInstanceGet() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        String name = getName();
-        return name.charAt(0) == 'i' && name.charAt(1) == 'g';
+        int value = this.value;
+        return value >= 0x52 && value <= 0x58;
     }
     public boolean isFieldInstancePut() {
-        if (getSectionType() != SectionType.FIELD_ID) {
-            return false;
-        }
-        String name = getName();
-        return name.charAt(0) == 'i' && name.charAt(1) == 'p';
+        int value = this.value;
+        return value >= 0x59 && value <= 0x5f;
+    }
+    public boolean isFieldStaticOp() {
+        int value = this.value;
+        return value >= 0x60 && value <= 0x6d;
+    }
+    public boolean isFieldStaticGet() {
+        int value = this.value;
+        return value >= 0x60 && value <= 0x66;
+    }
+    public boolean isFieldStaticPut() {
+        int value = this.value;
+        return value >= 0x67 && value <= 0x6d;
+    }
+    public boolean isFieldGet() {
+        return isFieldInstanceGet() || isFieldStaticGet();
+    }
+    public boolean isFieldPut() {
+        return isFieldInstancePut() || isFieldStaticPut();
     }
     public boolean isMethodInvoke() {
-        return getSectionType() == SectionType.METHOD_ID;
+        return getOperandType() == OperandType.METHOD;
     }
     public boolean isMethodInvokeStatic() {
-        if (getSectionType() != SectionType.METHOD_ID) {
-            return false;
+        int value = this.value;
+        return value == 0x71 || value == 0x77;
+    }
+    public boolean isConstNumber() {
+        int value = this.value;
+        return value >= 0x12 && value <= 0x19;
+    }
+    public boolean isConstInteger() {
+        int value = this.value;
+        return value >= 0x12 && value <= 0x15;
+    }
+    public boolean isConstWide() {
+        int value = this.value;
+        return value >= 0x16 && value <= 0x19;
+    }
+    public boolean isReturn() {
+        int value = this.value;
+        if (value >= 0x0e && value <= 0x11) {
+            return true;
         }
-        return getName().charAt(8) == 't';
+        return value == 0xf1 || value == 0x73;
     }
-    public boolean isReturning() {
-        String name = getName();
-        return name.charAt(0) == 'r' &&
-                name.charAt(2) == 't';
+    public boolean isMoveResult() {
+        int value = this.value;
+        return value == 0x0a || value == 0x0b || value == 0x0c;
     }
-    public boolean isMoveResultValue() {
-        String name = getName();
-        if (name.length() < 6) {
-            return false;
-        }
-        return name.charAt(0) == 'm' &&
-                name.charAt(5) == 'r';
+    public boolean isMove() {
+        int value = this.value;
+        return value >= 0x1 && value <= 0x9;
     }
-    public boolean isMover() {
-        Opcode<?> opcode = this;
-        return opcode == MOVE ||
-                opcode == MOVE_16 ||
-                opcode == MOVE_FROM16 ||
-                opcode == MOVE_OBJECT ||
-                opcode == MOVE_OBJECT_16 ||
-                opcode == MOVE_OBJECT_FROM16 ||
-                opcode == MOVE_WIDE ||
-                opcode == MOVE_WIDE_16 ||
-                opcode == MOVE_WIDE_FROM16;
+    public boolean isIfTest() {
+        int value = this.value;
+        return value >= 0x32 && value <= 0x3d;
+    }
+    public boolean isGoto() {
+        int value = this.value;
+        return value == 0x28 || value == 0x29 || value == 0x2a;
+    }
+    public boolean isRange() {
+        return getRegisterFormat().isRange();
     }
     public SectionType<? extends IdItem> getSectionType() {
         return opcodeFormat.getSectionType();
@@ -1157,7 +1150,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         }
         return valueOf(smali.substring(i1, i2));
     }
-    public static boolean isPrefix(byte b) {
+    private static boolean isPrefix(byte b) {
         switch (b) {
             case 'a':
             case 'c':
@@ -1180,5 +1173,42 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
             default:
                 return false;
         }
+    }
+
+    public static Opcode<?> getConstIntegerFor(int i) {
+        if (i >= -0x8 && i <= 0x7) {
+            return CONST_4;
+        }
+        if (i >= -0x8000 && i <= 0x7fff) {
+            return CONST_16;
+        }
+        if ((i & 0x0000ffff) == 0) {
+            return CONST_HIGH16;
+        }
+        return CONST;
+    }
+    public static Opcode<?> getConstWideFor(long l) {
+        if (l >= -0x8000 && l <= 0x7fff) {
+            return CONST_WIDE_16;
+        }
+        if ((l & 0x0000ffffffffffffL) == 0) {
+            return CONST_WIDE_HIGH16;
+        }
+        if (l >= -0x80000000L && l <= 0x7fffffffL) {
+            return CONST_WIDE_32;
+        }
+        return CONST_WIDE;
+    }
+    public static Opcode<?> getReturnForType(TypeKey typeKey) {
+        if (!typeKey.isPrimitive()) {
+            return RETURN_OBJECT;
+        }
+        if (TypeKey.TYPE_V.equals(typeKey)) {
+            return RETURN_VOID;
+        }
+        if (typeKey.isWide()) {
+            return RETURN_WIDE;
+        }
+        return RETURN;
     }
 }
