@@ -12,6 +12,7 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
+import com.reandroid.arsc.coder.CoderDimension;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.io.BlockReader;
@@ -40,6 +41,9 @@ import java.util.zip.ZipEntry;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ApkModuleTest {
+
+    public static final boolean TEST_WITH_MULTI_LAYOUT_DEX_V041 = true;
+
     private static ApkModule last_apkModule;
     @Test
     public void a_testApkModule() throws IOException {
@@ -91,7 +95,10 @@ public class ApkModuleTest {
         String appClass = manifestBlock.getApplicationClassName();
         String mainActivity = manifestBlock.getMainActivityClassName();
 
-        DexFile dexFile = SampleDexFileCreator.createApplicationClass(appClass, mainActivity, mainActivityLayoutId);
+        DexFile dexFile = SampleDexFileCreator.createApplicationClass(
+                TEST_WITH_MULTI_LAYOUT_DEX_V041,
+                appClass, mainActivity, mainActivityLayoutId);
+
         byte[] bytes = dexFile.getBytes();
         apkModule.add(new ByteInputSource(bytes, "classes.dex"));
         apkModule.getUncompressedFiles().addPath(apkModule.getZipEntryMap());
@@ -119,6 +126,9 @@ public class ApkModuleTest {
 
         attribute = root.getOrCreateAndroidAttribute("orientation", 0x010100c4);
         attribute.setTypeAndData(ValueType.DEC, 1); // vertical
+
+        attribute = root.getOrCreateAndroidAttribute("padding", 0x010100d5);
+        attribute.setValue(CoderDimension.INS.encode("20.0dp"));
 
         ResXmlElement textView = root.newElement("TextView");
         attribute = textView.getOrCreateAndroidAttribute("layout_width", 0x010100f4);
@@ -462,13 +472,17 @@ public class ApkModuleTest {
 
         manifestBlock.setCompileSdkVersion(frameworkApk.getVersionCode());
         manifestBlock.setCompileSdkVersionCodename(frameworkApk.getVersionName());
-        manifestBlock.setCompileSdk(AndroidApiLevel.O);
+        AndroidApiLevel apiLevel = AndroidApiLevel.O;
+        if (TEST_WITH_MULTI_LAYOUT_DEX_V041) {
+            apiLevel = AndroidApiLevel.VANILLA_ICE_CREAM;
+        }
+        manifestBlock.setCompileSdk(apiLevel);
 
         manifestBlock.setPlatformBuildVersionCode(frameworkApk.getVersionCode());
         manifestBlock.setPlatformBuildVersionName(frameworkApk.getVersionName());
-        manifestBlock.setPlatformBuild(AndroidApiLevel.O);
-        manifestBlock.setMinSdkVersion(AndroidApiLevel.O.getApi());
-        manifestBlock.setTargetSdkVersion(AndroidApiLevel.O.getApi());
+        manifestBlock.setPlatformBuild(apiLevel);
+        manifestBlock.setMinSdkVersion(apiLevel.getApi());
+        manifestBlock.setTargetSdkVersion(apiLevel.getApi());
 
         manifestBlock.addUsesPermission("android.permission.INTERNET");
         manifestBlock.addUsesPermission("android.permission.READ_EXTERNAL_STORAGE");

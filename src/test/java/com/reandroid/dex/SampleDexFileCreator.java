@@ -11,9 +11,17 @@ import java.io.IOException;
 public class SampleDexFileCreator {
 
     public static DexFile createApplicationClass(String appSourceName, String activitySourceName, int contentViewResourceId) throws IOException {
+        return createApplicationClass(false, appSourceName, activitySourceName, contentViewResourceId);
+    }
+    public static DexFile createApplicationClass(boolean multiContainerDex, String appSourceName, String activitySourceName, int contentViewResourceId) throws IOException {
         DexFile dexFile = DexFile.createDefault();
         createApplicationClass(dexFile, appSourceName);
-        createActivityClass(dexFile, activitySourceName, contentViewResourceId);
+        int i = 0;
+        if (multiContainerDex) {
+            dexFile.setVersion(41);
+            i = 1;
+        }
+        createActivityClass(dexFile.getOrCreateAt(i), activitySourceName, contentViewResourceId);
         dexFile.clearUnused();
         dexFile.clearEmptySections();
         dexFile.refreshFull();
@@ -31,8 +39,9 @@ public class SampleDexFileCreator {
 
         createConstructor(dexClass);
     }
-    private static void createActivityClass(DexFile dexFile, String activitySourceName, int contentViewResourceId) throws IOException {
-        DexClass dexClass = dexFile.getOrCreateFirst().getOrCreateClass(TypeKey.parse(activitySourceName));
+    private static void createActivityClass(DexLayout dexLayout, String activitySourceName, int contentViewResourceId) throws IOException {
+
+        DexClass dexClass = dexLayout.getOrCreateClass(TypeKey.parse(activitySourceName));
         dexClass.addAccessFlag(AccessFlag.PUBLIC);
         dexClass.setSuperClass(TypeKey.create("Landroid/app/Activity;"));
 
