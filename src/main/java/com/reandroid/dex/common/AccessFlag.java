@@ -18,7 +18,6 @@ package com.reandroid.dex.common;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.EmptyIterator;
 
 import java.lang.annotation.ElementType;
 import java.util.HashMap;
@@ -45,6 +44,8 @@ public class AccessFlag extends Modifier {
     public static final AccessFlag SYNTHETIC;
     public static final AccessFlag ANNOTATION;
     public static final AccessFlag ENUM;
+    // for flags of dalvik.annotation.MethodParameters
+    public static final AccessFlag MANDATED;
     public static final AccessFlag CONSTRUCTOR;
     public static final AccessFlag DECLARED_SYNCHRONIZED;
 
@@ -71,6 +72,7 @@ public class AccessFlag extends Modifier {
         SYNTHETIC = new AccessFlag(0x1000, "synthetic", true, true, true);
         ANNOTATION = new AccessFlag(0x2000, "annotation", true, false, false);
         ENUM = new AccessFlag(0x4000, "enum", true, false, true);
+        MANDATED = new AccessFlag(0x8000, "mandated", false, false, false);
         CONSTRUCTOR = new AccessFlag(0x10000, "constructor", false, true, false);
         DECLARED_SYNCHRONIZED = new AccessFlag(0x20000, "declared-synchronized", false, true, false);
 
@@ -92,6 +94,7 @@ public class AccessFlag extends Modifier {
                 SYNTHETIC,
                 ANNOTATION,
                 ENUM,
+                MANDATED,
                 CONSTRUCTOR,
                 DECLARED_SYNCHRONIZED
         };
@@ -151,7 +154,7 @@ public class AccessFlag extends Modifier {
         if (elementType == ElementType.METHOD) {
             return valuesOfMethod(value);
         }
-        return EmptyIterator.of();
+        return valuesOf(value);
     }
     public static Iterator<AccessFlag> valuesOfClass(int value) {
         return getValues(accessFlag -> accessFlag.isSetForClass(value));
@@ -161,6 +164,9 @@ public class AccessFlag extends Modifier {
     }
     public static Iterator<AccessFlag> valuesOfField(int value) {
         return getValues(accessFlag -> accessFlag.isSetForField(value));
+    }
+    public static Iterator<AccessFlag> valuesOf(int value) {
+        return getValues(accessFlag -> accessFlag.isSet(value));
     }
     public static AccessFlag valueOf(String name) {
         return accessFlagsByName.get(name);

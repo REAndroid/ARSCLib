@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.dalvik;
 
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.AnnotationElementKey;
@@ -27,6 +28,7 @@ import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.AccessibleItem;
+import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.program.MethodParameter;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.utils.NumbersUtil;
@@ -34,6 +36,9 @@ import com.reandroid.utils.NumbersUtil;
 import java.lang.annotation.ElementType;
 
 public class DalvikMethodParameters extends DalvikAnnotation {
+
+    private static final int ACCESS_FLAGS_MASK = AccessFlag.FINAL.getValue()
+            | AccessFlag.MANDATED.getValue() | AccessFlag.SYNTHETIC.getValue();
 
     private DalvikMethodParameters(MethodProgram methodProgram) {
         super(methodProgram, TypeKey.DALVIK_MethodParameters);
@@ -65,6 +70,10 @@ public class DalvikMethodParameters extends DalvikAnnotation {
         return 0;
     }
     public void setAccessFlags(int i, int flags) {
+        flags = ACCESS_FLAGS_MASK & flags;
+        if (flags == 0) {
+            flags = AccessFlag.SYNTHETIC.getValue();
+        }
         ensureSize(i + 1);
         writeValue(Key.DALVIK_accessFlags, getAccessFlags()
                 .set(i, PrimitiveKey.of(flags)));
@@ -113,7 +122,7 @@ public class DalvikMethodParameters extends DalvikAnnotation {
         } else {
             arrayKey = ArrayValueKey.empty();
         }
-        arrayKey = arrayKey.setSize(size, PrimitiveKey.of(0x0));
+        arrayKey = arrayKey.setSize(size, PrimitiveKey.of(AccessFlag.SYNTHETIC.getValue()));
         writeValue(Key.DALVIK_accessFlags, arrayKey);
 
         value = readValue(Key.DALVIK_names);
@@ -137,26 +146,27 @@ public class DalvikMethodParameters extends DalvikAnnotation {
         return ArrayValueKey.create((ArrayKey<?>) readValue(Key.DALVIK_names));
     }
 
-    public static DalvikMethodParameters of(MethodProgram methodProgram) {
-        if (methodProgram.hasAnnotation(TypeKey.DALVIK_MethodParameters)) {
-            return new DalvikMethodParameters(methodProgram);
+    public static DalvikMethodParameters of(AnnotatedProgram methodProgram) {
+        if (methodProgram instanceof MethodProgram &&
+                methodProgram.hasAnnotation(TypeKey.DALVIK_MethodParameters)) {
+            return new DalvikMethodParameters((MethodProgram) methodProgram);
         }
         return null;
     }
-    public static DalvikMethodParameters getOrCreate(MethodProgram methodProgram) {
-        if (!methodProgram.hasAnnotation(TypeKey.DALVIK_MethodParameters)) {
-            int size = methodProgram.getParametersCount();
-            methodProgram.addAnnotation(AnnotationItemKey.create(
+    public static DalvikMethodParameters getOrCreate(AnnotatedProgram annotatedProgram) {
+        if (annotatedProgram instanceof MethodProgram && !annotatedProgram.hasAnnotation(TypeKey.DALVIK_MethodParameters)) {
+            int size = ((MethodProgram) annotatedProgram).getParametersCount();
+            annotatedProgram.addAnnotation(AnnotationItemKey.create(
                     AnnotationVisibility.SYSTEM,
                     TypeKey.DALVIK_MethodParameters,
                     AnnotationElementKey.create(Key.DALVIK_accessFlags,
-                            ArrayValueKey.empty().setSize(size, PrimitiveKey.of(0))),
+                            ArrayValueKey.empty().setSize(size, PrimitiveKey.of(AccessFlag.SYNTHETIC.getValue()))),
                     AnnotationElementKey.create(Key.DALVIK_names,
                             ArrayValueKey.empty().setSize(size, StringKey.EMPTY))
                     )
             );
         }
-        return of(methodProgram);
+        return of(annotatedProgram);
     }
 
     public static class Data implements AccessibleItem {
@@ -190,7 +200,7 @@ public class DalvikMethodParameters extends DalvikAnnotation {
 
         @Override
         public ElementType getElementType() {
-            return ElementType.TYPE;
+            return ElementType.PARAMETER;
         }
 
         @Override
