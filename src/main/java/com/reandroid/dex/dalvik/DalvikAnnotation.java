@@ -85,4 +85,56 @@ public class DalvikAnnotation {
         }
         return key.toString();
     }
+
+    public static DalvikAnnotation of(TypeKey dalvikAnnotationType, AnnotatedProgram annotatedProgram) {
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingClass)) {
+            return DalvikEnclosingClass.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingMethod)) {
+            return DalvikEnclosingMethod.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_InnerClass)) {
+            return DalvikInnerClass.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MemberClass)) {
+            return DalvikMemberClass.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MethodParameters)) {
+            return DalvikMethodParameters.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Signature)) {
+            return DalvikSignature.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Throws)) {
+            return DalvikThrows.of(annotatedProgram);
+        }
+        return null;
+    }
+    public static DalvikAnnotation getOrCreate(TypeKey dalvikAnnotationType, AnnotatedProgram annotatedProgram) {
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_AnnotationDefault)) {
+            return DalvikAnnotationDefault.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingClass)) {
+            return DalvikEnclosingClass.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingMethod)) {
+            return DalvikEnclosingMethod.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_InnerClass)) {
+            return DalvikInnerClass.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MemberClass)) {
+            return DalvikMemberClass.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MethodParameters)) {
+            return DalvikMethodParameters.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Signature)) {
+            return DalvikSignature.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Throws)) {
+            return DalvikThrows.getOrCreate(annotatedProgram);
+        }
+        return null;
+    }
 }

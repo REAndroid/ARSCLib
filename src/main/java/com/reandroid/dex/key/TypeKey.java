@@ -836,6 +836,7 @@ public class TypeKey implements ProgramKey {
     public static final TypeKey STRING = new TypeKey("Ljava/lang/String;");
     public static final TypeKey EXCEPTION = new TypeKey("Ljava/lang/Exception;");
 
+    public static final TypeKey DALVIK_AnnotationDefault = new TypeKey("Ldalvik/annotation/AnnotationDefault;");
     public static final TypeKey DALVIK_EnclosingClass = new TypeKey("Ldalvik/annotation/EnclosingClass;");
     public static final TypeKey DALVIK_EnclosingMethod = new TypeKey("Ldalvik/annotation/EnclosingMethod;");
     public static final TypeKey DALVIK_InnerClass = new TypeKey("Ldalvik/annotation/InnerClass;");
