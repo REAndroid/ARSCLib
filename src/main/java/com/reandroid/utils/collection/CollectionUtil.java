@@ -128,6 +128,12 @@ public class CollectionUtil {
         return result;
     }
     public static int count(Iterator<?> iterator) {
+        return count(0x7fffffff, iterator);
+    }
+    public static int count(int limit, Iterator<?> iterator) {
+        if (limit <= 0) {
+            return limit;
+        }
         if (iterator == null || iterator instanceof EmptyItem) {
             return 0;
         }
@@ -137,9 +143,10 @@ public class CollectionUtil {
             }
         }
         int result = 0;
-        while (iterator.hasNext()) {
+        while (limit > 0 && iterator.hasNext()) {
             iterator.next();
             result ++;
+            limit --;
         }
         return result;
     }
@@ -178,18 +185,6 @@ public class CollectionUtil {
         }
         return !iterator.hasNext();
     }
-    public static<T> Collection<T> collect(Iterator<? extends T> iterator) {
-        boolean hasNext = iterator.hasNext();
-        if (!hasNext) {
-            return ArrayCollection.empty();
-        }
-        ArrayCollection<T> results = new ArrayCollection<>();
-        results.addAll(iterator);
-        if (results.size() > 1000) {
-            results.trimToSize();
-        }
-        return results;
-    }
     @SafeVarargs
     public static<T> List<T> asList(T ... elements) {
         return new ArrayCollection<>(elements);
@@ -209,12 +204,35 @@ public class CollectionUtil {
         }
         return results;
     }
-    public static<T> Iterator<T> newIterator(Collection<? extends T> collection) {
-        int size = collection.size();
-        if (size == 0) {
-            return EmptyIterator.of();
+    public static<T> List<T> collect(Iterator<? extends T> iterator) {
+        return collect(0x7fffffff, iterator);
+    }
+    public static<T> List<T> collect(int limit, Iterator<? extends T> iterator) {
+        if (limit <= 0) {
+            return EmptyList.of();
         }
-        return ArrayIterator.of(collection.toArray());
+        boolean hasNext = iterator.hasNext();
+        if (!hasNext) {
+            return EmptyList.of();
+        }
+        ArrayCollection<T> results = new ArrayCollection<>(2);
+        collect(limit, results, iterator);
+        if (results.size() > 1000) {
+            results.trimToSize();
+        }
+        return results;
+    }
+    public static<T> void collect(Collection<? super T> collection, Iterator<? extends T> iterator) {
+        collect(0x7fffffff, collection, iterator);
+    }
+    public static<T> void collect(int limit, Collection<? super T> collection, Iterator<? extends T> iterator) {
+        if (limit <= 0) {
+            return;
+        }
+        while (limit > 0 && iterator.hasNext()) {
+            collection.add(iterator.next());
+            limit --;
+        }
     }
     public static<T> Iterator<T> copyOf(Iterator<? extends T> iterator) {
         boolean hasNext = iterator.hasNext();
