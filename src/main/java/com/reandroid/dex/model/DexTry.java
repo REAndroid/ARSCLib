@@ -73,7 +73,7 @@ public class DexTry extends DexCode {
                     int address = ins.getAddress();
                     return address >= getStartAddress() && address < getEndAddress();
                 });
-        return DexInstruction.create(getDexMethod(), iterator);
+        return DexInstruction.createAll(getDexMethod(), iterator);
     }
     public int getStartAddress(){
         return getTryItem().getStartAddress();

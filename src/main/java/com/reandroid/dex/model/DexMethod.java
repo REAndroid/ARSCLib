@@ -265,11 +265,11 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
         return getInstructionsIfIns(filter);
     }
     public Iterator<DexInstruction> getInstructionsIfIns(Predicate<? super Ins> filter) {
-        Iterator<Ins> iterator = FilterIterator.of(getDefinition().getInstructions(), filter);
-        return ComputeIterator.of(iterator, this::create);
+        return DexInstruction.createAll(this,
+                FilterIterator.of(getDefinition().getInstructions(), filter));
     }
     public Iterator<DexInstruction> getInstructions() {
-        return DexInstruction.create(this, getDefinition().getInstructions());
+        return DexInstruction.createAll(this, getDefinition().getInstructions());
     }
 
     int getEditIndex() {

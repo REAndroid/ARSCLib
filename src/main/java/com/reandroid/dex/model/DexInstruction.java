@@ -42,11 +42,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -399,12 +395,41 @@ public class DexInstruction extends DexCode {
         }
         return null;
     }
+    public DexInstruction getTargetInstruction() {
+        return DexInstruction.create(getDexMethod(), getIns().getTargetIns());
+    }
+    public boolean hasTargetingInstructions() {
+        return getIns().getForcedExtraLines(Ins.class).hasNext();
+    }
+    public boolean hasTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
+        return FilterIterator.of(getIns().getForcedExtraLines(Ins.class),
+                ins -> predicate.test(ins.getOpcode())).hasNext();
+    }
+    public Iterator<DexInstruction> getTargetingInstructions() {
+        return DexInstruction.createAll(getDexMethod(),
+                CollectionUtil.copyOf(getIns().getForcedExtraLines(Ins.class)));
+    }
+    public Iterator<DexInstruction> getTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
+        Iterator<Ins> iterator = CollectionUtil.copyOf(getIns().getForcedExtraLines(Ins.class));
+        if (!iterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        iterator = FilterIterator.of(iterator, ins -> predicate.test(ins.getOpcode()));
+        return DexInstruction.createAll(getDexMethod(), iterator);
+    }
     public DexInstruction getNext() {
         return getDexMethod().getInstruction(getIndex() + 1);
+    }
+    public Iterator<DexInstruction> getNextInstructions() {
+        return LinkedIterator.of(this, DexInstruction::getNext);
     }
     public DexInstruction getPrevious() {
         return getDexMethod().getInstruction(getIndex() - 1);
     }
+    public Iterator<DexInstruction> getPreviousInstructions() {
+        return LinkedIterator.of(this, DexInstruction::getPrevious);
+    }
+
     public DexInstruction getPreviousReader(int register) {
         return getPreviousReader(register, CollectionUtil.getAcceptAll());
     }
@@ -499,8 +524,8 @@ public class DexInstruction extends DexCode {
         return getIns().toString();
     }
 
-    public static Iterator<DexInstruction> create(DexMethod dexMethod, Iterator<Ins> iterator) {
-        if (dexMethod == null) {
+    public static Iterator<DexInstruction> createAll(DexMethod dexMethod, Iterator<Ins> iterator) {
+        if (dexMethod == null || !iterator.hasNext()) {
             return EmptyIterator.of();
         }
         return ComputeIterator.of(iterator, ins -> create(dexMethod, ins));
