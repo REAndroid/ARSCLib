@@ -1064,6 +1064,10 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         int value = this.value;
         return value == 0x2b || value == 0x2c;
     }
+    public boolean isPayload() {
+        int value = this.value;
+        return value == 0x100 || value == 0x200 || value == 0x300;
+    }
     public boolean isInsBranching() {
         return isIfTest() || isGoto();
     }
