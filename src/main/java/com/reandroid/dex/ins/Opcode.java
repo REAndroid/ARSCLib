@@ -1060,6 +1060,19 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         int value = this.value;
         return value == 0x28 || value == 0x29 || value == 0x2a;
     }
+    public boolean isSwitch() {
+        int value = this.value;
+        return value == 0x2b || value == 0x2c;
+    }
+    public boolean isInsBranching() {
+        return isIfTest() || isGoto();
+    }
+    public boolean isBranching() {
+        return isInsBranching() || isSwitch();
+    }
+    public boolean isMethodExit() {
+        return isReturn() || this == THROW;
+    }
     public boolean isRange() {
         return getRegisterFormat().isRange();
     }
