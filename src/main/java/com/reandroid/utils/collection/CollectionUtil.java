@@ -235,16 +235,26 @@ public class CollectionUtil {
         }
     }
     public static<T> Iterator<T> copyOf(Iterator<? extends T> iterator) {
-        boolean hasNext = iterator.hasNext();
-        if (!hasNext) {
+        if (iterator instanceof SingleIterator) {
+            return ObjectsUtil.cast(iterator);
+        }
+        if (!iterator.hasNext()) {
             return EmptyIterator.of();
         }
-        List<T> results = toList(iterator);
+        T first = iterator.next();
+        if (!iterator.hasNext()) {
+            return SingleIterator.of(first);
+        }
+        ArrayCollection<T> results = new ArrayCollection<>(8);
+        results.add(first);
+        collect(results, iterator);
         return results.iterator();
     }
     public static<T> Iterator<T> uniqueOf(Iterator<? extends T> iterator) {
-        boolean hasNext = iterator.hasNext();
-        if (!hasNext) {
+        if (iterator instanceof SingleIterator) {
+            return ObjectsUtil.cast(iterator);
+        }
+        if (!iterator.hasNext()) {
             return EmptyIterator.of();
         }
         return new UniqueIterator<T>(ObjectsUtil.cast(iterator));
