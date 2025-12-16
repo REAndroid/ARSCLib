@@ -237,6 +237,22 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         ObjectsStore.sort(this.extraLineList, ExtraLine.COMPARATOR);
         return ObjectsStore.iterator(this.extraLineList, instance);
     }
+    public Iterator<ExtraLine> getForcedExtraLines() {
+        InstructionList instructionList = getInstructionList();
+        if (instructionList == null) {
+            return EmptyIterator.of();
+        }
+        instructionList.linkExtraLines();
+        return getExtraLines();
+    }
+    public<T1> Iterator<T1> getForcedExtraLines(Class<T1> instance) {
+        InstructionList instructionList = getInstructionList();
+        if (instructionList == null) {
+            return EmptyIterator.of();
+        }
+        instructionList.linkExtraLines();
+        return getExtraLines(instance);
+    }
     public void clearExtraLines() {
         extraLineList = ObjectsStore.clear(extraLineList);
     }
