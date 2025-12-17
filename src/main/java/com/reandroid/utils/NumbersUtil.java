@@ -78,12 +78,14 @@ public class NumbersUtil {
     }
 
     public static int bitCount(int i) {
-        i = i - (i >>> 1) & 0x55555555;
-        i = (i & 0x33333333) + (i >>> 2 & 0x33333333);
-        i = i + (i >>> 4) & 0xf0f0f0f;
-        i = i + (i >>> 8);
-        i = i + (i >>> 16);
-        return i & 63;
+        int count = 0;
+        while (i != 0) {
+            if ((i & 0x1) != 0) {
+                count ++;
+            }
+            i = i >>> 1;
+        }
+        return count;
     }
     public static int bitWidth(int num) {
         int bits = 0;
