@@ -75,9 +75,15 @@ public class SmaliSet<T extends Smali> extends Smali{
         return body.get(i);
     }
     public boolean add(T smali){
+        if (smali != null && smali.getParent() == null) {
+            smali.setParent(this);
+        }
         return body.add(smali);
     }
     public void add(int i, T smali){
+        if (smali != null && smali.getParent() == null) {
+            smali.setParent(this);
+        }
         body.add(i, smali);
     }
     public void addAll(Iterator<? extends T> iterator){

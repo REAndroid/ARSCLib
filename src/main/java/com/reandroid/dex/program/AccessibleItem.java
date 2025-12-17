@@ -28,19 +28,19 @@ public interface AccessibleItem {
     ElementType getElementType();
 
     default boolean isPublic() {
-        return AccessFlag.PUBLIC.isSet(getElementType(), getAccessFlagsValue());
+        return AccessFlag.PUBLIC.isSet(getAccessFlagsValue());
     }
     default boolean isPrivate() {
-        return AccessFlag.PRIVATE.isSet(getElementType(), getAccessFlagsValue());
+        return AccessFlag.PRIVATE.isSet(getAccessFlagsValue());
     }
     default boolean isInternal() {
         return (getAccessFlagsValue() & 0x7) == 0;
     }
     default boolean isStatic() {
-        return AccessFlag.STATIC.isSet(getElementType(), getAccessFlagsValue());
+        return AccessFlag.STATIC.isSet(getAccessFlagsValue());
     }
     default boolean isFinal() {
-        return AccessFlag.FINAL.isSet(getElementType(), getAccessFlagsValue());
+        return AccessFlag.FINAL.isSet(getAccessFlagsValue());
     }
     default boolean isProtected() {
         return AccessFlag.PROTECTED.isSet(getAccessFlagsValue());

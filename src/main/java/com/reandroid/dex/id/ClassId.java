@@ -266,6 +266,32 @@ public class ClassId extends IdItem implements ClassProgram,
     }
 
     @Override
+    public int getInstanceFieldsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getInstanceFieldsCount();
+        }
+        return 0;
+    }
+
+    @Override
+    public int getStaticFieldsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getStaticFieldsCount();
+        }
+        return 0;
+    }
+    @Override
+    public boolean hasStaticFields() {
+        return getStaticFieldsCount() != 0;
+    }
+    @Override
+    public boolean hasInstanceFields() {
+        return getInstanceFieldsCount() != 0;
+    }
+
+    @Override
     public Iterator<MethodDef> getDirectMethods() {
         ClassData classData = getClassData();
         if (classData != null) {
@@ -280,6 +306,34 @@ public class ClassId extends IdItem implements ClassProgram,
             return classData.getVirtualMethods();
         }
         return EmptyIterator.of();
+    }
+    @Override
+    public Iterator<MethodDef> declaredMethods() {
+        return CombiningIterator.two(getDirectMethods(), getVirtualMethods());
+    }
+    @Override
+    public int getDirectMethodsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getDirectMethodsCount();
+        }
+        return 0;
+    }
+    @Override
+    public int getVirtualMethodsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getVirtualMethodsCount();
+        }
+        return 0;
+    }
+    @Override
+    public boolean hasDirectMethods() {
+        return getDirectMethodsCount() != 0;
+    }
+    @Override
+    public boolean hasVirtualMethods() {
+        return getVirtualMethodsCount() != 0;
     }
 
     public TypeKey getDalvikEnclosing() {

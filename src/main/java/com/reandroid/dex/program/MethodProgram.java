@@ -22,7 +22,7 @@ import com.reandroid.dex.key.ProtoKey;
 import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
-public interface MethodProgram extends AccessibleProgram {
+public interface MethodProgram extends MemberProgram {
 
     @Override
     MethodKey getKey();
@@ -43,13 +43,6 @@ public interface MethodProgram extends AccessibleProgram {
         MethodKey key = getKey();
         if (key != null) {
             return key.getProto();
-        }
-        return null;
-    }
-    default String getName() {
-        MethodKey key = getKey();
-        if (key != null) {
-            return key.getName();
         }
         return null;
     }

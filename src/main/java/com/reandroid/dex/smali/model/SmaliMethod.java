@@ -37,7 +37,7 @@ import com.reandroid.dex.smali.fix.SmaliGotoFix;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTable {
+public class SmaliMethod extends SmaliMember implements MethodProgram, RegistersTable {
 
     private ProtoKey protoKey;
 
@@ -161,7 +161,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
-        setHiddenApiFlags(HiddenApiFlag.parse(reader));
+        setHiddenApiFlagsValue(HiddenApiFlag.parseValues(reader));
         setName(StringKey.readSimpleName(reader, '('));
         parseProto(reader);
         if (reader.checkInterned(getKey())) {

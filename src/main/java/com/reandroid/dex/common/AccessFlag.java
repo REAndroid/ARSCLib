@@ -16,13 +16,17 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 public class AccessFlag extends Modifier {
@@ -44,66 +48,63 @@ public class AccessFlag extends Modifier {
     public static final AccessFlag SYNTHETIC;
     public static final AccessFlag ANNOTATION;
     public static final AccessFlag ENUM;
+
     // for flags of dalvik.annotation.MethodParameters
     public static final AccessFlag MANDATED;
+
     public static final AccessFlag CONSTRUCTOR;
     public static final AccessFlag DECLARED_SYNCHRONIZED;
 
     private static final AccessFlag[] VALUES;
+    private static final AccessFlag[] METHOD_VALUES;
+    private static final int MASK;
 
     private static final HashMap<String, AccessFlag> accessFlagsByName;
 
     static {
 
-        PUBLIC = new AccessFlag(0x1, "public", true, true, true);
-        PRIVATE = new AccessFlag(0x2, "private", true, true, true);
-        PROTECTED = new AccessFlag(0x4, "protected", true, true, true);
-        STATIC = new AccessFlag(0x8, "static", true, true, true);
-        FINAL = new AccessFlag(0x10, "final", true, true, true);
-        SYNCHRONIZED = new AccessFlag(0x20, "synchronized", false, true, false);
-        VOLATILE = new AccessFlag(0x40, "volatile", false, false, true);
-        BRIDGE = new AccessFlag(0x40, "bridge", false, true, false);
-        TRANSIENT = new AccessFlag(0x80, "transient", false, false, true);
-        VARARGS = new AccessFlag(0x80, "varargs", false, true, false);
-        NATIVE = new AccessFlag(0x100, "native", false, true, false);
-        INTERFACE = new AccessFlag(0x200, "interface", true, false, false);
-        ABSTRACT = new AccessFlag(0x400, "abstract", true, true, false);
-        STRICTFP = new AccessFlag(0x800, "strictfp", false, true, false);
-        SYNTHETIC = new AccessFlag(0x1000, "synthetic", true, true, true);
-        ANNOTATION = new AccessFlag(0x2000, "annotation", true, false, false);
-        ENUM = new AccessFlag(0x4000, "enum", true, false, true);
-        MANDATED = new AccessFlag(0x8000, "mandated", false, false, false);
-        CONSTRUCTOR = new AccessFlag(0x10000, "constructor", false, true, false);
-        DECLARED_SYNCHRONIZED = new AccessFlag(0x20000, "declared-synchronized", false, true, false);
+        AccessFlag[] values = new AccessFlag[18];
+        VALUES = values;
 
-        VALUES = new AccessFlag[]{
-                PUBLIC,
-                PRIVATE,
-                PROTECTED,
-                STATIC,
-                FINAL,
-                SYNCHRONIZED,
-                VOLATILE,
-                BRIDGE,
-                TRANSIENT,
-                VARARGS,
-                NATIVE,
-                INTERFACE,
-                ABSTRACT,
-                STRICTFP,
-                SYNTHETIC,
-                ANNOTATION,
-                ENUM,
-                MANDATED,
-                CONSTRUCTOR,
-                DECLARED_SYNCHRONIZED
-        };
+        PUBLIC = values[0] = new AccessFlag(0x1, "public", true, true, true);
+        PRIVATE = values[1] = new AccessFlag(0x1 << 1, "private", true, true, true);
+        PROTECTED = values[2] = new AccessFlag(0x1 << 2, "protected", true, true, true);
+        STATIC = values[3] = new AccessFlag(0x1 << 3, "static", true, true, true);
+        FINAL = values[4] = new AccessFlag(0x1 << 4, "final", true, true, true);
+        SYNCHRONIZED = values[5] = new AccessFlag(0x1 << 5, "synchronized", false, true, false);
 
-        accessFlagsByName = new HashMap<>();
-        for (AccessFlag accessFlag : VALUES) {
-            accessFlagsByName.put(accessFlag.getName(), accessFlag);
+        VOLATILE = values[6] = new AccessFlag(0x1 << 6, "volatile", false, false, true);
+        BRIDGE = new AccessFlag(0x1 << 6, "bridge", false, true, false);
+
+        TRANSIENT = values[7] = new AccessFlag(0x1 << 7, "transient", false, false, true);
+        VARARGS = new AccessFlag(0x1 << 7, "varargs", false, true, false);
+
+        NATIVE = values[8] = new AccessFlag(0x1 << 8, "native", false, true, false);
+        INTERFACE = values[9] = new AccessFlag(0x1 << 9, "interface", true, false, false);
+        ABSTRACT = values[10] = new AccessFlag(0x1 << 10, "abstract", true, true, false);
+        STRICTFP = values[11] = new AccessFlag(0x1 << 11, "strictfp", false, true, false);
+        SYNTHETIC = values[12] = new AccessFlag(0x1 << 12, "synthetic", true, true, true);
+        ANNOTATION = values[13] = new AccessFlag(0x1 << 13, "annotation", true, false, false);
+        ENUM = values[14] = new AccessFlag(0x1 << 14, "enum", true, false, true);
+        MANDATED = values[15] = new AccessFlag(0x1 << 15, "mandated", false, false, false);
+        CONSTRUCTOR = values[16] = new AccessFlag(0x1 << 16, "constructor", false, true, false);
+        DECLARED_SYNCHRONIZED = values[17] = new AccessFlag(0x1 << 17, "declared-synchronized", false, true, false);
+
+        MASK = (0x1 << values.length) - 1;
+
+        AccessFlag[] methodValues = values.clone();
+        methodValues[6] = BRIDGE;
+        methodValues[7] = VARARGS;
+        METHOD_VALUES = methodValues;
+
+        HashMap<String, AccessFlag> map = new HashMap<>(20);
+        accessFlagsByName = map;
+
+        for (AccessFlag accessFlag : values) {
+            map.put(accessFlag.getName(), accessFlag);
         }
-
+        map.put(BRIDGE.getName(), BRIDGE);
+        map.put(VARARGS.getName(), VARARGS);
     }
 
     private final boolean validForClass;
@@ -118,64 +119,93 @@ public class AccessFlag extends Modifier {
         this.validForField = validForField;
     }
 
+    public boolean isValidForClass() {
+        return validForClass;
+    }
+    public boolean isValidForField() {
+        return validForField;
+    }
+    public boolean isValidForMethod() {
+        return validForMethod;
+    }
+
     @Override
     public boolean isSet(int accessFlags) {
         return (getValue() & accessFlags) != 0;
     }
-    public boolean isSet(ElementType elementType, int accessFlags) {
-        if (elementType == ElementType.TYPE) {
-            return isSetForClass(accessFlags);
-        }
-        if (elementType == ElementType.FIELD) {
-            return isSetForField(accessFlags);
-        }
-        if (elementType == ElementType.METHOD) {
-            return isSetForMethod(accessFlags);
-        }
-        return false;
-    }
-    private boolean isSetForField(int value) {
-        return validForField && (getValue() & value) != 0;
-    }
-    private boolean isSetForMethod(int value) {
-        return validForMethod && (getValue() & value) != 0;
-    }
-    private boolean isSetForClass(int value) {
-        return validForClass && (getValue() & value) != 0;
-    }
 
     public static Iterator<AccessFlag> valuesOf(ElementType elementType, int value) {
-        if (elementType == ElementType.TYPE) {
-            return valuesOfClass(value);
-        }
-        if (elementType == ElementType.FIELD) {
-            return valuesOfField(value);
-        }
-        if (elementType == ElementType.METHOD) {
-            return valuesOfMethod(value);
-        }
-        return valuesOf(value);
-    }
-    public static Iterator<AccessFlag> valuesOfClass(int value) {
-        return getValues(accessFlag -> accessFlag.isSetForClass(value));
-    }
-    public static Iterator<AccessFlag> valuesOfMethod(int value) {
-        return getValues(accessFlag -> accessFlag.isSetForMethod(value));
-    }
-    public static Iterator<AccessFlag> valuesOfField(int value) {
-        return getValues(accessFlag -> accessFlag.isSetForField(value));
+        return valuesOf(elementType == ElementType.METHOD, value);
     }
     public static Iterator<AccessFlag> valuesOf(int value) {
-        return getValues(accessFlag -> accessFlag.isSet(value));
+        value = value & MASK;
+        if (value == 0) {
+            return EmptyIterator.of();
+        }
+        return new FlagsIterator(VALUES, value);
+    }
+    public static Iterator<AccessFlag> valuesOf(boolean method, int value) {
+        value = value & MASK;
+        if (value == 0) {
+            return EmptyIterator.of();
+        }
+        AccessFlag[] values;
+        if (method) {
+            values = METHOD_VALUES;
+        } else {
+            values = VALUES;
+        }
+        return new FlagsIterator(values, value);
     }
     public static AccessFlag valueOf(String name) {
         return accessFlagsByName.get(name);
     }
     public static Iterator<AccessFlag> getValues() {
-        return getValues(null);
+        return new ArrayIterator<>(VALUES);
     }
     public static Iterator<AccessFlag> getValues(Predicate<AccessFlag> filter) {
         return new ArrayIterator<>(VALUES, filter);
+    }
+    public static String toString(int flags) {
+        return toString(false, flags);
+    }
+    public static String toString(boolean method, int flags) {
+        flags = flags & MASK;
+        if (flags == 0) {
+            return StringsUtil.EMPTY;
+        }
+        StringBuilder builder = new StringBuilder();
+        try {
+            append(method, flags, builder);
+        } catch (IOException e) {
+            builder.append(" # Unexpected AccessFlags.append: ");
+            builder.append(e.getMessage());
+        }
+        return builder.toString();
+    }
+    public static void append(int flags, Appendable appendable) throws IOException {
+        append(false, flags, appendable);
+    }
+    public static void append(boolean method, int flags, Appendable appendable) throws IOException {
+        flags = flags & MASK;
+        if (flags == 0) {
+            return;
+        }
+        AccessFlag[] values;
+        if (method) {
+            values = METHOD_VALUES;
+        } else {
+            values = VALUES;
+        }
+        int i = 0;
+        while (flags != 0) {
+            if ((flags & 0x1) != 0) {
+                appendable.append(values[i].getName());
+                appendable.append(' ');
+            }
+            flags = flags >>> 1;
+            i ++;
+        }
     }
     public static AccessFlag[] parse(SmaliReader reader) {
         List<AccessFlag> accessFlags = null;
@@ -219,5 +249,36 @@ public class AccessFlag extends Modifier {
             }
         }
         return result;
+    }
+    static class FlagsIterator implements Iterator<AccessFlag> {
+
+        private final AccessFlag[] values;
+        private int flags;
+        private int index;
+
+        public FlagsIterator(AccessFlag[] values, int flags) {
+            this.values = values;
+            this.flags = flags;
+        }
+        @Override
+        public boolean hasNext() {
+            return flags != 0;
+        }
+        @Override
+        public AccessFlag next() {
+            int flags = this.flags;
+            if (flags == 0) {
+                throw new NoSuchElementException();
+            }
+            int index = this.index;
+            while ((flags & 0x1) == 0) {
+                flags = flags >>> 1;
+                index ++;
+            }
+            AccessFlag accessFlag = values[index];
+            this.flags = flags >>> 1;
+            this.index = index + 1;
+            return accessFlag;
+        }
     }
 }

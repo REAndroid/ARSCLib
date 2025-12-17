@@ -27,12 +27,9 @@ import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.AnnotationSetKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ProgramKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.pool.DexSectionPool;
+import com.reandroid.dex.program.MemberProgram;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -47,7 +44,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool implements
-        IdDefinition<T>, EditableItem, Comparable<Def<T>>, SmaliRegion,
+        IdDefinition<T>, MemberProgram, EditableItem, Comparable<Def<T>>, SmaliRegion,
         DefIndex, IdUsageIterator {
 
     private final SectionType<T> sectionType;
@@ -112,13 +109,9 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         }
         return null;
     }
-
     @Override
-    public Iterator<? extends Modifier> getModifiers() {
-        return CombiningIterator.two(getAccessFlags(), getHiddenApiFlags());
-    }
     public Iterator<HiddenApiFlag> getHiddenApiFlags() {
-        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        HiddenApiFlagValue flagValue = getHiddenApiFlag();
         if (flagValue != null) {
             return flagValue.iterator();
         }
@@ -137,20 +130,20 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     public void removeHiddenApiFlag(HiddenApiFlag flag) {
         if (flag != null) {
-            HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+            HiddenApiFlagValue flagValue = getHiddenApiFlag();
             if (flagValue != null) {
                 flagValue.remove(flag);
             }
         }
     }
     public void removeHiddenApiFlags() {
-        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        HiddenApiFlagValue flagValue = getHiddenApiFlag();
         if (flagValue != null) {
             flagValue.clear();
         }
     }
     public HiddenApiFlagValue getOrCreateHiddenApiFlagValue() {
-        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        HiddenApiFlagValue flagValue = getHiddenApiFlag();
         if (flagValue == null) {
             Section<HiddenApiRestrictions> section = getOrCreateSection(SectionType.HIDDEN_API);
             HiddenApiRestrictions restrictions = section.get(0);
@@ -161,7 +154,24 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         }
         return flagValue;
     }
-    public HiddenApiFlagValue getHiddenApiFlagValue() {
+    @Override
+    public int getHiddenApiFlagsValue() {
+        HiddenApiFlagValue flagValue = getHiddenApiFlag();
+        if (flagValue != null) {
+            return flagValue.get();
+        }
+        return HiddenApiFlag.NO_RESTRICTION;
+    }
+    @Override
+    public void setHiddenApiFlagsValue(int value) {
+        if (value == HiddenApiFlag.NO_RESTRICTION) {
+            removeHiddenApiFlags();
+        } else {
+            HiddenApiFlagValue flagValue = getOrCreateHiddenApiFlagValue();
+            flagValue.set(value);
+        }
+    }
+    public HiddenApiFlagValue getHiddenApiFlag() {
         return hiddenApiFlagValue;
     }
     public void linkHiddenApiFlagValueInternal(HiddenApiFlagValue hiddenApiFlagValue) {
@@ -183,7 +193,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         return id == null || id.isRemoved();
     }
     void onRemove() {
-        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        HiddenApiFlagValue flagValue = getHiddenApiFlag();
         if (flagValue != null) {
             this.linkHiddenApiFlagValueInternal(null);
             flagValue.removeSelf();
@@ -193,7 +203,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         relativeId.set(0);
     }
     @Override
-    public abstract ProgramKey getKey();
+    public abstract MemberKey getKey();
 
     public void setKey(Key key) {
         setItem(key);
@@ -375,7 +385,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     public void merge(Def<?> def) {
         setItem(def.getKey());
         setAccessFlagsValue(def.getAccessFlagsValue());
-        HiddenApiFlagValue flagValue = def.getHiddenApiFlagValue();
+        HiddenApiFlagValue flagValue = def.getHiddenApiFlag();
         if (flagValue != null) {
             addHiddenApiFlag(flagValue.getRestriction());
             addHiddenApiFlag(flagValue.getDomain());

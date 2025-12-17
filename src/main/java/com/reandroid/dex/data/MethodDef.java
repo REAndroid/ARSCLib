@@ -19,7 +19,6 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
-import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.MethodId;
@@ -372,7 +371,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         SmaliMethod smaliMethod = (SmaliMethod) smali;
         setKey(smaliMethod.getKey());
         setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
-        addHiddenApiFlags(smaliMethod.getHiddenApiFlags());
+        setHiddenApiFlagsValue(smaliMethod.getHiddenApiFlagsValue());
         if (smaliMethod.hasInstructions()) {
             getOrCreateCodeItem().fromSmali(smaliMethod);
         }
@@ -400,8 +399,8 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     public SmaliMethod toSmali() {
         SmaliMethod smaliMethod = new SmaliMethod();
         smaliMethod.setKey(getKey());
-        smaliMethod.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
-        smaliMethod.setHiddenApiFlags(getHiddenApiFlags());
+        smaliMethod.setAccessFlagsValue(getAccessFlagsValue());
+        smaliMethod.setHiddenApiFlagsValue(getHiddenApiFlagsValue());
         smaliMethod.setAnnotation(getAnnotation());
         CodeItem codeItem = getCodeItem();
         if (codeItem != null) {

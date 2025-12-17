@@ -18,6 +18,8 @@ package com.reandroid.dex.program;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 
 import java.lang.annotation.ElementType;
 import java.util.Iterator;
@@ -33,9 +35,62 @@ public interface ClassProgram extends AccessibleProgram {
 
     Iterator<? extends FieldProgram> getStaticFields();
     Iterator<? extends FieldProgram> getInstanceFields();
+    default Iterator<? extends FieldProgram> declaredFields() {
+        return CombiningIterator.two(getStaticFields(), getInstanceFields());
+    }
+    // use declaredFields();
+    @Deprecated
+    default Iterator<? extends FieldProgram> getDeclaredFields() {
+        return declaredFields();
+    }
+    default int getStaticFieldsCount() {
+        return CollectionUtil.count(getStaticFields());
+    }
+    default int getInstanceFieldsCount() {
+        return CollectionUtil.count(getInstanceFields());
+    }
+    default int getDeclaredFieldsCount() {
+        return getStaticFieldsCount() + getInstanceFieldsCount();
+    }
+    default boolean hasStaticFields() {
+        return getStaticFields().hasNext();
+    }
+    default boolean hasInstanceFields() {
+        return getInstanceFields().hasNext();
+    }
+    default boolean hasDeclaredFields() {
+        return hasStaticFields() || hasInstanceFields();
+    }
 
     Iterator<? extends MethodProgram> getDirectMethods();
     Iterator<? extends MethodProgram> getVirtualMethods();
+
+    default Iterator<? extends MethodProgram> declaredMethods() {
+        return CombiningIterator.two(getDirectMethods(), getVirtualMethods());
+    }
+    // use declaredMethods();
+    @Deprecated
+    default Iterator<? extends MethodProgram> getDeclaredMethods() {
+        return declaredMethods();
+    }
+    default int getDirectMethodsCount() {
+        return CollectionUtil.count(getDirectMethods());
+    }
+    default int getVirtualMethodsCount() {
+        return CollectionUtil.count(getVirtualMethods());
+    }
+    default int getDeclaredMethodsCount() {
+        return getDirectMethodsCount() + getVirtualMethodsCount();
+    }
+    default boolean hasDirectMethods() {
+        return getDirectMethods().hasNext();
+    }
+    default boolean hasVirtualMethods() {
+        return getVirtualMethods().hasNext();
+    }
+    default boolean hasDeclaredMethods() {
+        return hasDirectMethods() || hasVirtualMethods();
+    }
 
     @Override
     default ElementType getElementType() {

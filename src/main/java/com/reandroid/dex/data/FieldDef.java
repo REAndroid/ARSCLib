@@ -16,7 +16,6 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
@@ -217,7 +216,8 @@ public class FieldDef extends Def<FieldId> implements FieldProgram {
     public SmaliField toSmali() {
         SmaliField smaliField = new SmaliField();
         smaliField.setKey(getKey());
-        smaliField.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
+        smaliField.setAccessFlagsValue(getAccessFlagsValue());
+        smaliField.setHiddenApiFlagsValue(getHiddenApiFlagsValue());
         smaliField.setStaticValue(getStaticValue());
         smaliField.setAnnotation(getAnnotation());
         return smaliField;

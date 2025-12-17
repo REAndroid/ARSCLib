@@ -28,7 +28,7 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 
-public class FieldKey implements ProgramKey {
+public class FieldKey implements MemberKey {
 
     private final TypeKey declaring;
     private final StringKey name;
@@ -51,6 +51,7 @@ public class FieldKey implements ProgramKey {
     public StringKey getNameKey() {
         return name;
     }
+    @Override
     public String getName() {
         return getNameKey().getString();
     }
@@ -64,6 +65,7 @@ public class FieldKey implements ProgramKey {
         }
         return create(typeKey, getNameKey(), getType());
     }
+    @Override
     public FieldKey changeName(String name) {
         if (name.equals(getName())) {
             return this;

@@ -13,28 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.program;
+package com.reandroid.dex.key;
 
-import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.key.FieldKey;
-import com.reandroid.dex.key.Key;
+public interface MemberKey extends ProgramKey {
 
-import java.lang.annotation.ElementType;
+    String getName();
+    MemberKey changeName(String name);
 
-public interface FieldProgram extends MemberProgram {
-
-    @Override
-    FieldKey getKey();
-    Key getStaticValue();
-
-    default boolean isEnum() {
-        return AccessFlag.ENUM.isSet(getAccessFlagsValue());
-    }
-    @Override
-    default ElementType getElementType() {
-        return ElementType.FIELD;
-    }
-    default boolean isInstance() {
-        return !isStatic();
-    }
 }

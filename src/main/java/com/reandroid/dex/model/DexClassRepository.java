@@ -387,7 +387,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return new IterableIterator<DexClass, DexMethod>(getDexClasses()) {
             @Override
             public Iterator<DexMethod> iterator(DexClass dexClass) {
-                return dexClass.getDeclaredMethods();
+                return dexClass.declaredMethods();
             }
         };
     }
@@ -395,7 +395,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         return new IterableIterator<DexClass, DexField>(getDexClasses()) {
             @Override
             public Iterator<DexField> iterator(DexClass dexClass) {
-                return dexClass.getDeclaredFields();
+                return dexClass.declaredFields();
             }
         };
     }

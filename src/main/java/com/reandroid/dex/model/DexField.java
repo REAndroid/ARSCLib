@@ -36,11 +36,21 @@ public class DexField extends DexDeclaration implements FieldProgram {
         this.fieldDef = fieldDef;
     }
 
+    @Override
     public String getName(){
         return getId().getName();
     }
     public void setName(String name){
         getId().setName(name);
+    }
+
+    @Override
+    public int getHiddenApiFlagsValue() {
+        return getDefinition().getHiddenApiFlagsValue();
+    }
+    @Override
+    public void setHiddenApiFlagsValue(int value) {
+        getDefinition().setHiddenApiFlagsValue(value);
     }
 
     @Override

@@ -94,6 +94,9 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
             return e.getMessage();
         }
     }
+    public String toSmaliString() {
+        return SmaliWriter.toStringSafe(this);
+    }
     @Override
     public String toString() {
         return SmaliWriter.toStringSafe(this);

@@ -117,6 +117,19 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
     public Iterator<SmaliField> getInstanceFields() {
         return fields.getInstanceFields();
     }
+    @Override
+    public Iterator<SmaliField> declaredFields() {
+        return fields.iterator();
+    }
+    @Override
+    public int getDeclaredFieldsCount() {
+        return fields.size();
+    }
+    @Override
+    public boolean hasDeclaredFields() {
+        return !fields.isEmpty();
+    }
+
     public void addFields(Iterator<SmaliField> iterator) {
         fields.addAll(iterator);
     }
@@ -128,6 +141,19 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
     public Iterator<SmaliMethod> getVirtualMethods() {
         return methods.getVirtualMethods();
     }
+    @Override
+    public Iterator<SmaliMethod> declaredMethods() {
+        return methods.iterator();
+    }
+    @Override
+    public int getDeclaredMethodsCount() {
+        return methods.size();
+    }
+    @Override
+    public boolean hasDeclaredMethods() {
+        return !methods.isEmpty();
+    }
+
     public void addMethods(Iterator<SmaliMethod> iterator) {
         methods.addAll(iterator);
     }

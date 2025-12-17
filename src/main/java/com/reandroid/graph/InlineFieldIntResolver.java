@@ -57,7 +57,7 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
         return mResolvedCount;
     }
     private void scanClass(DexClass dexClass) {
-        Iterator<DexMethod> iterator = dexClass.getDeclaredMethods();
+        Iterator<DexMethod> iterator = dexClass.declaredMethods();
         while (iterator.hasNext()) {
             scanMethod(iterator.next());
         }

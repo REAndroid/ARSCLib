@@ -29,6 +29,7 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.program.ClassProgram;
+import com.reandroid.dex.program.FieldProgram;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliField;
@@ -41,7 +42,6 @@ import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.UniqueIterator;
-import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -66,14 +66,14 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         if (isNative()) {
             return true;
         }
-        Iterator<DexMethod> methods = getDeclaredMethods();
+        Iterator<DexMethod> methods = declaredMethods();
         while (methods.hasNext()) {
             DexMethod dexMethod = methods.next();
             if (dexMethod.isNative()) {
                 return true;
             }
         }
-        Iterator<DexField> fields = getDeclaredFields();
+        Iterator<DexField> fields = declaredFields();
         while (fields.hasNext()) {
             DexField dexField = fields.next();
             if (dexField.isNative()) {
@@ -164,7 +164,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return getDeclaredField(fieldKey);
     }
     public DexField getDeclaredField(FieldKey fieldKey) {
-        Iterator<DexField> iterator = getDeclaredFields();
+        Iterator<DexField> iterator = declaredFields();
         while (iterator.hasNext()) {
             DexField dexField = iterator.next();
             if (fieldKey.equalsIgnoreDeclaring(dexField.getKey())) {
@@ -174,7 +174,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return null;
     }
     public DexField getDeclaredField(String name) {
-        Iterator<DexField> iterator = getDeclaredFields();
+        Iterator<DexField> iterator = declaredFields();
         while (iterator.hasNext()) {
             DexField dexField = iterator.next();
             if (ObjectsUtil.equals(dexField.getName(), name)) {
@@ -259,7 +259,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return getDeclaredMethod(methodKey, false);
     }
     public DexMethod getDeclaredMethod(MethodKey methodKey, boolean ignoreReturnType) {
-        Iterator<DexMethod> iterator = getDeclaredMethods();
+        Iterator<DexMethod> iterator = declaredMethods();
         while (iterator.hasNext()) {
             DexMethod dexMethod = iterator.next();
             MethodKey key = dexMethod.getKey();
@@ -272,7 +272,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return null;
     }
     public Iterator<DexMethod> getDeclaredMethods(MethodKey methodKey) {
-        return FilterIterator.of(getDeclaredMethods(),
+        return FilterIterator.of(declaredMethods(),
                 dexMethod -> methodKey.equalsNameAndParameters(dexMethod.getKey()));
     }
     public Iterator<DexClass> getOverridingAndSuperTypes() {
@@ -290,7 +290,6 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
                 return CombiningIterator.two(SingleIterator.of(element), element.getSuperTypes());
             }
         };
-
         return new UniqueIterator<>(iterator).exclude(this);
     }
     public Iterator<DexClass> getOverriding() {
@@ -341,7 +340,14 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         }
         return false;
     }
-    public Iterator<DexField> getDeclaredFields() {
+
+    @Deprecated
+    @Override
+    public Iterator<? extends FieldProgram> getDeclaredFields() {
+        return declaredFields();
+    }
+    @Override
+    public Iterator<DexField> declaredFields() {
         return CombiningIterator.two(getStaticFields(), getInstanceFields());
     }
 
@@ -359,6 +365,24 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     public Iterator<DexField> getInstanceFields() {
         return ComputeIterator.of(getId().getInstanceFields(), this::initializeField);
     }
+
+    @Override
+    public int getStaticFieldsCount() {
+        return getId().getStaticFieldsCount();
+    }
+    @Override
+    public int getInstanceFieldsCount() {
+        return getId().getInstanceFieldsCount();
+    }
+    @Override
+    public boolean hasStaticFields() {
+        return getId().hasStaticFields();
+    }
+    @Override
+    public boolean hasInstanceFields() {
+        return getId().hasInstanceFields();
+    }
+
     public DexField getOrCreateInstanceField(FieldKey fieldKey) {
         return initializeField(getOrCreateInstance(fieldKey));
     }
@@ -366,13 +390,20 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return getOrCreateClassData().getOrCreateInstance(fieldKey);
     }
     public Iterator<DexMethod> getDeclaredMethods(Predicate<DexMethod> filter) {
-        Iterator<DexMethod> iterator = getDeclaredMethods();
+        Iterator<DexMethod> iterator = declaredMethods();
         if (filter == null) {
             return iterator;
         }
         return FilterIterator.of(iterator, filter);
     }
+    // use declaredMethods();
+    @Deprecated
+    @Override
     public Iterator<DexMethod> getDeclaredMethods() {
+        return declaredMethods();
+    }
+    @Override
+    public Iterator<DexMethod> declaredMethods() {
         return CombiningIterator.two(getDirectMethods(), getVirtualMethods());
     }
     @Override
@@ -383,6 +414,26 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
     public Iterator<DexMethod> getVirtualMethods() {
         return ComputeIterator.of(getId().getVirtualMethods(), this::initializeMethod);
     }
+
+    @Override
+    public int getDirectMethodsCount() {
+        return getId().getDirectMethodsCount();
+    }
+    @Override
+    public int getVirtualMethodsCount() {
+        return getId().getVirtualMethodsCount();
+    }
+
+    @Override
+    public boolean hasDirectMethods() {
+        return getId().hasDirectMethods();
+    }
+    @Override
+    public boolean hasVirtualMethods() {
+        return getId().hasVirtualMethods();
+    }
+
+
     public DexMethod getOrCreateDirectMethod(MethodKey methodKey) {
         return initializeMethod(getOrCreateClassData().getOrCreateDirect(methodKey));
     }
@@ -495,7 +546,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         getId().setInterfaces(TypeListKey.empty());
     }
     public void clearDebug() {
-        Iterator<DexMethod> iterator = getDeclaredMethods();
+        Iterator<DexMethod> iterator = declaredMethods();
         while (iterator.hasNext()) {
             iterator.next().clearDebug();
         }
@@ -523,7 +574,7 @@ public class DexClass extends DexDeclaration implements ClassProgram, Comparable
         return results;
     }
     private void fixMethodAccessibility(Set<Key> results) {
-        Iterator<DexMethod> iterator = getDeclaredMethods();
+        Iterator<DexMethod> iterator = declaredMethods();
         while (iterator.hasNext()) {
             DexMethod dexMethod = iterator.next();
             if (dexMethod.isPrivate()) {

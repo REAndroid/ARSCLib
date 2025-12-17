@@ -31,7 +31,7 @@ import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class MethodKey implements ProgramKey {
+public class MethodKey implements MemberKey {
 
     private final TypeKey declaring;
     private final StringKey nameKey;
@@ -63,6 +63,7 @@ public class MethodKey implements ProgramKey {
         }
         return new MethodKey(typeKey, getNameKey(), getProto());
     }
+    @Override
     public MethodKey changeName(String name) {
         return changeName(StringKey.create(name));
     }
@@ -106,6 +107,7 @@ public class MethodKey implements ProgramKey {
     public TypeListKey getParameters() {
         return getProto().getParameters();
     }
+    @Override
     public String getName() {
         return getNameKey().getString();
     }

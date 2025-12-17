@@ -67,120 +67,148 @@ public class ClassData extends DataItem implements SmaliFormat {
         return SectionType.CLASS_DATA;
     }
 
-    public void remove(Key key){
+    public void remove(Key key) {
         Def<?> def = get(key);
-        if(def != null){
+        if (def != null) {
             def.removeSelf();
         }
     }
-    public Def<?> get(Key key){
-        if(key instanceof FieldKey){
+    public Def<?> get(Key key) {
+        if (key instanceof FieldKey) {
             return getField((FieldKey) key);
         }
-        if(key instanceof MethodKey){
+        if (key instanceof MethodKey) {
             return getMethod((MethodKey) key);
         }
-        if(key != null){
+        if (key != null) {
             throw new RuntimeException("Unknown key type: "
                     + key.getClass() + ", '" + key + "'");
         }
         return null;
     }
-    public FieldDef getField(FieldKey key){
+    public FieldDef getField(FieldKey key) {
         FieldDef fieldDef = null;
         FieldDefArray fieldDefArray = this.staticFields;
-        if(fieldDefArray != null){
+        if (fieldDefArray != null) {
             fieldDef = fieldDefArray.get(key);
         }
-        if(fieldDef == null){
+        if (fieldDef == null) {
             fieldDefArray = this.instanceFields;
-            if(fieldDefArray != null){
+            if (fieldDefArray != null) {
                 fieldDef = fieldDefArray.get(key);
             }
         }
         return fieldDef;
     }
-    public MethodDef getMethod(MethodKey key){
+    public MethodDef getMethod(MethodKey key) {
         MethodDef methodDef = null;
         MethodDefArray methodDefArray = this.directMethods;
-        if(methodDefArray != null){
+        if (methodDefArray != null) {
             methodDef = methodDefArray.get(key);
         }
-        if(methodDef == null){
+        if (methodDef == null) {
             methodDefArray = this.virtualMethods;
-            if(methodDefArray != null){
+            if (methodDefArray != null) {
                 methodDef = methodDefArray.get(key);
             }
         }
         return methodDef;
     }
-    public FieldDef getOrCreateStatic(FieldKey fieldKey){
+    public FieldDef getOrCreateStatic(FieldKey fieldKey) {
         FieldDef fieldDef = initStaticFieldsArray().getOrCreate(fieldKey);
         fieldDef.addAccessFlag(AccessFlag.STATIC);
         return fieldDef;
     }
-    public FieldDef getOrCreateInstance(FieldKey fieldKey){
+    public FieldDef getOrCreateInstance(FieldKey fieldKey) {
         return initInstanceFieldsArray().getOrCreate(fieldKey);
     }
 
 
-    public MethodDef getOrCreateDirect(MethodKey methodKey){
+    public MethodDef getOrCreateDirect(MethodKey methodKey) {
         return initDirectMethodsArray().getOrCreate(methodKey);
     }
-    public MethodDef getOrCreateVirtual(MethodKey methodKey){
+    public MethodDef getOrCreateVirtual(MethodKey methodKey) {
         return initVirtualMethodsArray().getOrCreate(methodKey);
     }
-    public Iterator<FieldDef> getFields(){
+    public Iterator<FieldDef> getFields() {
         return new CombiningIterator<>(getStaticFields(), getInstanceFields());
     }
-    public Iterator<MethodDef> getMethods(){
+    public Iterator<MethodDef> getMethods() {
         return new CombiningIterator<>(getDirectMethods(), getVirtualMethods());
     }
-    public Iterator<MethodDef> getDirectMethods(){
+    public Iterator<MethodDef> getDirectMethods() {
         MethodDefArray methodDefArray = this.directMethods;
-        if(methodDefArray == null){
+        if (methodDefArray == null) {
             return EmptyIterator.of();
         }
         return methodDefArray.arrayIterator();
+    }
+    public int getDirectMethodsCount() {
+        MethodDefArray methodDefArray = this.directMethods;
+        if (methodDefArray != null) {
+            return methodDefArray.size();
+        }
+        return 0;
+    }
+    public int getVirtualMethodsCount() {
+        MethodDefArray methodDefArray = this.virtualMethods;
+        if (methodDefArray != null) {
+            return methodDefArray.size();
+        }
+        return 0;
     }
 
-    public Iterator<MethodDef> getVirtualMethods(){
+    public Iterator<MethodDef> getVirtualMethods() {
         MethodDefArray methodDefArray = this.virtualMethods;
-        if(methodDefArray == null){
+        if (methodDefArray == null) {
             return EmptyIterator.of();
         }
         return methodDefArray.arrayIterator();
     }
-    public Iterator<FieldDef> getStaticFields(){
+    public Iterator<FieldDef> getStaticFields() {
         FieldDefArray fieldDefArray = this.staticFields;
-        if(fieldDefArray == null){
+        if (fieldDefArray == null) {
             return EmptyIterator.of();
         }
         return fieldDefArray.arrayIterator();
     }
-    public Iterator<FieldDef> getInstanceFields(){
+    public Iterator<FieldDef> getInstanceFields() {
         FieldDefArray fieldDefArray = this.instanceFields;
-        if(fieldDefArray == null){
+        if (fieldDefArray == null) {
             return EmptyIterator.of();
         }
         return fieldDefArray.arrayIterator();
     }
-    public StaticFieldDefArray getStaticFieldsArray(){
+    public int getStaticFieldsCount() {
+        FieldDefArray fieldDefArray = this.staticFields;
+        if (fieldDefArray != null) {
+            return fieldDefArray.size();
+        }
+        return 0;
+    }
+    public int getInstanceFieldsCount() {
+        FieldDefArray fieldDefArray = this.instanceFields;
+        if (fieldDefArray != null) {
+            return fieldDefArray.size();
+        }
+        return 0;
+    }
+    public StaticFieldDefArray getStaticFieldsArray() {
         return staticFields;
     }
-    public FieldDefArray getInstanceFieldsArray(){
+    public FieldDefArray getInstanceFieldsArray() {
         return instanceFields;
     }
-    public MethodDefArray getDirectMethodsArray(){
+    public MethodDefArray getDirectMethodsArray() {
         return directMethods;
     }
-    public MethodDefArray getVirtualMethodArray(){
+    public MethodDefArray getVirtualMethodArray() {
         return virtualMethods;
     }
 
     private FieldDefArray initStaticFieldsArray() {
         StaticFieldDefArray defArray = this.staticFields;
-        if(defArray == null) {
+        if (defArray == null) {
             defArray = new StaticFieldDefArray(staticFieldsCount);
             this.staticFields = defArray;
             addChildBlock(4, staticFields);
@@ -242,16 +270,16 @@ public class ClassData extends DataItem implements SmaliFormat {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        if(staticFieldsCount.get() != 0){
+        if (staticFieldsCount.get() != 0) {
             initStaticFieldsArray().onReadBytes(reader);
         }
-        if(instanceFieldsCount.get() != 0){
+        if (instanceFieldsCount.get() != 0) {
             initInstanceFieldsArray().onReadBytes(reader);
         }
-        if(directMethodsCount.get() != 0){
+        if (directMethodsCount.get() != 0) {
             initDirectMethodsArray().onReadBytes(reader);
         }
-        if(virtualMethodCount.get() != 0){
+        if (virtualMethodCount.get() != 0) {
             initVirtualMethodsArray().onReadBytes(reader);
         }
     }
@@ -268,36 +296,36 @@ public class ClassData extends DataItem implements SmaliFormat {
     public void removeSelf() {
         super.removeSelf();
         Iterator<DefArray<?>> iterator = getDefArrays();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             iterator.next().clearChildes();
         }
         setClassId(null);
     }
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         Iterator<DefArray<?>> iterator = getDefArrays();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             iterator.next().replaceKeys(search, replace);
         }
     }
 
     @Override
     public void editInternal(Block user) {
-        if(staticFields != null){
+        if (staticFields != null) {
             staticFields.editInternal(user);
         }
-        if(instanceFields != null){
+        if (instanceFields != null) {
             instanceFields.editInternal(user);
         }
-        if(directMethods != null){
+        if (directMethods != null) {
             directMethods.editInternal(user);
         }
-        if(virtualMethods != null){
+        if (virtualMethods != null) {
             virtualMethods.editInternal(user);
         }
     }
 
     @Override
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return new IterableIterator<DefArray<?>, IdItem>(getDefArrays()) {
             @Override
             public Iterator<IdItem> iterator(DefArray<?> element) {

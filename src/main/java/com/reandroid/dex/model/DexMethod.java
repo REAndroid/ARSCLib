@@ -178,6 +178,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
                 dexClass -> dexClass.getOverridingKeys(DexMethod.this.getKey())));
     }
 
+    @Override
     public String getName() {
         return getDefinition().getName();
     }
@@ -418,6 +419,15 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     @Override
     public MethodDef getDefinition() {
         return methodDef;
+    }
+
+    @Override
+    public int getHiddenApiFlagsValue() {
+        return getDefinition().getHiddenApiFlagsValue();
+    }
+    @Override
+    public void setHiddenApiFlagsValue(int value) {
+        getDefinition().setHiddenApiFlagsValue(value);
     }
 
     @Override
