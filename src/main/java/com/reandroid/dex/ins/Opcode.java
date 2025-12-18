@@ -980,6 +980,14 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         int value = this.value;
         return value == 0x1a || value == 0x1b;
     }
+    public boolean isArrayGet() {
+        int value = this.value;
+        return value >= 0x44 && value <= 0x4a;
+    }
+    public boolean isArrayPut() {
+        int value = this.value;
+        return value >= 0x4b && value <= 0x51;
+    }
     public boolean isArrayOp() {
         int value = this.value;
         return value >= 0x44 && value <= 0x51;
@@ -1018,12 +1026,29 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     public boolean isFieldPut() {
         return isFieldInstancePut() || isFieldStaticPut();
     }
-    public boolean isMethodInvoke() {
-        return getOperandType() == OperandType.METHOD;
+    public boolean isMethodInvokeVirtual() {
+        int value = this.value;
+        return value == 0x6e || value == 0x74;
+    }
+    public boolean isMethodInvokeSuper() {
+        int value = this.value;
+        return value == 0x6f || value == 0x75;
+    }
+    public boolean isMethodInvokeDirect() {
+        int value = this.value;
+        return value == 0x70 || value == 0x76;
     }
     public boolean isMethodInvokeStatic() {
         int value = this.value;
         return value == 0x71 || value == 0x77;
+    }
+    public boolean isMethodInvokeInterface() {
+        int value = this.value;
+        return value == 0x72 || value == 0x78;
+    }
+    public boolean isMethodInvoke() {
+        int value = this.value;
+        return value != 0x73 && value >= 0x6e && value <= 0x78;
     }
     public boolean isConstNumber() {
         int value = this.value;

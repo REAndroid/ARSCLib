@@ -217,18 +217,94 @@ public class DexInstruction extends DexCode {
         return opcode == getOpcode();
     }
     public boolean isConstString() {
-        return getIns() instanceof ConstString;
+        return getOpcode().isConstString();
     }
-    public boolean isNumber() {
-        return getIns() instanceof ConstNumber;
+    public boolean isConstNumber() {
+        return getOpcode().isConstNumber();
     }
-    public boolean isNumberLong() {
-        return getIns() instanceof ConstNumberLong;
+    public boolean isConstInteger() {
+        return getOpcode().isConstInteger();
     }
-    public boolean isInvokeStatic() {
-        Opcode<?> opcode = getOpcode();
-        return opcode == Opcode.INVOKE_STATIC || 
-                opcode == Opcode.INVOKE_STATIC_RANGE;
+    public boolean isConstWide() {
+        return getOpcode().isConstWide();
+    }
+    public boolean isGoto() {
+        return getOpcode().isGoto();
+    }
+    public boolean isIfTest() {
+        return getOpcode().isIfTest();
+    }
+    public boolean isSwitch() {
+        return getOpcode().isSwitch();
+    }
+    public boolean isPayload() {
+        return getOpcode().isPayload();
+    }
+    public boolean isReturn() {
+        return getOpcode().isReturn();
+    }
+    public boolean isThrow() {
+        return getOpcode() == Opcode.THROW;
+    }
+    public boolean isMethodExit() {
+        return getOpcode().isMethodExit();
+    }
+    public boolean isInsBranching() {
+        return getOpcode().isInsBranching();
+    }
+    public boolean isArrayOp() {
+        return getOpcode().isArrayOp();
+    }
+    public boolean isArrayGet() {
+        return getOpcode().isArrayGet();
+    }
+    public boolean isArrayPut() {
+        return getOpcode().isArrayPut();
+    }
+    public boolean isFieldInstanceGet() {
+        return getOpcode().isFieldInstanceGet();
+    }
+    public boolean isFieldInstancePut() {
+        return getOpcode().isFieldInstancePut();
+    }
+    public boolean isFieldInstanceOp() {
+        return getOpcode().isFieldInstanceOp();
+    }
+    public boolean isFieldStaticGet() {
+        return getOpcode().isFieldStaticGet();
+    }
+    public boolean isFieldStaticPut() {
+        return getOpcode().isFieldStaticPut();
+    }
+    public boolean isFieldGet() {
+        return getOpcode().isFieldGet();
+    }
+    public boolean isFieldPut() {
+        return getOpcode().isFieldPut();
+    }
+    public boolean isFieldStaticOp() {
+        return getOpcode().isFieldStaticOp();
+    }
+    public boolean isFieldOp() {
+        return getOpcode().isFieldOp();
+    }
+    public boolean isMethodInvokeVirtual() {
+        return getOpcode().isMethodInvokeVirtual();
+    }
+    public boolean isMethodInvokeSuper() {
+        return getOpcode().isMethodInvokeSuper();
+    }
+    public boolean isMethodInvokeDirect() {
+        return getOpcode().isMethodInvokeDirect();
+    }
+    public boolean isMethodInvokeStatic() {
+        return getOpcode().isMethodInvokeStatic();
+    }
+    public boolean isMethodInvokeInterface() {
+        return getOpcode().isMethodInvokeInterface();
+    }
+    public boolean isMethodInvoke() {
+        return getOpcode().isMethodInvoke();
     }
     public int getTargetAddress() {
         Ins ins = getIns();
