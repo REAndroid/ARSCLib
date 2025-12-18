@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.data.CodeItem;
@@ -47,7 +48,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class DexMethod extends DexDeclaration implements MethodProgram {
+public class DexMethod extends DexDeclaration implements MethodProgram, BlockRefresh {
 
     private final DexClass dexClass;
     private final MethodDef methodDef;
@@ -374,17 +375,27 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     private InstructionList getInstructionList() {
         return getDefinition().getInstructionList();
     }
-    public int getLocalRegistersCount() {
-        RegistersTable registersTable = getRegistersTable();
-        if (registersTable != null) {
-            return registersTable.getLocalRegistersCount();
-        }
-        return 0;
-    }
+    @Override
     public int getRegistersCount() {
         RegistersTable registersTable = getRegistersTable();
         if (registersTable != null) {
             return registersTable.getRegistersCount();
+        }
+        return 0;
+    }
+    @Override
+    public int getParameterRegistersCount() {
+        RegistersTable registersTable = getRegistersTable();
+        if (registersTable != null) {
+            return registersTable.getParameterRegistersCount();
+        }
+        return 0;
+    }
+    @Override
+    public int getLocalRegistersCount() {
+        RegistersTable registersTable = getRegistersTable();
+        if (registersTable != null) {
+            return registersTable.getLocalRegistersCount();
         }
         return 0;
     }
@@ -454,6 +465,13 @@ public class DexMethod extends DexDeclaration implements MethodProgram {
     @Override
     public void removeSelf() {
         getDefinition().removeSelf();
+    }
+
+    @Override
+    public void refresh() {
+        if (!isRemoved()) {
+            getDefinition().refresh();
+        }
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

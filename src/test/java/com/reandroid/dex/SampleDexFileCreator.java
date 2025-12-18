@@ -60,7 +60,7 @@ public class SampleDexFileCreator {
         MethodKey key = instruction.getKeyAsMethod();
         key = key.changeDeclaring(dexClass.getSuperClassKey());
         instruction.setKey(key);
-        instruction.createNext("return-void");
+        instruction.createNextFromSmali("return-void");
     }
 
     private static void create_onCreate(DexClass dexClass, int contentViewResourceId){

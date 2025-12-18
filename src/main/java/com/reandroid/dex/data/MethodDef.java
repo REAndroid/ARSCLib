@@ -120,6 +120,15 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
             }
         });
     }
+    @Override
+    public int getRegistersCount() {
+        CodeItem codeItem = getCodeItem();
+        if (codeItem != null) {
+            return codeItem.getRegistersCount();
+        }
+        return 0;
+    }
+    @Override
     public int getParameterRegistersCount() {
         MethodId methodId = getId();
         if (methodId != null) {

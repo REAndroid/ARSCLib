@@ -47,6 +47,12 @@ public interface MethodProgram extends MemberProgram {
         return null;
     }
 
+    int getRegistersCount();
+    int getParameterRegistersCount();
+    default int getLocalRegistersCount() {
+        return getRegistersCount() - getParameterRegistersCount();
+    }
+
     default boolean isConstructor() {
         return AccessFlag.CONSTRUCTOR.isSet(getAccessFlagsValue());
     }

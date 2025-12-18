@@ -26,7 +26,6 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.ins.ConstNumber;
 import com.reandroid.dex.ins.ConstNumberLong;
-import com.reandroid.dex.ins.ConstString;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.InsConstStringJumbo;
 import com.reandroid.dex.ins.Label;
@@ -42,7 +41,13 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.utils.collection.*;
+import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.LinkedIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -372,31 +377,69 @@ public class DexInstruction extends DexCode {
     public Iterator<DexTry> getTries() {
         return getDexMethod().getDexTry(getAddress());
     }
-    public DexInstruction replace(String smaliString) throws IOException {
-        return replace(SmaliReader.of(smaliString));
+
+    public DexInstruction replace(Opcode<?> opcode) {
+        return DexInstruction.create(getDexMethod(), edit().replace(opcode));
     }
-    public DexInstruction replace(SmaliReader reader) throws IOException {
+    public DexInstruction replace(SmaliInstruction smaliInstruction) {
+        DexInstruction dexInstruction = replace(smaliInstruction.getOpcode());
+        dexInstruction.getIns().fromSmali(smaliInstruction);
+        return dexInstruction;
+    }
+    public DexInstruction createNext(Opcode<?> opcode) {
+        return DexInstruction.create(getDexMethod(), edit().createNext(opcode));
+    }
+    public DexInstruction createNext(SmaliInstruction smaliInstruction) {
+        DexInstruction dexInstruction = createNext(smaliInstruction.getOpcode());
+        dexInstruction.getIns().fromSmali(smaliInstruction);
+        return dexInstruction;
+    }
+    public DexInstruction replaceWithSmali(String smaliString) throws IOException {
+        return replaceWithSmali(SmaliReader.of(smaliString));
+    }
+    public DexInstruction replaceWithSmali(SmaliReader reader) throws IOException {
         SmaliInstruction smaliInstruction = new SmaliInstruction();
         smaliInstruction.parse(reader);
-        Ins ins = edit().replace(smaliInstruction.getOpcode());
-        ins.fromSmali(smaliInstruction);
-        return DexInstruction.create(getDexMethod(), ins);
+        return replace(smaliInstruction);
     }
-    public DexInstruction createNext(String smaliString) throws IOException {
-        return createNext(SmaliReader.of(smaliString));
+    public DexInstruction replaceFromSmaliAll(String smaliString) throws IOException {
+        return replaceFromSmaliAll(SmaliReader.of(smaliString));
     }
-    public DexInstruction createNext(SmaliReader reader) throws IOException {
+    public DexInstruction replaceFromSmaliAll(SmaliReader reader) throws IOException {
+        SmaliMethod smaliMethod = SmaliMethod.create(getDexMethod());
+        smaliMethod.getCodeSet().parse(reader);
+        DexInstruction lastInstruction = this;
+        Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
+        if (iterator.hasNext()) {
+            lastInstruction = lastInstruction.replace(iterator.next());
+        }
+        while (iterator.hasNext()) {
+            lastInstruction = lastInstruction.createNext(iterator.next());
+        }
+        return lastInstruction;
+    }
+    public DexInstruction createNextFromSmali(String smaliString) throws IOException {
+        return createNextFromSmali(SmaliReader.of(smaliString));
+    }
+    public DexInstruction createNextFromSmali(SmaliReader reader) throws IOException {
         SmaliInstruction smaliInstruction = new SmaliInstruction();
         smaliInstruction.parse(reader);
         Ins ins = edit().createNext(smaliInstruction.getOpcode());
         ins.fromSmali(smaliInstruction);
         return DexInstruction.create(getDexMethod(), ins);
     }
-    public DexInstruction replace(Opcode<?> opcode) {
-        return DexInstruction.create(getDexMethod(), edit().replace(opcode));
+    public DexInstruction createNextFromSmaliAll(String smaliString) throws IOException {
+        return createNextFromSmaliAll(SmaliReader.of(smaliString));
     }
-    public DexInstruction createNext(Opcode<?> opcode) {
-        return DexInstruction.create(getDexMethod(), edit().createNext(opcode));
+    public DexInstruction createNextFromSmaliAll(SmaliReader reader) throws IOException {
+        SmaliMethod smaliMethod = SmaliMethod.create(getDexMethod());
+        smaliMethod.getCodeSet().parse(reader);
+        DexInstruction lastInstruction = this;
+        Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
+        while (iterator.hasNext()) {
+            lastInstruction = lastInstruction.createNext(iterator.next());
+        }
+        return lastInstruction;
     }
     @Override
     public void removeSelf() {

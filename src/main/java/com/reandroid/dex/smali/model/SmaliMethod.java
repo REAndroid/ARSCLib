@@ -247,6 +247,16 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
         return builder.toString();
     }
 
+    public static SmaliMethod create(MethodProgram methodProgram) {
+        SmaliMethod smaliMethod = new SmaliMethod();
+        smaliMethod.setKey(methodProgram.getKey());
+        smaliMethod.setAccessFlagsValue(methodProgram.getAccessFlagsValue());
+        SmaliRegistersCount count = smaliMethod.getSmaliRegistersCount();
+        count.setLocalsMode(true);
+        count.setValue(methodProgram.getLocalRegistersCount());
+        return smaliMethod;
+    }
+
     public static class SmaliRegistersCount extends Smali implements SmaliRegion {
 
         private SmaliDirective directive;
