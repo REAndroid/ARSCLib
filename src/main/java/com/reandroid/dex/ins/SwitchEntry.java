@@ -21,6 +21,13 @@ public interface SwitchEntry extends PayloadEntry, Label {
     @Override
     InsSwitchPayload<?> getPayload();
 
+    default InsSwitch getInsSwitch() {
+        InsSwitchPayload<?> payload = getPayload();
+        if (payload != null) {
+            return payload.getSwitch();
+        }
+        return null;
+    }
     @Override
     default boolean isRemoved() {
         return getPayload().isRemoved();
@@ -32,7 +39,7 @@ public interface SwitchEntry extends PayloadEntry, Label {
     }
 
     default void addEquivalentIfEq(int constRegister) {
-        InsSwitch insSwitch = getPayload().getSwitch();
+        InsSwitch insSwitch = getInsSwitch();
         InstructionList instructionList = insSwitch.getInstructionList();
 
         Ins targetIns = getTargetIns();

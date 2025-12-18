@@ -24,14 +24,7 @@ import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.ins.ConstNumber;
-import com.reandroid.dex.ins.ConstNumberLong;
-import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.InsConstStringJumbo;
-import com.reandroid.dex.ins.Label;
-import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.ins.RegistersSet;
-import com.reandroid.dex.ins.SizeXIns;
+import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -311,6 +304,15 @@ public class DexInstruction extends DexCode {
     public boolean isMethodInvoke() {
         return getOpcode().isMethodInvoke();
     }
+    public boolean isMove() {
+        return getOpcode().isMove();
+    }
+    public boolean isMoveResult() {
+        return getOpcode().isMoveResult();
+    }
+    public boolean hasOutRegisters() {
+        return getOpcode().hasOutRegisters();
+    }
     public int getTargetAddress() {
         Ins ins = getIns();
         if (ins instanceof Label) {
@@ -536,6 +538,36 @@ public class DexInstruction extends DexCode {
         iterator = FilterIterator.of(iterator, ins -> predicate.test(ins.getOpcode()));
         return DexInstruction.createAll(getDexMethod(), iterator);
     }
+    // for switch payload instruction
+    public Iterator<DexInstruction> getTargetSwitchCases() {
+        Ins ins = getIns();
+        if (!(ins instanceof InsSwitchPayload)) {
+            return EmptyIterator.of();
+        }
+        InsSwitchPayload<? extends SwitchEntry> payload = (InsSwitchPayload<? extends SwitchEntry>) ins;
+        Iterator<? extends SwitchEntry> switchEntryIterator = payload.iterator();
+        if (!switchEntryIterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        Iterator<Ins> iterator = ComputeIterator.of(switchEntryIterator, SwitchEntry::getTargetIns);
+        iterator = CollectionUtil.copyOfUniqueOf(iterator);
+        return DexInstruction.createAll(getDexMethod(), iterator);
+    }
+    public DexInstruction getTargetingSwitch() {
+        return CollectionUtil.getFirst(getTargetingSwitches(null));
+    }
+    public Iterator<DexInstruction> getTargetingSwitches(Opcode<? extends InsSwitch> switchOpcode) {
+        Iterator<SwitchEntry> switchEntryIterator = getIns().getForcedExtraLines(SwitchEntry.class);
+        if (!switchEntryIterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        Iterator<InsSwitch> iterator = ComputeIterator.of(switchEntryIterator, SwitchEntry::getInsSwitch);
+        if (switchOpcode != null) {
+            iterator = FilterIterator.of(iterator, ins -> ins.getOpcode() == switchOpcode);
+        }
+        iterator = CollectionUtil.copyOfUniqueOf(iterator);
+        return DexInstruction.createAll(getDexMethod(), iterator);
+    }
     public DexInstruction getNext() {
         return getDexMethod().getInstruction(getIndex() + 1);
     }
@@ -547,6 +579,16 @@ public class DexInstruction extends DexCode {
     }
     public Iterator<DexInstruction> getPreviousInstructions() {
         return LinkedIterator.of(this, DexInstruction::getPrevious);
+    }
+    public DexInstruction getMoveResult() {
+        if (!hasOutRegisters()) {
+            return null;
+        }
+        DexInstruction next = getNext();
+        if (next != null && next.isMoveResult()) {
+            return next;
+        }
+        return null;
     }
 
     public DexInstruction getPreviousReader(int register) {
@@ -643,7 +685,7 @@ public class DexInstruction extends DexCode {
         return getIns().toString();
     }
 
-    public static Iterator<DexInstruction> createAll(DexMethod dexMethod, Iterator<Ins> iterator) {
+    public static Iterator<DexInstruction> createAll(DexMethod dexMethod, Iterator<? extends Ins> iterator) {
         if (dexMethod == null || !iterator.hasNext()) {
             return EmptyIterator.of();
         }
