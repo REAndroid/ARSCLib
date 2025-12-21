@@ -1,5 +1,8 @@
 
-apply plugin: 'java'
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
 
 group 'com.reandroid'
 version '1.3.9'
@@ -37,6 +40,17 @@ javadoc {
     exclude('zorg/**')
     exclude('com/reandroid/unity/**')
     //exclude('com/reandroid/dex/**')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
 
 jar {
