@@ -25,9 +25,22 @@ import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.ins.*;
+import com.reandroid.dex.ins.ConstNumber;
+import com.reandroid.dex.ins.ConstNumberLong;
+import com.reandroid.dex.ins.ConstString;
+import com.reandroid.dex.ins.ExceptionHandler;
+import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.ins.InsBlockList;
+import com.reandroid.dex.ins.InsNop;
+import com.reandroid.dex.ins.NullInstruction;
+import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.ins.RegisterReference;
+import com.reandroid.dex.ins.RegistersEditor;
+import com.reandroid.dex.ins.RegistersIterator;
+import com.reandroid.dex.ins.SizeXIns;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -35,7 +48,13 @@ import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.ArraySupplierIterator;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -50,7 +69,7 @@ public class InstructionList extends FixedBlockContainer implements
     private final InsBlockList insBlockList;
     private final DexPositionAlign blockAlign;
 
-    public InstructionList(CodeItem codeItem){
+    public InstructionList(CodeItem codeItem) {
         super(2);
         this.codeItem = codeItem;
 
@@ -58,7 +77,7 @@ public class InstructionList extends FixedBlockContainer implements
         this.insBlockList = new InsBlockList(blockAlign,
                 codeItem.getInstructionCodeUnitsReference(),
                 codeItem.getInstructionOutsReference(),
-                codeItem.getExtraLines()
+                codeItem.getExternalLabels()
                 );
 
         this.blockAlign = blockAlign;
@@ -67,82 +86,82 @@ public class InstructionList extends FixedBlockContainer implements
         addChild(1, blockAlign);
     }
 
-    public RegistersEditor editRegisters(){
+    public RegistersEditor editRegisters() {
         return RegistersEditor.fromIns(getCodeItem(), iterator());
     }
 
     public MethodDef getMethodDef() {
         return getCodeItem().getMethodDef();
     }
-    public DebugSequence getDebugSequence(){
+    public DebugSequence getDebugSequence() {
         DebugInfo debugInfo = getDebugInfo();
-        if(debugInfo != null){
+        if (debugInfo != null) {
             return debugInfo.getDebugSequence();
         }
         return null;
     }
-    public DebugSequence getOrCreateDebugSequence(){
+    public DebugSequence getOrCreateDebugSequence() {
         return getOrCreateDebugInfo().getDebugSequence();
     }
-    public DebugInfo getDebugInfo(){
+    public DebugInfo getDebugInfo() {
         return getCodeItem().getDebugInfo();
     }
-    public DebugInfo getOrCreateDebugInfo(){
+    public DebugInfo getOrCreateDebugInfo() {
         return getCodeItem().getOrCreateDebugInfo();
     }
     public CodeItem getCodeItem() {
         return codeItem;
     }
-    public RegistersTable getRegistersTable(){
+    public RegistersTable getRegistersTable() {
         return getCodeItem();
     }
-    public void addLocalRegisters(int amount){
+    public void addLocalRegisters(int amount) {
         addLocalRegisters(false, amount);
     }
-    public void addLocalRegisters(boolean start, int amount){
+    public void addLocalRegisters(boolean start, int amount) {
         RegistersTable registersTable = getRegistersTable();
         Iterator<RegistersIterator> iterator = getRegistersIterators();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             RegistersIterator registersIterator = iterator.next();
             int count;
-            if(registersIterator.isRange()){
+            if (registersIterator.isRange()) {
                 count = 1;
-            }else {
+            } else {
                 count = registersIterator.size();
             }
-            for(int i = 0; i < count; i++){
+            for(int i = 0; i < count; i++) {
                 RegisterReference reference = registersIterator.get(i);
-                if(start || reference.isParameter()){
+                if (start || reference.isParameter()) {
                     reference.setRegisterValue(reference.getValue() + amount);
                 }
             }
         }
         registersTable.setRegistersCount(registersTable.getRegistersCount() + amount);
     }
-    public boolean canAddLocalRegisters(int amount){
+    public boolean canAddLocalRegisters(int amount) {
         RegistersTable registersTable = getRegistersTable();
-        if(registersTable.getRegistersCount() + amount < 0xf) {
+        if (registersTable.getRegistersCount() + amount < 0xf) {
             return true;
         }
         Iterator<RegistersIterator> iterator = getRegistersIterators();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             RegistersIterator registersIterator = iterator.next();
             int count;
-            if(registersIterator.isRange()){
+            if (registersIterator.isRange()) {
                 count = 1;
-            }else {
+            } else {
                 count = registersIterator.size();
             }
-            for(int i = 0; i < count; i++){
+            for(int i = 0; i < count; i++) {
                 RegisterReference reference = registersIterator.get(i);
-                if(reference.isParameter() && reference.getValue() + amount > reference.getLimit()){
+                if (reference.isParameter() && reference.getValue() + amount > reference.getLimit()) {
                     return false;
                 }
             }
         }
         return true;
     }
-    public List<Register> getLocalFreeRegisters(int startIndex){
+    public List<Register> getLocalFreeRegisters(int startIndex) {
         RegistersTable registersTable = getRegistersTable();
         int count = registersTable.getLocalRegistersCount();
         Iterator<Register> iterator = new ArraySupplierIterator<>(new ArraySupplier<Register>() {
@@ -163,40 +182,40 @@ public class InstructionList extends FixedBlockContainer implements
         list.sort(CompareUtil.getComparableComparator());
         return list;
     }
-    public boolean isFreeRegister(int registerValue, int startIndex){
+    public boolean isFreeRegister(int registerValue, int startIndex) {
         Iterator<RegistersIterator> iterator = getRegistersIterators(startIndex);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             RegistersIterator registersIterator = iterator.next();
-            for(RegisterReference reference : registersIterator){
-                if(reference.getValue() == registerValue) {
+            for(RegisterReference reference : registersIterator) {
+                if (reference.getValue() == registerValue) {
                     return reference.getRegisterType() == RegisterType.WRITE;
                 }
             }
         }
         return registerValue != getRegistersTable().getLocalRegistersCount();
     }
-    private Iterator<RegistersIterator> getRegistersIterators(){
+    private Iterator<RegistersIterator> getRegistersIterators() {
         return getRegistersIterators(0);
     }
-    private Iterator<RegistersIterator> getRegistersIterators(int start){
+    private Iterator<RegistersIterator> getRegistersIterators(int start) {
         return ComputeIterator.of(iterator(start), ins -> {
-            if(ins instanceof SizeXIns){
+            if (ins instanceof SizeXIns) {
                 return ((SizeXIns) ins).getRegistersIterator();
             }
             return null;
         });
     }
 
-    public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode){
+    public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode) {
         return iterator(opcode, null);
     }
     @SuppressWarnings("unchecked")
-    public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode, Predicate<? super T1> filter){
+    public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode, Predicate<? super T1> filter) {
         return ComputeIterator.of(iterator(), ins -> {
             T1 result = null;
-            if(ins != null && ins.getOpcode() == opcode){
+            if (ins != null && ins.getOpcode() == opcode) {
                 result = (T1) ins;
-                if(filter != null && !filter.test(result)){
+                if (filter != null && !filter.test(result)) {
                     result = null;
                 }
             }
@@ -222,7 +241,7 @@ public class InstructionList extends FixedBlockContainer implements
     }
     public Iterator<Ins> iteratorByAddress(int startAddress, int codeUnits) {
         Ins insStart = getAtAddress(startAddress);
-        if(insStart == null){
+        if (insStart == null) {
             return EmptyIterator.of();
         }
         Ins insEnd = getAtAddress(startAddress + codeUnits);
@@ -237,16 +256,16 @@ public class InstructionList extends FixedBlockContainer implements
     void onEditing(InstructionList instructionList) {
         getInsBlockList().onEditingInternal(instructionList.getInsBlockList());
     }
-    public Ins get(int i){
+    public Ins get(int i) {
         return getInsBlockList().get(i);
     }
-    public int getCount(){
+    public int getCount() {
         return getInsBlockList().size();
     }
     public boolean isEmpty() {
         return getInsBlockList().size() == 0;
     }
-    public void add(Ins ins){
+    public void add(Ins ins) {
         add(getInsBlockList().size(), ins);
     }
     public void add(int index, Ins item) {
@@ -257,48 +276,45 @@ public class InstructionList extends FixedBlockContainer implements
         insBlockList.unlink();
         Ins exist = insBlockList.get(index);
         Object lock = null;
-        if(exist != null) {
+        if (exist != null) {
             lock = insBlockList.linkLocked();
         }
         insBlockList.add(index, item);
-        if(shiftLabels && exist != null) {
-            exist.transferExtraLinesTo(item);
+        if (shiftLabels && exist != null) {
+            exist.transferReferenceLabelsTo(item);
         }
         insBlockList.unlinkLocked(lock);
     }
-    public void moveTo(Ins ins, int index){
+    public void moveTo(Ins ins, int index) {
         int current = ins.getIndex();
-        if(index == current){
+        if (index == current) {
             return;
         }
-        if(current < 0) {
+        if (current < 0) {
             throw new IndexOutOfBoundsException("Removed ins, negative index: " + index);
         }
-        if(index < 0){
+        if (index < 0) {
             throw new IndexOutOfBoundsException("Negative index: " + index);
         }
-        if(index >= getCount()){
+        if (index >= getCount()) {
             throw new IndexOutOfBoundsException("Size = " + getCount() + ", " + index);
         }
         InsBlockList insBlockList = getInsBlockList();
         Object locked = insBlockList.linkLocked();
         insBlockList.moveTo(ins, index);
         Ins insAtPosition = get(current);
-        ins.transferExtraLinesTo(insAtPosition);
+        ins.transferReferenceLabelsTo(insAtPosition);
         insBlockList.unlinkLocked(locked);
-    }
-    public ConstNumber createConstIntegerAt(int index, int value) {
-        return createConstIntegerAt(index, 0, value);
     }
     public ConstNumber createConstIntegerAt(int index, int register, int value) {
         ConstNumber constNumber;
-        if(register <= 0x0f && value <= 0x7 && value >= -0x7){
+        if (register <= 0x0f && value <= 0x7 && value >= -0x7) {
             constNumber = createAt(index, Opcode.CONST_4);
-        }else if(value <= 0x7fff && value >= -0x7fff){
+        } else if (value <= 0x7fff && value >= -0x7fff) {
             constNumber = createAt(index, Opcode.CONST_16);
-        }else if((value & 0x0000ffff) == 0){
+        } else if ((value & 0x0000ffff) == 0) {
             constNumber = createAt(index, Opcode.CONST_HIGH16);
-        }else {
+        } else {
             constNumber = createAt(index, Opcode.CONST);
         }
         constNumber.setRegister(register);
@@ -310,13 +326,13 @@ public class InstructionList extends FixedBlockContainer implements
     }
     public ConstNumberLong createConstLongAt(int index, int register, long value) {
         ConstNumberLong constNumber;
-        if((value & 0xffff00000000L) == 0){
+        if ((value & 0xffff00000000L) == 0) {
             constNumber = createAt(index, Opcode.CONST_WIDE_HIGH16);
-        }else if((value & 0xffff) == value){
+        } else if ((value & 0xffff) == value) {
             constNumber = createAt(index, Opcode.CONST_WIDE_16);
-        }else if((value & 0xffffffffL) == value){
+        } else if ((value & 0xffffffffL) == value) {
             constNumber = createAt(index, Opcode.CONST_WIDE_32);
-        }else {
+        } else {
             constNumber = createAt(index, Opcode.CONST_WIDE);
         }
         constNumber.setRegister(register);
@@ -336,9 +352,9 @@ public class InstructionList extends FixedBlockContainer implements
         ConstString constNumber;
         StringId stringId = getCodeItem().getOrCreateSectionItem(SectionType.STRING_ID, value);
         int id = stringId.getIdx();
-        if((id & 0xffff) == id){
+        if ((id & 0xffff) == id) {
             constNumber = createAt(index, Opcode.CONST_STRING);
-        }else {
+        } else {
             constNumber = createAt(index, Opcode.CONST_STRING_JUMBO);
         }
         constNumber.setRegister(register);
@@ -361,20 +377,20 @@ public class InstructionList extends FixedBlockContainer implements
         add(item);
         return item;
     }
-    public boolean isLonelyInTryCatch(Ins ins){
-        Iterator<ExceptionHandler.TryStartLabel> iterator = ins.getReferenceLabels(
+    public boolean isLonelyInTryCatch(Ins ins) {
+        Iterator<ExceptionHandler.TryStartLabel> iterator = ins.getReferencingLabels(
                 ExceptionHandler.TryStartLabel.class);
-        if(!iterator.hasNext()) {
+        if (!iterator.hasNext()) {
             return false;
         }
         InsBlockList insBlockList = getInsBlockList();
         insBlockList.link(iterator);
         int codeUnits = ins.getCodeUnits();
         boolean result = false;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             ExceptionHandler.TryStartLabel startLabel = iterator.next();
             int handlerCodeUnits = startLabel.getHandler().getCodeUnit();
-            if(handlerCodeUnits <= codeUnits){
+            if (handlerCodeUnits <= codeUnits) {
                 result = true;
                 break;
             }
@@ -382,15 +398,15 @@ public class InstructionList extends FixedBlockContainer implements
         insBlockList.unlink(iterator);
         return result;
     }
-    public boolean contains(Ins item){
+    public boolean contains(Ins item) {
         return getInsBlockList().containsExact(item);
     }
-    public boolean remove(Ins item){
+    public boolean remove(Ins item) {
         return remove(item, false);
     }
     public boolean remove(Ins item, boolean force) {
         InsBlockList insBlockList = getInsBlockList();
-        if(!insBlockList.containsExact(item)){
+        if (!insBlockList.containsExact(item)) {
             return false;
         }
         Object lock = insBlockList.linkLocked();
@@ -403,7 +419,7 @@ public class InstructionList extends FixedBlockContainer implements
             next = insBlockList.getOrCreateNullInstruction();
         }
         if (next != null) {
-            item.transferExtraLinesTo(next);
+            item.transferReferenceLabelsTo(next);
         }
         insBlockList.remove(item);
         item.setParent(null);
@@ -411,11 +427,11 @@ public class InstructionList extends FixedBlockContainer implements
         insBlockList.unlinkLocked(lock);
         return true;
     }
-    public InsNop replaceWithNop(Ins ins){
+    public InsNop replaceWithNop(Ins ins) {
         return replace(ins, Opcode.NOP);
     }
-    public<T1 extends Ins> T1 replace(Ins old, Opcode<T1> opcode){
-        if(!contains(old)){
+    public<T1 extends Ins> T1 replace(Ins old, Opcode<T1> opcode) {
+        if (!contains(old)) {
             return null;
         }
         T1 item = opcode.newInstance();
@@ -423,17 +439,17 @@ public class InstructionList extends FixedBlockContainer implements
         return item;
     }
     public void replace(Ins old, Ins item) {
-        if(old == item){
+        if (old == item) {
             return;
         }
         InsBlockList insBlockList = getInsBlockList();
-        if(!insBlockList.containsExact(old)) {
+        if (!insBlockList.containsExact(old)) {
             throw new IllegalArgumentException("Not a member of this instruction list");
         }
         Object obj = insBlockList.linkLocked();
         int index = old.getIndex();
         insBlockList.set(index, item);
-        old.transferExtraLinesTo(item);
+        old.transferReferenceLabelsTo(item);
         old.setParent(null);
         old.setIndex(-1);
         insBlockList.unlinkLocked(obj);
@@ -450,13 +466,13 @@ public class InstructionList extends FixedBlockContainer implements
     public DexPositionAlign getBlockAlign() {
         return blockAlign;
     }
-    public Ins getAtAddress(int address){
+    public Ins getAtAddress(int address) {
         return getInsBlockList().getAtAddress(address);
     }
-    public Iterator<Label> getCodeLabels() {
+    public Iterator<InstructionLabel> getCodeLabels() {
         return CombiningIterator.two(getInsBlockList().getLabels(), getCodeItem().getTryBlockLabels());
     }
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         for(Ins ins : this) {
             ins.replaceKeys(search, replace);
         }
@@ -478,7 +494,7 @@ public class InstructionList extends FixedBlockContainer implements
             }
         };
     }
-    public void linkExtraLines() {
+    public void linkReferenceLabels() {
         InsBlockList insBlockList = getInsBlockList();
         insBlockList.link();
     }
@@ -494,24 +510,24 @@ public class InstructionList extends FixedBlockContainer implements
         }
         writer.setStateWritingInstructions(false);
         NullInstruction nullInstruction = getInsBlockList().getNullInstruction();
-        if(nullInstruction != null) {
+        if (nullInstruction != null) {
             writer.newLine();
             nullInstruction.append(writer);
         }
         insBlockList.unlink(lock, false);
     }
-    public void merge(InstructionList instructionList){
+    public void merge(InstructionList instructionList) {
         getInsBlockList().merge(instructionList.getInsBlockList());
         getInsBlockList().updateCodeUnits();
     }
     public void fromSmali(SmaliCodeSet smaliCodeSet) {
         int index = 0;
         int offset = smaliCodeSet.getAddressOffset();
-        if(offset != 0) {
+        if (offset != 0) {
             Ins ins = getAtAddress(smaliCodeSet.getAddressOffset());
-            if(ins != null) {
+            if (ins != null) {
                 index = ins.getIndex();
-            }else if(offset >= getCodeUnits()) {
+            } else if (offset >= getCodeUnits()) {
                 index = getCount();
             }
         }

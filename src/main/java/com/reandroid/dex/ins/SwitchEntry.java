@@ -16,13 +16,15 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.program.InstructionLabel;
 
-public interface SwitchEntry extends PayloadEntry, Label {
+public interface SwitchEntry extends PayloadEntry, InstructionLabel {
+
     @Override
-    InsSwitchPayload<?> getPayload();
+    InsSwitchPayload<?> getOwnerInstruction();
 
     default InsSwitch getInsSwitch() {
-        InsSwitchPayload<?> payload = getPayload();
+        InsSwitchPayload<?> payload = getOwnerInstruction();
         if (payload != null) {
             return payload.getSwitch();
         }
@@ -30,19 +32,18 @@ public interface SwitchEntry extends PayloadEntry, Label {
     }
     @Override
     default boolean isRemoved() {
-        return getPayload().isRemoved();
+        return getOwnerInstruction().isRemoved();
     }
 
     default void updateTargetAddress() {
-        Ins target = getTargetIns();
-        setTargetAddress(target.getAddress());
+        setTargetAddress(getTargetInstruction().getAddress());
     }
 
     default void addEquivalentIfEq(int constRegister) {
         InsSwitch insSwitch = getInsSwitch();
         InstructionList instructionList = insSwitch.getInstructionList();
 
-        Ins targetIns = getTargetIns();
+        Ins targetIns = (Ins) getTargetInstruction();
 
         Ins constNumberIns = (Ins) instructionList.createConstIntegerAt(
                 insSwitch.getIndex() + 1,
@@ -53,13 +54,13 @@ public interface SwitchEntry extends PayloadEntry, Label {
         Ins22t insIfEq = Opcode.IF_EQ.newInstance();
         insIfEq.setRegister(0, insSwitch.getRegister());
         insIfEq.setRegister(1, constRegister);
-        insIfEq.setTargetIns(targetIns);
+        insIfEq.setTargetInstruction(targetIns);
         instructionList.add(constNumberIns.getIndex() + 1, insIfEq);
-        insIfEq.setTargetIns(targetIns);
+        insIfEq.setTargetInstruction(targetIns);
     }
 
     default Ins findTargetIns() {
-        InsBlockList insBlockList = getPayload().getInsBlockList();
+        InsBlockList insBlockList = getOwnerInstruction().getInsBlockList();
         if (insBlockList != null) {
             return insBlockList.getAtAddress(getTargetAddress());
         }

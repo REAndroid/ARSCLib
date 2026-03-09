@@ -15,8 +15,11 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.program.InstructionLabelType;
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.InstanceIterator;
 

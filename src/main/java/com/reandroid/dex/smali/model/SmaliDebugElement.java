@@ -17,6 +17,7 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.dex.program.Instruction;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 
@@ -30,5 +31,9 @@ public abstract class SmaliDebugElement extends SmaliDebug implements DebugEleme
     @Override
     public InstructionLabelType getLabelType() {
         return InstructionLabelType.DEBUG;
+    }
+    @Override
+    public Instruction getTargetInstruction() {
+        return null;
     }
 }

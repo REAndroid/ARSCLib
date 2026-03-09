@@ -27,6 +27,7 @@ import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -66,7 +67,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return tryItemArray.getCount();
     }
     @Override
-    public Iterator<Label> getLabels() {
+    public Iterator<InstructionLabel> getLabels() {
         return new ExpandIterator<>(iterator());
     }
 

@@ -57,7 +57,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
             return EmptyIterator.of();
         }
         insBlockList.link();
-        return InstanceIterator.of(getReferenceLabels(), InsFillArrayData.class);
+        return InstanceIterator.of(getReferencingLabels(), InsFillArrayData.class);
     }
     @Override
     public int size(){

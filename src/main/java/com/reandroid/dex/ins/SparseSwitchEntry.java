@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.program.Instruction;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliSparseSwitchEntry;
@@ -39,7 +40,7 @@ public class SparseSwitchEntry implements SwitchEntry {
     }
 
     @Override
-    public InsSparseSwitchData getPayload() {
+    public InsSparseSwitchData getOwnerInstruction() {
         return payload;
     }
 
@@ -60,22 +61,22 @@ public class SparseSwitchEntry implements SwitchEntry {
     }
 
     @Override
-    public Ins getTargetIns() {
-        Ins targetIns = this.entryKey.getTargetIns();
-        if (targetIns == null) {
-            setTargetIns(findTargetIns());
-            targetIns = this.entryKey.getTargetIns();
+    public Instruction getTargetInstruction() {
+        Instruction target = this.entryKey.getTargetInstruction();
+        if (target == null) {
+            setTargetInstruction(findTargetIns());
+            target = this.entryKey.getTargetInstruction();
         }
-        return targetIns;
+        return target;
     }
 
     @Override
-    public void setTargetIns(Ins targetIns) {
-        Ins ins = entryKey.getTargetIns();
-        if (targetIns != ins) {
-            entryKey.setTargetIns(targetIns);
-            if (targetIns != null) {
-                targetIns.addReferenceLabel(this);
+    public void setTargetInstruction(Instruction target) {
+        Instruction instruction = entryKey.getTargetInstruction();
+        if (target != instruction) {
+            entryKey.setTargetInstruction(target);
+            if (target != null) {
+                target.addReferencingLabel(this);
             }
         }
     }
@@ -96,12 +97,7 @@ public class SparseSwitchEntry implements SwitchEntry {
     }
 
     @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_INSTRUCTION_LABEL;
-    }
-
-    @Override
-    public int getAddress() {
+    public int getOwnerAddress() {
         return payload.getAddress();
     }
 
@@ -126,6 +122,19 @@ public class SparseSwitchEntry implements SwitchEntry {
     }
 
     @Override
+    public boolean equalsLabel(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+        SwitchEntry entry = (SwitchEntry) obj;
+        return getTargetAddress() == entry.getTargetAddress() &&
+                this.get() == entry.get();
+    }
+
+    @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();
         int value = get();
@@ -136,7 +145,7 @@ public class SparseSwitchEntry implements SwitchEntry {
     }
 
     @Override
-    public void appendLabels(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         writer.appendLabelName(getLabelName());
         writer.appendComment(HexUtil.toSignedHex(get()));
     }
@@ -147,10 +156,10 @@ public class SparseSwitchEntry implements SwitchEntry {
 
     public void fromPackedSwitch(PackedSwitchEntry packedSwitchEntry) {
         this.set(packedSwitchEntry.get());
-        Ins ins = packedSwitchEntry.getTargetIns();
+        Instruction ins = packedSwitchEntry.getTargetInstruction();
         this.setTargetAddress(ins.getAddress());
-        this.setTargetIns(ins);
-        ins.addReferenceLabel(this);
+        this.setTargetInstruction(ins);
+        ins.addReferencingLabel(this);
     }
 
     public void merge(SparseSwitchEntry data) {

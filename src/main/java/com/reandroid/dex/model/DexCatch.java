@@ -87,6 +87,6 @@ public class DexCatch extends DexCode {
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getExceptionHandler().getHandlerLabel().appendLabels(writer);
+        getExceptionHandler().getHandlerLabel().appendLabelName(writer);
     }
 }

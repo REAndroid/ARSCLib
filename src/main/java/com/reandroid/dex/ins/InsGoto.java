@@ -16,13 +16,14 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class InsGoto extends SizeXIns implements Label {
+public class InsGoto extends SizeXIns implements InstructionLabel {
 
     private Opcode<?> opcode;
 
@@ -86,10 +87,6 @@ public class InsGoto extends SizeXIns implements Label {
         writer.append(getOpcode().getName());
         writer.append(' ');
         writer.appendLabelName(getLabelName());
-    }
-    @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_INSTRUCTION_LABEL;
     }
 
     @Override

@@ -69,6 +69,11 @@ public interface DebugLineNumber extends DebugElement {
         }
 
         @Override
+        public int getOwnerAddress() {
+            return -1;
+        }
+
+        @Override
         public int getTargetAddress() {
             return targetAddress;
         }
@@ -77,6 +82,16 @@ public interface DebugLineNumber extends DebugElement {
         public void setTargetAddress(int address) {
 
         }
+
+        @Override
+        public Instruction getTargetInstruction() {
+            return null;
+        }
+
+        @Override
+        public void setTargetInstruction(Instruction targetInstruction) {
+        }
+
         @Override
         public InstructionLabelType getLabelType() {
             return InstructionLabelType.LINE;

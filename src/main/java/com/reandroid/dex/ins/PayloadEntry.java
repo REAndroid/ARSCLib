@@ -19,6 +19,6 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.smali.SmaliFormat;
 
 public interface PayloadEntry extends IntegerReference, SmaliFormat {
-    PayloadData<?> getPayload();
+    PayloadData<?> getOwnerInstruction();
     int getIndex();
 }

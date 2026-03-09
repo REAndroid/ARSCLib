@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.program.DebugLineNumber;
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelType;
@@ -168,7 +167,7 @@ public class DebugLineNumberBlock extends DebugElementBlock implements DebugLine
     }
 
     @Override
-    public void appendLabels(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if(isValid()) {
             int lineNum = getLineNumber();
             if(lineNum == -1){
@@ -184,15 +183,6 @@ public class DebugLineNumberBlock extends DebugElementBlock implements DebugLine
     }
 
     @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_DEBUG_LINE_NUMBER;
-    }
-    @Override
-    public int getSortOrderFine(){
-        return getLineNumber();
-    }
-
-    @Override
     int compareDetailElement(DebugElementBlock element) {
         return CompareUtil.compare(getLineNumber(), element.getLineNumber());
     }
@@ -202,7 +192,7 @@ public class DebugLineNumberBlock extends DebugElementBlock implements DebugLine
         if (label == this) {
             return 0;
         }
-        int i = InstructionLabel.compareLabels(this, label);
+        int i = super.compareLabel(label);
         if (i == 0) {
             DebugLineNumber lineNumber = (DebugLineNumber) label;
             i = CompareUtil.compare(getLineNumber(), lineNumber.getLineNumber());

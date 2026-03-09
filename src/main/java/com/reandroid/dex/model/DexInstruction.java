@@ -36,12 +36,14 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.Instruction;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.ProgramType;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -100,6 +102,12 @@ public class DexInstruction extends DexCode implements Instruction {
     public int getCodeUnits() {
         return getIns().getCodeUnits();
     }
+
+    @Override
+    public void addReferencingLabel(Object label) {
+
+    }
+
     public List<Register> getLocalFreeRegisters() {
         return getDexMethod().getLocalFreeRegisters(getIndex());
     }
@@ -358,14 +366,14 @@ public class DexInstruction extends DexCode implements Instruction {
     }
     public int getTargetAddress() {
         Ins ins = getIns();
-        if (ins instanceof Label) {
-            return ((Label) ins).getTargetAddress();
+        if (ins instanceof InstructionLabel) {
+            return ((InstructionLabel) ins).getTargetAddress();
         }
         return -1;
     }
     public void setTargetAddress(int address) {
-        if (getIns() instanceof Label) {
-            ((Label) edit()).setTargetAddress(address);
+        if (getIns() instanceof InstructionLabel) {
+            ((InstructionLabel) edit()).setTargetAddress(address);
         }
     }
     public IntegerReference getAsIntegerReference() {
@@ -641,12 +649,12 @@ public class DexInstruction extends DexCode implements Instruction {
         return null;
     }
     public DexInstruction getTargetInstruction() {
-        return DexInstruction.create(getDexMethod(), getIns().getTargetIns());
+        return DexInstruction.create(getDexMethod(), (Ins) getIns().getTargetInstruction());
     }
     public boolean hasTargetingInstructions() {
-        Iterator<ExtraLine> iterator = getIns().getForcedExtraLines();
+        Iterator<InstructionLabel> iterator = getIns().getForcedReferencingLabels();
         while (iterator.hasNext()) {
-            ExtraLine label = iterator.next();
+            InstructionLabel label = iterator.next();
             if (!(label instanceof DebugElementBlock)) {
                 return true;
             }
@@ -654,15 +662,15 @@ public class DexInstruction extends DexCode implements Instruction {
         return false;
     }
     public boolean hasTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
-        return FilterIterator.of(getIns().getForcedExtraLines(Ins.class),
+        return FilterIterator.of(getIns().getForcedReferencingLabels(Ins.class),
                 ins -> predicate.test(ins.getOpcode())).hasNext();
     }
     public Iterator<DexInstruction> getTargetingInstructions() {
         return DexInstruction.createAll(getDexMethod(),
-                CollectionUtil.copyOf(getIns().getForcedExtraLines(Ins.class)));
+                CollectionUtil.copyOf(getIns().getForcedReferencingLabels(Ins.class)));
     }
     public Iterator<DexInstruction> getTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
-        Iterator<Ins> iterator = CollectionUtil.copyOf(getIns().getForcedExtraLines(Ins.class));
+        Iterator<Ins> iterator = CollectionUtil.copyOf(getIns().getForcedReferencingLabels(Ins.class));
         if (!iterator.hasNext()) {
             return EmptyIterator.of();
         }
@@ -680,15 +688,15 @@ public class DexInstruction extends DexCode implements Instruction {
         if (!switchEntryIterator.hasNext()) {
             return EmptyIterator.of();
         }
-        Iterator<Ins> iterator = ComputeIterator.of(switchEntryIterator, SwitchEntry::getTargetIns);
+        Iterator<Instruction> iterator = ComputeIterator.of(switchEntryIterator, SwitchEntry::getTargetInstruction);
         iterator = CollectionUtil.copyOfUniqueOf(iterator);
-        return DexInstruction.createAll(getDexMethod(), iterator);
+        return DexInstruction.createAll(getDexMethod(), ObjectsUtil.cast(iterator));
     }
     public DexInstruction getTargetingSwitch() {
         return CollectionUtil.getFirst(getTargetingSwitches(null));
     }
     public Iterator<DexInstruction> getTargetingSwitches(Opcode<? extends InsSwitch> switchOpcode) {
-        Iterator<SwitchEntry> switchEntryIterator = getIns().getForcedExtraLines(SwitchEntry.class);
+        Iterator<SwitchEntry> switchEntryIterator = getIns().getForcedReferencingLabels(SwitchEntry.class);
         if (!switchEntryIterator.hasNext()) {
             return EmptyIterator.of();
         }
@@ -748,13 +756,13 @@ public class DexInstruction extends DexCode implements Instruction {
             DebugSequence debugSequence = getDexMethod().getDefinition().getOrCreateDebugSequence();
             lineNumber = debugSequence.createNext(DebugElementType.LINE_NUMBER);
             lineNumber.setTargetAddress(ins.getAddress());
-            lineNumber.setTargetIns(ins);
+            lineNumber.setTargetInstruction(ins);
         }
         lineNumber.setLineNumber(line);
     }
     private Iterator<DebugLineNumberBlock> debugLineNumbers() {
         if (getDexMethod().hasDebugSequence()) {
-            return getIns().getForcedExtraLines(DebugLineNumberBlock.class);
+            return getIns().getForcedReferencingLabels(DebugLineNumberBlock.class);
         }
         return EmptyIterator.of();
     }

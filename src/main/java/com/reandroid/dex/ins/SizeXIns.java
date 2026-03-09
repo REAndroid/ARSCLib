@@ -24,6 +24,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.DualKeyReference;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.reference.InsIdSectionReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -423,7 +424,7 @@ public class SizeXIns extends Ins {
         } else if (operandType == OperandType.LABEL) {
             SmaliLabel smaliLabel = ((SmaliInstructionOperand.SmaliLabelOperand) operand)
                     .getLabel();
-            Label label = (Label) this;
+            InstructionLabel label = (InstructionLabel) this;
             smaliLabel.setLabelName(label.getLabelName());
         }
     }

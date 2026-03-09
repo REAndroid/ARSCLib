@@ -19,9 +19,9 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
-import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.program.Instruction;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -34,12 +34,12 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class DebugElementBlock extends FixedDexContainerWithTool implements
-        DebugElement, ExtraLine {
+        DebugElement {
     
     private final ByteItem elementType;
     private int address;
     private int lineNumber;
-    private Ins targetIns;
+    private Instruction targetIns;
 
     DebugElementBlock(int childesCount, int flag) {
         super(childesCount + 1);
@@ -57,15 +57,15 @@ public abstract class DebugElementBlock extends FixedDexContainerWithTool implem
     }
 
     @Override
-    public Ins getTargetIns() {
+    public Instruction getTargetInstruction() {
         return targetIns;
     }
     @Override
-    public void setTargetIns(Ins targetIns) {
+    public void setTargetInstruction(Instruction targetIns) {
         if (targetIns != this.targetIns) {
             this.targetIns = targetIns;
             if (targetIns != null) {
-                targetIns.addReferenceLabel(this);
+                targetIns.addReferencingLabel(this);
             }
         }
     }
@@ -318,7 +318,7 @@ public abstract class DebugElementBlock extends FixedDexContainerWithTool implem
     }
 
     @Override
-    public void appendLabels(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if (isValid()) {
             getSmaliDirective().append(writer);
         }
@@ -327,17 +327,22 @@ public abstract class DebugElementBlock extends FixedDexContainerWithTool implem
     public boolean equalsLabel(Object obj) {
         return obj == this;
     }
+
     @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_DEBUG_LINE;
+    public void updateTarget() {
     }
     @Override
-    public int compareExtraLine(ExtraLine other) {
+    public int getOwnerAddress() {
+        return -1;
+    }
+
+    @Override
+    public int compareLabel(InstructionLabel other) {
         if (other == this) {
             return 0;
         }
         if (!(other instanceof DebugElementBlock)) {
-            return ExtraLine.super.compareExtraLine(other);
+            return InstructionLabel.compareLabels(this, other);
         }
         DebugElementBlock element = (DebugElementBlock) other;
         return CompareUtil.compare(getIndex(), element.getIndex());

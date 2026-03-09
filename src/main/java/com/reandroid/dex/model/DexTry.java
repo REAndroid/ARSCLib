@@ -194,7 +194,7 @@ public class DexTry extends DexCode {
             }
             previous = label;
             writer.newLine();
-            label.appendLabels(writer);
+            label.appendLabelName(writer);
         }
         writer.indentPlus();
         Iterator<DexInstruction> instructions = getInstructions();
@@ -209,13 +209,13 @@ public class DexTry extends DexCode {
             }
             previous = label;
             writer.newLine();
-            label.appendLabels(writer);
+            label.appendLabelName(writer);
         }
         handlers = tryItem.getExceptionHandlers();
         while (handlers.hasNext()){
             ExceptionLabel label = handlers.next().getHandlerLabel();
             writer.newLine();
-            label.appendLabels(writer);
+            label.appendLabelName(writer);
         }
     }
 

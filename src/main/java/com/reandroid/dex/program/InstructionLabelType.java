@@ -48,30 +48,30 @@ public class InstructionLabelType implements Comparable<InstructionLabelType> {
         LINE = new InstructionLabelType(0, ".line ");
         DEBUG = new InstructionLabelType(1, "");
 
-        TRY_END = new InstructionLabelType(4, ":try_end_");
-        CATCH_HANDLER = new InstructionLabelType(5, ".catch ");
-        CATCH_ALL_HANDLER = new InstructionLabelType(6, ".catchall ");
+        TRY_END = new InstructionLabelType(8, ":try_end_");
+        CATCH_HANDLER = new InstructionLabelType(9, ".catch ");
+        CATCH_ALL_HANDLER = new InstructionLabelType(10, ".catchall ");
 
-        CATCH = new InstructionLabelType(10, ":catch_");
-        CATCH_ALL = new InstructionLabelType(11, ":catchall_");
+        CATCH = new InstructionLabelType(16, ":catch_");
+        CATCH_ALL = new InstructionLabelType(17, ":catchall_");
 
-        COND = new InstructionLabelType(16, ":cond_");
-        GOTO = new InstructionLabelType(17, ":goto_");
+        COND = new InstructionLabelType(24, ":cond_");
+        GOTO = new InstructionLabelType(25, ":goto_");
 
-        ARRAY = new InstructionLabelType(20, ":array_");
-        ARRAY_DATA = new InstructionLabelType(21, ":array_data_");
-        P_SWITCH_DATA = new InstructionLabelType(22, ":pswitch_data_");
-        S_SWITCH_DATA = new InstructionLabelType(23, ":sswitch_data_");
+        ARRAY = new InstructionLabelType(32, ":array_");
+        ARRAY_DATA = new InstructionLabelType(33, ":array_data_");
+        P_SWITCH_DATA = new InstructionLabelType(34, ":pswitch_data_");
+        S_SWITCH_DATA = new InstructionLabelType(35, ":sswitch_data_");
 
-        P_SWITCH = new InstructionLabelType(24, ":pswitch_");
-        S_SWITCH = new InstructionLabelType(25, ":sswitch_");
+        P_SWITCH = new InstructionLabelType(40, ":pswitch_");
+        S_SWITCH = new InstructionLabelType(41, ":sswitch_");
 
-        INSTRUCTION = new InstructionLabelType(28, ":label_");
-        INSTRUCTION_OTHER = new InstructionLabelType(29, "");
+        INSTRUCTION = new InstructionLabelType(48, ":label_");
+        INSTRUCTION_OTHER = new InstructionLabelType(49, "");
 
-        TRY_START = new InstructionLabelType(32, ":try_start_");
+        TRY_START = new InstructionLabelType(56, ":try_start_");
 
-        OTHER = new InstructionLabelType(40, "");
+        OTHER = new InstructionLabelType(72, "");
     }
 
     private final int order;

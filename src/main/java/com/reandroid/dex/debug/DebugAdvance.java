@@ -45,7 +45,7 @@ public abstract class DebugAdvance extends DebugElementBlock {
     }
 
     @Override
-    public void appendLabels(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
     }
 
     @Override

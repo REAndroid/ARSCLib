@@ -26,6 +26,7 @@ import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.smali.model.SmaliCodeCatch;
 import com.reandroid.dex.smali.model.SmaliCodeCatchAll;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
@@ -38,7 +39,7 @@ import java.io.OutputStream;
 import java.util.Iterator;
 
 public class TryItem extends FixedDexContainerWithTool implements
-        Iterable<Label>, IdUsageIterator {
+        Iterable<InstructionLabel>, IdUsageIterator {
 
     private final HandlerOffsetArray handlerOffsetArray;
 
@@ -202,7 +203,7 @@ public class TryItem extends FixedDexContainerWithTool implements
     }
 
     @Override
-    public Iterator<Label> iterator(){
+    public Iterator<InstructionLabel> iterator(){
         return new ExpandIterator<>(getExceptionHandlers());
     }
     public boolean isEmpty() {

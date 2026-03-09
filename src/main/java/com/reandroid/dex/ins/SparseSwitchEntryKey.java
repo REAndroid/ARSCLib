@@ -17,20 +17,21 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.dex.program.Instruction;
 
 public class SparseSwitchEntryKey extends IntegerItem {
-    private Ins targetIns;
+
+    private Instruction targetInstruction;
 
     public SparseSwitchEntryKey() {
         super();
     }
 
-    public Ins getTargetIns() {
-        return targetIns;
+    public Instruction getTargetInstruction() {
+        return targetInstruction;
     }
-
-    public void setTargetIns(Ins targetIns) {
-        this.targetIns = targetIns;
+    public void setTargetInstruction(Instruction targetIns) {
+        this.targetInstruction = targetIns;
     }
 
     public static final Creator<SparseSwitchEntryKey> CREATOR = SparseSwitchEntryKey::new;

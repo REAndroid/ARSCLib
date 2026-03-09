@@ -19,6 +19,8 @@ public interface Instruction extends InstructionStatement {
     InstructionOpcode getOpcode();
     int getAddress();
     int getCodeUnits();
+    void addReferencingLabel(Object label);
+    boolean isRemoved();
     // TODO: implement everywhere
     default ReferenceLabelSet getReferenceLabelSet() {
         return null;

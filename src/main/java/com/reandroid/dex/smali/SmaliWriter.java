@@ -19,9 +19,9 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.ins.Label;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.smali.formatters.SequentialLabelFactory;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
@@ -489,7 +489,7 @@ public class SmaliWriter implements Appendable, Closeable {
         this.stateWritingInstructions = stateWritingInstructions;
     }
 
-    public void buildLabels(Iterator<? extends Label> iterator) {
+    public void buildLabels(Iterator<? extends InstructionLabel> iterator) {
         SequentialLabelFactory labelFactory = getOrCreateSequentialLabelFactory();
         if (labelFactory != null) {
             labelFactory.build(iterator);

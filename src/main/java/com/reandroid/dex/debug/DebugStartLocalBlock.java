@@ -95,7 +95,7 @@ public class DebugStartLocalBlock extends DebugRegisterNumber {
     }
 
     @Override
-    public void appendLabels(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if(isValid()) {
             getSmaliDirective().append(writer);
             writer.appendRegister(getRegisterNumber());

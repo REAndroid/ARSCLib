@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.dex.program.Instruction;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliPackedSwitchEntry;
@@ -25,34 +26,34 @@ import java.io.IOException;
 
 public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
 
-    private Ins targetIns;
+    private Instruction targetIns;
 
     public PackedSwitchEntry() {
         super();
     }
 
     @Override
-    public Ins getTargetIns() {
-        Ins targetIns = this.targetIns;
+    public Instruction getTargetInstruction() {
+        Instruction targetIns = this.targetIns;
         if (targetIns == null) {
-            setTargetIns(findTargetIns());
+            setTargetInstruction(findTargetIns());
             targetIns = this.targetIns;
         }
         return targetIns;
     }
 
     @Override
-    public void setTargetIns(Ins targetIns) {
+    public void setTargetInstruction(Instruction targetIns) {
         if (targetIns != this.targetIns) {
             this.targetIns = targetIns;
             if (targetIns != null) {
-                targetIns.addReferenceLabel(this);
+                targetIns.addReferencingLabel(this);
             }
         }
     }
 
     @Override
-    public InsPackedSwitchData getPayload() {
+    public InsPackedSwitchData getOwnerInstruction() {
         return getParentDataList().getSwitchData();
     }
 
@@ -78,13 +79,13 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
     }
 
     @Override
-    public void appendLabels(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         writer.appendLabelName(getLabelName());
         writer.appendComment(HexUtil.toSignedHex(get()));
     }
 
     @Override
-    public int getAddress() {
+    public int getOwnerAddress() {
         return super.get();
     }
 
@@ -94,7 +95,7 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
 
     @Override
     public int getTargetAddress() {
-        return getParentDataList().getBaseAddress() + getAddress();
+        return getParentDataList().getBaseAddress() + getOwnerAddress();
     }
 
     @Override
@@ -112,17 +113,25 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
         return HexUtil.toHex(":pswitch_", getTargetAddress(), 1);
     }
 
+    @Override
+    public boolean equalsLabel(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+        SwitchEntry entry = (SwitchEntry) obj;
+        return getTargetAddress() == entry.getTargetAddress() &&
+                this.get() == entry.get();
+    }
+
     private PackedSwitchDataList getParentDataList() {
         return (PackedSwitchDataList) getParent();
     }
 
-    @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_INSTRUCTION_LABEL;
-    }
-
     public void merge(PackedSwitchEntry data) {
-        setAddress(data.getAddress());
+        setAddress(data.getOwnerAddress());
     }
 
     public void fromSmali(SmaliPackedSwitchEntry smaliEntry) {

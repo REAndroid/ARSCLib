@@ -15,15 +15,52 @@
  */
 package com.reandroid.dex.program;
 
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 
+import java.io.IOException;
 import java.util.Comparator;
 
 public interface InstructionLabel extends InstructionStatement {
 
     int getTargetAddress();
     void setTargetAddress(int address);
+    Instruction getTargetInstruction();
+    default void setTargetInstruction(Instruction targetInstruction) {
+    }
+    default Instruction getOwnerInstruction() {
+        if (this instanceof Instruction) {
+            return (Instruction) this;
+        }
+        return null;
+    }
+    default int getOwnerAddress() {
+        Instruction instruction = getOwnerInstruction();
+        if (instruction != null) {
+            return instruction.getAddress();
+        }
+        return -1;
+    }
+    default boolean equalsLabel(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        InstructionLabel label = (InstructionLabel) obj;
+        return ObjectsUtil.equals(getLabelName(), label.getLabelName());
+    }
+    default boolean isRemoved() {
+        return false;
+    }
+    default void updateTarget() {
+        Instruction target = getTargetInstruction();
+        if (target != null && !target.isRemoved()) {
+            setTargetAddress(target.getAddress());
+        }
+    }
     // TODO: implement everywhere
     default String getLabelName() {
         return null;
@@ -33,6 +70,9 @@ public interface InstructionLabel extends InstructionStatement {
     @Override
     default ProgramType programType() {
         return ProgramType.UNKNOWN;
+    }
+    default void appendLabelName(SmaliWriter writer) throws IOException {
+        writer.appendLabelName(getLabelName());
     }
 
     default int compareLabel(InstructionLabel label) {
@@ -49,7 +89,7 @@ public interface InstructionLabel extends InstructionStatement {
         return i;
     }
 
-    Comparator<InstructionLabel> LABEL_COMPARATOR = InstructionLabel::compareLabels;
+    Comparator<InstructionLabel> LABEL_COMPARATOR = InstructionLabel::compareLabel;
 
     class LabelWrapper implements InstructionLabel {
 
@@ -67,6 +107,25 @@ public interface InstructionLabel extends InstructionStatement {
         public void setTargetAddress(int address) {
             getBaseLabel().setTargetAddress(address);
         }
+
+        @Override
+        public Instruction getTargetInstruction() {
+            return baseLabel.getTargetInstruction();
+        }
+        @Override
+        public void setTargetInstruction(Instruction targetInstruction) {
+            baseLabel.setTargetInstruction(targetInstruction);
+        }
+        @Override
+        public int getOwnerAddress() {
+            return baseLabel.getOwnerAddress();
+        }
+
+        @Override
+        public Instruction getOwnerInstruction() {
+            return baseLabel.getOwnerInstruction();
+        }
+
         @Override
         public String getLabelName() {
             return getBaseLabel().getLabelName();
@@ -92,6 +151,16 @@ public interface InstructionLabel extends InstructionStatement {
                 label = ((LabelWrapper) label).getBaseLabel();
             }
             return getBaseLabel().compareLabel(label);
+        }
+
+        @Override
+        public boolean equalsLabel(Object obj) {
+            return false;
+        }
+
+        @Override
+        public void appendLabelName(SmaliWriter writer) throws IOException {
+            getBaseLabel().appendLabelName(writer);
         }
 
         @Override

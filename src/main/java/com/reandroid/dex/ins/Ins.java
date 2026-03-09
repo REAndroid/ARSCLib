@@ -24,7 +24,11 @@ import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.program.*;
+import com.reandroid.dex.program.Instruction;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
+import com.reandroid.dex.program.ProgramType;
+import com.reandroid.dex.program.ReferenceLabelSet;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
@@ -41,8 +45,8 @@ import java.util.Iterator;
 public class Ins extends FixedDexContainerWithTool implements Instruction, SmaliFormat {
 
     private final Opcode<?> opcode;
-    private Object extraLineList;
-    private Ins targetIns;
+    private Object referencingLabelList;
+    private Instruction targetInstruction;
 
     Ins(int childesCount, Opcode<?> opcode) {
         super(childesCount);
@@ -54,14 +58,14 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
 
     public MethodDef getMethodDef() {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
+        if (instructionList != null) {
             return instructionList.getMethodDef();
         }
         return null;
     }
     public MethodKey getMethodKey() {
         MethodDef methodDef = getMethodDef();
-        if(methodDef != null) {
+        if (methodDef != null) {
             return methodDef.getKey();
         }
         return null;
@@ -71,7 +75,7 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         InstructionList current = methodDef.getInstructionList();
         methodDef.edit();
         InstructionList update = methodDef.getInstructionList();
-        if(current != update) {
+        if (current != update) {
             return update.get(getIndex());
         }
         return this;
@@ -84,43 +88,43 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
     }
 
     public void updateTargetAddress() {
-        if(this instanceof Label) {
-            Ins target = getTargetIns();
-            if(target == null) {
+        if (this instanceof InstructionLabel) {
+            Instruction target = getTargetInstruction();
+            if (target == null) {
                 throw new NullPointerException("Null target: " + this + ", " + getMethodKey());
             }
-            ((Label) this).setTargetAddress(target.getAddress());
+            ((InstructionLabel) this).setTargetAddress(target.getAddress());
         }
     }
-    public void transferExtraLinesTo(Ins destination) {
-        destination.extraLineList = ObjectsStore.addAll(
-                destination.extraLineList, this.getReferenceLabels());
+    public void transferReferenceLabelsTo(Ins destination) {
+        destination.referencingLabelList = ObjectsStore.addAll(
+                destination.referencingLabelList, this.getReferencingLabels());
 
-        Iterator<ExtraLine> iterator = destination.getReferenceLabels();
+        Iterator<InstructionLabel> iterator = destination.getReferencingLabels();
         while (iterator.hasNext()) {
-            ExtraLine extraLine = iterator.next();
-            extraLine.setTargetIns(null);
-            extraLine.setTargetIns(destination);
+            InstructionLabel label = iterator.next();
+            label.setTargetInstruction(null);
+            label.setTargetInstruction(destination);
         }
-        Ins target = this.targetIns;
-        if (target != null && destination instanceof Label) {
-            destination.setTargetIns(target);
+        Instruction target = this.targetInstruction;
+        if (target != null && destination instanceof InstructionLabel) {
+            destination.setTargetInstruction(target);
         }
         this.clearReferenceLabels();
     }
-    public void replace(Ins ins){
-        if(ins == null || ins == this){
+    public void replace(Ins ins) {
+        if (ins == null || ins == this) {
             return;
         }
         InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
+        if (instructionList == null) {
             return;
         }
         instructionList.replace(this, ins);
     }
-    public<T1 extends Ins> T1 replace(Opcode<T1> opcode){
+    public<T1 extends Ins> T1 replace(Opcode<T1> opcode) {
         InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
+        if (instructionList == null) {
             throw new DexException("Missing parent "
                     + InstructionList.class.getSimpleName());
         }
@@ -128,7 +132,7 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
     }
     public<T1 extends Ins> T1 createNext(Opcode<T1> opcode) {
         InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
+        if (instructionList == null) {
             throw new DexException("Parent " + getClass().getSimpleName() + " == null");
         }
         return instructionList.createAt(getIndex() + 1, opcode);
@@ -140,15 +144,15 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         }
         return instructionList.createAt(shiftLabels, getIndex() + 1, opcode);
     }
-    public void moveTo(int index){
+    public void moveTo(int index) {
         InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
+        if (instructionList == null) {
             throw new DexException("Parent " + getClass().getSimpleName() + " == null");
         }
         instructionList.moveTo(this, index);
     }
 
-    public boolean is(Opcode<?> opcode){
+    public boolean is(Opcode<?> opcode) {
         return opcode == getOpcode();
     }
 
@@ -163,135 +167,143 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         return getOpcode().getRegisterFormat();
     }
 
-    public int getCodeUnits(){
+    public int getCodeUnits() {
         return countBytes() / 2;
     }
-    public int getOutSize(){
+    public int getOutSize() {
         return 0;
     }
     public int getAddress() {
         InsBlockList insBlockList = getInsBlockList();
-        if(insBlockList != null) {
+        if (insBlockList != null) {
             return insBlockList.addressOf(this);
         }
         return -1;
     }
-    void linkTargetIns() {
-        Ins targetIns = this.targetIns;
-        if(targetIns == null) {
-            setTargetIns(findTargetIns());
+    public int getOwnerAddress() {
+        return getAddress();
+    }
+    public Ins getOwnerInstruction() {
+        return this;
+    }
+    void linkTargetInstruction() {
+        Instruction target = this.targetInstruction;
+        if (target == null) {
+            setTargetInstruction(findTargetIns());
         }
-        if((this instanceof Label) && this.targetIns == null) {
+        if ((this instanceof InstructionLabel) && this.targetInstruction == null) {
             throw new NullPointerException("Missing target: " + this + ", " + getMethodKey());
         }
     }
-    void unLinkTargetIns() {
-        Ins targetIns = this.targetIns;
-        if(targetIns != null) {
-            setTargetIns(null);
+    void detachTargetInstructions() {
+        Instruction target = this.targetInstruction;
+        if (target != null) {
+            setTargetInstruction(null);
         }
         clearReferenceLabels();
     }
-    public Ins getTargetIns() {
-        Ins targetIns = ensureTargetNotRemoved();
-        if(targetIns == null) {
-            targetIns = findTargetIns();
-            setTargetIns(targetIns);
-            targetIns = this.targetIns;
+    public Instruction getTargetInstruction() {
+        Instruction target = ensureTargetNotRemoved();
+        if (target == null) {
+            target = findTargetIns();
+            setTargetInstruction(target);
+            target = this.targetInstruction;
         }
-        return targetIns;
+        return target;
     }
-    public void setTargetIns(Ins targetIns) {
-        if(targetIns == this) {
+    public void setTargetInstruction(Instruction targetInstruction) {
+        if (targetInstruction == this) {
             // TODO: throw ?
             return;
         }
-        if(targetIns != this.targetIns) {
-            this.targetIns = targetIns;
-            if(targetIns != null) {
-                ((Label) this).setTargetAddress(targetIns.getAddress());
-                targetIns.addReferenceLabel((Label) this);
+        if (targetInstruction != this.targetInstruction) {
+            this.targetInstruction = targetInstruction;
+            if (targetInstruction != null) {
+                ((InstructionLabel) this).setTargetAddress(targetInstruction.getAddress());
+                targetInstruction.addReferencingLabel(this);
             }
         }
     }
 
-    private Ins ensureTargetNotRemoved() {
-        Ins target = this.targetIns;
-        if(target != null && target.isRemoved()) {
+    private Instruction ensureTargetNotRemoved() {
+        Instruction target = this.targetInstruction;
+        if (target != null && target.isRemoved()) {
             target = null;
-            this.targetIns = null;
+            this.targetInstruction = null;
         }
         return target;
     }
     private Ins findTargetIns() {
-        if(this instanceof Label) {
+        if (this instanceof InstructionLabel) {
             InsBlockList insBlockList = getInsBlockList();
-            if(insBlockList != null) {
-                int targetAddress = ((Label) this).getTargetAddress();
+            if (insBlockList != null) {
+                int targetAddress = ((InstructionLabel) this).getTargetAddress();
                 Ins target = insBlockList.getAtAddress(targetAddress);
-                if(targetAddress != 0 || target != this) {
+                if (targetAddress != 0 || target != this) {
                     return target;
                 }
             }
         }
         return null;
     }
-    public void addReferenceLabel(ExtraLine extraLine){
-        if (extraLine != this) {
-            this.extraLineList = ObjectsStore.add(this.extraLineList, extraLine);
+    public void addReferencingLabel(Object label) {
+        if (label != this) {
+            this.referencingLabelList = ObjectsStore.add(this.referencingLabelList, label);
         }
     }
-    public Iterator<ExtraLine> getReferenceLabels() {
-        ObjectsStore.sort(this.extraLineList, ExtraLine.COMPARATOR);
-        return ObjectsStore.iterator(this.extraLineList);
+    public Iterator<InstructionLabel> getReferencingLabels() {
+        ObjectsStore.sort(this.referencingLabelList, InstructionLabel.LABEL_COMPARATOR);
+        return ObjectsStore.iterator(this.referencingLabelList);
     }
-    public<T1> Iterator<T1> getReferenceLabels(Class<T1> instance) {
-        ObjectsStore.sort(this.extraLineList, ExtraLine.COMPARATOR);
-        return ObjectsStore.iterator(this.extraLineList, instance);
+    public<T1> Iterator<T1> getReferencingLabels(Class<T1> instance) {
+        ObjectsStore.sort(this.referencingLabelList, InstructionLabel.LABEL_COMPARATOR);
+        return ObjectsStore.iterator(this.referencingLabelList, instance);
     }
-    public Iterator<ExtraLine> getForcedExtraLines() {
+    public Iterator<InstructionLabel> getForcedReferencingLabels() {
         InstructionList instructionList = getInstructionList();
         if (instructionList == null) {
             return EmptyIterator.of();
         }
-        instructionList.linkExtraLines();
-        return getReferenceLabels();
+        instructionList.linkReferenceLabels();
+        return getReferencingLabels();
     }
-    public<T1> Iterator<T1> getForcedExtraLines(Class<T1> instance) {
+    public<T1> Iterator<T1> getForcedReferencingLabels(Class<T1> instance) {
         InstructionList instructionList = getInstructionList();
         if (instructionList == null) {
             return EmptyIterator.of();
         }
-        instructionList.linkExtraLines();
-        return getReferenceLabels(instance);
+        instructionList.linkReferenceLabels();
+        return getReferencingLabels(instance);
     }
     public void clearReferenceLabels() {
-        extraLineList = ObjectsStore.clear(extraLineList);
+        referencingLabelList = ObjectsStore.clear(referencingLabelList);
     }
     public void removeReferenceLabels(InstructionLabel label) {
-        extraLineList = ObjectsStore.remove(extraLineList, label);
+        referencingLabelList = ObjectsStore.remove(referencingLabelList, label);
     }
     public boolean hasReferenceLabels() {
-        return !ObjectsStore.isEmpty(extraLineList);
+        return !ObjectsStore.isEmpty(referencingLabelList);
     }
-    private void appendExtraLines(SmaliWriter writer) throws IOException {
-        Iterator<ExtraLine> iterator = getReferenceLabels();
-        ExtraLine extraLine = null;
+    private void appendReferenceLabels(SmaliWriter writer) throws IOException {
+        Iterator<InstructionLabel> iterator = getReferencingLabels();
+        InstructionLabel label = null;
         boolean hasHandler = false;
-        ExtraLine previous = null;
-        while (iterator.hasNext()){
-            extraLine = iterator.next();
-            if(extraLine.equalsLabel(previous)){
+        InstructionLabel previous = null;
+        while (iterator.hasNext()) {
+            label = iterator.next();
+            if (previous != null && label.equalsLabel(previous)) {
                 continue;
             }
             writer.newLine();
-            extraLine.appendLabels(writer);
-            if(!hasHandler){
-                hasHandler = extraLine.getSortOrder() == ExtraLine.ORDER_EXCEPTION_HANDLER;
+            boolean append = label.getLabelType().isHandler();
+            if (hasHandler && !append) {
+                writer.newLine();
             }
-            previous = extraLine;
+            label.appendLabelName(writer);
+            hasHandler = append;
+            previous = label;
         }
-        if(hasHandler && extraLine.getSortOrder() >= ExtraLine.ORDER_EXCEPTION_HANDLER){
+        if (hasHandler) {
             writer.newLine();
         }
     }
@@ -301,19 +313,19 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         return null;
     }
 
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
 
     }
     public boolean uses(Key key) {
         return false;
     }
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return EmptyIterator.of();
     }
     public boolean isRemoved() {
         return getParent() == null;
     }
-    public void merge(Ins ins){
+    public void merge(Ins ins) {
         throw new RuntimeException("merge method not implemented, opcode = " + getOpcode());
     }
     public void fromSmali(SmaliInstruction smaliInstruction) {
@@ -337,7 +349,7 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
             toSmaliRegisters(instruction);
         }
         if (hasReferenceLabels() && instruction.getCodeSet() != null) {
-            toSmaliExtraLines(instruction);
+            toSmaliReferenceLabels(instruction);
         }
         toSmaliOthers(instruction);
     }
@@ -345,36 +357,36 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
     }
     void toSmaliRegisters(SmaliInstruction instruction) {
     }
-    void toSmaliExtraLines(SmaliInstruction instruction) {
-        SmaliCodeSet smaliCodeSet = instruction.getCodeSet();
-        Iterator<Label> iterator = InstanceIterator.of(getReferenceLabels(),
-                Label.class, label -> !(label instanceof ExceptionLabel));
-        Label extraLine;
-        ExtraLine previous = null;
-        int index = smaliCodeSet.indexOf(instruction);
-        while (iterator.hasNext()){
-            extraLine = iterator.next();
-            if(extraLine.equalsLabel(previous)){
+    void toSmaliReferenceLabels(SmaliInstruction smaliInstruction) {
+        SmaliCodeSet smaliCodeSet = smaliInstruction.getCodeSet();
+        Iterator<InstructionLabel> iterator = InstanceIterator.of(getReferencingLabels(),
+                InstructionLabel.class, label -> !(label instanceof ExceptionLabel));
+        InstructionLabel label;
+        InstructionLabel previous = null;
+        int index = smaliCodeSet.indexOf(smaliInstruction);
+        while (iterator.hasNext()) {
+            label = iterator.next();
+            if (label.equalsLabel(previous)) {
                 continue;
             }
             SmaliLabel smaliLabel = new SmaliLabel();
             smaliCodeSet.add(index, smaliLabel);
-            smaliLabel.setLabelName(extraLine.getLabelName());
+            smaliLabel.setLabelName(label.getLabelName());
             index ++;
-            previous = extraLine;
+            previous = label;
         }
     }
     void toSmaliOthers(SmaliInstruction instruction) {
     }
     void validateOpcode(SmaliInstruction smaliInstruction) {
-        if(getOpcode() != smaliInstruction.getOpcode()) {
+        if (getOpcode() != smaliInstruction.getOpcode()) {
             throw new DexException("Mismatch opcode " + getOpcode()
                     + " vs " + smaliInstruction.getOpcode());
         }
     }
     @Override
     public final void append(SmaliWriter writer) throws IOException {
-        appendExtraLines(writer);
+        appendReferenceLabels(writer);
         writer.newLine();
         appendCode(writer);
     }
@@ -404,9 +416,9 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
             return exception.toString();
         }
     }
-    static int toSigned(int unsigned, int width){
+    static int toSigned(int unsigned, int width) {
         int half = width / 2;
-        if(unsigned <= half){
+        if (unsigned <= half) {
             return unsigned;
         }
         return unsigned - width - 1;
