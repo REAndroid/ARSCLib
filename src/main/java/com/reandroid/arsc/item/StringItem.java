@@ -24,9 +24,9 @@ import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.ObjectsStore;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -36,18 +36,21 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
 
     private boolean mUtf8;
-    private Object mReferencedList;
+    private final Set<ReferenceItem> mReferencedList;
     private StyleItem mStyleItem;
 
     public StringItem(boolean utf8) {
         super();
         this.mUtf8 = utf8;
+        this.mReferencedList = new HashSet<>();
     }
 
     public StyleDocument getStyleDocument() {
@@ -73,22 +76,22 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
 
     public void removeReference(ReferenceItem reference) {
-        mReferencedList = ObjectsStore.remove(mReferencedList, reference);
+        mReferencedList.remove(reference);
     }
     public void clearReferences() {
-        mReferencedList = ObjectsStore.clear(mReferencedList);
+        mReferencedList.clear();
     }
     public boolean hasReference() {
         ensureStringLinkUnlocked();
-        return ObjectsStore.containsIf(mReferencedList, referenceItem ->
-                !(referenceItem instanceof StyleItem.StyleIndexReference));
+        return FilterIterator.of(mReferencedList.iterator(), referenceItem ->
+                !(referenceItem instanceof StyleItem.StyleIndexReference)).hasNext();
     }
     public int getReferencesSize() {
-        return ObjectsStore.size(mReferencedList);
+        return mReferencedList.size();
     }
     public Iterator<ReferenceItem> getReferences() {
         ensureStringLinkUnlocked();
-        return ObjectsStore.iterator(mReferencedList);
+        return mReferencedList.iterator();
     }
     void ensureStringLinkUnlocked() {
         StringPool<?> stringPool = getParentInstance(StringPool.class);
@@ -98,7 +101,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     public void addReference(ReferenceItem reference) {
         if (reference != null) {
-            mReferencedList = ObjectsStore.add(mReferencedList, reference);
+            mReferencedList.add(reference);
             int index = this.getIndex();
             if (reference.get() != index) {
                 reference.set(index);
@@ -106,9 +109,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
     }
     private void reUpdateReferences(int newIndex) {
-        Iterator<ReferenceItem> iterator = ObjectsStore.clonedIterator(mReferencedList);
-        while (iterator.hasNext()) {
-            ReferenceItem reference = iterator.next();
+        for (ReferenceItem reference : new HashSet<>(mReferencedList)) {
             reference.set(newIndex);
         }
     }
@@ -360,9 +361,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         if (getIndex() < 0 || source.getIndex() < 0) {
             return;
         }
-        Iterator<ReferenceItem> iterator = ObjectsStore.clonedIterator(source.mReferencedList);
-        while (iterator.hasNext()) {
-            ReferenceItem reference = iterator.next();
+        for (ReferenceItem reference : new HashSet<>(source.mReferencedList)) {
             if (isTransferable(reference)) {
                 source.removeReference(reference);
                 addReference(reference);
