@@ -15,21 +15,19 @@
  */
 package com.reandroid.utils;
 
-import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
  * A utility class to hold few non-null objects, the main purpose is to minimize new List class creation.
  *    <br />If no entries, the container will be null.
  *    <br />If one entry, the container will become entry itself.
- *    <br />If more than one entry, List class will be created and becomes the container.
+ *    <br />If more than one entry, a {@link LinkedHashSet} will be created and becomes the container.
  * */
 public class ObjectsStore {
 
@@ -37,8 +35,8 @@ public class ObjectsStore {
         if (container == null) {
             return true;
         }
-        if (container.getClass() == ObjectsList.class) {
-            return ((ObjectsList) container).isEmpty();
+        if (container instanceof LinkedHashSet) {
+            return ((LinkedHashSet<?>) container).isEmpty();
         }
         return false;
     }
@@ -46,8 +44,8 @@ public class ObjectsStore {
         if (container == null) {
             return 0;
         }
-        if (container.getClass() == ObjectsList.class) {
-            return ((ObjectsList) container).size();
+        if (container instanceof LinkedHashSet) {
+            return ((LinkedHashSet<?>) container).size();
         }
         return 1;
     }
@@ -55,8 +53,8 @@ public class ObjectsStore {
         if (container == null) {
             return false;
         }
-        if (container.getClass() == ObjectsList.class) {
-            return ((ObjectsList) container).contains(item);
+        if (container instanceof LinkedHashSet) {
+            return ((LinkedHashSet<?>) container).contains(item);
         }
         return container.equals(item);
     }
@@ -64,22 +62,29 @@ public class ObjectsStore {
         return iteratorIf(container, predicate).hasNext();
     }
     public static Object clear(Object container) {
-        if (container != null && container.getClass() == ObjectsList.class) {
-            ((ObjectsList) container).clear();
+        if (container instanceof LinkedHashSet) {
+            ((LinkedHashSet<?>) container).clear();
         }
         return null;
     }
     public static void sort(Object container, Comparator<?> comparator) throws ClassCastException {
-        if (container != null && container.getClass() == ObjectsList.class) {
-            ((ObjectsList) container).sort(ObjectsUtil.cast(comparator));
+        if (container instanceof LinkedHashSet) {
+            LinkedHashSet<Object> set = ObjectsUtil.cast(container);
+            if (set.size() < 2) {
+                return;
+            }
+            ArrayList<Object> list = new ArrayList<>(set);
+            list.sort(ObjectsUtil.cast(comparator));
+            set.clear();
+            set.addAll(list);
         }
     }
     public static<T> Iterator<T> iterator(Object container) throws ClassCastException {
         Iterator<?> iterator;
         if (container == null) {
             iterator = EmptyIterator.of();
-        } else if (container.getClass() == ObjectsList.class) {
-            iterator = ((ObjectsList) container).iterator();
+        } else if (container instanceof LinkedHashSet) {
+            iterator = ((LinkedHashSet<?>) container).iterator();
         } else {
             iterator = SingleIterator.of(container);
         }
@@ -89,8 +94,8 @@ public class ObjectsStore {
         Iterator<?> iterator;
         if (container == null) {
             iterator = EmptyIterator.of();
-        } else if (container.getClass() == ObjectsList.class) {
-            iterator = ((ObjectsList) container).iterator(instance);
+        } else if (container instanceof LinkedHashSet) {
+            iterator = InstanceIterator.of(((LinkedHashSet<?>) container).iterator(), instance);
         } else if (instance.isInstance(container)) {
             iterator = SingleIterator.of(container);
         } else {
@@ -102,8 +107,8 @@ public class ObjectsStore {
         Iterator<?> iterator;
         if (container == null) {
             iterator = EmptyIterator.of();
-        } else if (container.getClass() == ObjectsList.class) {
-            iterator = ((ObjectsList) container).clonedIterator();
+        } else if (container instanceof LinkedHashSet) {
+            iterator = new ArrayList<>((LinkedHashSet<?>) container).iterator();
         } else {
             iterator = SingleIterator.of(container);
         }
@@ -116,22 +121,22 @@ public class ObjectsStore {
         if (item == null || container == null || item == container) {
             return null;
         }
-        if (container.getClass() != ObjectsList.class) {
+        if (!(container instanceof LinkedHashSet)) {
             if (container.equals(item)) {
                 container = null;
             }
             return container;
         }
-        ObjectsList list = (ObjectsList) container;
-        list.remove(item);
-        int size = list.size();
+        LinkedHashSet<Object> set = ObjectsUtil.cast(container);
+        set.remove(item);
+        int size = set.size();
         if (size == 0) {
             return null;
         }
         if (size == 1) {
-            return list.get(0);
+            return set.iterator().next();
         }
-        return list;
+        return set;
     }
     public static Object add(Object container, Object item) {
         if (item == null || item == container) {
@@ -140,15 +145,15 @@ public class ObjectsStore {
         if (container == null) {
             return item;
         }
-        ObjectsList list;
-        if (container.getClass() == ObjectsList.class) {
-            list = (ObjectsList) container;
+        LinkedHashSet<Object> set;
+        if (container instanceof LinkedHashSet) {
+            set = ObjectsUtil.cast(container);
         } else {
-            list = new ObjectsList();
-            list.add(container);
+            set = new LinkedHashSet<>();
+            set.add(container);
         }
-        list.add(item);
-        return list;
+        set.add(item);
+        return set;
     }
     public static Object addAll(Object container, Iterator<?> iterator) {
         if (iterator == null || !iterator.hasNext()) {
@@ -158,85 +163,87 @@ public class ObjectsStore {
         if (!iterator.hasNext()) {
             return add(container, first);
         }
-        ObjectsList list;
-        if (container != null && container.getClass() == ObjectsList.class) {
-            list = (ObjectsList) container;
+        LinkedHashSet<Object> set;
+        if (container instanceof LinkedHashSet) {
+            set = ObjectsUtil.cast(container);
         } else {
-            list = new ObjectsList();
+            set = new LinkedHashSet<>();
             if (container != null) {
-                list.add(container);
+                set.add(container);
             }
         }
-        list.add(first);
-        list.add(iterator.next());
-        list.addAll(iterator);
-        int size = list.size();
+        set.add(first);
+        while (iterator.hasNext()) {
+            set.add(iterator.next());
+        }
+        int size = set.size();
         if (size == 0) {
             return null;
         }
         if (size == 1) {
-            return list.get(0);
+            return set.iterator().next();
         }
-        return list;
+        return set;
     }
     public static Object addAll(Object container, Collection<?> collection) {
         if (collection == null || collection.isEmpty()) {
             return container;
         }
-        ObjectsList list;
-        if (container != null && container.getClass() == ObjectsList.class) {
-            list = (ObjectsList) container;
-            list.addAll(collection);
+        LinkedHashSet<Object> set;
+        if (container instanceof LinkedHashSet) {
+            set = ObjectsUtil.cast(container);
         } else {
-            if (container == null) {
-                list = new ObjectsList(collection.toArray());
-            } else {
-                list = new ObjectsList();
-                list.add(container);
-                list.addAll(collection);
+            set = new LinkedHashSet<>();
+            if (container != null) {
+                set.add(container);
             }
         }
-        int size = list.size();
+        set.addAll(collection);
+        int size = set.size();
         if (size == 0) {
             return null;
         }
         if (size == 1) {
-            return list.get(0);
+            return set.iterator().next();
         }
-        return list;
+        return set;
     }
     public static Object addAll(Object container, Object[] itemsArray) {
         if (itemsArray == null || itemsArray.length == 0) {
             return container;
         }
-        ObjectsList list;
-        if (container != null && container.getClass() == ObjectsList.class) {
-            list = (ObjectsList) container;
-            list.addAll(itemsArray);
+        LinkedHashSet<Object> set;
+        if (container instanceof LinkedHashSet) {
+            set = ObjectsUtil.cast(container);
         } else {
-            if (container == null) {
-                list = new ObjectsList(itemsArray);
-            } else {
-                list = new ObjectsList();
-                list.add(container);
-                list.addAll(itemsArray);
+            set = new LinkedHashSet<>();
+            if (container != null) {
+                set.add(container);
             }
         }
-        int size = list.size();
+        set.addAll(Arrays.asList(itemsArray));
+        int size = set.size();
         if (size == 0) {
             return null;
         }
         if (size == 1) {
-            return list.get(0);
+            return set.iterator().next();
         }
-        return list;
+        return set;
     }
     public static<T> T get(Object container, int i) throws ClassCastException {
         Object item = null;
         if (container != null) {
-            if (container.getClass() == ObjectsList.class) {
-                item = ((ObjectsList) container).get(i);
-            } else if(i == 0) {
+            if (container instanceof LinkedHashSet) {
+                int index = 0;
+                for (Object obj : (LinkedHashSet<?>) container) {
+                    if (index == i) {
+                        item = obj;
+                        break;
+                    }
+                    index++;
+                }
+            } else if (i == 0) {
                 item = container;
             }
         }
@@ -246,9 +253,14 @@ public class ObjectsStore {
         if (container == null || array == null || array.length == 0) {
             return;
         }
-        if (container.getClass() == ObjectsList.class) {
-            ObjectsList list = (ObjectsList) container;
-            list.toArrayFill(array);
+        if (container instanceof LinkedHashSet) {
+            int i = 0;
+            for (Object obj : (LinkedHashSet<?>) container) {
+                if (i >= array.length) {
+                    break;
+                }
+                array[i++] = obj;
+            }
         } else {
             array[0] = container;
         }
@@ -264,7 +276,7 @@ public class ObjectsStore {
         if (length == 1) {
             return array[0];
         }
-        return new ObjectsList(array);
+        return new LinkedHashSet<>(Arrays.asList(array));
     }
     public static Object create(Iterator<?> iterator) {
         if (iterator == null || !iterator.hasNext()) {
@@ -274,68 +286,11 @@ public class ObjectsStore {
         if (!iterator.hasNext()) {
             return first;
         }
-        ObjectsList list = new ObjectsList();
-        list.add(first);
-        list.addAll(iterator);
-        return list;
-    }
-
-    static final class ObjectsList extends ArrayCollection<Object> {
-
-        private boolean sorted;
-
-        ObjectsList() {
-            super(10);
+        LinkedHashSet<Object> set = new LinkedHashSet<>();
+        set.add(first);
+        while (iterator.hasNext()) {
+            set.add(iterator.next());
         }
-        ObjectsList(Object[] elements) {
-            super(elements);
-        }
-
-
-        @Override
-        public boolean remove(Object obj) {
-            boolean removed = super.remove(obj);
-            if (removed) {
-                sorted = false;
-            }
-            return removed;
-        }
-
-        @Override
-        public boolean add(Object item) {
-            if (containsExact(item) || item == null) {
-                return false;
-            }
-            sorted = false;
-            return super.add(item);
-        }
-
-        @Override
-        public void addAll(Iterator<?> iterator) {
-            while (iterator.hasNext()) {
-                this.add(iterator.next());
-            }
-        }
-
-        @Override
-        public boolean addAll(Collection<?> collection) {
-            int size = size();
-            this.add(collection.iterator());
-            return size != size();
-        }
-
-        @Override
-        public void sort(Comparator<? super Object> comparator) {
-            boolean sorted = this.sorted;
-            if (!sorted) {
-                if (size() < 2) {
-                    sorted = true;
-                }
-                this.sorted = true;
-            }
-            if (!sorted) {
-                super.sort(comparator);
-            }
-        }
+        return set;
     }
 }
