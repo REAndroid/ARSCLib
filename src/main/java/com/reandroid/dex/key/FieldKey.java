@@ -225,6 +225,9 @@ public class FieldKey extends NamedTypeKey implements MemberKey {
         }
         return new FieldKey(declaring, name, type);
     }
+    public static FieldKey create(TypeKey declaring, StringKey name, TypeDescriptorKey type) {
+        return create(declaring, name, (TypeKey) type);
+    }
     public static FieldKey create(TypeKey declaring, String name, Key type) {
         return create(declaring, name, (TypeKey) type);
     }

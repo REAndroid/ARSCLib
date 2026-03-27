@@ -91,6 +91,9 @@ public class EnumKey extends FieldKey {
     public static EnumKey create(TypeKey declaring, StringKey name, TypeKey type) {
         return create(FieldKey.create(declaring, name, type));
     }
+    public static EnumKey create(TypeKey declaring, StringKey name, TypeDescriptorKey type) {
+        return create(declaring, name, (TypeKey) type);
+    }
 
     public static EnumKey parse(String text) {
         if (text == null) {
