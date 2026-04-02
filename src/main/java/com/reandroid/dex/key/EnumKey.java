@@ -30,24 +30,36 @@ public class EnumKey extends FieldKey {
 
     @Override
     public EnumKey changeDeclaring(TypeKey typeKey) {
-        return create(super.changeDeclaring(typeKey));
+        return (EnumKey) super.changeDeclaring(typeKey);
     }
     @Override
     public EnumKey changeName(String name) {
-        return create(super.changeName(name));
+        return (EnumKey) super.changeName(name);
     }
     @Override
     public EnumKey changeName(StringKey name) {
-        return create(super.changeName(name));
+        return (EnumKey) super.changeName(name);
     }
     @Override
-    public EnumKey changeType(TypeKey typeKey) {
-        return create(super.changeType(typeKey));
+    public EnumKey changeType(TypeDescriptorKey type) {
+        return (EnumKey) super.changeType(type);
+    }
+
+    @Override
+    protected NamedTypeKey newInstance(TypeKey declaring, StringKey nameKey, TypeDescriptorKey type) {
+        if (declaring == null || !(type instanceof TypeKey)) {
+            return super.newInstance(declaring, nameKey, type);
+        }
+        return EnumKey.create(declaring, nameKey, (TypeKey) type);
     }
 
     @Override
     public EnumKey replaceKey(Key search, Key replace) {
-        return create(super.replaceKey(search, replace));
+        FieldKey result = super.replaceKey(search, replace);
+        if (result == this) {
+            return this;
+        }
+        return create(result);
     }
 
     @Override
@@ -69,6 +81,18 @@ public class EnumKey extends FieldKey {
             return (EnumKey) fieldKey;
         }
         return new EnumKey(fieldKey);
+    }
+    public static EnumKey create(TypeKey declaring, NamedTypeKey namedTypeKey) {
+        return create(FieldKey.create(declaring, namedTypeKey));
+    }
+    public static EnumKey create(TypeKey declaring, StringKey name, Key type) {
+        return create(declaring, name, (TypeKey) type);
+    }
+    public static EnumKey create(TypeKey declaring, StringKey name, TypeKey type) {
+        return create(FieldKey.create(declaring, name, type));
+    }
+    public static EnumKey create(TypeKey declaring, StringKey name, TypeDescriptorKey type) {
+        return create(declaring, name, (TypeKey) type);
     }
 
     public static EnumKey parse(String text) {

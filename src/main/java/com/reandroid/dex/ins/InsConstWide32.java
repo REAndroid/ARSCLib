@@ -48,8 +48,4 @@ public class InsConstWide32 extends Ins31i implements ConstNumberLong{
         setRegister(0, register);
     }
 
-    @Override
-    public boolean isWideRegisterAt(int index) {
-        return true;
-    }
 }

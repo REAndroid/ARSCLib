@@ -63,7 +63,7 @@ public class NumbersUtil {
         } else {
             bits = 1;
         }
-        bits = bits + countBits(num);
+        bits = bits + bitWidth(num);
         long sign = 1L << (bits - 1);
         if (num > sign && bits < 64) {
             bits = bits + 1;
@@ -74,9 +74,28 @@ public class NumbersUtil {
         if (unsigned == 0) {
             return 1;
         }
-        return countBits(unsigned);
+        return bitWidth(unsigned);
     }
-    public static int countBits(long num) {
+
+    public static int bitCount(int i) {
+        int count = 0;
+        while (i != 0) {
+            if ((i & 0x1) != 0) {
+                count ++;
+            }
+            i = i >>> 1;
+        }
+        return count;
+    }
+    public static int bitWidth(int num) {
+        int bits = 0;
+        while (num != 0) {
+            num = num >>> 1;
+            bits ++;
+        }
+        return bits;
+    }
+    public static int bitWidth(long num) {
         int bits = 0;
         while (num != 0) {
             num = num >>> 1;

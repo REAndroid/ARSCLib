@@ -16,7 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugRestartLocal;
+import com.reandroid.dex.debug.DebugRestartLocalBlock;
 
 public class SmaliDebugRestartLocal extends SmaliDebugRegister {
 
@@ -25,7 +25,7 @@ public class SmaliDebugRestartLocal extends SmaliDebugRegister {
     }
 
     @Override
-    public DebugElementType<DebugRestartLocal> getDebugElementType() {
+    public DebugElementType<DebugRestartLocalBlock> getDebugElementType() {
         return DebugElementType.RESTART_LOCAL;
     }
 }

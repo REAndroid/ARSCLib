@@ -20,7 +20,7 @@ import java.util.NoSuchElementException;
 
 public abstract class IterableIterator<E, T> implements Iterator<T> {
     private final Iterator<? extends E> iterator;
-    private Iterator<T> mCurrent;
+    private Iterator<? extends T> mCurrent;
     private int mCount;
     private boolean mStop;
     public IterableIterator(Iterator<? extends E> iterator){
@@ -32,17 +32,17 @@ public abstract class IterableIterator<E, T> implements Iterator<T> {
     public void stop(){
         mStop = true;
     }
-    public abstract Iterator<T> iterator(E element);
+    public abstract Iterator<? extends T> iterator(E element);
 
     @Override
     public boolean hasNext() {
-        Iterator<T> current = getCurrent();
+        Iterator<? extends T> current = getCurrent();
         return current != null && !mStop && current.hasNext();
     }
 
     @Override
     public T next() {
-        Iterator<T> current = getCurrent();
+        Iterator<? extends T> current = getCurrent();
         if(current == null){
             throw new NoSuchElementException();
         }
@@ -51,11 +51,11 @@ public abstract class IterableIterator<E, T> implements Iterator<T> {
         return item;
     }
 
-    private Iterator<T> getCurrent(){
+    private Iterator<? extends T> getCurrent(){
         if(mCurrent == null || !mCurrent.hasNext()) {
             mCurrent = null;
             while (iterator.hasNext()) {
-                Iterator<T> item = iterator(iterator.next());
+                Iterator<? extends T> item = iterator(iterator.next());
                 if (item != null && item.hasNext()) {
                     mCurrent = item;
                     break;

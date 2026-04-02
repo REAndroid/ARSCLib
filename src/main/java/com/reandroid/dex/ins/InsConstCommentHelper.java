@@ -95,7 +95,7 @@ class InsConstCommentHelper {
     }
     private static TypeKey findDataTypeFromReturnInsLazy(SizeXIns sizeXIns) {
         Opcode<?> opcode = sizeXIns.getOpcode();
-        if (!opcode.isReturning()) {
+        if (!opcode.isReturn()) {
             return null;
         }
         MethodDef methodDef = sizeXIns.getMethodDef();

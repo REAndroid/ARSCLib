@@ -16,13 +16,15 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.ProgramKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.AccessibleProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.utils.collection.CombiningIterator;
 
 import java.util.Iterator;
 
@@ -30,7 +32,6 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
 
     private StringKey name;
     private int accessFlagsValue;
-    private int hiddenApiFlagsValue;
 
     private SmaliAnnotationSet annotation;
 
@@ -38,7 +39,6 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
 
     public SmaliDef() {
         super();
-        this.hiddenApiFlagsValue = HiddenApiFlag.NO_RESTRICTION;
     }
 
     @Override
@@ -53,12 +53,6 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
         this.accessFlagsValue = accessFlagsValue;
     }
 
-    public int getHiddenApiFlagsValue() {
-        return hiddenApiFlagsValue;
-    }
-    public void setHiddenApiFlagsValue(int hiddenApiFlagsValue) {
-        this.hiddenApiFlagsValue = hiddenApiFlagsValue;
-    }
     @Override
     public AnnotationSetKey getAnnotation() {
         SmaliAnnotationSet annotationSet = getAnnotationSet();
@@ -90,20 +84,6 @@ public abstract class SmaliDef extends Smali implements AccessibleProgram, Smali
     }
     public void setAccessFlags(Iterator<AccessFlag> iterator) {
         setAccessFlagsValue(AccessFlag.combineAccessFlags(iterator));
-    }
-    public Iterator<HiddenApiFlag> getHiddenApiFlags() {
-        return HiddenApiFlag.valuesOf(getHiddenApiFlagsValue());
-    }
-    public void setHiddenApiFlags(HiddenApiFlag ... flags) {
-        setHiddenApiFlagsValue(HiddenApiFlag.combineHiddenApiFlag(flags));
-    }
-    public void setHiddenApiFlags(Iterator<HiddenApiFlag> iterator) {
-        setHiddenApiFlagsValue(HiddenApiFlag.combineHiddenApiFlag(iterator));
-    }
-
-    @Override
-    public Iterator<? extends Modifier> getModifiers() {
-        return CombiningIterator.two(getAccessFlags(), getHiddenApiFlags());
     }
 
     public StringKey getNameKey() {

@@ -19,9 +19,9 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.debug.DebugElement;
+import com.reandroid.dex.debug.DebugElementBlock;
 import com.reandroid.dex.debug.DebugSequence;
-import com.reandroid.dex.debug.DebugParameter;
+import com.reandroid.dex.debug.DebugParameterBlock;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
@@ -40,7 +40,7 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
 
     private final Ule128Item lineStart;
     private final Ule128Item debugParameterCount;
-    private BlockList<DebugParameter> debugParametersArray;
+    private BlockList<DebugParameterBlock> debugParametersArray;
     private final DebugSequence debugSequence;
 
     private final DataKey<DebugInfo> debugKey;
@@ -95,24 +95,24 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         }
         return 0;
     }
-    public DebugParameter getDebugParameter(int index) {
-        BlockList<DebugParameter> debugParametersArray = this.debugParametersArray;
+    public DebugParameterBlock getDebugParameter(int index) {
+        BlockList<DebugParameterBlock> debugParametersArray = this.debugParametersArray;
         if (debugParametersArray != null) {
             return debugParametersArray.get(index);
         }
         return null;
     }
-    public DebugParameter getOrCreateDebugParameter(int index) {
-        BlockList<DebugParameter> debugParametersArray = initParametersArray();
+    public DebugParameterBlock getOrCreateDebugParameter(int index) {
+        BlockList<DebugParameterBlock> debugParametersArray = initParametersArray();
         debugParametersArray.ensureSize(index + 1);
         return debugParametersArray.get(index);
     }
     public void removeDebugParameter(int index) {
-        BlockList<DebugParameter> parameterNames = this.debugParametersArray;
+        BlockList<DebugParameterBlock> parameterNames = this.debugParametersArray;
         if (parameterNames == null) {
             return;
         }
-        DebugParameter parameter = parameterNames.get(index);
+        DebugParameterBlock parameter = parameterNames.get(index);
         if (parameter == null) {
             return;
         }
@@ -127,16 +127,16 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         return !getDebugSequence().isEmpty();
     }
     public boolean hasParameters() {
-        BlockList<DebugParameter> array = debugParametersArray;
+        BlockList<DebugParameterBlock> array = debugParametersArray;
         return array != null && array.size() != 0;
     }
-    public Iterator<DebugParameter> getParameters() {
+    public Iterator<DebugParameterBlock> getParameters() {
         if (debugParametersArray != null) {
             return debugParametersArray.iterator();
         }
         return EmptyIterator.of();
     }
-    public Iterator<DebugElement> getExtraLines() {
+    public Iterator<DebugElementBlock> getExtraLines() {
         return getDebugSequence().getExtraLines();
     }
     public DebugSequence getDebugSequence() {
@@ -148,14 +148,14 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         lineStart.onReadBytes(reader);
         debugParameterCount.onReadBytes(reader);
         if (debugParameterCount.get() > 0) {
-            BlockList<DebugParameter> array = initParametersArray();
+            BlockList<DebugParameterBlock> array = initParametersArray();
             array.setSize(debugParameterCount.get());
             array.readChildes(reader);
         }
         debugSequence.onReadBytes(reader);
     }
-    private BlockList<DebugParameter> initParametersArray() {
-        BlockList<DebugParameter> debugParametersArray = this.debugParametersArray;
+    private BlockList<DebugParameterBlock> initParametersArray() {
+        BlockList<DebugParameterBlock> debugParametersArray = this.debugParametersArray;
         if (debugParametersArray == null) {
             debugParametersArray = new BlockList<>();
             this.debugParametersArray = debugParametersArray;
@@ -166,7 +166,7 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
     }
 
     public void onRemove() {
-        BlockList<DebugParameter> array = this.debugParametersArray;
+        BlockList<DebugParameterBlock> array = this.debugParametersArray;
         if (array != null) {
             this.debugParametersArray = null;
             array.clearChildes();
@@ -191,9 +191,9 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
     }
 
     public Iterator<IdItem> usedIds() {
-        Iterator<IdItem> iterator1 = new IterableIterator<DebugParameter, IdItem>(getParameters()) {
+        Iterator<IdItem> iterator1 = new IterableIterator<DebugParameterBlock, IdItem>(getParameters()) {
             @Override
-            public Iterator<IdItem> iterator(DebugParameter element) {
+            public Iterator<IdItem> iterator(DebugParameterBlock element) {
                 return element.usedIds();
             }
         };
@@ -207,11 +207,11 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         int count = debugInfo.getParameterCount();
         debugParameterCount.set(count);
         if (count != 0) {
-            BlockList<DebugParameter> array = initParametersArray();
+            BlockList<DebugParameterBlock> array = initParametersArray();
             array.setSize(count);
             for(int i = 0; i < count; i++) {
-                DebugParameter comingParameter = debugInfo.getDebugParameter(i);
-                DebugParameter parameter = array.get(i);
+                DebugParameterBlock comingParameter = debugInfo.getDebugParameter(i);
+                DebugParameterBlock parameter = array.get(i);
                 parameter.merge(comingParameter);
             }
         }
@@ -279,7 +279,7 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         int hash = 1;
         if (!isEmpty()) {
             hash = hash * 31 + lineStart.get();
-            BlockList<DebugParameter> array = this.debugParametersArray;
+            BlockList<DebugParameterBlock> array = this.debugParametersArray;
             hash = hash * 31;
             if (array != null) {
                 hash = hash + array.hashCode();
@@ -299,6 +299,6 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
                 ")}";
     }
 
-    private static final Creator<DebugParameter> CREATOR = DebugParameter::new;
+    private static final Creator<DebugParameterBlock> CREATOR = DebugParameterBlock::new;
 
 }

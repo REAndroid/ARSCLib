@@ -23,7 +23,6 @@ import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.FilterIterator;
@@ -33,10 +32,10 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class DebugSequence extends FixedDexContainer implements Iterable<DebugElement> {
+public class DebugSequence extends FixedDexContainer implements Iterable<DebugElementBlock> {
 
     private final IntegerReference lineStart;
-    private BlockList<DebugElement> elementList;
+    private BlockList<DebugElementBlock> elementList;
 
     public DebugSequence(IntegerReference lineStart) {
         super(2);
@@ -44,7 +43,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         addChild(1, DebugEndSequence.INSTANCE);
     }
 
-    public<T1 extends DebugElement> T1 getOrCreateAtAddress(DebugElementType<T1> elementType, int address) {
+    public<T1 extends DebugElementBlock> T1 getOrCreateAtAddress(DebugElementType<T1> elementType, int address) {
         T1 prev = null;
         Iterator<T1> iterator = iterator(elementType);
         while (iterator.hasNext()) {
@@ -66,13 +65,13 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         element.setTargetAddress(address);
         return element;
     }
-    public Iterator<DebugElement> getAtAddress(int address) {
+    public Iterator<DebugElementBlock> getAtAddress(int address) {
         return FilterIterator.of(iterator(), element -> address == element.getTargetAddress());
     }
     public void removeInvalid() {
         int size = size();
         for(int i = size - 1; i >= 0; i --) {
-            DebugElement element = get(i);
+            DebugElementBlock element = get(i);
             if (!element.isValid()) {
                 remove(element);
             }
@@ -92,13 +91,13 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         lineStart.set(start);
     }
 
-    public Iterator<DebugElement> getExtraLines() {
+    public Iterator<DebugElementBlock> getExtraLines() {
         return new FilterIterator<>(iterator(),
                 element -> (!(element instanceof DebugAdvance)));
     }
-    public boolean removeIf(Predicate<? super DebugElement> filter) {
+    public boolean removeIf(Predicate<? super DebugElementBlock> filter) {
         boolean removedOnce = false;
-        Iterator<DebugElement> iterator = FilterIterator.of(clonedIterator(), filter);
+        Iterator<DebugElementBlock> iterator = FilterIterator.of(clonedIterator(), filter);
         while (iterator.hasNext()) {
             boolean removed = removeInternal(iterator.next());
             if (removed) {
@@ -110,7 +109,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         }
         return removedOnce;
     }
-    public boolean remove(DebugElement element) {
+    public boolean remove(DebugElementBlock element) {
         if (element == null || element.getParent(getClass()) != this) {
             return false;
         }
@@ -120,7 +119,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         }
         return removed;
     }
-    private boolean removeInternal(DebugElement element) {
+    private boolean removeInternal(DebugElementBlock element) {
         element.onPreRemove(this);
         boolean removed = getElementList().remove(element);
         if (removed) {
@@ -129,17 +128,17 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         }
         return removed;
     }
-    public<T1 extends DebugElement> T1 createAtPosition(DebugElementType<T1> type, int index) {
-        T1 element = type.newInstance();
+    public<T1 extends DebugElementBlock> T1 createAtPosition(DebugElementType<T1> type, int index) {
+        T1 element = type.newDebugBlock();
         add(index, element);
         return element;
     }
     @SuppressWarnings("unchecked")
-    public<T1 extends DebugElement> T1 createNext(DebugElementType<T1> type) {
+    public<T1 extends DebugElementBlock> T1 createNext(DebugElementType<T1> type) {
         if (type == DebugElementType.END_SEQUENCE) {
             return (T1) DebugEndSequence.INSTANCE;
         }
-        T1 element = type.newInstance();
+        T1 element = type.newDebugBlock();
         add(element);
         return element;
     }
@@ -155,7 +154,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
             return;
         }
         reader.seek(position);
-        BlockList<DebugElement> elementList = unlockElementList();
+        BlockList<DebugElementBlock> elementList = unlockElementList();
         unlockElementList().ensureCapacity(count);
         DebugElementType<?> type = readNext(reader);
         while (!type.is(DebugElementType.END_SEQUENCE)) {
@@ -167,11 +166,11 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
 
     private DebugElementType<?> readNext(BlockReader reader) throws IOException {
         DebugElementType<?> type = DebugElementType.readFlag(reader);
-        DebugElement debugElement;
+        DebugElementBlock debugElement;
         if (type == DebugElementType.END_SEQUENCE) {
             debugElement = DebugEndSequence.INSTANCE;
         } else {
-            debugElement = type.newInstance();
+            debugElement = type.newDebugBlock();
             unlockElementList().add(debugElement);
         }
         debugElement.readBytes(reader);
@@ -179,30 +178,30 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
     }
 
     private void cacheValues() {
-        DebugElement previous = null;
-        for(DebugElement element : this) {
+        DebugElementBlock previous = null;
+        for(DebugElementBlock element : this) {
             element.cacheValues(this, previous);
             previous = element;
         }
     }
     private void updateValues() {
-        DebugElement previous = null;
-        Iterator<DebugElement> iterator = clonedIterator();
+        DebugElementBlock previous = null;
+        Iterator<DebugElementBlock> iterator = clonedIterator();
         while (iterator.hasNext()) {
-            DebugElement element = iterator.next();
+            DebugElementBlock element = iterator.next();
             element.updateValues(this, previous);
             previous = element;
         }
     }
 
-    public DebugElement get(int i) {
+    public DebugElementBlock get(int i) {
         return getElementList().get(i);
     }
-    public void add(int i, DebugElement element) {
+    public void add(int i, DebugElementBlock element) {
         unlockElementList().add(i, element);
     }
     @SuppressWarnings("unchecked")
-    public<T1 extends DebugElement> Iterator<T1> iterator(DebugElementType<T1> type) {
+    public<T1 extends DebugElementBlock> Iterator<T1> iterator(DebugElementType<T1> type) {
         return ComputeIterator.of(iterator(), element -> {
             if (element.getElementType() == type) {
                 return (T1) element;
@@ -220,16 +219,16 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         return CollectionUtil.count(getVisible());
     }
     @Override
-    public Iterator<DebugElement> iterator() {
+    public Iterator<DebugElementBlock> iterator() {
         return getElementList().iterator();
     }
-    public Iterator<DebugElement> getVisible() {
-        return getElementList().iterator(DebugElement::isVisible);
+    public Iterator<DebugElementBlock> getVisible() {
+        return getElementList().iterator(DebugElementBlock::isVisible);
     }
-    public Iterator<DebugElement> clonedIterator() {
+    public Iterator<DebugElementBlock> clonedIterator() {
         return getElementList().clonedIterator();
     }
-    public boolean add(DebugElement element) {
+    public boolean add(DebugElementBlock element) {
         if (element == null || element.getClass() == DebugEndSequence.class) {
             return false;
         }
@@ -248,16 +247,16 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
 
 
     public Iterator<IdItem> usedIds() {
-        return new IterableIterator<DebugElement, IdItem>(iterator()) {
+        return new IterableIterator<DebugElementBlock, IdItem>(iterator()) {
             @Override
-            public Iterator<IdItem> iterator(DebugElement element) {
+            public Iterator<IdItem> iterator(DebugElementBlock element) {
                 return element.usedIds();
             }
         };
     }
 
-    private BlockList<DebugElement> unlockElementList() {
-        BlockList<DebugElement> elementList = this.elementList;
+    private BlockList<DebugElementBlock> unlockElementList() {
+        BlockList<DebugElementBlock> elementList = this.elementList;
         if (elementList == null || BlockList.isImmutableEmpty(elementList)) {
             elementList = new BlockList<>();
             this.elementList = elementList;
@@ -265,8 +264,8 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         }
         return elementList;
     }
-    private BlockList<DebugElement> getElementList() {
-        BlockList<DebugElement> elementList = this.elementList;
+    private BlockList<DebugElementBlock> getElementList() {
+        BlockList<DebugElementBlock> elementList = this.elementList;
         if (elementList == null || isRemoved()) {
             elementList = BlockList.empty();
         }
@@ -281,8 +280,8 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         }
         unlockElementList().ensureCapacity(size);
         for(int i = 0; i < size; i++) {
-            DebugElement coming = sequence.get(i);
-            DebugElement element = createNext(coming.getElementType());
+            DebugElementBlock coming = sequence.get(i);
+            DebugElementBlock element = createNext(coming.getElementType());
             element.merge(coming);
         }
         cacheValues();
@@ -304,11 +303,11 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
             return 0;
         }
         int i;
-        Iterator<DebugElement> iterator1 = this.getVisible();
-        Iterator<DebugElement> iterator2 = sequence.getVisible();
+        Iterator<DebugElementBlock> iterator1 = this.getVisible();
+        Iterator<DebugElementBlock> iterator2 = sequence.getVisible();
         while (iterator1.hasNext() && iterator2.hasNext()) {
-            DebugElement element1 = iterator1.next();
-            DebugElement element2 = iterator2.next();
+            DebugElementBlock element1 = iterator1.next();
+            DebugElementBlock element2 = iterator2.next();
             i = element1.compareElement(element2);
             if (i != 0) {
                 return i;
@@ -329,11 +328,11 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         if (sequence == this) {
             return true;
         }
-        Iterator<DebugElement> iterator1 = this.getVisible();
-        Iterator<DebugElement> iterator2 = sequence.getVisible();
+        Iterator<DebugElementBlock> iterator1 = this.getVisible();
+        Iterator<DebugElementBlock> iterator2 = sequence.getVisible();
         while (iterator1.hasNext() && iterator2.hasNext()) {
-            DebugElement element1 = iterator1.next();
-            DebugElement element2 = iterator2.next();
+            DebugElementBlock element1 = iterator1.next();
+            DebugElementBlock element2 = iterator2.next();
             if (!element1.equals(element2)) {
                 return false;
             }
@@ -343,7 +342,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
     @Override
     public int hashCode() {
         int hash = 1;
-        Iterator<DebugElement> iterator = getVisible();
+        Iterator<DebugElementBlock> iterator = getVisible();
         while (iterator.hasNext()) {
             hash = hash * 31 + iterator.next().hashCode() * 31;
         }
@@ -358,8 +357,8 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
             return false;
         }
         DebugSequence sequence = (DebugSequence) obj;
-        Iterator<DebugElement> iterator1 = this.getVisible();
-        Iterator<DebugElement> iterator2 = sequence.getVisible();
+        Iterator<DebugElementBlock> iterator1 = this.getVisible();
+        Iterator<DebugElementBlock> iterator2 = sequence.getVisible();
         while (iterator1.hasNext() && iterator2.hasNext()) {
             Object item1 = iterator1.next();
             Object item2 = iterator2.next();

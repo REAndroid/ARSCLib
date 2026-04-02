@@ -205,7 +205,7 @@ public class ResourceEntry implements Iterable<Entry> {
             config.setRegion((String) null);
             config.setLocaleScript((String) null);
             config.setLocaleVariant((String) null);
-            entry = findMatching(resConfig, true);
+            entry = findMatching(config, true);
         }
         if (entry == null) {
             entry = any();

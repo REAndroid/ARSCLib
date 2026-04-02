@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.program.InstructionLabelType;
+
 public class InsSparseSwitch extends InsSwitch {
 
     public InsSparseSwitch() {
@@ -33,6 +35,10 @@ public class InsSparseSwitch extends InsSwitch {
     @Override
     public void setTargetAddress(int targetAddress){
         setData(targetAddress - getAddress());
+    }
+    @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.S_SWITCH_DATA;
     }
     @Override
     String getLabelPrefix(){

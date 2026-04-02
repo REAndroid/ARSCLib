@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.debug;
+package com.reandroid.dex.program;
 
-public class DebugEndLocal extends DebugRegisterNumber {
+import java.util.Iterator;
 
-    public DebugEndLocal() {
-        super(0, DebugElementType.END_LOCAL);
-    }
-
-    @Override
-    public DebugElementType<DebugEndLocal> getElementType() {
-        return DebugElementType.END_LOCAL;
-    }
+public interface Opcodes<T extends InstructionOpcode> extends Iterable<T>, ProgramTypeDescriptor {
+    T get(int value);
+    T get(String name);
+    Iterator<T> iterator();
+    int count();
 }

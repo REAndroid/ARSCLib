@@ -24,6 +24,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.DualKeyReference;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.reference.InsIdSectionReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -285,6 +286,22 @@ public class SizeXIns extends Ins {
             setKey(key2);
         }
     }
+
+    @Override
+    public boolean uses(Key key) {
+        if (key == null) {
+            return false;
+        }
+        Key k = getKey();
+        if (k == null) {
+            return false;
+        }
+        if (key.equals(k)) {
+            return true;
+        }
+        return k.uses(key);
+    }
+
     @Override
     public Iterator<IdItem> usedIds(){
         return SingleIterator.of(getSectionId());
@@ -398,17 +415,17 @@ public class SizeXIns extends Ins {
         OperandType operandType = instruction.getOperandType();
         if (operandType == OperandType.HEX) {
             ((SmaliInstructionOperand.SmaliHexOperand)operand).setNumber(getData());
-        } else if (operandType == OperandType.KEY) {
+        } else if (operandType.hasSectionId2()) {
+            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey(getKey());
+            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey2(
+                    ((DualKeyReference)this).getKey2());
+        } else if (operandType.hasSectionId()) {
             ((SmaliInstructionOperand.SmaliKeyOperand)operand).setKey(getKey());
         } else if (operandType == OperandType.LABEL) {
             SmaliLabel smaliLabel = ((SmaliInstructionOperand.SmaliLabelOperand) operand)
                     .getLabel();
-            Label label = (Label) this;
+            InstructionLabel label = (InstructionLabel) this;
             smaliLabel.setLabelName(label.getLabelName());
-        } else if (operandType == OperandType.DUAL_KEY) {
-            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey(getKey());
-            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey2(
-                    ((DualKeyReference)this).getKey2());
         }
     }
     @Override
@@ -420,9 +437,12 @@ public class SizeXIns extends Ins {
             return;
         }
         RegistersIterator registersIterator = getRegistersIterator();
+        int size = registersIterator.size();
+        if (size == 0) {
+            return;
+        }
         RegisterReference ref = registersIterator.get(0);
         smaliRegisterSet.addRegister(ref.isParameter(), ref.getNumber());
-        int size = registersIterator.size();
         int start = 1;
         if (registerFormat.isRange()) {
             start = size - 1;

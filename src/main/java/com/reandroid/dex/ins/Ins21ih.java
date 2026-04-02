@@ -39,11 +39,6 @@ public class Ins21ih extends Size4Ins implements RegistersSet {
     }
 
     @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
-    }
-
-    @Override
     public int getData() {
         InsConst insConst = this.mReplaced;
         if(insConst != null){

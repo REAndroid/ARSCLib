@@ -24,7 +24,7 @@ import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-abstract class DebugRegisterNumber extends DebugElement {
+abstract class DebugRegisterNumber extends DebugElementBlock {
 
     private final Ule128Item registerNumber;
 
@@ -45,7 +45,7 @@ abstract class DebugRegisterNumber extends DebugElement {
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if(isValid()) {
             getSmaliDirective().append(writer);
             writer.appendRegister(getRegisterNumber());
@@ -53,7 +53,7 @@ abstract class DebugRegisterNumber extends DebugElement {
     }
 
     @Override
-    public void merge(DebugElement element){
+    public void merge(DebugElementBlock element){
         super.merge(element);
         DebugRegisterNumber coming = (DebugRegisterNumber) element;
         this.registerNumber.set(coming.registerNumber.get());
@@ -68,7 +68,7 @@ abstract class DebugRegisterNumber extends DebugElement {
     }
 
     @Override
-    int compareDetailElement(DebugElement element) {
+    int compareDetailElement(DebugElementBlock element) {
         DebugRegisterNumber debug = (DebugRegisterNumber) element;
         return CompareUtil.compare(getRegisterNumber(), debug.getRegisterNumber());
     }

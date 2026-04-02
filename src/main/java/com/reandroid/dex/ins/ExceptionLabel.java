@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.ins;
 
-public interface ExceptionLabel extends Label{
+import com.reandroid.dex.program.InstructionLabel;
+
+public interface ExceptionLabel extends InstructionLabel {
     ExceptionHandler getHandler();
 
     @Override
@@ -23,8 +25,4 @@ public interface ExceptionLabel extends Label{
         return getHandler().isRemoved();
     }
 
-    @Override
-    default int compareLabelName(Label label) {
-        return 0;
-    }
 }

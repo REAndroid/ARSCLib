@@ -19,6 +19,54 @@ import com.reandroid.utils.NumbersUtil;
 
 public class ArrayUtil {
 
+    public static boolean areEqual(int[] items1, int[] items2) {
+        if (items1 == items2) {
+            return true;
+        }
+        if (items1 == null || items2 == null) {
+            return false;
+        }
+        int length = items1.length;
+        if (length != items2.length) {
+            return false;
+        }
+        for (int i = 0; i < length; i++) {
+            if (items1[i] != items2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    public static void fill(byte[] elements, byte item) {
+        if (elements == null) {
+            return;
+        }
+        fill(elements, item, 0, elements.length);
+    }
+    public static void fill(byte[] elements, byte item, int start, int length) {
+        if (elements == null) {
+            return;
+        }
+        int end = NumbersUtil.min(start + length, elements.length);
+        for(int i = start; i < end; i++) {
+            elements[i] = item;
+        }
+    }
+    public static void fill(char[] elements, char item) {
+        if (elements == null) {
+            return;
+        }
+        fill(elements, item, 0, elements.length);
+    }
+    public static void fill(char[] elements, char item, int start, int length) {
+        if (elements == null) {
+            return;
+        }
+        int end = NumbersUtil.min(start + length, elements.length);
+        for(int i = start; i < end; i++) {
+            elements[i] = item;
+        }
+    }
     public static void fill(Object[] elements, Object item) {
         if (elements == null) {
             return;

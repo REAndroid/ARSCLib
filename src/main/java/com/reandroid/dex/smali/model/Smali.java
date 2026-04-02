@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.common.Origin;
+import com.reandroid.dex.program.ProgramType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliParser;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -78,6 +79,9 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
         this.parent = parent;
     }
 
+    public ProgramType programType() {
+        return ProgramType.SMALI;
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
 
@@ -93,6 +97,9 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
         }catch (Throwable e){
             return e.getMessage();
         }
+    }
+    public String toSmaliString() {
+        return SmaliWriter.toStringSafe(this);
     }
     @Override
     public String toString() {

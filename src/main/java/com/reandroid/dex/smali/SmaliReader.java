@@ -18,6 +18,7 @@ package com.reandroid.dex.smali;
 import com.reandroid.common.ByteSource;
 import com.reandroid.common.Origin;
 import com.reandroid.common.TextPosition;
+import com.reandroid.dex.key.Key;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.io.IOUtil;
@@ -26,6 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SmaliReader {
 
@@ -34,6 +37,9 @@ public class SmaliReader {
 
     private Origin origin;
 
+    private Set<Key> internedItems;
+    private SmaliReaderSetting readerSetting;
+
     public SmaliReader(ByteSource byteSource) {
         this.byteSource = byteSource;
     }
@@ -41,8 +47,29 @@ public class SmaliReader {
         this(ByteSource.of(bytes));
     }
 
+    public SmaliReaderSetting getReaderSetting() {
+        SmaliReaderSetting readerSetting = this.readerSetting;
+        if (readerSetting == null) {
+            readerSetting = new SmaliReaderSetting();
+            this.readerSetting = readerSetting;
+        }
+        return readerSetting;
+    }
+    public void setReaderSetting(SmaliReaderSetting setting) {
+        this.readerSetting = setting;
+    }
+    public boolean isFixGoto() {
+        SmaliReaderSetting readerSetting = this.readerSetting;
+        return readerSetting == null || readerSetting.isFixGoto();
+    }
+    public boolean isValidateRegisters() {
+        SmaliReaderSetting readerSetting = this.readerSetting;
+        return readerSetting == null || readerSetting.isValidateRegisters();
+    }
+
     public void reset() {
         this.position(0);
+        this.internedItems = null;
     }
     public int position() {
         return position;
@@ -448,9 +475,15 @@ public class SmaliReader {
     public Origin getCurrentOrigin() {
         return getOrigin(position());
     }
+    public Origin getCurrentOrigin(boolean withDescription) {
+        return getOrigin(position(), withDescription);
+    }
     public Origin getOrigin(int position) {
+        return getOrigin(position, true);
+    }
+    public Origin getOrigin(int position, boolean withDescription) {
         Origin origin =  this.getOrigin();
-        origin = origin.createChild(new SmaliTextPosition(byteSource, position));
+        origin = origin.createChild(new SmaliTextPosition(byteSource, position, withDescription));
         return origin;
     }
     public Origin getOrigin() {
@@ -463,6 +496,17 @@ public class SmaliReader {
     }
     public void setOrigin(Origin origin) {
         this.origin = origin;
+    }
+    public boolean checkInterned(Key key) {
+        if (key == null) {
+            return false;
+        }
+        Set<Key> internedItems = this.internedItems;
+        if (internedItems == null) {
+            internedItems = new HashSet<>();
+            this.internedItems = internedItems;
+        }
+        return !internedItems.add(key);
     }
 
     @Override
@@ -619,10 +663,12 @@ public class SmaliReader {
 
         private ByteSource byteSource;
         private final int position;
+        private final boolean withDescription;
 
-        public SmaliTextPosition(ByteSource byteSource, int position) {
+        public SmaliTextPosition(ByteSource byteSource, int position, boolean withDescription) {
             this.byteSource = byteSource;
             this.position = position;
+            this.withDescription = withDescription;
         }
 
         @Override
@@ -662,6 +708,9 @@ public class SmaliReader {
             this.byteSource = null;
         }
         private String computePositionDescription(ByteSource byteSource) {
+            if (!withDescription) {
+                return null;
+            }
             int pos = this.position;
             if (pos >= byteSource.length()) {
                 return "EOF";

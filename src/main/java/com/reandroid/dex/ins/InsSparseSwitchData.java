@@ -19,6 +19,7 @@ import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliPayloadSparseSwitch;
@@ -110,6 +111,10 @@ public class InsSparseSwitchData extends InsSwitchPayload<SparseSwitchEntry> {
                 return InsSparseSwitchData.this.size();
             }
         });
+    }
+    @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.S_SWITCH_DATA;
     }
 
     public int getBaseAddress() {

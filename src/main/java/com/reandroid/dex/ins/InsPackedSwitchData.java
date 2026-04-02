@@ -18,12 +18,12 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliInstructionOperand;
 import com.reandroid.dex.smali.model.SmaliPayloadPackedSwitch;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
@@ -120,6 +120,11 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     }
 
     @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.P_SWITCH_DATA;
+    }
+
+    @Override
     public void merge(Ins ins) {
         InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
         setFirstKey(switchData.getFirstKey());
@@ -151,7 +156,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
-        writer.append(HexUtil.toHex(firstKey.get(), 1));
+        writer.appendHex(getFirstKey());
         writer.indentPlus();
         elements.append(writer);
         writer.indentMinus();

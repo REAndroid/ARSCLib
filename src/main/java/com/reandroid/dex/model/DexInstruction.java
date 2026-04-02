@@ -16,44 +16,47 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.LongReference;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.common.RegisterType;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.debug.DebugElementBlock;
+import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.dex.debug.DebugLineNumberBlock;
+import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.ins.ConstNumber;
-import com.reandroid.dex.ins.ConstNumberLong;
-import com.reandroid.dex.ins.ConstString;
-import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.InsConstStringJumbo;
-import com.reandroid.dex.ins.Label;
-import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.ins.RegistersSet;
-import com.reandroid.dex.ins.SizeXIns;
+import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.Instruction;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.ProgramType;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.LinkedIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class DexInstruction extends DexCode {
+public class DexInstruction extends DexCode implements Instruction {
 
     private final DexMethod dexMethod;
     private Ins mIns;
@@ -65,9 +68,12 @@ public class DexInstruction extends DexCode {
     }
 
     public boolean usesRegister(int register) {
-        int count = getRegistersCount();
+        RegistersSet registersSet = getRegistersSet();
+        int count = registersSet.getRegistersCount();
+        RegisterFormat format = getRegisterFormat();
         for (int i = 0; i < count; i++) {
-            if (register == getRegister(i)) {
+            int r = registersSet.getRegister(i);
+            if (register == r || (register == (r + 1) && format.isWide(i))) {
                 return true;
             }
         }
@@ -75,20 +81,33 @@ public class DexInstruction extends DexCode {
     }
     public boolean usesRegister(int register, RegisterType type) {
         RegisterFormat format = getOpcode().getRegisterFormat();
-        int count = getRegistersCount();
+        RegistersSet registersSet = getRegistersSet();
+        int count = registersSet.getRegistersCount();
         for (int i = 0; i < count; i++) {
-            if (register == getRegister(i) && type.is(format.get(i))) {
+            if (!type.is(format.get(i))) {
+                continue;
+            }
+            int r = registersSet.getRegister(i);
+            if (register == r || (register == (r + 1) && format.isWide(i))) {
                 return true;
             }
         }
         return false;
     }
+    @Override
     public int getAddress() {
         return getIns().getAddress();
     }
+    @Override
     public int getCodeUnits() {
         return getIns().getCodeUnits();
     }
+
+    @Override
+    public void addReferencingLabel(Object label) {
+
+    }
+
     public List<Register> getLocalFreeRegisters() {
         return getDexMethod().getLocalFreeRegisters(getIndex());
     }
@@ -116,26 +135,12 @@ public class DexInstruction extends DexCode {
         jumbo.setSectionId(stringId);
         return DexInstruction.create(getDexMethod(), jumbo);
     }
-    /**
-     * Use: getKeyAsField
-     * */
-    @Deprecated
-    public FieldKey getFieldKey() {
-        return getKeyAsField();
-    }
     public FieldKey getKeyAsField() {
         IdItem idItem = getIdSectionEntry();
         if (idItem instanceof FieldId) {
             return ((FieldId) idItem).getKey();
         }
         return null;
-    }
-    /**
-     * Use: getKeyAsMethod
-     * */
-    @Deprecated
-    public MethodKey getMethodKey() {
-        return getKeyAsMethod();
     }
     public MethodKey getKeyAsMethod() {
         IdItem idItem = getIdSectionEntry();
@@ -164,16 +169,22 @@ public class DexInstruction extends DexCode {
         }
         return null;
     }
+    public RegisterFormat getRegisterFormat() {
+        return getOpcode().getRegisterFormat();
+    }
+    public RegistersSet getRegistersSet() {
+        Ins ins = getIns();
+        if (ins instanceof RegistersSet) {
+            return (RegistersSet) ins;
+        }
+        return RegistersSet.NO_REGISTERS;
+    }
     public int getRegister(int i) {
         if (i < 0) {
             return -1;
         }
-        Ins ins = getIns();
-        if (ins instanceof RegistersSet) {
-            RegistersSet registersSet = (RegistersSet) ins;
-            if (i >= registersSet.getRegistersCount()) {
-                return -1;
-            }
+        RegistersSet registersSet = getRegistersSet();
+        if (i < registersSet.getRegistersCount()) {
             return registersSet.getRegister(i);
         }
         return -1;
@@ -198,6 +209,40 @@ public class DexInstruction extends DexCode {
             ((RegistersSet) ins).setRegister(i, register);
         }
     }
+    public void setRegisters(RegistersSet source) {
+        RegistersSet self;
+        Ins ins = getIns();
+        if (ins instanceof RegistersSet) {
+            self = (RegistersSet) ins;
+        } else {
+            return;
+        }
+        int count = source.getRegistersCount();
+        self.setRegistersCount(count);
+        for (int i = 0; i < count; i++) {
+            self.setRegister(i, source.getRegister(i));
+        }
+    }
+    public void setRegisters(DexInstruction source) {
+        Ins ins = source.getIns();
+        if (ins instanceof RegistersSet) {
+            setRegisters((RegistersSet) ins);
+        }
+    }
+    public int[] getRegisters() {
+        Ins ins = getIns();
+        if (ins instanceof RegistersSet) {
+            return ((RegistersSet) ins).getRegisters();
+        }
+        return null;
+    }
+    public void setRegisters(int[] registers) {
+        Ins ins = getIns();
+        if (ins instanceof RegistersSet) {
+            ((RegistersSet) ins).setRegisters(registers);
+        }
+    }
+
     public boolean removeRegisterAt(int index) {
         Ins ins = edit();
         if (ins instanceof RegistersSet) {
@@ -221,29 +266,114 @@ public class DexInstruction extends DexCode {
         return opcode == getOpcode();
     }
     public boolean isConstString() {
-        return getIns() instanceof ConstString;
+        return getOpcode().isConstString();
     }
-    public boolean isNumber() {
-        return getIns() instanceof ConstNumber;
+    public boolean isConstNumber() {
+        return getOpcode().isConstNumber();
     }
-    public boolean isNumberLong() {
-        return getIns() instanceof ConstNumberLong;
+    public boolean isConstInteger() {
+        return getOpcode().isConstInteger();
     }
-    public boolean isInvokeStatic() {
-        Opcode<?> opcode = getOpcode();
-        return opcode == Opcode.INVOKE_STATIC || 
-                opcode == Opcode.INVOKE_STATIC_RANGE;
+    public boolean isConstWide() {
+        return getOpcode().isConstWide();
+    }
+    public boolean isGoto() {
+        return getOpcode().isGoto();
+    }
+    public boolean isIfTest() {
+        return getOpcode().isIfTest();
+    }
+    public boolean isSwitch() {
+        return getOpcode().isSwitch();
+    }
+    public boolean isPayload() {
+        return getOpcode().isPayload();
+    }
+    public boolean isReturn() {
+        return getOpcode().isReturn();
+    }
+    public boolean isThrow() {
+        return getOpcode() == Opcode.THROW;
+    }
+    public boolean isMethodExit() {
+        return getOpcode().isMethodExit();
+    }
+    public boolean isInsBranching() {
+        return getOpcode().isInsBranching();
+    }
+    public boolean isArrayOp() {
+        return getOpcode().isArrayOp();
+    }
+    public boolean isArrayGet() {
+        return getOpcode().isArrayGet();
+    }
+    public boolean isArrayPut() {
+        return getOpcode().isArrayPut();
+    }
+    public boolean isFieldInstanceGet() {
+        return getOpcode().isFieldInstanceGet();
+    }
+    public boolean isFieldInstancePut() {
+        return getOpcode().isFieldInstancePut();
+    }
+    public boolean isFieldInstanceOp() {
+        return getOpcode().isFieldInstanceOp();
+    }
+    public boolean isFieldStaticGet() {
+        return getOpcode().isFieldStaticGet();
+    }
+    public boolean isFieldStaticPut() {
+        return getOpcode().isFieldStaticPut();
+    }
+    public boolean isFieldGet() {
+        return getOpcode().isFieldGet();
+    }
+    public boolean isFieldPut() {
+        return getOpcode().isFieldPut();
+    }
+    public boolean isFieldStaticOp() {
+        return getOpcode().isFieldStaticOp();
+    }
+    public boolean isFieldOp() {
+        return getOpcode().isFieldOp();
+    }
+    public boolean isMethodInvokeVirtual() {
+        return getOpcode().isMethodInvokeVirtual();
+    }
+    public boolean isMethodInvokeSuper() {
+        return getOpcode().isMethodInvokeSuper();
+    }
+    public boolean isMethodInvokeDirect() {
+        return getOpcode().isMethodInvokeDirect();
+    }
+    public boolean isMethodInvokeStatic() {
+        return getOpcode().isMethodInvokeStatic();
+    }
+    public boolean isMethodInvokeInterface() {
+        return getOpcode().isMethodInvokeInterface();
+    }
+    public boolean isMethodInvoke() {
+        return getOpcode().isMethodInvoke();
+    }
+    public boolean isMove() {
+        return getOpcode().isMove();
+    }
+    public boolean isMoveResult() {
+        return getOpcode().isMoveResult();
+    }
+    public boolean hasOutRegisters() {
+        return getOpcode().hasOutRegisters();
     }
     public int getTargetAddress() {
         Ins ins = getIns();
-        if (ins instanceof Label) {
-            return ((Label) ins).getTargetAddress();
+        if (ins instanceof InstructionLabel) {
+            return ((InstructionLabel) ins).getTargetAddress();
         }
         return -1;
     }
     public void setTargetAddress(int address) {
-        if (getIns() instanceof Label) {
-            ((Label) edit()).setTargetAddress(address);
+        if (getIns() instanceof InstructionLabel) {
+            ((InstructionLabel) edit()).setTargetAddress(address);
         }
     }
     public IntegerReference getAsIntegerReference() {
@@ -255,16 +385,75 @@ public class DexInstruction extends DexCode {
     }
     public Integer getAsInteger() {
         Ins ins = getIns();
-        if (ins instanceof ConstNumber) {
-            return ((ConstNumber) ins).get();
+        if (ins instanceof IntegerReference) {
+            return ((IntegerReference) ins).get();
         }
         return null;
     }
     public Long getAsLong() {
         Ins ins = getIns();
-        if (ins instanceof ConstNumberLong) {
-            return ((ConstNumberLong) ins).getLong();
+        if (ins instanceof LongReference) {
+            return ((LongReference) ins).getLong();
         }
+        return null;
+    }
+    public Object getAsConstValue() {
+        return getAsConstValue(null);
+    }
+    public Object getAsConstValue(TypeKey valueType) {
+        if (is(Opcode.CONST_CLASS)) {
+            return getKey();
+        }
+        if (isConstString()) {
+            if (valueType != null && valueType.isPrimitive()) {
+                return null;
+            }
+            return getString();
+        }
+        if (isConstInteger()) {
+            int value = getAsInteger();
+            if (valueType == null || TypeKey.TYPE_I.equals(valueType)) {
+                return value;
+            }
+            if (TypeKey.TYPE_B.equals(valueType)) {
+                return (byte) value;
+            }
+            if (TypeKey.TYPE_S.equals(valueType)) {
+                return (short) value;
+            }
+            if (TypeKey.TYPE_C.equals(valueType)) {
+                return (char) value;
+            }
+            if (TypeKey.TYPE_F.equals(valueType)) {
+                return Float.intBitsToFloat(value);
+            }
+            if (TypeKey.TYPE_Z.equals(valueType)) {
+                if (value == 1) {
+                    return true;
+                }
+                if (value == 0) {
+                    return false;
+                }
+                return null;
+            }
+            if (valueType.isPrimitive()) {
+                return value;
+            }
+            if (!valueType.isPrimitive() && value == 0) {
+                // TODO: make null value instead
+                return null;
+            }
+            // TODO
+            return null;
+        }
+        if (isConstWide()) {
+            long value = getAsLong();
+            if (TypeKey.TYPE_D.equals(valueType)) {
+                return Double.longBitsToDouble(value);
+            }
+            return value;
+        }
+        // TODO: confirm this is unreachable
         return null;
     }
     public void setAsInteger(int value) {
@@ -300,31 +489,84 @@ public class DexInstruction extends DexCode {
     public Iterator<DexTry> getTries() {
         return getDexMethod().getDexTry(getAddress());
     }
-    public DexInstruction replace(String smaliString) throws IOException {
-        return replace(SmaliReader.of(smaliString));
+
+    public DexInstruction replace(Opcode<?> opcode) {
+        return DexInstruction.create(getDexMethod(), edit().replace(opcode));
     }
-    public DexInstruction replace(SmaliReader reader) throws IOException {
+    public DexInstruction replace(SmaliInstruction smaliInstruction) {
+        DexInstruction dexInstruction = replace(smaliInstruction.getOpcode());
+        dexInstruction.getIns().fromSmali(smaliInstruction);
+        return dexInstruction;
+    }
+    public DexInstruction createNext(Opcode<?> opcode) {
+        return DexInstruction.create(getDexMethod(), edit().createNext(opcode));
+    }
+    public DexInstruction createNext(boolean shiftLabels, Opcode<?> opcode) {
+        return DexInstruction.create(getDexMethod(), edit().createNext(shiftLabels, opcode));
+    }
+    public DexInstruction createNext(SmaliInstruction smaliInstruction) {
+        DexInstruction dexInstruction = createNext(smaliInstruction.getOpcode());
+        dexInstruction.getIns().fromSmali(smaliInstruction);
+        return dexInstruction;
+    }
+    public DexInstruction replaceWithSmali(String smaliString) throws IOException {
+        return replaceWithSmali(SmaliReader.of(smaliString));
+    }
+    public DexInstruction replaceWithSmali(SmaliReader reader) throws IOException {
         SmaliInstruction smaliInstruction = new SmaliInstruction();
         smaliInstruction.parse(reader);
-        Ins ins = edit().replace(smaliInstruction.getOpcode());
-        ins.fromSmali(smaliInstruction);
-        return DexInstruction.create(getDexMethod(), ins);
+        return replace(smaliInstruction);
     }
-    public DexInstruction createNext(String smaliString) throws IOException {
-        return createNext(SmaliReader.of(smaliString));
+    public DexInstruction replaceFromSmaliAll(String smaliString) throws IOException {
+        return replaceFromSmaliAll(SmaliReader.of(smaliString));
     }
-    public DexInstruction createNext(SmaliReader reader) throws IOException {
+    public DexInstruction replaceFromSmaliAll(SmaliReader reader) throws IOException {
+        SmaliMethod smaliMethod = SmaliMethod.create(getDexMethod());
+        smaliMethod.getCodeSet().parse(reader);
+        DexInstruction lastInstruction = this;
+        Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
+        if (iterator.hasNext()) {
+            lastInstruction = lastInstruction.replace(iterator.next());
+        }
+        while (iterator.hasNext()) {
+            lastInstruction = lastInstruction.createNext(iterator.next());
+        }
+        return lastInstruction;
+    }
+    public DexInstruction createNextFromSmali(String smaliString) throws IOException {
+        return createNextFromSmali(SmaliReader.of(smaliString));
+    }
+    public DexInstruction createNextFromSmali(SmaliReader reader) throws IOException {
         SmaliInstruction smaliInstruction = new SmaliInstruction();
         smaliInstruction.parse(reader);
         Ins ins = edit().createNext(smaliInstruction.getOpcode());
         ins.fromSmali(smaliInstruction);
         return DexInstruction.create(getDexMethod(), ins);
     }
-    public DexInstruction replace(Opcode<?> opcode) {
-        return DexInstruction.create(getDexMethod(), edit().replace(opcode));
+    public DexInstruction createNextFromSmaliAll(String smaliString) throws IOException {
+        return createNextFromSmaliAll(SmaliReader.of(smaliString));
     }
-    public DexInstruction createNext(Opcode<?> opcode) {
-        return DexInstruction.create(getDexMethod(), edit().createNext(opcode));
+    public DexInstruction createNextFromSmaliAll(SmaliReader reader) throws IOException {
+        SmaliMethod smaliMethod = SmaliMethod.create(getDexMethod());
+        smaliMethod.getCodeSet().parse(reader);
+        DexInstruction lastInstruction = this;
+        Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
+        while (iterator.hasNext()) {
+            lastInstruction = lastInstruction.createNext(iterator.next());
+        }
+        return lastInstruction;
+    }
+    public DexInstruction removeSafe() {
+        if (safeToRemove()) {
+            if (!isRemoved()) {
+                removeSelf();
+            }
+            return null;
+        }
+        if (this.is(Opcode.NOP)) {
+            return this;
+        }
+        return replace(Opcode.NOP);
     }
     @Override
     public void removeSelf() {
@@ -343,6 +585,7 @@ public class DexInstruction extends DexCode {
         return ins == null || ins.isRemoved();
     }
 
+    @Override
     public Opcode<?> getOpcode() {
         return getIns().getOpcode();
     }
@@ -376,6 +619,12 @@ public class DexInstruction extends DexCode {
         return ins;
     }
 
+    public SmaliInstruction toSmali() {
+        if (toString().contains(" Lkr/co/psynet/LiveScoreApplication;->getInstance()Lkr/co/psynet/LiveScoreApplication;")) {
+            String junk = "";
+        }
+        return getIns().toSmali();
+    }
     @Override
     public boolean uses(Key key) {
         Key insKey = getKey();
@@ -399,12 +648,161 @@ public class DexInstruction extends DexCode {
         }
         return null;
     }
+    public DexInstruction getTargetInstruction() {
+        return DexInstruction.create(getDexMethod(), (Ins) getIns().getTargetInstruction());
+    }
+    public boolean hasTargetingInstructions() {
+        Iterator<InstructionLabel> iterator = getIns().getForcedReferencingLabels();
+        while (iterator.hasNext()) {
+            InstructionLabel label = iterator.next();
+            if (!(label instanceof DebugElementBlock)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
+        return FilterIterator.of(getIns().getForcedReferencingLabels(Ins.class),
+                ins -> predicate.test(ins.getOpcode())).hasNext();
+    }
+    public Iterator<DexInstruction> getTargetingInstructions() {
+        return DexInstruction.createAll(getDexMethod(),
+                CollectionUtil.copyOf(getIns().getForcedReferencingLabels(Ins.class)));
+    }
+    public Iterator<DexInstruction> getTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
+        Iterator<Ins> iterator = CollectionUtil.copyOf(getIns().getForcedReferencingLabels(Ins.class));
+        if (!iterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        iterator = FilterIterator.of(iterator, ins -> predicate.test(ins.getOpcode()));
+        return DexInstruction.createAll(getDexMethod(), iterator);
+    }
+    // for switch payload instruction
+    public Iterator<DexInstruction> getTargetSwitchCases() {
+        Ins ins = getIns();
+        if (!(ins instanceof InsSwitchPayload)) {
+            return EmptyIterator.of();
+        }
+        InsSwitchPayload<? extends SwitchEntry> payload = (InsSwitchPayload<? extends SwitchEntry>) ins;
+        Iterator<? extends SwitchEntry> switchEntryIterator = payload.iterator();
+        if (!switchEntryIterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        Iterator<Instruction> iterator = ComputeIterator.of(switchEntryIterator, SwitchEntry::getTargetInstruction);
+        iterator = CollectionUtil.copyOfUniqueOf(iterator);
+        return DexInstruction.createAll(getDexMethod(), ObjectsUtil.cast(iterator));
+    }
+    public DexInstruction getTargetingSwitch() {
+        return CollectionUtil.getFirst(getTargetingSwitches(null));
+    }
+    public Iterator<DexInstruction> getTargetingSwitches(Opcode<? extends InsSwitch> switchOpcode) {
+        Iterator<SwitchEntry> switchEntryIterator = getIns().getForcedReferencingLabels(SwitchEntry.class);
+        if (!switchEntryIterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        Iterator<InsSwitch> iterator = ComputeIterator.of(switchEntryIterator, SwitchEntry::getInsSwitch);
+        if (switchOpcode != null) {
+            iterator = FilterIterator.of(iterator, ins -> ins.getOpcode() == switchOpcode);
+        }
+        iterator = CollectionUtil.copyOfUniqueOf(iterator);
+        return DexInstruction.createAll(getDexMethod(), iterator);
+    }
+    public Iterator<DexCatch> getTargetingCatches() {
+        int address = getAddress();
+        return new IterableIterator<DexTry, DexCatch>(getDexMethod().getDexTry()) {
+            @Override
+            public Iterator<? extends DexCatch> iterator(DexTry element) {
+                return element.getCatchesAt(address);
+            }
+        };
+    }
+    public int getLineNumber() {
+        if (getDexMethod().hasDebugSequence()) {
+            Integer line = lineNumber();
+            if (line != null) {
+                return line;
+            }
+            DexInstruction prev = getPrevious();
+            if (prev != null) {
+                return prev.getLineNumber();
+            }
+        }
+        return 0;
+    }
+    public Integer lineNumber() {
+        DebugLineNumberBlock lineNumber = CollectionUtil.getLast(debugLineNumbers());
+        if (lineNumber != null) {
+            return lineNumber.getLineNumber();
+        }
+        return null;
+    }
+    public boolean hasLineNumber(int line) {
+        Iterator<DebugLineNumberBlock> iterator = debugLineNumbers();
+        while (iterator.hasNext()) {
+            if (iterator.next().getLineNumber() == line) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public Iterator<Integer> getLineNumbers() {
+        return ComputeIterator.of(debugLineNumbers(),
+                DebugLineNumberBlock::getLineNumber);
+    }
+    public void setLineNumber(int line) {
+        Ins ins = edit();
+        DebugLineNumberBlock lineNumber = CollectionUtil.getLast(debugLineNumbers());
+        if (lineNumber == null) {
+            DebugSequence debugSequence = getDexMethod().getDefinition().getOrCreateDebugSequence();
+            lineNumber = debugSequence.createNext(DebugElementType.LINE_NUMBER);
+            lineNumber.setTargetAddress(ins.getAddress());
+            lineNumber.setTargetInstruction(ins);
+        }
+        lineNumber.setLineNumber(line);
+    }
+    private Iterator<DebugLineNumberBlock> debugLineNumbers() {
+        if (getDexMethod().hasDebugSequence()) {
+            return getIns().getForcedReferencingLabels(DebugLineNumberBlock.class);
+        }
+        return EmptyIterator.of();
+    }
+    public boolean safeToRemove() {
+        if (isRemoved()) {
+            return true;
+        }
+        if (hasTargetingInstructions()) {
+            return false;
+        }
+        DexInstruction previous = getPrevious();
+        if (previous != null && previous.isIfTest()) {
+            DexInstruction next = getNext();
+            return next != null && previous.getTargetAddress() != next.getAddress();
+        }
+        return true;
+    }
     public DexInstruction getNext() {
         return getDexMethod().getInstruction(getIndex() + 1);
+    }
+    public Iterator<DexInstruction> getNextInstructions() {
+        return LinkedIterator.of(this, DexInstruction::getNext);
     }
     public DexInstruction getPrevious() {
         return getDexMethod().getInstruction(getIndex() - 1);
     }
+    public Iterator<DexInstruction> getPreviousInstructions() {
+        return LinkedIterator.of(this, DexInstruction::getPrevious);
+    }
+    public DexInstruction getMoveResult() {
+        if (!hasOutRegisters()) {
+            return null;
+        }
+        DexInstruction next = getNext();
+        if (next != null && next.isMoveResult()) {
+            return next;
+        }
+        return null;
+    }
+
     public DexInstruction getPreviousReader(int register) {
         return getPreviousReader(register, CollectionUtil.getAcceptAll());
     }
@@ -415,14 +813,14 @@ public class DexInstruction extends DexCode {
         DexInstruction previous = getPrevious();
         while (previous != null) {
             Opcode<?> opcode = previous.getOpcode();
-            if (opcode.isMover() && previous.getRegister(0) == register) {
+            if (opcode.isMove() && previous.getRegister(0) == register) {
                 register = previous.getRegister(1);
             } else {
-                RegisterFormat format = opcode.getRegisterFormat();
+                RegisterFormat registerFormat = opcode.getRegisterFormat();
                 int size = previous.getRegistersCount();
                 for (int i = 0; i < size; i++) {
                     if (register == previous.getRegister(i) &&
-                            RegisterType.READ.is(format.get(i))) {
+                            RegisterType.READ.is(registerFormat.get(i))) {
                         if (predicate.test(previous)) {
                             return previous;
                         }
@@ -444,7 +842,7 @@ public class DexInstruction extends DexCode {
         DexInstruction previous = getPrevious();
         while (previous != null) {
             Opcode<?> opcode = previous.getOpcode();
-            if (opcode.isMover() && previous.getRegister(1) == register) {
+            if (opcode.isMove() && previous.getRegister(1) == register) {
                 register = previous.getRegister(0);
             } else {
                 RegisterFormat format = opcode.getRegisterFormat();
@@ -494,13 +892,19 @@ public class DexInstruction extends DexCode {
     public void append(SmaliWriter writer) throws IOException {
         getIns().append(writer);
     }
+
+    @Override
+    public ProgramType programType() {
+        return ProgramType.DEX;
+    }
+
     @Override
     public String toString() {
         return getIns().toString();
     }
 
-    public static Iterator<DexInstruction> create(DexMethod dexMethod, Iterator<Ins> iterator) {
-        if (dexMethod == null) {
+    public static Iterator<DexInstruction> createAll(DexMethod dexMethod, Iterator<? extends Ins> iterator) {
+        if (dexMethod == null || !iterator.hasNext()) {
             return EmptyIterator.of();
         }
         return ComputeIterator.of(iterator, ins -> create(dexMethod, ins));

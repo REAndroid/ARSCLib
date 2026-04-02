@@ -151,6 +151,9 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
         return null;
     }
 
+    public static int parseValues(SmaliReader reader) {
+        return combineHiddenApiFlag(parse(reader));
+    }
     public static HiddenApiFlag[] parse(SmaliReader reader) {
         Object container = null;
         HiddenApiFlag flag;

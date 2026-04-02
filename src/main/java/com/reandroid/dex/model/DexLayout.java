@@ -25,8 +25,7 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.*;
-import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.*;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
@@ -284,6 +283,9 @@ public class DexLayout implements DexClassModule, Closeable,
         return getDexLayoutBlock().merge(options, dexLayout.getDexLayoutBlock());
     }
     public void parseSmaliDirectory(File dir) throws IOException {
+        parseSmaliDirectory(null, dir);
+    }
+    public void parseSmaliDirectory(SmaliReaderSetting readerSetting, File dir) throws IOException {
         requireNotClosed();
         if (!dir.isDirectory()) {
             throw new FileNotFoundException("No such directory: " + dir);
@@ -291,7 +293,9 @@ public class DexLayout implements DexClassModule, Closeable,
         FileIterator iterator = new FileIterator(dir, FileIterator.getExtensionFilter(".smali"));
         FileByteSource byteSource = new FileByteSource();
         SmaliReader reader = new SmaliReader(byteSource);
+        reader.setReaderSetting(readerSetting);
         DexLayoutBlock layout = getDexLayoutBlock();
+        Section<ClassId> classIdSection = null;
         while (iterator.hasNext()) {
             reader.reset();
             File file = iterator.next();
@@ -299,6 +303,13 @@ public class DexLayout implements DexClassModule, Closeable,
             reader.setOrigin(Origin.createNew(file));
             SmaliClass smaliClass = new SmaliClass();
             smaliClass.parse(reader);
+            if (classIdSection == null) {
+                classIdSection = getSection(SectionType.CLASS_ID);
+            }
+            if (classIdSection != null && classIdSection.contains(smaliClass.getKey())) {
+                throw new IOException(smaliClass.getOrigin() + " Class: "
+                        + smaliClass.getKey() + " has already been interned");
+            }
             layout.fromSmali(smaliClass);
         }
         sort();
@@ -329,10 +340,27 @@ public class DexLayout implements DexClassModule, Closeable,
         ClassId classId = getDexLayoutBlock().fromSmali(smaliClass);
         return create(classId);
     }
+    @Deprecated
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
-        Iterator<DexClass> iterator = getDexClasses();
+        SmaliFileNameFactory fileNameFactory = new SmaliFileNameFactory(root);
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
         while (iterator.hasNext()) {
-            iterator.next().writeSmali(writer, root);
+            ClassId classId = iterator.next();
+            File file = fileNameFactory.getUniqueFilenameForClass(classId.getKey());
+            writer.setWriter(file);
+            classId.append(writer);
+            writer.close();
+        }
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        SmaliFileNameFactory fileNameFactory = new SmaliFileNameFactory(root);
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
+        while (iterator.hasNext()) {
+            ClassId classId = iterator.next();
+            SmaliWriter writer = new SmaliWriter(writerSetting);
+            writer.setWriter(fileNameFactory.getUniqueFilenameForClass(classId.getKey()));
+            classId.append(writer);
+            writer.close();
         }
     }
 

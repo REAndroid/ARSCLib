@@ -19,22 +19,28 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.ins.Label;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.smali.formatters.SequentialLabelFactory;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 public class SmaliWriter implements Appendable, Closeable {
 
     private Writer writer;
+    private OutputStream outputStream;
     private int indent;
     private int lineNumber;
     private int columnNumber;
@@ -52,6 +58,10 @@ public class SmaliWriter implements Appendable, Closeable {
     public SmaliWriter(Writer writer) {
         this();
         this.writer = writer;
+    }
+    public SmaliWriter(SmaliWriterSetting setting) {
+        this();
+        this.writerSetting = setting;
     }
     public SmaliWriter() {
         this.lineNumber = 1;
@@ -71,8 +81,18 @@ public class SmaliWriter implements Appendable, Closeable {
             setting.writeMethodComment(this, methodKey);
         }
     }
+    public void setWriter(File file) throws IOException {
+        setWriter(FileUtil.outputStream(file));
+    }
+    public void setWriter(OutputStream outputStream) {
+        setWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+        this.outputStream = outputStream;
+    }
     public void setWriter(Writer writer) {
         this.reset();
+        if (writer != this.writer) {
+            this.outputStream = null;
+        }
         this.writer = writer;
     }
 
@@ -314,6 +334,8 @@ public class SmaliWriter implements Appendable, Closeable {
                 builder.append(' ');
             } else if (c < ' ' || !Character.isDefined(c)) {
                 DexUtils.encodeToHexChar(builder, c);
+            } else if (c == '\u0085' || c == '\u2028' || c == '\u2029') {
+                DexUtils.encodeToHexChar(builder, c);
             } else {
                 builder.append(c);
             }
@@ -385,13 +407,6 @@ public class SmaliWriter implements Appendable, Closeable {
         this.writerSetting = writerSetting;
     }
 
-    public SmaliFileNameFactory getFileNameFactory() {
-        SmaliWriterSetting setting = getWriterSetting();
-        if (setting != null) {
-            return setting.getFileNameFactory();
-        }
-        return SmaliFileNameFactory.INSTANCE;
-    }
     public boolean isLocalRegistersCount() {
         SmaliWriterSetting setting = getWriterSetting();
         if (setting != null) {
@@ -444,6 +459,11 @@ public class SmaliWriter implements Appendable, Closeable {
         flushComment();
         this.writer = null;
         writer.close();
+        OutputStream outputStream = this.outputStream;
+        this.outputStream = null;
+        if (outputStream != null) {
+            outputStream.close();
+        }
     }
     public void reset() {
         this.indent = 0;
@@ -469,7 +489,7 @@ public class SmaliWriter implements Appendable, Closeable {
         this.stateWritingInstructions = stateWritingInstructions;
     }
 
-    public void buildLabels(Iterator<? extends Label> iterator) {
+    public void buildLabels(Iterator<? extends InstructionLabel> iterator) {
         SequentialLabelFactory labelFactory = getOrCreateSequentialLabelFactory();
         if (labelFactory != null) {
             labelFactory.build(iterator);

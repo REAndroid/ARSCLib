@@ -22,10 +22,23 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.key.*;
-import com.reandroid.dex.sections.*;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyPair;
+import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.sections.MergeOptions;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionArray;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.*;
+import com.reandroid.dex.smali.SmaliWriterSetting;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.EmptyList;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.Closeable;
 import java.io.File;
@@ -39,11 +52,11 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
 
     private final DexFileSourceSet dexSourceSet;
     private Object mTag;
-    private final ArrayCollection<TypeKeyReference> externalTypeKeyReferenceList;
+    private final ArrayCollection<KeyReference> externalKeyReferenceList;
 
     public DexDirectory() {
         this.dexSourceSet = new DexFileSourceSet();
-        this.externalTypeKeyReferenceList = new ArrayCollection<>();
+        this.externalKeyReferenceList = new ArrayCollection<>();
     }
 
     public Object getTag() {
@@ -634,16 +647,16 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     }
 
     @Override
-    public List<TypeKeyReference> getExternalTypeKeyReferenceList() {
-        return externalTypeKeyReferenceList;
+    public Iterator<? extends KeyReference> getExternalReferences() {
+        return externalKeyReferenceList.iterator();
     }
-    public void addExternalTypeKeyReference(TypeKeyReference reference) {
-        if(reference != null && !externalTypeKeyReferenceList.contains(reference)) {
-            externalTypeKeyReferenceList.add(reference);
+    public void addExternalKeyReference(KeyReference reference) {
+        if (reference != null && !externalKeyReferenceList.contains(reference)) {
+            externalKeyReferenceList.add(reference);
         }
     }
     public void clearExternalTypeKeyReferences() {
-        externalTypeKeyReferenceList.clear();
+        externalKeyReferenceList.clear();
     }
 
     @Override
@@ -652,9 +665,24 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         this.clearExternalTypeKeyReferences();
     }
 
+    @Deprecated
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
-        for(DexFile dexFile : this) {
-            dexFile.writeSmali(writer, root);
+        SmaliWriterSetting writerSetting = writer.getWriterSetting();
+        for (DexFile dexFile : this) {
+            File dir = new File(root, dexFile.buildSmaliDirectoryName());
+            dexFile.writeSmali(writerSetting, dir);
+        }
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root) throws IOException {
+        writeSmali(writerSetting, root, null);
+    }
+    public void writeSmali(SmaliWriterSetting writerSetting, File root,
+                           Predicate<? super DexFile> predicate) throws IOException {
+        for (DexFile dexFile : this) {
+            if (predicate == null || predicate.test(dexFile)) {
+                File dir = new File(root, dexFile.buildSmaliDirectoryName());
+                dexFile.writeSmali(writerSetting, dir);
+            }
         }
     }
 

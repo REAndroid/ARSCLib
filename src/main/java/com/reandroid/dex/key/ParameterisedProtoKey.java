@@ -25,11 +25,11 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
+public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> implements
+        ParameterisedKey, ProtoDescriptorKey {
 
     public static final ParameterisedProtoKey EMPTY = new ParameterisedProtoKey(
             false, null, EMPTY_ARRAY);
-
 
     private final boolean method;
     private final ParameterisedTypeKey returnType;
@@ -44,6 +44,7 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
     public boolean isMethod() {
         return method;
     }
+    @Override
     public ParameterisedTypeKey getReturnType() {
         return returnType;
     }
@@ -77,6 +78,36 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
     }
 
     @Override
+    public ProtoKey getRawType() {
+        if (isMethod()) {
+            ParameterisedTypeKey key = getReturnType();
+            if (key != null) {
+                TypeKey returnType = key.getDeclaring();
+                if (returnType != null) {
+                    int length = getParametersCount();
+                    TypeKey[] parameters = new TypeKey[length];
+                    for (int i = 0; i < length; i++) {
+                        parameters[i] = getParameter(i).getDeclaring();
+                    }
+                    return ProtoKey.create(returnType, parameters);
+                }
+            }
+        }
+        return null;
+    }
+    @Override
+    public ParameterisedTypeKey getParameter(int i) {
+        return get(i);
+    }
+    @Override
+    public int getParametersCount() {
+        return size();
+    }
+    @Override
+    public KeyList<ParameterisedTypeKey> getParameters() {
+        return this;
+    }
+    @Override
     public ParameterisedProtoKey replaceKey(Key search, Key replace) {
         ParameterisedProtoKey result = (ParameterisedProtoKey) super.replaceKey(search, replace);
         ParameterisedTypeKey returnType = result.getReturnType();
@@ -87,14 +118,18 @@ public class ParameterisedProtoKey extends ArrayKey<ParameterisedTypeKey> {
     }
 
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
-        return super.mentionedKeys();
+    public Iterator<? extends Key> contents() {
+        Iterator<? extends Key> iterator = super.contents();
+        return CombiningIterator.singleOne(getRawType(), iterator);
     }
 
     void buildSignature(DalvikSignatureBuilder builder) {
         ParameterisedTypeKey returnType = getReturnType();
         if (isBlank()) {
             return;
+        }
+        if (returnType != null && returnType.isInnerType()) {
+            builder.flushPending();
         }
         boolean method = isMethod();
         builder.append(method? '(' : '<');

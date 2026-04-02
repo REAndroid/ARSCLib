@@ -16,6 +16,7 @@
 package com.reandroid.app;
 
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.XMLPath;
 
 @SuppressWarnings("unused")
 public interface AndroidManifest {
@@ -83,6 +84,7 @@ public interface AndroidManifest {
     int ID_icon = ObjectsUtil.of(0x01010002);
     int ID_id = ObjectsUtil.of(0x010100d0);
     int ID_isFeatureSplit = ObjectsUtil.of(0x0101055b);
+    int ID_isolatedSplits = ObjectsUtil.of(0x0101054b);
     int ID_isSplitRequired = ObjectsUtil.of(0x01010591);
     int ID_label = ObjectsUtil.of(0x01010001);
     int ID_maxSdkVersion = ObjectsUtil.of(0x01010271);
@@ -113,6 +115,7 @@ public interface AndroidManifest {
     String NAME_id = ObjectsUtil.of("id");
     String NAME_installLocation = ObjectsUtil.of("installLocation");
     String NAME_isFeatureSplit = ObjectsUtil.of("isFeatureSplit");
+    String NAME_isolatedSplits = ObjectsUtil.of("isolatedSplits");
     String NAME_isSplitRequired = ObjectsUtil.of("isSplitRequired");
     String NAME_label = ObjectsUtil.of("label");
     String NAME_maxSdkVersion = ObjectsUtil.of("maxSdkVersion");
@@ -146,12 +149,14 @@ public interface AndroidManifest {
     String TAG_package = ObjectsUtil.of("package");
     String TAG_permission = ObjectsUtil.of("permission");
     String TAG_provider = ObjectsUtil.of("provider");
+    String TAG_queries = ObjectsUtil.of("queries");
     String TAG_receiver = ObjectsUtil.of("receiver");
     String TAG_service = ObjectsUtil.of("service");
     String TAG_uses_feature = ObjectsUtil.of("uses-feature");
     String TAG_uses_library = ObjectsUtil.of("uses-library");
     String TAG_uses_permission = ObjectsUtil.of("uses-permission");
     String TAG_uses_sdk = ObjectsUtil.of("uses-sdk");
+    String TAG_uses_split = ObjectsUtil.of("uses-split");
 
     String VALUE_android_intent_action_MAIN = ObjectsUtil.of("android.intent.action.MAIN");
     String VALUE_com_android_dynamic_apk_fused_modules = ObjectsUtil.of("com.android.dynamic.apk.fused.modules");
@@ -159,6 +164,12 @@ public interface AndroidManifest {
     String FILE_NAME = ObjectsUtil.of("AndroidManifest.xml");
     String FILE_NAME_BIN = ObjectsUtil.of("AndroidManifest.xml.bin");
     String FILE_NAME_JSON = ObjectsUtil.of("AndroidManifest.xml.json");
+
+    XMLPath PATH_MANIFEST = XMLPath.newElement(TAG_manifest);
+    XMLPath PATH_APPLICATION = PATH_MANIFEST.element(TAG_application);
+    XMLPath PATH_APPLICATION_META_DATA = PATH_APPLICATION.element(TAG_meta_data);
+    XMLPath PATH_APPLICATION_META_DATA_NAME = PATH_APPLICATION.element(TAG_meta_data)
+            .attribute(ID_name);
 
     String EMPTY_MANIFEST_TAG = ObjectsUtil.of("x");
 

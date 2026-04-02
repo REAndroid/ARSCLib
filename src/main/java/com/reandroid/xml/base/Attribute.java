@@ -20,6 +20,7 @@ import com.reandroid.common.Namespace;
 public interface Attribute extends Node, NamedNode{
 
     String getValueAsString();
+    Object getValueAsEncoded();
 
     Namespace getNamespace();
     void setNamespace(Namespace namespace);
@@ -28,5 +29,8 @@ public interface Attribute extends Node, NamedNode{
 
     default Object getAttributeValue(){
         return getValueAsString();
+    }
+    default int getNameId() {
+        return 0;
     }
 }

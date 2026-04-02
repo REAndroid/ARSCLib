@@ -16,7 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugEpilogue;
+import com.reandroid.dex.debug.DebugEpilogueBlock;
 
 public class SmaliDebugEpilogue extends SmaliDebugElement {
 
@@ -25,7 +25,7 @@ public class SmaliDebugEpilogue extends SmaliDebugElement {
     }
 
     @Override
-    public DebugElementType<DebugEpilogue> getDebugElementType() {
+    public DebugElementType<DebugEpilogueBlock> getDebugElementType() {
         return DebugElementType.EPILOGUE;
     }
 }

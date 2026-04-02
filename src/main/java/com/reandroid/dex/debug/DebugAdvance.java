@@ -20,7 +20,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public abstract class DebugAdvance extends DebugElement {
+public abstract class DebugAdvance extends DebugElementBlock {
 
     private final Le128 advance;
 
@@ -45,11 +45,11 @@ public abstract class DebugAdvance extends DebugElement {
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
     }
 
     @Override
-    public void merge(DebugElement element){
+    public void merge(DebugElementBlock element){
         super.merge(element);
         DebugAdvance coming = (DebugAdvance) element;
         this.advance.set(coming.advance.get());

@@ -125,11 +125,22 @@ public abstract class SmaliValueNumber<T extends Number> extends SmaliValue{
             return new SmaliValueDouble();
         }
         if(b <= '9' && b >= '0'){
-            b = reader.get(reader.indexOfWhiteSpaceOrComment() - 1);
-            if(b == 'f'){
-                return new SmaliValueFloat();
+            int i = reader.indexOfWhiteSpaceOrComment();
+            b = reader.get(i - 1);
+            int dot = reader.indexOfBeforeLineEnd('.');
+            if (dot > 0 && dot < i) {
+                if (b == 'f') {
+                    return new SmaliValueFloat();
+                }
+                return new SmaliValueDouble();
             }
-            return new SmaliValueDouble();
+            if (b == 'L') {
+                return new SmaliValueLong();
+            }
+            return new SmaliValueInteger();
+        }
+        if (b == '\'') {
+            return new SmaliValueChar();
         }
         throw new SmaliParseException("Unrecognized number format", reader);
     }

@@ -33,12 +33,12 @@ import com.reandroid.utils.collection.SingleIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DebugStartLocal extends DebugRegisterNumber {
+public class DebugStartLocalBlock extends DebugRegisterNumber {
 
     private final Base1Ule128IdItemReference<StringId> mName;
     private final Base1Ule128IdItemReference<TypeId> mType;
 
-    DebugStartLocal(int childesCount, int flag) {
+    DebugStartLocalBlock(int childesCount, int flag) {
         super(childesCount + 2, flag);
 
         this.mName = new Base1Ule128IdItemReference<>(SectionType.STRING_ID);
@@ -47,10 +47,10 @@ public class DebugStartLocal extends DebugRegisterNumber {
         addChild(2, mName);
         addChild(3, mType);
     }
-    DebugStartLocal(int childesCount, DebugElementType<?> elementType) {
+    DebugStartLocalBlock(int childesCount, DebugElementType<?> elementType) {
         this(childesCount, elementType.getFlag());
     }
-    public DebugStartLocal() {
+    public DebugStartLocalBlock() {
         this(0, DebugElementType.START_LOCAL.getFlag());
     }
 
@@ -95,7 +95,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if(isValid()) {
             getSmaliDirective().append(writer);
             writer.appendRegister(getRegisterNumber());
@@ -107,7 +107,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
     }
 
     @Override
-    public DebugElementType<? extends DebugStartLocal> getElementType() {
+    public DebugElementType<? extends DebugStartLocalBlock> getElementType() {
         return DebugElementType.START_LOCAL;
     }
 
@@ -118,9 +118,9 @@ public class DebugStartLocal extends DebugRegisterNumber {
                 SingleIterator.of(mType.getItem()));
     }
     @Override
-    public void merge(DebugElement element){
+    public void merge(DebugElementBlock element){
         super.merge(element);
-        DebugStartLocal coming = (DebugStartLocal) element;
+        DebugStartLocalBlock coming = (DebugStartLocalBlock) element;
         this.mName.setKey(coming.mName.getKey());
         this.mType.setKey(coming.mType.getKey());
     }
@@ -134,12 +134,12 @@ public class DebugStartLocal extends DebugRegisterNumber {
     }
 
     @Override
-    int compareDetailElement(DebugElement element) {
+    int compareDetailElement(DebugElementBlock element) {
         int i = super.compareDetailElement(element);
         if (i != 0) {
             return i;
         }
-        DebugStartLocal debug = (DebugStartLocal) element;
+        DebugStartLocalBlock debug = (DebugStartLocalBlock) element;
         i = CompareUtil.compare(getNameKey(), debug.getNameKey());
         if (i != 0) {
             return i;
@@ -156,7 +156,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        DebugStartLocal debug = (DebugStartLocal) obj;
+        DebugStartLocalBlock debug = (DebugStartLocalBlock) obj;
         return getFlag() == debug.getFlag() &&
                 getRegisterNumber() == debug.getRegisterNumber() &&
                 ObjectsUtil.equals(getName(), debug.getName()) &&

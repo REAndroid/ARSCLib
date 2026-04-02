@@ -19,15 +19,15 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 
-public class TypeListKey extends KeyList<TypeKey> {
+public class TypeListKey extends TypeDescriptorList<TypeKey> {
 
     private static final TypeListKey EMPTY = new TypeListKey(EMPTY_ARRAY);
+
 
     private TypeListKey(Key[] keys) {
         super(keys);
@@ -48,21 +48,17 @@ public class TypeListKey extends KeyList<TypeKey> {
         return (TypeListKey) super.add(typeKey);
     }
     @Override
+    public TypeListKey add(int index, TypeKey item) {
+        return (TypeListKey) super.add(index, item);
+    }
+
+    @Override
     public TypeListKey remove(TypeKey itemKey) {
         return (TypeListKey) super.remove(itemKey);
     }
     @Override
     public TypeListKey set(int i, TypeKey item) {
         return (TypeListKey) super.set(i, item);
-    }
-    public boolean contains(TypeKey typeKey) {
-        int size = size();
-        for (int i = 0; i < size; i++) {
-            if (ObjectsUtil.equals(typeKey, get(i))) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
@@ -111,13 +107,25 @@ public class TypeListKey extends KeyList<TypeKey> {
     public String toString() {
         return '(' + StringsUtil.join(iterator(), null) + ')';
     }
+    public String toStringInterface() {
+        StringBuilder builder = new StringBuilder();
+        int size = size();
+        if (size != 0) {
+            builder.append("\n# interfaces");
+        }
+        for (int i = 0; i < size; i++) {
+            builder.append("\n.implements ");
+            builder.append(get(i));
+        }
+        return builder.toString();
+    }
 
     public static TypeListKey empty() {
         return EMPTY;
     }
     public static TypeListKey create(Key ... keys) {
         keys = removeNulls(keys);
-        if (keys == EMPTY_ARRAY) {
+        if (keys.length == 0) {
             return empty();
         }
         return new TypeListKey(keys);

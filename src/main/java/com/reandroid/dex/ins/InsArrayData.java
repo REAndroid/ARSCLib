@@ -19,6 +19,7 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -56,7 +57,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
             return EmptyIterator.of();
         }
         insBlockList.link();
-        return InstanceIterator.of(getExtraLines(), InsFillArrayData.class);
+        return InstanceIterator.of(getReferencingLabels(), InsFillArrayData.class);
     }
     @Override
     public int size(){
@@ -215,6 +216,12 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
         }
         return null;
     }
+
+    @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.ARRAY_DATA;
+    }
+
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);

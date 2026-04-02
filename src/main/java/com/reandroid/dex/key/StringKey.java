@@ -51,11 +51,15 @@ public class StringKey implements Key{
     }
 
     @Override
+    public String asObject() {
+        return getString();
+    }
+    @Override
     public TypeKey getDeclaring() {
         return null;
     }
     @Override
-    public Iterator<Key> mentionedKeys() {
+    public Iterator<Key> contents() {
         return CombiningIterator.singleOne(
                 getDeclaring(),
                 SingleIterator.of(this));

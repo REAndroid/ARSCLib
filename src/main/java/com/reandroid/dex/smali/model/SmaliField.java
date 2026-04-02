@@ -31,7 +31,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliField extends SmaliDef implements FieldProgram {
+public class SmaliField extends SmaliMember implements FieldProgram {
 
     private TypeKey type;
     private SmaliValue value;
@@ -150,10 +150,14 @@ public class SmaliField extends SmaliDef implements FieldProgram {
     public void parse(SmaliReader reader) throws IOException {
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
-        setHiddenApiFlags(HiddenApiFlag.parse(reader));
+        setHiddenApiFlagsValue(HiddenApiFlag.parseValues(reader));
         setName(StringKey.readSimpleName(reader, ':'));
         reader.skip(1);
         setType(TypeKey.read(reader));
+        if (reader.checkInterned(getKey())) {
+            throw new IOException(reader.getCurrentOrigin(false) + " Field "
+                    + getKey() + " has already been interned");
+        }
         parseValue(reader);
         parseAnnotationSet(reader);
     }

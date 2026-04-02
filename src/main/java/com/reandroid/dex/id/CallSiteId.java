@@ -31,6 +31,10 @@ import java.util.Iterator;
 
 public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
+    private static final int METHOD_HANDLE_INDEX = 0;
+    private static final int NAME_INDEX = 1;
+    private static final int TYPE_INDEX = 2;
+
     private final DataItemIndirectReference<EncodedArray> encodedArrayReference;
 
     public CallSiteId() {
@@ -41,23 +45,38 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
     @Override
     public CallSiteKey getKey() {
-        return checkKey(new CallSiteKey(getMethodHandle(), getMethodName(),
-                getProto(), getArguments()));
+        CallSiteKey last = getLastKey();
+        NamedTypeKey nameAndType = getNameAndType();
+        BootstrapMethodKey bootstrap = getBootstrap();
+        if (last == null || !last.equals(nameAndType, bootstrap)) {
+            last = checkKey(CallSiteKey.create(nameAndType, bootstrap));
+        }
+        return last;
     }
     @Override
     public void setKey(Key key) {
         CallSiteKey callSiteKey = (CallSiteKey) key;
         this.encodedArrayReference.setKey(callSiteKey.toArrayKey());
     }
+    public NamedTypeKey getNameAndType() {
+        return NamedTypeKey.create(getMethodName(), getType());
+    }
+    public BootstrapMethodKey getBootstrap() {
+        return BootstrapMethodKey.create(getArguments(), getMethodHandle());
+    }
 
     public String callSiteName() {
         return NAME_PREFIX + getIdx();
     }
     public MethodHandleKey getMethodHandle() {
-        return getMethodHandleId().getKey();
+        MethodHandleId methodHandleId = getMethodHandleId();
+        if (methodHandleId != null) {
+            return methodHandleId.getKey();
+        }
+        return null;
     }
-    public MethodHandleId getMethodHandleId(){
-        return getValue(SectionType.METHOD_HANDLE, 0);
+    public MethodHandleId getMethodHandleId() {
+        return getValue(SectionType.METHOD_HANDLE, METHOD_HANDLE_INDEX);
     }
     public void setMethodHandle(MethodHandleKey key) {
         if (!key.equals(getMethodHandle())) {
@@ -66,12 +85,12 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     }
     public StringKey getMethodName() {
         StringId stringId = getMethodNameId();
-        if(stringId != null){
+        if (stringId != null) {
             return stringId.getKey();
         }
         return null;
     }
-    public void setMethodName(String methodName){
+    public void setMethodName(String methodName) {
         setMethodName(StringKey.create(methodName));
     }
     public void setMethodName(StringKey methodName) {
@@ -79,22 +98,22 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
             setKey(getKey().changeName(methodName));
         }
     }
-    public StringId getMethodNameId(){
-        return getValue(SectionType.STRING_ID, 1);
+    public StringId getMethodNameId() {
+        return getValue(SectionType.STRING_ID, NAME_INDEX);
     }
-    public ProtoId getProtoId() {
-        return getValue(SectionType.PROTO_ID, 2);
+    public IdItem getTypeId() {
+        return getValue(null, TYPE_INDEX);
     }
-    public ProtoKey getProto() {
-        ProtoId protoId = getProtoId();
-        if (protoId != null) {
-            return protoId.getKey();
+    public TypeDescriptorKey getType() {
+        IdItem typeId = getTypeId();
+        if (typeId != null) {
+            return (TypeDescriptorKey) typeId.getKey();
         }
         return null;
     }
-    public void setProto(ProtoKey protoKey){
-        if (!protoKey.equals(getProto())) {
-            setKey(getKey().changeProto(protoKey));
+    public void setProto(TypeDescriptorKey protoKey) {
+        if (!protoKey.equals(getType())) {
+            setKey(getKey().changeType(protoKey));
         }
     }
     public ArrayValueKey getArguments() {
@@ -143,26 +162,26 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
             setKey(getKey().changeArguments(key));
         }
     }
-    @SuppressWarnings("unchecked")
-    private<T1 extends IdItem> T1 getValue(SectionType<T1> sectionType, int index){
+
+    private<T1 extends IdItem> T1 getValue(SectionType<T1> sectionType, int index) {
         EncodedArray encodedArray = getEncodedArray();
-        if(encodedArray == null){
+        if (encodedArray == null) {
             return null;
         }
         DexValueBlock<?> value = encodedArray.get(index);
-        if(!(value instanceof SectionValue)){
+        if (!(value instanceof SectionValue)) {
             return null;
         }
         SectionValue<?> sectionValue = (SectionValue<?>) value;
-        if(sectionValue.getSectionType() != sectionType){
+        if (sectionType != null && sectionType != sectionValue.getSectionType()) {
             return null;
         }
-        return ((SectionValue<T1>)value).getItem();
+        return ObjectsUtil.cast(((SectionValue<?>)value).getItem());
     }
-    public EncodedArray getOrCreateEncodedArray(){
+    public EncodedArray getOrCreateEncodedArray() {
         return encodedArrayReference.getOrCreate();
     }
-    public EncodedArray getEncodedArray(){
+    public EncodedArray getEncodedArray() {
         return encodedArrayReference.getItem();
     }
 
@@ -177,7 +196,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     @Override
     public Iterator<IdItem> usedIds() {
         EncodedArray encodedArray = getEncodedArray();
-        if(encodedArray == null){
+        if (encodedArray == null) {
             return EmptyIterator.of();
         }
         return encodedArray.usedIds();
@@ -187,8 +206,8 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     public SectionType<CallSiteId> getSectionType() {
         return SectionType.CALL_SITE_ID;
     }
-    public void merge(CallSiteId callSiteId){
-        if(callSiteId == this){
+    public void merge(CallSiteId callSiteId) {
+        if (callSiteId == this) {
             return;
         }
         EncodedArray encodedArray = getOrCreateEncodedArray();
@@ -200,7 +219,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         writer.append('(');
         getMethodNameId().append(writer);
         writer.append(", ");
-        getProtoId().append(writer);
+        getTypeId().append(writer);
         Iterator<DexValueBlock<?>> iterator = getArgumentValues();
         while (iterator.hasNext()) {
             writer.append(", ");
@@ -212,25 +231,33 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
     @Override
     public int compareTo(CallSiteId callSiteId) {
-        if(callSiteId == this){
+        if (callSiteId == this) {
             return 0;
         }
-        if(callSiteId == null){
+        if (callSiteId == null) {
             return -1;
         }
         int i = CompareUtil.compare(getMethodHandleId(), callSiteId.getMethodHandleId());
-        if(i != 0){
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getArguments(), callSiteId.getArguments());
-        if(i != 0){
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getMethodNameId(), callSiteId.getMethodNameId());
-        if(i != 0){
+        if (i != 0) {
             return i;
         }
-        return CompareUtil.compare(getProtoId(), callSiteId.getProtoId());
+        IdItem type1 = getTypeId();
+        IdItem type2 = callSiteId.getTypeId();
+        if (type1 instanceof ProtoId && type2 instanceof ProtoId) {
+            return CompareUtil.compare((ProtoId) type1, (ProtoId) type2);
+        }
+        if (type1 instanceof TypeId && type2 instanceof TypeId) {
+            return CompareUtil.compare((TypeId) type1, (TypeId) type2);
+        }
+        return 0;
     }
     @Override
     public boolean equals(Object o) {
@@ -246,7 +273,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     @Override
     public int hashCode() {
         EncodedArray encodedArray = getEncodedArray();
-        if(encodedArray != null){
+        if (encodedArray != null) {
             return encodedArray.hashCode();
         }
         return 0;

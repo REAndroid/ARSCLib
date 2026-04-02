@@ -32,7 +32,5 @@ public abstract class Ins22 extends Size4Ins implements RegistersSet {
     public abstract int getRegister(int index);
     @Override
     public abstract void setRegister(int index, int value);
-    @Override
-    public abstract int getRegisterLimit(int index);
 
 }

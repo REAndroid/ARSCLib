@@ -43,7 +43,7 @@ public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod>
     }
     @Override
     protected List<DexMethod> listUnusedInClass(DexClass dexClass) {
-        Iterator<DexMethod> iterator = dexClass.getDeclaredMethods();
+        Iterator<DexMethod> iterator = dexClass.declaredMethods();
         ArrayCollection<DexMethod> list = null;
         while (iterator.hasNext()) {
             DexMethod dexMethod = iterator.next();
@@ -97,7 +97,7 @@ public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod>
             if(dexClass.usesNative()) {
                 continue;
             }
-            Iterator<DexMethod> methods = dexClass.getDeclaredMethods();
+            Iterator<DexMethod> methods = dexClass.declaredMethods();
             while (methods.hasNext()) {
                 DexMethod dexMethod = methods.next();
                 if(isInternal(dexMethod)) {

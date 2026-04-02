@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliPackedSwitchEntry;
@@ -27,7 +28,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class PackedSwitchDataList extends CountedBlockList<PackedSwitchEntry>
-        implements SmaliFormat, LabelsSet {
+        implements SmaliFormat, InstructionLabelSet {
 
     private final InsPackedSwitchData switchData;
 

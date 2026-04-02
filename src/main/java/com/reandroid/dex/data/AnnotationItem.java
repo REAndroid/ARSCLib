@@ -16,7 +16,6 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.Ule128Item;
@@ -25,16 +24,19 @@ import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.AnnotationElementKey;
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliAnnotationElement;
 import com.reandroid.dex.smali.model.SmaliAnnotationItem;
-import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
@@ -52,7 +54,7 @@ public class AnnotationItem extends DataItem
 
     private final ByteItem visibility;
     private final Ule128IdItemReference<TypeId> typeId;
-    private final CountedBlockList<AnnotationElement> annotationElements;
+    private final CountedBlockList<AnnotationElement> elementList;
 
     private final boolean mValueEntry;
 
@@ -60,156 +62,166 @@ public class AnnotationItem extends DataItem
         super(valueEntry? 3 : 4);
         this.mValueEntry = valueEntry;
         ByteItem visibility;
-        if(valueEntry){
+        if (valueEntry) {
             visibility = null;
-        }else {
+        } else {
             visibility = new ByteItem();
         }
         this.visibility = visibility;
         this.typeId = new Ule128IdItemReference<>(SectionType.TYPE_ID, UsageMarker.USAGE_ANNOTATION);
         Ule128Item elementsCount = new Ule128Item();
-        this.annotationElements = new CountedBlockList<>(
+        this.elementList = new CountedBlockList<>(
                 AnnotationElement.CREATOR, elementsCount);
         int i = 0;
-        if(!valueEntry){
+        if (!valueEntry) {
             addChildBlock(i++, visibility);
         }
 
         addChildBlock(i++, typeId);
         addChildBlock(i++, elementsCount);
-        addChildBlock(i, annotationElements);
+        addChildBlock(i, elementList);
     }
-    public AnnotationItem(){
+    public AnnotationItem() {
         this(false);
     }
 
     @Override
+    public AnnotationItemKey getKey() {
+        AnnotationItemKey lastKey = getLastKey();
+        if (lastKey != null && equalsKey(lastKey)) {
+            return lastKey;
+        }
+        int size = size();
+        AnnotationElementKey[] elements = size == 0 ? null : new AnnotationElementKey[size];
+        for (int i = 0; i < size; i++) {
+            elements[i] = get(i).getKey();
+        }
+        return checkKey(AnnotationItemKey.create(getVisibility(), getType(), elements));
+    }
+    @Override
+    public void setKey(Key key) {
+        AnnotationItemKey itemKey = (AnnotationItemKey) key;
+        setVisibility(itemKey.getVisibility());
+        setType(itemKey.getType());
+        int size = itemKey.size();
+        CountedBlockList<AnnotationElement> elementList = this.elementList;
+        elementList.setSize(size);
+        for (int i = 0; i < size; i++) {
+            elementList.get(i).setKey(itemKey.get(i));
+        }
+    }
+    private boolean equalsKey(AnnotationItemKey itemKey) {
+        if (!ObjectsUtil.equals(getVisibility(), itemKey.getVisibility()) ||
+                !ObjectsUtil.equals(getType(), itemKey.getType())) {
+            return false;
+        }
+        int size = size();
+        if (size != itemKey.size()) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            AnnotationElement element = get(i);
+            if (element == null || !itemKey.get(i).equals(element.getKey())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    @Override
     public SectionType<AnnotationItem> getSectionType() {
         return SectionType.ANNOTATION_ITEM;
     }
-    public boolean removeIf(Predicate<AnnotationElement> filter){
-        return annotationElements.removeIf(filter);
+    public void remove(AnnotationElement element) {
+        elementList.remove(element);
     }
-    public void remove(AnnotationElement element){
-        annotationElements.remove(element);
+    public void remove(int i) {
+        elementList.remove(i);
     }
     public void clear() {
-        annotationElements.clearChildes();
+        elementList.clearChildes();
     }
-    public AnnotationElement getOrCreateElement(String name){
-        AnnotationElement element = getElement(name);
-        if(element != null){
+    public AnnotationElement getOrCreate(String name) {
+        AnnotationElement element = get(name);
+        if (element != null) {
             return element;
         }
-        element = createNewElement();
+        element = newElement();
         element.setName(name);
         element.getOrCreateValue(DexValueType.NULL);
         return element;
     }
-    public AnnotationElement createNewElement(){
-        return annotationElements.createNext();
+    public AnnotationElement newElement() {
+        return elementList.createNext();
     }
-    public boolean containsName(String name){
-        for(AnnotationElement element : this){
-            if(name.equals(element.getName())){
-                return true;
-            }
-        }
-        return false;
+    public boolean contains(String name) {
+        return get(name) != null;
     }
-    public DexValueBlock<?> getElementValue(String name){
-        AnnotationElement element = getElement(name);
-        if(element != null){
-            return element.getValueBlock();
-        }
-        return null;
-    }
-    public AnnotationElement getElement(String name){
-        for(AnnotationElement element : this){
-            if(name.equals(element.getName())){
+    public AnnotationElement get(String name) {
+        CountedBlockList<AnnotationElement> elementList = this.elementList;
+        int size = elementList.size();
+        for (int i = 0; i < size; i++) {
+            AnnotationElement element = elementList.get(i);
+            if (ObjectsUtil.equals(element.getName(), name)) {
                 return element;
             }
         }
         return null;
     }
-    public AnnotationElementKey[] getElements() {
-        int length = getElementsCount();
-        AnnotationElementKey[] results = new AnnotationElementKey[length];
-        for (int i = 0; i < length; i++) {
-            results[i] = getElement(i).getKey();
+    public void add(String name, Key value) {
+        AnnotationElement element = get(name);
+        if (element == null) {
+            element = newElement();
         }
-        return results;
+        element.setName(name);
+        element.setValue(value);
+        sort();
     }
-    public void addElement(AnnotationElementKey element) {
-        createNewElement().setKey(element);
-    }
-    public String[] getNames(){
-        BlockList<AnnotationElement> elements = annotationElements;
-        int length = elements.size();
-        if(length == 0){
-            return null;
+    public void add(AnnotationElementKey elementKey) {
+        AnnotationElement element = get(elementKey.getName());
+        if (element == null) {
+            element = newElement();
         }
-        String[] results = new String[length];
-        for(int i = 0; i < length; i++){
-            results[i] = elements.get(i).getName();
-        }
-        return results;
+        element.setKey(elementKey);
+        sort();
     }
-    @Override
-    public AnnotationItemKey getKey(){
-        return checkKey(AnnotationItemKey.create(getVisibility(), getType(), getElements()));
-    }
-    @Override
-    public void setKey(Key key){
-        AnnotationItemKey itemKey = (AnnotationItemKey) key;
-        setVisibility(itemKey.getVisibility());
-        setType(itemKey.getType());
-        clear();
-        for (AnnotationElementKey elementKey : itemKey) {
-            addElement(elementKey);
-        }
-    }
-    @Override
-    public Iterator<AnnotationElement> iterator(){
-        return annotationElements.iterator();
-    }
-    public Iterator<AnnotationElement> clonedIterator(){
-        return annotationElements.clonedIterator();
-    }
-    public int getElementsCount(){
-        return annotationElements.size();
+    public int size() {
+        return elementList.size();
     }
     public boolean isEmpty() {
-        return annotationElements.size() == 0;
+        return elementList.size() == 0;
     }
-    public AnnotationElement getElement(int index){
-        return annotationElements.get(index);
+    public AnnotationElement get(int index) {
+        return elementList.get(index);
+    }
+    @Override
+    public Iterator<AnnotationElement> iterator() {
+        return elementList.iterator();
     }
     public boolean isValueEntry() {
         return mValueEntry;
     }
-    public AnnotationVisibility getVisibility(){
-        if(!isValueEntry()){
+    public AnnotationVisibility getVisibility() {
+        if (!isValueEntry()) {
             return AnnotationVisibility.valueOf(visibility.get());
         }
         return null;
     }
-    public void setVisibility(AnnotationVisibility visibility){
+    public void setVisibility(AnnotationVisibility visibility) {
         int value;
-        if(visibility != null){
+        if (visibility != null) {
             value = visibility.getValue();
-        }else {
+        } else {
             value = 0;
         }
         setVisibility(value);
     }
-    public void setVisibility(int visibility){
-        if(this.visibility != null){
+    public void setVisibility(int visibility) {
+        if (this.visibility != null) {
             this.visibility.set((byte) visibility);
         }
     }
-    public int getVisibilityValue(){
-        if(this.visibility == null){
+    public int getVisibilityValue() {
+        if (this.visibility == null) {
             return -1;
         }
         return this.visibility.get();
@@ -217,14 +229,14 @@ public class AnnotationItem extends DataItem
     public TypeKey getType() {
         return (TypeKey) typeId.getKey();
     }
-    public TypeId getTypeId(){
+    public TypeId getTypeId() {
         return typeId.getItem();
     }
-    public void setType(String type){
-        setType(TypeKey.create(type));
-    }
-    public void setType(TypeKey typeKey){
+    public void setType(TypeKey typeKey) {
         typeId.setKey(typeKey);
+    }
+    public void sort() {
+        elementList.sort(CompareUtil.getComparableComparator());
     }
 
     public void replaceKeys(Key search, Key replace) {
@@ -234,9 +246,9 @@ public class AnnotationItem extends DataItem
             setKey(update);
         }
     }
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         TypeKey typeKey = getType();
-        if(typeKey.getTypeName().startsWith("Ldalvik/annotation/")){
+        if (typeKey.getTypeName().startsWith("Ldalvik/annotation/")) {
             return EmptyIterator.of();
         }
         return CombiningIterator.singleOne(getTypeId(),
@@ -258,25 +270,27 @@ public class AnnotationItem extends DataItem
         return new WarpedAnnotation(this);
     }
 
-    public void merge(AnnotationItem annotationItem){
-        if(annotationItem == this){
+    public void merge(AnnotationItem annotationItem) {
+        if (annotationItem == this) {
             return;
         }
         setVisibility(annotationItem.getVisibilityValue());
         setType(annotationItem.getType());
-        annotationElements.ensureCapacity(annotationItem.getElementsCount());
-        for(AnnotationElement coming : annotationItem){
-            createNewElement().merge(coming);
+        CountedBlockList<AnnotationElement> elementList = this.elementList;
+        int size = annotationItem.size();
+        elementList.setSize(size);
+        for (int i = 0; i < size; i++) {
+            elementList.get(i).merge(annotationItem.get(i));
         }
     }
-    public void fromSmali(SmaliAnnotationItem smaliAnnotationItem){
+    public void fromSmali(SmaliAnnotationItem smaliAnnotationItem) {
         setType(smaliAnnotationItem.getType());
         setVisibility(smaliAnnotationItem.getVisibility());
-        Iterator<SmaliAnnotationElement> iterator = smaliAnnotationItem.iterator();
-        while (iterator.hasNext()){
-            SmaliAnnotationElement smaliAnnotationElement = iterator.next();
-            AnnotationElement element = createNewElement();
-            element.fromSmali(smaliAnnotationElement);
+        CountedBlockList<AnnotationElement> elementList = this.elementList;
+        int size = smaliAnnotationItem.size();
+        elementList.setSize(size);
+        for (int i = 0; i < size; i++) {
+            elementList.get(i).fromSmali(smaliAnnotationItem.get(i));
         }
     }
     @Override
@@ -291,22 +305,22 @@ public class AnnotationItem extends DataItem
     }
     @Override
     public SmaliDirective getSmaliDirective() {
-        if(isValueEntry()){
+        if (isValueEntry()) {
             return SmaliDirective.SUB_ANNOTATION;
         }
         return SmaliDirective.ANNOTATION;
     }
 
     @Override
-    public int compareTo(AnnotationItem other){
-        if(other == null){
+    public int compareTo(AnnotationItem other) {
+        if (other == null) {
             return -1;
         }
-        if(other == this){
+        if (other == this) {
             return 0;
         }
         int i = SectionTool.compareIdx(getTypeId(), other.getTypeId());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         return CompareUtil.compare(getVisibilityValue(), other.getVisibilityValue());
@@ -320,13 +334,13 @@ public class AnnotationItem extends DataItem
             return false;
         }
         AnnotationItem item = (AnnotationItem) obj;
-        if(!ObjectsUtil.equals(this.getType(), item.getType())){
+        if (!ObjectsUtil.equals(this.getType(), item.getType())) {
             return false;
         }
-        if(this.getVisibilityValue() != item.getVisibilityValue()){
+        if (this.getVisibilityValue() != item.getVisibilityValue()) {
             return false;
         }
-        return this.annotationElements.equals(item.annotationElements);
+        return this.elementList.equals(item.elementList);
     }
 
     @Override
@@ -334,25 +348,25 @@ public class AnnotationItem extends DataItem
         return ObjectsUtil.hash(
                 getVisibility(),
                 getType(),
-                annotationElements);
+                elementList);
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append('@');
         builder.append(getType());
         boolean appendOnce = false;
-        for(AnnotationElement element : this){
-            if(appendOnce){
+        for (AnnotationElement element : this) {
+            if (appendOnce) {
                 builder.append(", ");
-            }else {
+            } else {
                 builder.append('(');
             }
             builder.append(element);
             appendOnce = true;
         }
-        if(appendOnce){
+        if (appendOnce) {
             builder.append(')');
         }
         return builder.toString();
@@ -403,10 +417,7 @@ public class AnnotationItem extends DataItem
         @Override
         public boolean hasAnnotation(TypeKey typeKey) {
             AnnotationItemKey itemKey = getItemKey();
-            if (itemKey != null && itemKey.getType().equals(typeKey)) {
-                return true;
-            }
-            return false;
+            return itemKey != null && itemKey.getType().equals(typeKey);
         }
         @Override
         public AnnotationItemKey getAnnotation(TypeKey typeKey) {

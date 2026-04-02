@@ -19,9 +19,9 @@ import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugPrologue;
 
 
-public class DebugPrologue extends DebugElement{
+public class DebugPrologueBlock extends DebugElementBlock {
 
-    public DebugPrologue() {
+    public DebugPrologueBlock() {
         super(DebugElementType.PROLOGUE);
     }
 
@@ -34,7 +34,7 @@ public class DebugPrologue extends DebugElement{
         }
     }
     @Override
-    public DebugElementType<DebugPrologue> getElementType() {
+    public DebugElementType<DebugPrologueBlock> getElementType() {
         return DebugElementType.PROLOGUE;
     }
 }

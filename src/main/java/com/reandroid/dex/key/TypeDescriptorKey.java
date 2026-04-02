@@ -13,16 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.debug;
+package com.reandroid.dex.key;
 
-public class DebugRestartLocal extends DebugRegisterNumber {
+public interface TypeDescriptorKey extends Key {
 
-    public DebugRestartLocal() {
-        super(0, DebugElementType.RESTART_LOCAL);
-    }
-
-    @Override
-    public DebugElementType<DebugRestartLocal> getElementType() {
-        return DebugElementType.RESTART_LOCAL;
-    }
 }

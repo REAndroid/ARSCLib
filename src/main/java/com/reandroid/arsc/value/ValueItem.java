@@ -268,6 +268,22 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         return null;
     }
+    public Object getValueAsEncoded() {
+        ValueType valueType = getValueType();
+        if (valueType == ValueType.STRING) {
+            return getValueAsString();
+        }
+        if (valueType == ValueType.BOOLEAN) {
+            return getValueAsBoolean();
+        }
+        if (valueType == ValueType.DEC || valueType == ValueType.HEX) {
+            return getData();
+        }
+        if (valueType == ValueType.FLOAT) {
+            return getValueAsFloat();
+        }
+        return null;
+    }
     public StyleDocument getValueAsStyleDocument(){
         StringItem stringItem = getDataAsPoolString();
         if(stringItem != null) {

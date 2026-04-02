@@ -29,9 +29,9 @@ import com.reandroid.utils.collection.SingleIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DebugParameter extends Base1Ule128IdItemReference<StringId> implements SmaliFormat {
+public class DebugParameterBlock extends Base1Ule128IdItemReference<StringId> implements SmaliFormat {
 
-    public DebugParameter(){
+    public DebugParameterBlock(){
         super(SectionType.STRING_ID);
     }
 
@@ -76,7 +76,7 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
     public Iterator<IdItem> usedIds(){
         return SingleIterator.of(getItem());
     }
-    public void merge(DebugParameter parameter){
+    public void merge(DebugParameterBlock parameter){
         setKey(parameter.getKey());
     }
 
@@ -88,7 +88,7 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         if (obj == null || obj.getClass() != getClass()) {
             return false;
         }
-        DebugParameter parameter = (DebugParameter) obj;
+        DebugParameterBlock parameter = (DebugParameterBlock) obj;
         return ObjectsUtil.equals(getKey(), parameter.getKey());
     }
 

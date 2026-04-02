@@ -84,4 +84,11 @@ public class DalvikSignature extends DalvikAnnotation {
         }
         return of(annotatedProgram);
     }
+    public static DalvikSignatureKey getSignature(AnnotatedProgram annotatedProgram) {
+        DalvikSignature dalvikSignature = DalvikSignature.of(annotatedProgram);
+        if (dalvikSignature != null) {
+            return dalvikSignature.getSignature();
+        }
+        return null;
+    }
 }

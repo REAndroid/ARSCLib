@@ -16,7 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugStartLocal;
+import com.reandroid.dex.debug.DebugStartLocalBlock;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.*;
@@ -57,7 +57,7 @@ public class SmaliDebugLocal extends SmaliDebugRegister{
     }
 
     @Override
-    public DebugElementType<? extends DebugStartLocal> getDebugElementType() {
+    public DebugElementType<? extends DebugStartLocalBlock> getDebugElementType() {
         if(isExtended()){
             return DebugElementType.START_LOCAL_EXTENDED;
         }else {

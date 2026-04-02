@@ -48,6 +48,7 @@ public class CatchAllHandler extends ExceptionHandler {
     public boolean isCatchAll() {
         return true;
     }
+
     @Override
     public SmaliDirective getSmaliDirective(){
         return SmaliDirective.CATCH_ALL;
@@ -61,6 +62,7 @@ public class CatchAllHandler extends ExceptionHandler {
             super(true);
             this.catchAllHandler = catchAllHandler;
         }
+
         @Override
         public boolean isRemoved() {
             return super.isRemoved() || catchAllHandler.isRemoved();

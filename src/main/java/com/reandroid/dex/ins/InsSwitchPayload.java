@@ -19,6 +19,9 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.program.Instruction;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.utils.ObjectsUtil;
@@ -27,7 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadData<T>
-        implements LabelsSet, SmaliRegion, SmaliFormat {
+        implements InstructionLabelSet, SmaliRegion, SmaliFormat {
 
     private InsSwitch insSwitch;
 
@@ -38,7 +41,7 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
     @Override
     public void updateTargetAddress() {
         super.updateTargetAddress();
-        getSwitch().setTargetIns(this);
+        getSwitch().setTargetInstruction(this);
         getSwitch().updateTargetAddress();
         for(SwitchEntry switchEntry : this) {
             switchEntry.updateTargetAddress();
@@ -46,18 +49,18 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
     }
 
     @Override
-    void linkTargetIns() {
-        super.linkTargetIns();
+    void linkTargetInstruction() {
+        super.linkTargetInstruction();
         for(SwitchEntry switchEntry : this) {
-            switchEntry.getTargetIns();
+            switchEntry.getTargetInstruction();
         }
     }
 
     @Override
-    void unLinkTargetIns() {
-        super.unLinkTargetIns();
+    void detachTargetInstructions() {
+        super.detachTargetInstructions();
         for(SwitchEntry switchEntry : this) {
-            switchEntry.setTargetIns(null);
+            switchEntry.setTargetInstruction(null);
         }
     }
 
@@ -67,39 +70,39 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
     }
     public InsSwitch getSwitch() {
         InsSwitch insSwitch = this.insSwitch;
-        if(insSwitch == null){
-            insSwitch = findOnExtraLines();
-            if(insSwitch == null){
+        if (insSwitch == null) {
+            insSwitch = findOnReferencingLabels();
+            if (insSwitch == null) {
                 insSwitch = findByAddress();
             }
             this.insSwitch = insSwitch;
-            if(insSwitch != null) {
+            if (insSwitch != null) {
                 insSwitch.setPayload(this);
             }
         }
         return insSwitch;
     }
     public void setSwitch(InsSwitch insSwitch) {
-        if(insSwitch == null) {
+        if (insSwitch == null) {
             this.insSwitch = null;
-        } else if(getSwitchOpcode() != insSwitch.getOpcode()) {
+        } else if (getSwitchOpcode() != insSwitch.getOpcode()) {
             throw new ClassCastException("Incompatible switch opcode: '" + getSwitchOpcode()
                     + "' vs '" + insSwitch.getOpcode() + "'");
         } else {
             this.insSwitch = insSwitch;
-            addExtraLine(insSwitch);
+            addReferencingLabel(insSwitch);
             insSwitch.setPayload(this);
         }
     }
     public abstract Opcode<? extends InsSwitch> getSwitchOpcode();
 
-    private InsSwitch findOnExtraLines() {
-        Iterator<ExtraLine> iterator = getExtraLines();
-        while (iterator.hasNext()){
-            ExtraLine extraLine = iterator.next();
-            if(extraLine instanceof InsSwitch){
-                InsSwitch insSwitch = (InsSwitch) extraLine;
-                if(insSwitch.getOpcode() == getSwitchOpcode()) {
+    private InsSwitch findOnReferencingLabels() {
+        Iterator<InstructionLabel> iterator = getReferencingLabels();
+        while (iterator.hasNext()) {
+            Instruction instruction = iterator.next().getOwnerInstruction();
+            if (instruction instanceof InsSwitch) {
+                InsSwitch insSwitch = (InsSwitch) instruction;
+                if (insSwitch.getOpcode() == getSwitchOpcode()) {
                     return insSwitch;
                 }
             }
@@ -108,13 +111,13 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
     }
     private InsSwitch findByAddress() {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
+        if (instructionList != null) {
             Iterator<? extends InsSwitch> iterator = instructionList
                     .iterator(getSwitchOpcode());
             int address = getAddress();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 InsSwitch sparseSwitch = iterator.next();
-                if(sparseSwitch.getTargetAddress() == address){
+                if (sparseSwitch.getTargetAddress() == address) {
                     return sparseSwitch;
                 }
             }
@@ -129,15 +132,15 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
         int constRegister = local;
         local = local + 1;
         InsSwitch insSwitch = getSwitch();
-        if(!registersTable.ensureLocalRegistersCount(local)) {
+        if (!registersTable.ensureLocalRegistersCount(local)) {
             List<Register> freeRegisters = instructionList.getLocalFreeRegisters(insSwitch.getIndex());
-            if(freeRegisters.isEmpty()) {
+            if (freeRegisters.isEmpty()) {
                 return false;
             }
             // FIXME: consider using InstructionList#getLocalFreeRegisters
             constRegister = freeRegisters.get(0).getValue();
         }
-        if(constRegister > 0xf){
+        if (constRegister > 0xf) {
             // FIXME
             return false;
         }
@@ -148,7 +151,7 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
         InsSwitch packedSwitch = getSwitch();
         InsBlockList insBlockList = getInsBlockList();
         Object lock = insBlockList.link(new Object());
-        linkTargetIns();
+        linkTargetInstruction();
         for (SwitchEntry switchEntry : this) {
             switchEntry.addEquivalentIfEq(constRegister);
         }

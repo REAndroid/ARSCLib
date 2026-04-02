@@ -15,7 +15,10 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IdItemIndirectShortReference;
 import com.reandroid.dex.reference.IndirectStringReference;
@@ -120,8 +123,14 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
     }
     @Override
     public FieldKey getKey() {
-        return checkKey(FieldKey.create(getDefining(),
-                getNameKey(), getFieldType()));
+        TypeKey declaring = getDefining();
+        StringKey name = getNameKey();
+        TypeKey type = getFieldType();
+        FieldKey lastKey = getLastKey();
+        if (lastKey != null && lastKey.equals(declaring, name, type)) {
+            return lastKey;
+        }
+        return checkKey(FieldKey.create(declaring, name, type));
     }
 
     @Override

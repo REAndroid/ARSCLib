@@ -5,17 +5,20 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-public class ProtoKey implements Key {
+public class ProtoKey implements ProtoDescriptorKey {
 
     private final TypeListKey parameters;
     private final TypeKey returnType;
 
-    private ProtoKey(TypeListKey parameters, TypeKey returnType){
+    private ProtoKey(TypeListKey parameters, TypeKey returnType) {
+        super();
         this.parameters = parameters;
         this.returnType = returnType;
     }
@@ -69,16 +72,15 @@ public class ProtoKey implements Key {
         return create(getParameters(), typeKey);
     }
 
+    @Override
     public TypeKey getReturnType() {
         return returnType;
     }
-
-    public int getParametersCount() {
-        return getParameters().size();
-    }
+    @Override
     public TypeKey getParameter(int i){
         return getParameters().get(i);
     }
+    @Override
     public TypeListKey getParameters() {
         return parameters;
     }
@@ -95,6 +97,19 @@ public class ProtoKey implements Key {
         }
         return new String(results);
     }
+    public String getDetailedShorty() {
+        return getDetailedShorty(null);
+    }
+    public String getDetailedShorty(Predicate<TypeKey> platformPredicate) {
+        StringBuilder builder = new StringBuilder();
+        getReturnType().appendDetailedShorty(builder, platformPredicate);
+        TypeListKey parameters = getParameters();
+        int size = parameters.size();
+        for (int i = 0; i < size; i++) {
+            parameters.get(i).appendDetailedShorty(builder, platformPredicate);
+        }
+        return builder.toString();
+    }
     public int getParameterRegistersCount(){
         int result = 0;
         Iterator<TypeKey> iterator = iterator();
@@ -108,7 +123,7 @@ public class ProtoKey implements Key {
         return result;
     }
     @Override
-    public Iterator<Key> mentionedKeys() {
+    public Iterator<Key> contents() {
         return CombiningIterator.singleThree(
                 ProtoKey.this,
                 SingleIterator.of(StringKey.create(getShorty())),
@@ -118,12 +133,10 @@ public class ProtoKey implements Key {
     @Override
     public ProtoKey replaceKey(Key search, Key replace) {
         ProtoKey result = this;
-        if(search.equals(result)){
+        if (search.equals(result)) {
             return (ProtoKey) replace;
         }
-        if(search.equals(result.getReturnType())){
-            result = result.changeReturnType((TypeKey) replace);
-        }
+        result = result.changeReturnType(getReturnType().replaceKey(search, replace));
         result = result.changeParameters(getParameters().replaceKey(search, replace));
         return result;
     }
@@ -175,6 +188,16 @@ public class ProtoKey implements Key {
             return true;
         }
         return TypeListKey.equalsIgnoreEmpty(getParameters(), protoKey.getParameters());
+    }
+    public boolean equals(TypeKey returnType, TypeListKey parameters) {
+        if (!getReturnType().equals(returnType)) {
+            return false;
+        }
+        TypeListKey key = getParameters();
+        if (parameters == null) {
+            return key.isEmpty();
+        }
+        return key.equals(parameters);
     }
     @Override
     public boolean equals(Object obj) {
@@ -243,6 +266,6 @@ public class ProtoKey implements Key {
         TypeListKey parameters = TypeListKey.readParameters(reader);
         reader.skipWhitespacesOrComment();
         TypeKey returnType = TypeKey.read(reader);
-        return new ProtoKey(parameters, returnType);
+        return create(parameters, returnType);
     }
 }

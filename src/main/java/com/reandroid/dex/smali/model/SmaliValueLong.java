@@ -84,9 +84,21 @@ public class SmaliValueLong extends SmaliValueNumber<Long>{
         reader.skipSpaces();
         int position = reader.position();
         long l;
-        try{
-            l = HexUtil.parseHexLong(reader.readStringForNumber());
-        }catch (NumberFormatException ex){
+        try {
+            String num = reader.readStringForNumber();
+            if (num.indexOf('x') > 0) {
+                l = HexUtil.parseHexLong(num);
+            } else {
+                int i = num.length() - 1;
+                if (i > 0) {
+                    char c = num.charAt(i);
+                    if (c == 'L' || c == 'l') {
+                        num = num.substring(0, i);
+                    }
+                }
+                l = Long.parseLong(num);
+            }
+        } catch (NumberFormatException ex) {
             reader.position(position);
             throw new SmaliParseException(ex.getMessage(), reader);
         }

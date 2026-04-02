@@ -25,6 +25,7 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.program.MethodProgram;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -33,11 +34,12 @@ import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.fix.SmaliGotoFix;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTable {
+public class SmaliMethod extends SmaliMember implements MethodProgram, RegistersTable {
 
     private ProtoKey protoKey;
 
@@ -67,7 +69,7 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
     public void setKey(Key key) {
         MethodKey methodKey = (MethodKey) key;
         setName(methodKey.getNameKey());
-        setProtoKey(methodKey.getProto());
+        setProtoKey(methodKey.getType());
         setDefining(methodKey.getDeclaring());
     }
     public MethodKey getKey(TypeKey declaring) {
@@ -135,6 +137,45 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         return SmaliDirective.METHOD;
     }
 
+    public boolean matches(MethodKey methodKey) {
+        if (methodKey == null) {
+            return false;
+        }
+        return matches(methodKey.getName(), methodKey.getParameters(),
+                methodKey.getReturnType());
+    }
+    public boolean matches(String name, ProtoKey protoKey) {
+        TypeListKey parameters;
+        TypeKey returnType;
+        if (protoKey == null) {
+            parameters = null;
+            returnType = null;
+        } else {
+            parameters = protoKey.getParameters();
+            returnType = protoKey.getReturnType();
+        }
+        return matches(name, parameters, returnType);
+    }
+    public boolean matches(String name, TypeListKey parameters, TypeKey returnType) {
+        if (ObjectsUtil.equals(getName(), name)) {
+            ProtoKey protoKey = getProtoKey();
+            if (parameters != null) {
+                if (protoKey == null && !parameters.isEmpty()) {
+                    return false;
+                }
+                if (protoKey != null) {
+                    if (!protoKey.equalsParameters(parameters)) {
+                        return false;
+                    }
+                }
+            }
+            if (protoKey == null || returnType == null) {
+                return returnType == null;
+            }
+            return returnType.equals(protoKey.getReturnType());
+        }
+        return false;
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
@@ -161,19 +202,25 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
-        setHiddenApiFlags(HiddenApiFlag.parse(reader));
+        setHiddenApiFlagsValue(HiddenApiFlag.parseValues(reader));
         setName(StringKey.readSimpleName(reader, '('));
         parseProto(reader);
+        if (reader.checkInterned(getKey())) {
+            throw new IOException(reader.getCurrentOrigin(false) + " Method "
+                    + getKey() + " has already been interned");
+        }
         reader.skipWhitespacesOrComment();
         while (parseNoneCode(reader)) {
             reader.skipWhitespacesOrComment();
         }
         getCodeSet().parse(reader);
         SmaliParseException.expect(reader, getSmaliDirective(), true);
-        runFixes();
+        runFixes(reader);
     }
-    private void runFixes() {
-        new SmaliGotoFix(this).apply();
+    private void runFixes(SmaliReader reader) {
+        if (reader.isFixGoto()) {
+            new SmaliGotoFix(this).apply();
+        }
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
@@ -239,6 +286,16 @@ public class SmaliMethod extends SmaliDef implements MethodProgram, RegistersTab
         builder.append(getName());
         builder.append(getProtoKey());
         return builder.toString();
+    }
+
+    public static SmaliMethod create(MethodProgram methodProgram) {
+        SmaliMethod smaliMethod = new SmaliMethod();
+        smaliMethod.setKey(methodProgram.getKey());
+        smaliMethod.setAccessFlagsValue(methodProgram.getAccessFlagsValue());
+        SmaliRegistersCount count = smaliMethod.getSmaliRegistersCount();
+        count.setLocalsMode(true);
+        count.setValue(methodProgram.getLocalRegistersCount());
+        return smaliMethod;
     }
 
     public static class SmaliRegistersCount extends Smali implements SmaliRegion {

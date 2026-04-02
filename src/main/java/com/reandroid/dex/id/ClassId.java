@@ -67,9 +67,9 @@ public class ClassId extends IdItem implements ClassProgram,
 
     public ClassId() {
         super(SIZE);
-        int offset = -4;
+        int offset = 0;
         
-        this.classTypeId = new ClassTypeId(this, offset += 4);
+        this.classTypeId = new ClassTypeId(this, offset);
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
         this.superClassId = new SuperClassId(this, offset += 4);
         this.interfaces = new TypeListReference(this, offset += 4, USAGE_INTERFACE);
@@ -101,7 +101,12 @@ public class ClassId extends IdItem implements ClassProgram,
     }
     @Override
     public TypeKey getKey() {
-        return checkKey(TypeKey.create(getName()));
+        TypeId typeId = getId();
+        TypeKey typeKey = null;
+        if (typeId != null) {
+            typeKey = typeId.getKey();
+        }
+        return checkKey(typeKey);
     }
     @Override
     public void setKey(Key key) {
@@ -167,6 +172,7 @@ public class ClassId extends IdItem implements ClassProgram,
             getOrCreateUniqueAnnotationsDirectory().put(this, key);
         }
     }
+    @Deprecated
     public String getName() {
         TypeId typeId = getId();
         if (typeId != null) {
@@ -174,6 +180,7 @@ public class ClassId extends IdItem implements ClassProgram,
         }
         return null;
     }
+    @Deprecated
     public void setName(String typeName) {
         setKey(new TypeKey(typeName));
     }
@@ -242,6 +249,10 @@ public class ClassId extends IdItem implements ClassProgram,
     }
 
     @Override
+    public Iterator<FieldDef> declaredFields() {
+        return CombiningIterator.two(getStaticFields(), getInstanceFields());
+    }
+    @Override
     public Iterator<FieldDef> getStaticFields() {
         ClassData classData = getClassData();
         if (classData != null) {
@@ -259,6 +270,32 @@ public class ClassId extends IdItem implements ClassProgram,
     }
 
     @Override
+    public int getInstanceFieldsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getInstanceFieldsCount();
+        }
+        return 0;
+    }
+
+    @Override
+    public int getStaticFieldsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getStaticFieldsCount();
+        }
+        return 0;
+    }
+    @Override
+    public boolean hasStaticFields() {
+        return getStaticFieldsCount() != 0;
+    }
+    @Override
+    public boolean hasInstanceFields() {
+        return getInstanceFieldsCount() != 0;
+    }
+
+    @Override
     public Iterator<MethodDef> getDirectMethods() {
         ClassData classData = getClassData();
         if (classData != null) {
@@ -273,6 +310,34 @@ public class ClassId extends IdItem implements ClassProgram,
             return classData.getVirtualMethods();
         }
         return EmptyIterator.of();
+    }
+    @Override
+    public Iterator<MethodDef> declaredMethods() {
+        return CombiningIterator.two(getDirectMethods(), getVirtualMethods());
+    }
+    @Override
+    public int getDirectMethodsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getDirectMethodsCount();
+        }
+        return 0;
+    }
+    @Override
+    public int getVirtualMethodsCount() {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.getVirtualMethodsCount();
+        }
+        return 0;
+    }
+    @Override
+    public boolean hasDirectMethods() {
+        return getDirectMethodsCount() != 0;
+    }
+    @Override
+    public boolean hasVirtualMethods() {
+        return getVirtualMethodsCount() != 0;
     }
 
     public TypeKey getDalvikEnclosing() {
@@ -412,6 +477,29 @@ public class ClassId extends IdItem implements ClassProgram,
             classData.replaceKeys(search, replace);
         }
     }
+
+    @Override
+    public boolean uses(Key key) {
+        if (key == null || key.equals(getKey())) {
+            return false;
+        }
+        if (getSuperClassKey().uses(key)) {
+            return true;
+        }
+        if (getInterfacesKey().uses(key)) {
+            return true;
+        }
+        AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
+        if (annotationsDirectory != null && annotationsDirectory.uses(key)) {
+            return true;
+        }
+        ClassData classData = getClassData();
+        if (classData != null && classData.uses(key)) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public Iterator<IdItem> usedIds() {
         return listUsedIds().iterator();
@@ -495,12 +583,12 @@ public class ClassId extends IdItem implements ClassProgram,
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
+        ClassData classData = getClassData();
         getClassTypeId().append(writer);
         getSuperClassId().append(writer);
         getSourceFileReference().append(writer);
         getInterfacesKey().appendInterfaces(writer);
         getAnnotation().appendClass(writer);
-        ClassData classData = getClassData();
         if (classData != null) {
             writer.newLine();
             classData.append(writer);

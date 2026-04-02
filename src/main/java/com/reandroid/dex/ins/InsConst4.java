@@ -50,10 +50,6 @@ public class InsConst4 extends Size2Ins implements RegistersSet, ConstNumber {
     public void setRegister(int index, int value) {
         setNibble(2, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0x0f;
-    }
 
     @Override
     public int get() {

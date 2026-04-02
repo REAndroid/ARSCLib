@@ -20,15 +20,17 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.base.IndirectShort;
+import com.reandroid.dex.base.PositionAlignedItem;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.debug.DebugElement;
+import com.reandroid.dex.debug.DebugElementBlock;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.ins.ExtraLine;
-import com.reandroid.dex.ins.Label;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
@@ -73,7 +75,7 @@ public class CodeItem extends DataItem implements RegistersTable,
     }
     @SuppressWarnings("unchecked")
     @Override
-    public void setKey(Key key){
+    public void setKey(Key key) {
         DataKey<CodeItem> codeItemKey = (DataKey<CodeItem>) key;
         merge(codeItemKey.getItem());
     }
@@ -83,37 +85,37 @@ public class CodeItem extends DataItem implements RegistersTable,
     }
 
     @Override
-    public int getRegistersCount(){
+    public int getRegistersCount() {
         return header.registersCount.get();
     }
     @Override
-    public void setRegistersCount(int count){
+    public void setRegistersCount(int count) {
         header.registersCount.set(count);
     }
     @Override
-    public int getParameterRegistersCount(){
+    public int getParameterRegistersCount() {
         return header.parameterRegisters.get();
     }
     @Override
-    public void setParameterRegistersCount(int count){
+    public void setParameterRegistersCount(int count) {
         header.parameterRegisters.set(count);
     }
     @Override
-    public boolean ensureLocalRegistersCount(int locals){
-        if(locals == 0){
+    public boolean ensureLocalRegistersCount(int locals) {
+        if (locals == 0) {
             return true;
         }
-        if(locals <= getLocalRegistersCount()){
+        if (locals <= getLocalRegistersCount()) {
             return true;
         }
         int params = getParameterRegistersCount();
         int current = getLocalRegistersCount();
         int diff = locals - current;
         InstructionList instructionList = getInstructionList();
-        if(!instructionList.canAddLocalRegisters(diff)) {
+        if (!instructionList.canAddLocalRegisters(diff)) {
             return false;
         }
-        if(diff > 0) {
+        if (diff > 0) {
             instructionList.addLocalRegisters(diff);
         }
         setRegistersCount(locals + params);
@@ -121,57 +123,57 @@ public class CodeItem extends DataItem implements RegistersTable,
     }
 
 
-    public Iterator<DebugElement> getDebugLabels() {
+    public Iterator<DebugElementBlock> getDebugLabels() {
         DebugInfo debugInfo = getDebugInfo();
-        if(debugInfo != null) {
+        if (debugInfo != null) {
             return debugInfo.getExtraLines();
         }
         return EmptyIterator.of();
     }
-    public DebugInfo getDebugInfo(){
+    public DebugInfo getDebugInfo() {
         return header.debugInfoOffset.getItem();
     }
-    public DebugInfo getOrCreateDebugInfo(){
+    public DebugInfo getOrCreateDebugInfo() {
         return header.debugInfoOffset.getOrCreateUniqueItem(this);
     }
-    public void removeDebugInfo(){
-        if(getDebugInfo() == null){
+    public void removeDebugInfo() {
+        if (getDebugInfo() == null) {
             return;
         }
         setDebugInfo(null);
     }
-    public void setDebugInfo(DebugInfo debugInfo){
+    public void setDebugInfo(DebugInfo debugInfo) {
         header.debugInfoOffset.setItem(debugInfo);
     }
     public InstructionList getInstructionList() {
         return instructionList;
     }
-    public IntegerReference getTryCountReference(){
+    public IntegerReference getTryCountReference() {
         return header.tryBlockCount;
     }
 
-    public Iterable<ExtraLine> getExtraLines() {
+    public Iterable<InstructionLabel> getExternalLabels() {
         return () -> CombiningIterator.two(
                 CodeItem.this.getTryBlockLabels(),
                 CodeItem.this.getDebugLabels());
     }
-    public Iterator<Label> getTryBlockLabels(){
+    public Iterator<InstructionLabel> getTryBlockLabels() {
         TryBlock tryBlock = this.getTryBlock();
-        if(tryBlock == null || tryBlock.isNull()){
+        if (tryBlock == null || tryBlock.isNull()) {
             return EmptyIterator.of();
         }
         return tryBlock.getLabels();
     }
-    public TryBlock getTryBlock(){
+    public TryBlock getTryBlock() {
         return tryBlock;
     }
-    public TryBlock getOrCreateTryBlock(){
+    public TryBlock getOrCreateTryBlock() {
         initTryBlock();
         return tryBlock;
     }
-    public void removeTryBlock(){
+    public void removeTryBlock() {
         TryBlock tryBlock = this.tryBlock;
-        if(tryBlock == null){
+        if (tryBlock == null) {
             return;
         }
         this.tryBlock = null;
@@ -213,37 +215,37 @@ public class CodeItem extends DataItem implements RegistersTable,
         this.methodDef = methodDef;
     }
 
-    IntegerReference getInstructionCodeUnitsReference(){
+    IntegerReference getInstructionCodeUnitsReference() {
         return header.instructionCodeUnits;
     }
-    IntegerReference getInstructionOutsReference(){
+    IntegerReference getInstructionOutsReference() {
         return header.outs;
     }
-    void initTryBlock(){
-        if(this.tryBlock == null){
+    void initTryBlock() {
+        if (this.tryBlock == null) {
             this.tryBlock = new TryBlock(this);
             addChildBlock(2, this.tryBlock);
         }
     }
     @Override
-    public DexPositionAlign getPositionAlign(){
-        if(this.tryBlock != null){
+    public DexPositionAlign getPositionAlign() {
+        if (this.tryBlock != null) {
             return this.tryBlock.getPositionAlign();
-        }else if(this.instructionList != null){
+        } else if (this.instructionList != null) {
             return this.instructionList.getBlockAlign();
         }
         return new DexPositionAlign();
     }
     @Override
-    public void removeLastAlign(){
-        if(this.tryBlock != null){
+    public void removeLastAlign() {
+        if (this.tryBlock != null) {
             this.tryBlock.getPositionAlign().setSize(0);
-        }else if(this.instructionList != null){
+        } else if (this.instructionList != null) {
             this.instructionList.getBlockAlign().setSize(0);
         }
     }
 
-    public void replaceKeys(Key search, Key replace){
+    public void replaceKeys(Key search, Key replace) {
         getInstructionList().replaceKeys(search, replace);
     }
 
@@ -267,32 +269,41 @@ public class CodeItem extends DataItem implements RegistersTable,
     }
 
     @Override
-    public Iterator<IdItem> usedIds(){
+    public boolean uses(Key key) {
+        TryBlock tryBlock = getTryBlock();
+        if (tryBlock != null && tryBlock.uses(key)) {
+            return true;
+        }
+        return getInstructionList().uses(key);
+    }
+
+    @Override
+    public Iterator<IdItem> usedIds() {
         DebugInfo debugInfo = getDebugInfo();
         Iterator<IdItem> iterator1;
-        if(debugInfo == null){
+        if (debugInfo == null) {
             iterator1 = EmptyIterator.of();
-        }else {
+        } else {
             iterator1 = debugInfo.usedIds();
         }
         Iterator<IdItem> iterator2;
         TryBlock tryBlock = getTryBlock();
-        if(tryBlock == null) {
+        if (tryBlock == null) {
             iterator2 = EmptyIterator.of();
-        }else {
+        } else {
             iterator2 = tryBlock.usedIds();
         }
         return CombiningIterator.three(getInstructionList().usedIds(), iterator1, iterator2);
     }
 
-    public void merge(CodeItem codeItem){
-        if(codeItem == this){
+    public void merge(CodeItem codeItem) {
+        if (codeItem == this) {
             return;
         }
         this.header.merge(codeItem.header);
         getInstructionList().merge(codeItem.getInstructionList());
         TryBlock comingTry = codeItem.getTryBlock();
-        if(comingTry != null){
+        if (comingTry != null) {
             TryBlock tryBlock = getOrCreateTryBlock();
             tryBlock.merge(comingTry);
         }
@@ -303,13 +314,13 @@ public class CodeItem extends DataItem implements RegistersTable,
         getInstructionList().fromSmali(smaliMethod.getCodeSet());
         Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
         TryBlock tryBlock = null;
-        if(iterator.hasNext()){
+        if (iterator.hasNext()) {
             tryBlock = getOrCreateTryBlock();
         }
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             tryBlock.fromSmali(iterator.next());
         }
-        if(smaliMethod.hasDebugElements()){
+        if (smaliMethod.hasDebugElements()) {
             DebugInfo debugInfo = getOrCreateDebugInfo();
             debugInfo.getDebugSequence().fromSmali(smaliMethod.getCodeSet());
         }
@@ -358,7 +369,7 @@ public class CodeItem extends DataItem implements RegistersTable,
         hash = hash * 31 + instructionList.hashCode();
         hash = hash * 31;
         TryBlock tryBlock = this.tryBlock;
-        if(tryBlock != null){
+        if (tryBlock != null) {
             hash = hash + tryBlock.hashCode();
         }
         return hash;
@@ -366,7 +377,7 @@ public class CodeItem extends DataItem implements RegistersTable,
 
     @Override
     public String toString() {
-        if(isNull()){
+        if (isNull()) {
             return "NULL";
         }
         return header.toString()
@@ -413,12 +424,12 @@ public class CodeItem extends DataItem implements RegistersTable,
             super.onReadBytes(reader);
             this.debugInfoOffset.pullItem();
             this.debugInfoOffset.addUniqueUser(this.codeItem);
-            if(this.tryBlockCount.get() != 0){
+            if (this.tryBlockCount.get() != 0) {
                 this.codeItem.initTryBlock();
             }
         }
 
-        public void onRemove(){
+        public void onRemove() {
             debugInfoOffset.setItem(null);
         }
 
@@ -427,13 +438,13 @@ public class CodeItem extends DataItem implements RegistersTable,
             debugInfoOffset.editInternal(user);
         }
 
-        public void merge(Header header){
+        public void merge(Header header) {
             registersCount.set(header.registersCount.get());
             parameterRegisters.set(header.parameterRegisters.get());
             outs.set(header.outs.get());
             tryBlockCount.set(header.tryBlockCount.get());
             DebugInfo comingDebug = header.debugInfoOffset.getItem();
-            if(comingDebug != null){
+            if (comingDebug != null) {
                 debugInfoOffset.setKey(comingDebug.getKey());
                 debugInfoOffset.addUniqueUser(codeItem);
             }
@@ -467,7 +478,7 @@ public class CodeItem extends DataItem implements RegistersTable,
             hash = hash * 31 + instructionCodeUnits.get();
             hash = hash * 31;
             DebugInfo info = debugInfoOffset.getItem();
-            if(info != null){
+            if (info != null) {
                 hash = hash + info.hashCode();
             }
             return hash;

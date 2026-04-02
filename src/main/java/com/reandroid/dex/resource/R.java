@@ -150,10 +150,10 @@ public class R implements Iterable<RTypeItem> {
                 dexClass.isSynthetic()) {
             return false;
         }
-        if(dexClass.getDeclaredFields().hasNext()) {
+        if(dexClass.declaredFields().hasNext()) {
             return false;
         }
-        Iterator<DexMethod> declaredMethods = dexClass.getDeclaredMethods();
+        Iterator<DexMethod> declaredMethods = dexClass.declaredMethods();
         while (declaredMethods.hasNext()) {
             DexMethod dexMethod = declaredMethods.next();
             if(!dexMethod.isConstructor()) {

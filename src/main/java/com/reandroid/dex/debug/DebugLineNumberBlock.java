@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.ins.ExtraLine;
+import com.reandroid.dex.program.DebugLineNumber;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliLineNumber;
@@ -23,9 +25,9 @@ import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class DebugLineNumber extends DebugElement {
+public class DebugLineNumberBlock extends DebugElementBlock implements DebugLineNumber {
 
-    public DebugLineNumber() {
+    public DebugLineNumberBlock() {
         super(DebugElementType.LINE_NUMBER);
     }
 
@@ -70,6 +72,12 @@ public class DebugLineNumber extends DebugElement {
     public int getLineNumber(){
         return super.getLineNumber();
     }
+
+    @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.LINE;
+    }
+
     @Override
     public void setLineNumber(int lineNumber) {
         setUpLineNumber(lineNumber);
@@ -82,11 +90,11 @@ public class DebugLineNumber extends DebugElement {
             return 0;
         }
         for(int i = index - 1; i >=0; i--){
-            DebugElement element = debugSequence.get(i);
-            if(!(element instanceof DebugLineNumber)){
+            DebugElementBlock element = debugSequence.get(i);
+            if(!(element instanceof DebugLineNumberBlock)){
                 continue;
             }
-            DebugLineNumber lineNumber = (DebugLineNumber) element;
+            DebugLineNumberBlock lineNumber = (DebugLineNumberBlock) element;
             return lineNumber.getLineNumber();
         }
         return 0;
@@ -129,7 +137,7 @@ public class DebugLineNumber extends DebugElement {
     private DebugAdvanceLine getAdvanceLine(){
         DebugSequence debugSequence = getDebugSequence();
         if(debugSequence != null){
-            DebugElement element = debugSequence.get(getIndex() - 1);
+            DebugElementBlock element = debugSequence.get(getIndex() - 1);
             if(element instanceof DebugAdvancePc){
                 element = debugSequence.get(element.getIndex() - 1);
             }
@@ -140,26 +148,26 @@ public class DebugLineNumber extends DebugElement {
         return null;
     }
     @Override
-    public boolean isEqualExtraLine(Object obj) {
+    public boolean equalsLabel(Object obj) {
         if(obj == this){
             return true;
         }
-        if(!(obj instanceof DebugLineNumber)){
+        if(!(obj instanceof DebugLineNumberBlock)){
             return false;
         }
-        DebugLineNumber debugLineNumber = (DebugLineNumber) obj;
-        return getTargetAddress() == debugLineNumber.getTargetAddress();
+        DebugLineNumberBlock debugLineNumberBlock = (DebugLineNumberBlock) obj;
+        return getTargetAddress() == debugLineNumberBlock.getTargetAddress();
     }
 
     @Override
     public void fromSmali(Smali smali) {
         super.fromSmali(smali);
         SmaliLineNumber lineNumber = (SmaliLineNumber) smali;
-        setLineNumber(lineNumber.getNumber());
+        setLineNumber(lineNumber.getLineNumber());
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if(isValid()) {
             int lineNum = getLineNumber();
             if(lineNum == -1){
@@ -170,44 +178,40 @@ public class DebugLineNumber extends DebugElement {
         }
     }
     @Override
-    public DebugElementType<DebugLineNumber> getElementType() {
+    public DebugElementType<DebugLineNumberBlock> getElementType() {
         return DebugElementType.LINE_NUMBER;
     }
 
     @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_DEBUG_LINE_NUMBER;
-    }
-    @Override
-    public int getSortOrderFine(){
-        return getLineNumber();
-    }
-
-    @Override
-    int compareDetailElement(DebugElement element) {
+    int compareDetailElement(DebugElementBlock element) {
         return CompareUtil.compare(getLineNumber(), element.getLineNumber());
     }
 
     @Override
+    public int compareLabel(InstructionLabel label) {
+        if (label == this) {
+            return 0;
+        }
+        int i = super.compareLabel(label);
+        if (i == 0) {
+            DebugLineNumber lineNumber = (DebugLineNumber) label;
+            i = CompareUtil.compare(getLineNumber(), lineNumber.getLineNumber());
+        }
+        return i;
+    }
+
+    @Override
     public int hashCode() {
-        return getLineNumber() * 31 + getTargetAddress();
+        return DebugLineNumber.hashCodeOfDebugLineNumber(this);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-        DebugLineNumber lineNumber = (DebugLineNumber) obj;
-        return this.getLineNumber() == lineNumber.getLineNumber() &&
-                this.getTargetAddress() == lineNumber.getTargetAddress();
+        return DebugLineNumber.equalsDebugLineNumber(this, obj);
     }
 
     @Override
     public String toString() {
-        return ".line " + getLineNumber();
+        return DebugLineNumber.formatToString(this);
     }
 }

@@ -34,6 +34,12 @@ public class ArrayKey<T extends Key> extends KeyList<T> {
         super(elements);
     }
 
+    public int getInt(int i) {
+        return ArrayKeyHelper.getInt(this, i);
+    }
+    public String getString(int i) {
+        return ArrayKeyHelper.getString(this, i);
+    }
     @Override
     public ArrayKey<T> add(T item) {
         return (ArrayKey<T>) super.add(item);
@@ -55,6 +61,10 @@ public class ArrayKey<T extends Key> extends KeyList<T> {
         return (ArrayKey<T>) super.set(i, item);
     }
     @Override
+    public ArrayKey<T> setSize(int i, Key item) {
+        return (ArrayKey<T>) super.setSize(i, item);
+    }
+    @Override
     public ArrayKey<T> sort(Comparator<? super T> comparator) {
         return (ArrayKey<T>) super.sort(comparator);
     }
@@ -73,6 +83,11 @@ public class ArrayKey<T extends Key> extends KeyList<T> {
             throw new RuntimeException("Method not implemented");
         }
         return create(elements);
+    }
+
+    @Override
+    public Object[] asObject() {
+        return (Object[]) super.asObject();
     }
 
     @Override

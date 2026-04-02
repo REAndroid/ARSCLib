@@ -15,6 +15,10 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -45,6 +49,37 @@ public class SmaliMethodSet extends SmaliDefSet<SmaliMethod>{
         return SmaliDirective.METHOD;
     }
 
+
+    public SmaliMethod get(MethodKey methodKey) {
+        int size = this.size();
+        for (int i = 0; i < size; i++) {
+            SmaliMethod method = get(i);
+            if (method.matches(methodKey)) {
+                return method;
+            }
+        }
+        return null;
+    }
+    public SmaliMethod get(String name, ProtoKey protoKey) {
+        int size = this.size();
+        for (int i = 0; i < size; i++) {
+            SmaliMethod method = get(i);
+            if (method.matches(name, protoKey)) {
+                return method;
+            }
+        }
+        return null;
+    }
+    public SmaliMethod get(String name, TypeListKey parameters, TypeKey returnType) {
+        int size = this.size();
+        for (int i = 0; i < size; i++) {
+            SmaliMethod method = get(i);
+            if (method.matches(name, parameters, returnType)) {
+                return method;
+            }
+        }
+        return null;
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         boolean appendOnce = false;

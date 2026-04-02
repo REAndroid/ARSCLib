@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.ins;
+package com.reandroid.dex.program;
 
-import java.util.Iterator;
-
-public interface LabelsSet {
-    Iterator<? extends Label> getLabels();
+public interface InstructionStatement extends ProgramTypeDescriptor {
 }

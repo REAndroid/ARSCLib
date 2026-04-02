@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.program.InstructionLabelType;
 
 public class InsFillArrayData extends Ins31t{
 
@@ -48,6 +49,10 @@ public class InsFillArrayData extends Ins31t{
             }
         }
         return null;
+    }
+    @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.ARRAY;
     }
     @Override
     String getLabelPrefix(){

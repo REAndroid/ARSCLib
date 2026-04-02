@@ -21,14 +21,14 @@ import com.reandroid.dex.key.Key;
 
 import java.lang.annotation.ElementType;
 
-public interface FieldProgram extends AccessibleProgram {
+public interface FieldProgram extends MemberProgram {
 
     @Override
     FieldKey getKey();
     Key getStaticValue();
 
     default boolean isEnum() {
-        return AccessFlag.ENUM.isSet(getElementType(), getAccessFlagsValue());
+        return AccessFlag.ENUM.isSet(getAccessFlagsValue());
     }
     @Override
     default ElementType getElementType() {

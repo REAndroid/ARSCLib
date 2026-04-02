@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins22s extends Ins22 {
+import com.reandroid.arsc.item.IntegerReference;
+
+public class Ins22s extends Ins22 implements IntegerReference {
     public Ins22s(Opcode<?> opcode) {
         super(opcode);
     }
@@ -28,10 +30,6 @@ public class Ins22s extends Ins22 {
     public void setRegister(int index, int value) {
         setNibble(2 + index, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0x0f;
-    }
 
     @Override
     public int getData(){
@@ -40,5 +38,14 @@ public class Ins22s extends Ins22 {
     @Override
     public void setData(int data){
         setShort(2, data);
+    }
+
+    @Override
+    public int get() {
+        return getData();
+    }
+    @Override
+    public void set(int value) {
+        setData(value);
     }
 }

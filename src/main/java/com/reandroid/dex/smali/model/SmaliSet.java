@@ -68,13 +68,22 @@ public class SmaliSet<T extends Smali> extends Smali{
     public int indexOf(T smali) {
         return body.indexOf(smali);
     }
+    public int indexOfIdentity(T smali) {
+        return body.indexOfExact(smali);
+    }
     public T get(int i) {
         return body.get(i);
     }
     public boolean add(T smali){
+        if (smali != null && smali.getParent() == null) {
+            smali.setParent(this);
+        }
         return body.add(smali);
     }
     public void add(int i, T smali){
+        if (smali != null && smali.getParent() == null) {
+            smali.setParent(this);
+        }
         body.add(i, smali);
     }
     public void addAll(Iterator<? extends T> iterator){

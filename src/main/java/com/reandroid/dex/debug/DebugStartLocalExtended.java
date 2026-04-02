@@ -16,7 +16,7 @@ import com.reandroid.utils.collection.SingleIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DebugStartLocalExtended extends DebugStartLocal {
+public class DebugStartLocalExtended extends DebugStartLocalBlock {
 
     private final Base1Ule128IdItemReference<StringId> mSignature;
 
@@ -49,9 +49,9 @@ public class DebugStartLocalExtended extends DebugStartLocal {
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
+    public void appendLabelName(SmaliWriter writer) throws IOException {
         if(isValid()) {
-            super.appendExtra(writer);
+            super.appendLabelName(writer);
             writer.append(", ");
             mSignature.append(writer);
         }
@@ -67,7 +67,7 @@ public class DebugStartLocalExtended extends DebugStartLocal {
                 SingleIterator.of(mSignature.getItem()));
     }
     @Override
-    public void merge(DebugElement element){
+    public void merge(DebugElementBlock element){
         super.merge(element);
         DebugStartLocalExtended coming = (DebugStartLocalExtended) element;
         this.mSignature.setKey(coming.mSignature.getKey());
@@ -80,7 +80,7 @@ public class DebugStartLocalExtended extends DebugStartLocal {
     }
 
     @Override
-    int compareDetailElement(DebugElement element) {
+    int compareDetailElement(DebugElementBlock element) {
         int i = super.compareDetailElement(element);
         if (i != 0) {
             return i;

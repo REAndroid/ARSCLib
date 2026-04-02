@@ -16,7 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugPrologue;
+import com.reandroid.dex.debug.DebugPrologueBlock;
 import com.reandroid.dex.smali.*;
 
 public class SmaliDebugPrologue extends SmaliDebugElement implements SmaliRegion {
@@ -26,7 +26,7 @@ public class SmaliDebugPrologue extends SmaliDebugElement implements SmaliRegion
     }
 
     @Override
-    public DebugElementType<DebugPrologue> getDebugElementType() {
+    public DebugElementType<DebugPrologueBlock> getDebugElementType() {
         return DebugElementType.PROLOGUE;
     }
 }

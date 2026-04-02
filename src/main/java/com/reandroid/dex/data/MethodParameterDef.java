@@ -17,7 +17,7 @@ package com.reandroid.dex.data;
 
 import com.reandroid.dex.common.DefIndex;
 import com.reandroid.dex.dalvik.DalvikSignature;
-import com.reandroid.dex.debug.DebugParameter;
+import com.reandroid.dex.debug.DebugParameterBlock;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.AnnotationItemKey;
@@ -148,9 +148,9 @@ public class MethodParameterDef implements DefIndex, MethodParameter, SmaliRegio
 
     @Override
     public String getDebugName() {
-        DebugParameter debugParameter = getDebugParameter();
-        if (debugParameter != null) {
-            return debugParameter.getName();
+        DebugParameterBlock debugParameterBlock = getDebugParameter();
+        if (debugParameterBlock != null) {
+            return debugParameterBlock.getName();
         }
         return null;
     }
@@ -171,12 +171,12 @@ public class MethodParameterDef implements DefIndex, MethodParameter, SmaliRegio
             debugInfo.removeDebugParameter(getDefinitionIndex());
             return;
         }
-        DebugParameter parameter = debugInfo.getOrCreateDebugParameter(
+        DebugParameterBlock parameter = debugInfo.getOrCreateDebugParameter(
                 getDefinitionIndex());
         parameter.setName(name);
     }
 
-    public DebugParameter getDebugParameter() {
+    public DebugParameterBlock getDebugParameter() {
         DebugInfo debugInfo = getMethodDef().getDebugInfo();
         if (debugInfo != null) {
             return debugInfo.getDebugParameter(getDefinitionIndex());
@@ -211,9 +211,9 @@ public class MethodParameterDef implements DefIndex, MethodParameter, SmaliRegio
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        DebugParameter debugParameter = getDebugParameter();
-        boolean has_debug = debugParameter != null &&
-                debugParameter.getNameId() != null;
+        DebugParameterBlock debugParameterBlock = getDebugParameter();
+        boolean has_debug = debugParameterBlock != null &&
+                debugParameterBlock.getNameId() != null;
         AnnotationSetKey annotation = getAnnotation();
         boolean has_annotation = !annotation.isEmpty();
         if (!has_debug && !has_annotation) {
@@ -224,7 +224,7 @@ public class MethodParameterDef implements DefIndex, MethodParameter, SmaliRegio
         writer.append('p');
         writer.appendInteger(getRegister());
         if (has_debug) {
-            debugParameter.append(writer);
+            debugParameterBlock.append(writer);
         }
         ParameterisedTypeKey typeKey = getParameterisedTypeKey();
         if (typeKey != null) {

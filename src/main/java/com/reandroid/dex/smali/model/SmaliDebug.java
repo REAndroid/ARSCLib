@@ -15,7 +15,11 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.InstanceIterator;
 
@@ -23,11 +27,12 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
+
     public SmaliDebug(){
         super();
     }
 
-    public int getAddress(){
+    public int getTargetAddress() {
         return searchAddress();
     }
     private int searchAddress(){
@@ -42,6 +47,8 @@ public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
             return next.getAddress();
         }
         return -1;
+    }
+    public void setTargetAddress(int address) {
     }
 
     @Override

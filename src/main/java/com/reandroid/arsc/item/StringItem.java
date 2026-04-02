@@ -1,18 +1,18 @@
 /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
@@ -24,7 +24,7 @@ import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.ObjectsStore;
+import com.reandroid.utils.HashSetStore;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.xml.StyleDocument;
@@ -42,7 +42,7 @@ import java.util.function.Predicate;
 public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
 
     private boolean mUtf8;
-    private Object mReferencedList;
+    private Object mReferencedSet;
     private StyleItem mStyleItem;
 
     public StringItem(boolean utf8) {
@@ -73,22 +73,21 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
 
     public void removeReference(ReferenceItem reference) {
-        mReferencedList = ObjectsStore.remove(mReferencedList, reference);
+        mReferencedSet = HashSetStore.remove(mReferencedSet, reference);
     }
     public void clearReferences() {
-        mReferencedList = ObjectsStore.clear(mReferencedList);
+        mReferencedSet = HashSetStore.clear(mReferencedSet);
     }
     public boolean hasReference() {
         ensureStringLinkUnlocked();
-        return ObjectsStore.containsIf(mReferencedList, referenceItem ->
-                !(referenceItem instanceof StyleItem.StyleIndexReference));
+        return HashSetStore.containsIf(mReferencedSet, NON_STYLE_INDEX);
     }
     public int getReferencesSize() {
-        return ObjectsStore.size(mReferencedList);
+        return HashSetStore.size(mReferencedSet);
     }
     public Iterator<ReferenceItem> getReferences() {
         ensureStringLinkUnlocked();
-        return ObjectsStore.iterator(mReferencedList);
+        return HashSetStore.iterator(mReferencedSet);
     }
     void ensureStringLinkUnlocked() {
         StringPool<?> stringPool = getParentInstance(StringPool.class);
@@ -98,7 +97,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     public void addReference(ReferenceItem reference) {
         if (reference != null) {
-            mReferencedList = ObjectsStore.add(mReferencedList, reference);
+            mReferencedSet = HashSetStore.add(mReferencedSet, reference);
             int index = this.getIndex();
             if (reference.get() != index) {
                 reference.set(index);
@@ -106,7 +105,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
     }
     private void reUpdateReferences(int newIndex) {
-        Iterator<ReferenceItem> iterator = ObjectsStore.clonedIterator(mReferencedList);
+        Iterator<ReferenceItem> iterator = HashSetStore.clonedIterator(mReferencedSet);
         while (iterator.hasNext()) {
             ReferenceItem reference = iterator.next();
             reference.set(newIndex);
@@ -360,7 +359,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         if (getIndex() < 0 || source.getIndex() < 0) {
             return;
         }
-        Iterator<ReferenceItem> iterator = ObjectsStore.clonedIterator(source.mReferencedList);
+        Iterator<ReferenceItem> iterator = HashSetStore.clonedIterator(source.mReferencedSet);
         while (iterator.hasNext()) {
             ReferenceItem reference = iterator.next();
             if (isTransferable(reference)) {
@@ -600,4 +599,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
 
     public static final String NAME_string = ObjectsUtil.of("string");
     public static final String NAME_style = ObjectsUtil.of("style");
+
+    private static final Predicate<Object> NON_STYLE_INDEX = item ->
+            !(item instanceof StyleItem.StyleIndexReference);
 }

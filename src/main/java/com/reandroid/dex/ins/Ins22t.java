@@ -15,12 +15,14 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class Ins22t extends Ins22 implements Label {
+public class Ins22t extends Ins22 implements InstructionLabel {
 
     public Ins22t(Opcode<?> opcode) {
         super(opcode);
@@ -33,10 +35,6 @@ public class Ins22t extends Ins22 implements Label {
     @Override
     public void setRegister(int index, int value) {
         setNibble(2 + index, value);
-    }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0x0f;
     }
 
     @Override
@@ -56,6 +54,10 @@ public class Ins22t extends Ins22 implements Label {
         setData(targetAddress - getAddress());
     }
     @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.COND;
+    }
+    @Override
     public String getLabelName() {
         return HexUtil.toHex(":cond_", getTargetAddress(), 1);
     }
@@ -67,9 +69,5 @@ public class Ins22t extends Ins22 implements Label {
         getRegistersIterator().append(writer);
         writer.append(", ");
         writer.appendLabelName(getLabelName());
-    }
-    @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_INSTRUCTION_LABEL;
     }
 }

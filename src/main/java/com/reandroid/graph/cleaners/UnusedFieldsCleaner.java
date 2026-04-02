@@ -37,7 +37,7 @@ public class UnusedFieldsCleaner extends UnusedClassComponentCleaner<DexField> {
     }
     @Override
     protected List<DexField> listUnusedInClass(DexClass dexClass) {
-        Iterator<DexField> iterator = dexClass.getDeclaredFields();
+        Iterator<DexField> iterator = dexClass.declaredFields();
         ArrayCollection<DexField> list = null;
         while (iterator.hasNext()) {
             DexField dexField = iterator.next();

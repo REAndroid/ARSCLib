@@ -15,28 +15,36 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class KeyPair<T1 extends Key, T2 extends Key> implements Comparable<KeyPair<Key, Key>>{
+public class KeyPair<T1 extends Key, T2 extends Key> 
+        implements SmaliFormat, Comparable<KeyPair<Key, Key>> {
 
     private T1 first;
     private T2 second;
 
-    public KeyPair(T1 first, T2 second){
+    public KeyPair(T1 first, T2 second) {
         this.first = first;
         this.second = second;
     }
-    public KeyPair(T1 first){
+    public KeyPair(T1 first) {
         this(first, null);
     }
-    public KeyPair(){
+    public KeyPair() {
         this(null, null);
     }
 
@@ -53,40 +61,78 @@ public class KeyPair<T1 extends Key, T2 extends Key> implements Comparable<KeyPa
         this.second = second;
     }
 
-    public KeyPair<T2, T1> flip(){
+    public KeyPair<T2, T1> flip() {
         return new KeyPair<>(getSecond(), getFirst());
     }
-    public boolean isValid(){
+    public boolean isValid() {
         T1 t1 = getFirst();
-        if(t1 == null){
+        if (t1 == null) {
             return false;
         }
         T2 t2 = getSecond();
-        if(t2 == null){
+        if (t2 == null) {
             return false;
         }
         return !t1.equals(t2);
     }
+    public boolean isInstance(Class<?> instance) {
+        Key first = getFirst();
+        if (first != null && !instance.isInstance(first)) {
+            return false;
+        }
+        Key second = getFirst();
+        if (second != null && !instance.isInstance(second)) {
+            return false;
+        }
+        return first != null && second != null;
+    }
+    public int getDeclaringInnerDepth() {
+        TypeKey typeKey = getDeclaring();
+        if (typeKey != null) {
+            return typeKey.getInnerDepth();
+        }
+        return -1;
+    }
+    public TypeKey getDeclaring() {
+        Key key = getFirst();
+        if (key != null) {
+            return key.getDeclaring();
+        }
+        return null;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        Key key = getFirst();
+        if (key == null) {
+            key = NullValueKey.INSTANCE;
+        }
+        key.append(writer);
+        writer.append(' ');
+        writer.append('=');
+        writer.append(' ');
+        key = getSecond();
+        if (key == null) {
+            key = NullValueKey.INSTANCE;
+        }
+        key.append(writer);
+    }
+
+    public KeyPair<T1, T2> dualChecking() {
+        return new DualChecking<>(this);
+    }
 
     @Override
     public int compareTo(KeyPair<Key, Key> pair) {
-        if(pair == null){
+        if (pair == null) {
             return -1;
         }
-        Key key1 = this.getFirst();
-        Key key2 = pair.getFirst();
-        if(key1 == null){
-            if(key2 == null){
-                return 0;
-            }
-            return 1;
+        if (pair == this) {
+            return 0;
         }
-        if(key2 == null){
-            return -1;
-        }
-        int i = key1.getDeclaring().compareInnerFirst(key2.getDeclaring());
-        if(i == 0){
-            i = CompareUtil.compare(key1, key2);
+        int i = CompareUtil.compare(this.getFirst(), pair.getFirst());
+        if (i == 0) {
+            i = CompareUtil.compare(this.getSecond(), pair.getSecond());
         }
         return i;
     }
@@ -116,15 +162,176 @@ public class KeyPair<T1 extends Key, T2 extends Key> implements Comparable<KeyPa
     }
     @Override
     public String toString() {
-        return getFirst() + "=" + getSecond();
+        return getFirst() + " = " + getSecond();
     }
 
-    public static<E1 extends Key, E2 extends Key> Iterator<KeyPair<E2, E1>> flip(Iterator<KeyPair<E1, E2>> iterator){
+    public static KeyPair<?, ?> parse(String text) {
+        if (text == null) {
+            return null;
+        }
+        SmaliReader reader = SmaliReader.of(text);
+        reader.skipWhitespaces();
+        if (reader.finished()) {
+            return null;
+        }
+        byte b = reader.get();
+        if (b == '#' || b == '/') {
+            return null;
+        }
+        if (reader.indexOfBeforeLineEnd('=') < 0) {
+            return null;
+        }
+        try {
+            return read(reader);
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+    public static KeyPair<?, ?> read(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        Key first = PackageKey.readOrNull(reader);
+        if (first == null) {
+            first = KeyUtil.readKey(reader);
+        }
+        reader.skipWhitespaces();
+        SmaliParseException.expect(reader, '=');
+        reader.skipWhitespacesOrComment();
+        if (reader.finished()) {
+            throw new SmaliParseException(
+                    "Finished reading but expecting second key", reader);
+        }
+        Key second = PackageKey.readOrNull(reader);
+        if (second == null) {
+            second = KeyUtil.readKey(reader);
+        }
+        if (first == NullValueKey.INSTANCE) {
+            first = null;
+        }
+        if (second == NullValueKey.INSTANCE) {
+            second = null;
+        }
+        KeyPair<Key, Key> pair = new KeyPair<>(first, second);
+        if (first instanceof PackageKey || second instanceof PackageKey) {
+            pair = pair.dualChecking();
+        }
+        return pair;
+    }
+    public static<T extends Key, R extends Key> KeyPair<T, R> read(SmaliDirective directive, SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        Key first = readKey(directive, reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '=');
+        reader.skipWhitespaces();
+        Key second = readSecondKey(first, directive, reader);
+        if (first == NullValueKey.INSTANCE) {
+            first = null;
+        }
+        if (second == NullValueKey.INSTANCE) {
+            second = null;
+        }
+        KeyPair<Key, Key> pair = new KeyPair<>(first, second);
+        if (first instanceof PackageKey || second instanceof PackageKey) {
+            pair = pair.dualChecking();
+        }
+        return ObjectsUtil.cast(pair);
+    }
+    private static Key readSecondKey(Key firstKey, SmaliDirective directive, SmaliReader reader) throws IOException {
+        if (reader.finished()) {
+            throw new SmaliParseException(
+                    "Finished reading", reader);
+        }
+        if (firstKey instanceof NamedTypeKey && reader.get() == '"') {
+            StringKey name = StringKey.read(reader);
+            NamedTypeKey namedTypeKey = (NamedTypeKey) firstKey;
+            return namedTypeKey.changeName(name);
+        }
+        return readKey(directive, reader);
+    }
+    private static Key readKey(SmaliDirective directive, SmaliReader reader) throws IOException {
+        if (reader.finished()) {
+            throw new SmaliParseException(
+                    "Finished reading", reader);
+        }
+        Key key = PackageKey.readOrNull(reader);
+        if (key != null) {
+            return key;
+        }
+        if (reader.get() == 'n') {
+            return NullValueKey.read(reader);
+        }
+        if (directive == SmaliDirective.CLASS) {
+            return TypeKey.read(reader);
+        }
+        if (directive == SmaliDirective.FIELD) {
+            return FieldKey.read(reader);
+        }
+        if (directive == SmaliDirective.METHOD) {
+            return MethodKey.read(reader);
+        }
+        throw new IllegalArgumentException("Unimplemented directive: " + directive);
+    }
+
+    public static<E extends Key> Iterator<KeyPair<E, E>> instancesOf(Class<E> instance, Iterator<KeyPair<?, ?>> iterator) {
+        return ObjectsUtil.cast(FilterIterator.of(iterator, kp -> kp.isInstance(instance)));
+    }
+    public static<E1 extends Key, E2 extends Key> Iterator<KeyPair<E2, E1>> flip(Iterator<KeyPair<E1, E2>> iterator) {
         return ComputeIterator.of(iterator, KeyPair::flip);
     }
-    public static<E1 extends Key, E2 extends Key> List<KeyPair<E2, E1>> flip(Collection<KeyPair<E1, E2>> list){
+    public static<E1 extends Key, E2 extends Key> List<KeyPair<E2, E1>> flip(Collection<KeyPair<E1, E2>> list) {
         ArrayCollection<KeyPair<E2, E1>> results = new ArrayCollection<>(list.size());
         results.addAll(KeyPair.flip(list.iterator()));
         return results;
+    }
+
+    public static class DualChecking<T1 extends Key, T2 extends Key> extends KeyPair<T1, T2> {
+
+        private final KeyPair<T1, T2> mBase;
+
+        public DualChecking(KeyPair<T1, T2> base) {
+            this.mBase = base;
+        }
+
+        public KeyPair<T1, T2> getBase() {
+            return mBase;
+        }
+        @Override
+        public T1 getFirst() {
+            return getBase().getFirst();
+        }
+        @Override
+        public T2 getSecond() {
+            return getBase().getSecond();
+        }
+        @Override
+        public void setFirst(T1 first) {
+            getBase().setFirst(first);
+        }
+        @Override
+        public void setSecond(T2 second) {
+            getBase().setSecond(second);
+        }
+
+        @Override
+        public KeyPair<T1, T2> dualChecking() {
+            return this;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof KeyPair)) {
+                return false;
+            }
+            KeyPair<?, ?> keyPair = (KeyPair<?, ?>) obj;
+            return ObjectsUtil.equals(getFirst(), keyPair.getFirst()) &&
+                    ObjectsUtil.equals(getFirst(), keyPair.getFirst());
+        }
+
+        @Override
+        public int hashCode() {
+            return ObjectsUtil.hash(getFirst(), getSecond());
+        }
     }
 }

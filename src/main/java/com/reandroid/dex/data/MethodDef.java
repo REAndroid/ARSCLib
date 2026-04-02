@@ -19,8 +19,8 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
-import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
+import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.ProtoId;
@@ -121,6 +121,15 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
             }
         });
     }
+    @Override
+    public int getRegistersCount() {
+        CodeItem codeItem = getCodeItem();
+        if (codeItem != null) {
+            return codeItem.getRegistersCount();
+        }
+        return 0;
+    }
+    @Override
     public int getParameterRegistersCount() {
         MethodId methodId = getId();
         if (methodId != null) {
@@ -193,6 +202,26 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
     public DebugInfo getOrCreateDebugInfo() {
         return getOrCreateCodeItem().getOrCreateDebugInfo();
+    }
+    public DebugSequence getDebugSequence() {
+        DebugInfo debugInfo = getDebugInfo();
+        if (debugInfo != null) {
+            return debugInfo.getDebugSequence();
+        }
+        return null;
+    }
+    public DebugSequence getOrCreateDebugSequence() {
+        return getOrCreateDebugInfo().getDebugSequence();
+    }
+    public boolean hasDebugInfo() {
+        return getDebugInfo() != null;
+    }
+    public boolean hasDebugSequence() {
+        DebugInfo debugInfo = getDebugInfo();
+        if (debugInfo != null) {
+            return debugInfo.hasSequence();
+        }
+        return false;
     }
     public ProtoId getProtoId() {
         MethodId methodId = getId();
@@ -348,6 +377,22 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
 
     @Override
+    public boolean uses(Key key) {
+        Key k = getKey();
+        if (key.equals(k)) {
+            return false;
+        }
+        if (k.uses(key)) {
+            return true;
+        }
+        CodeItem codeItem = getCodeItem();
+        if (codeItem != null && codeItem.uses(key)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public Iterator<IdItem> usedIds() {
         Iterator<IdItem> iterator;
         CodeItem codeItem = getCodeItem();
@@ -372,7 +417,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         SmaliMethod smaliMethod = (SmaliMethod) smali;
         setKey(smaliMethod.getKey());
         setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
-        addHiddenApiFlags(smaliMethod.getHiddenApiFlags());
+        setHiddenApiFlagsValue(smaliMethod.getHiddenApiFlagsValue());
         if (smaliMethod.hasInstructions()) {
             getOrCreateCodeItem().fromSmali(smaliMethod);
         }
@@ -387,7 +432,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
                 MethodKey methodKey = smaliMethod.getKey();
                 throw new RuntimeException("Parameter out of range, class = " +
                         methodKey.getDeclaring() + ", method = " + methodKey.getName() +
-                        methodKey.getProto() + "\n" + smaliMethodParameter);
+                        methodKey.getType() + "\n" + smaliMethodParameter);
             }
             MethodParameterDef parameter = getParameter(index);
             parameter.fromSmali(smaliMethodParameter, false);
@@ -400,8 +445,8 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     public SmaliMethod toSmali() {
         SmaliMethod smaliMethod = new SmaliMethod();
         smaliMethod.setKey(getKey());
-        smaliMethod.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
-        smaliMethod.setHiddenApiFlags(getHiddenApiFlags());
+        smaliMethod.setAccessFlagsValue(getAccessFlagsValue());
+        smaliMethod.setHiddenApiFlagsValue(getHiddenApiFlagsValue());
         smaliMethod.setAnnotation(getAnnotation());
         CodeItem codeItem = getCodeItem();
         if (codeItem != null) {

@@ -15,12 +15,15 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class Ins21t extends Size4Ins implements RegistersSet, Label {
+public class Ins21t extends Size4Ins implements RegistersSet, InstructionLabel {
+
     public Ins21t(Opcode<?> opcode) {
         super(opcode);
     }
@@ -40,10 +43,6 @@ public class Ins21t extends Size4Ins implements RegistersSet, Label {
     public void setRegister(int index, int value) {
         setByte(1, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
-    }
 
     @Override
     public int getData(){
@@ -62,14 +61,14 @@ public class Ins21t extends Size4Ins implements RegistersSet, Label {
         setShort(2, targetAddress - getAddress());
     }
     @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.COND;
+    }
+    @Override
     public String getLabelName() {
         return HexUtil.toHex(":cond_", getTargetAddress(), 1);
     }
 
-    @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_INSTRUCTION_LABEL;
-    }
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();

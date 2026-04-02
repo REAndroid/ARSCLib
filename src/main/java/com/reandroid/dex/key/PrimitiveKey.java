@@ -29,7 +29,8 @@ public abstract class PrimitiveKey implements Key {
     public PrimitiveKey() {
     }
 
-    public abstract Object getValue();
+    @Override
+    public abstract Object asObject();
     public abstract TypeKey valueType();
     public abstract int width();
     public abstract long getValueAsLong();
@@ -98,7 +99,7 @@ public abstract class PrimitiveKey implements Key {
         }
 
         @Override
-        public abstract Number getValue();
+        public abstract Number asObject();
 
         @Override
         public boolean isNumber() {
@@ -107,7 +108,7 @@ public abstract class PrimitiveKey implements Key {
 
         @Override
         public String toString() {
-            return getValue().toString();
+            return asObject().toString();
         }
     }
 
@@ -128,7 +129,7 @@ public abstract class PrimitiveKey implements Key {
             return true;
         }
         @Override
-        public Boolean getValue() {
+        public Boolean asObject() {
             return value();
         }
 
@@ -185,7 +186,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Byte getValue() {
+        public Byte asObject() {
             return value;
         }
 
@@ -246,7 +247,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Character getValue() {
+        public Character asObject() {
             return value;
         }
 
@@ -307,7 +308,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Double getValue() {
+        public Double asObject() {
             return value;
         }
 
@@ -377,7 +378,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Float getValue() {
+        public Float asObject() {
             return value;
         }
 
@@ -449,7 +450,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Integer getValue() {
+        public Integer asObject() {
             return value();
         }
 
@@ -493,7 +494,7 @@ public abstract class PrimitiveKey implements Key {
 
         @Override
         public String toString() {
-            return HexUtil.toSignedHex(getValue());
+            return HexUtil.toSignedHex(asObject());
         }
     }
 
@@ -510,7 +511,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Long getValue() {
+        public Long asObject() {
             return value;
         }
 
@@ -553,7 +554,7 @@ public abstract class PrimitiveKey implements Key {
         }
         @Override
         public String toString() {
-            return HexUtil.toSignedHex(getValue());
+            return HexUtil.toSignedHex(asObject());
         }
     }
 
@@ -570,7 +571,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Short getValue() {
+        public Short asObject() {
             return value;
         }
 
@@ -632,7 +633,7 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
-        public Number getValue() {
+        public Number asObject() {
             int width = width();
             long value = value();
             if (width == 1) {

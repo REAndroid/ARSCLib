@@ -17,6 +17,7 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
@@ -86,6 +87,21 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         }
         return false;
     }
+    public KeyList<T> setSize(int size, Key item) {
+        if (size == size() || item == null) {
+            return this;
+        }
+        Key[] elements = this.elements;
+        int length = NumbersUtil.min(size, elements.length);
+        Key[] result = newArray(size);
+        for (int i = 0; i < length; i++) {
+            result[i] = elements[i];
+        }
+        for (int i = length; i < size; i++) {
+            result[i] = item;
+        }
+        return newInstance(result);
+    }
     public KeyList<T> set(int i, T item) {
         if (ObjectsUtil.equals(item, get(i))) {
             return this;
@@ -102,6 +118,30 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
             result[i] = elements[i];
         }
         result[length] = item;
+        return newInstance(result);
+    }
+    public KeyList<T> add(int index, T item) {
+        if (item == null) {
+            return this;
+        }
+        Key[] elements = this.elements;
+        int length = elements.length;
+        if (index > length) {
+            index = length;
+        }
+        length = length + 1;
+        Key[] result = newArray(length);
+        if (index < 0) {
+            index = 0;
+        }
+        for (int i = 0; i < index; i++) {
+            result[i] = elements[i];
+        }
+        result[index] = item;
+        index = index + 1;
+        for (int i = index; i < length; i++) {
+            result[i] = elements[i - 1];
+        }
         return newInstance(result);
     }
     public KeyList<T> remove(T itemKey) {
@@ -260,15 +300,23 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         return new Key[length];
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+    public Object asObject() {
+        int size = size();
+        Object[] results = new Object[size];
+        for (int i = 0; i < size; i++) {
+            results[i] = get(i).asObject();
+        }
+        return results;
+    }
+
     @Override
     public KeyList<T> replaceKey(Key search, Key replace) {
         if (this.equals(search)) {
-            return (KeyList<T>) replace;
+            return ObjectsUtil.cast(replace);
         }
         return replaceElements(search, replace);
     }
-    @SuppressWarnings("unchecked")
     KeyList<T> replaceElements(Key search, Key replace) {
         KeyList<T> result = this;
         int size = result.size();
@@ -277,19 +325,19 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
             if (item == null) {
                 continue;
             }
-            item = (T) item.replaceKey(search, replace);
+            item = ObjectsUtil.cast(item.replaceKey(search, replace));
             result = result.set(i, item);
         }
         return result;
     }
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
+    public Iterator<? extends Key> contents() {
         return CombiningIterator.singleOne(
                 this,
                 new IterableIterator<T, Key>(iterator()) {
                     @Override
                     public Iterator<Key> iterator(T element) {
-                        return ObjectsUtil.cast(element.mentionedKeys());
+                        return ObjectsUtil.cast(element.contents());
                     }
                 });
     }

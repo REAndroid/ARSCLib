@@ -21,14 +21,15 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class ParameterisedTypeKey implements Key {
+public class ParameterisedTypeKey implements ParameterisedKey {
 
     private final ParameterName parameterName;
     private final ParameterisedProtoKey protoKey;
@@ -71,21 +72,28 @@ public class ParameterisedTypeKey implements Key {
     ParameterName getParameterName() {
         return parameterName;
     }
+    boolean isInnerType() {
+        ParameterName name = getParameterName();
+        return name != null && name.isInnerName();
+    }
     @Override
     public TypeKey getDeclaring() {
-        TypeKey typeKey = getInnerClassKey();
+        TypeKey typeKey = getOwner();
         if (typeKey == null) {
-            typeKey = getNameTypeKey();
+            typeKey = getRawType();
         }
         return typeKey;
     }
-
-    private TypeKey getNameTypeKey() {
+    @Override
+    public TypeKey getRawType() {
         ParameterName name = getParameterName();
-        if (name != null) {
+        if (name != null && !name.isInnerName()) {
             return name.getDeclaring();
         }
         return null;
+    }
+    public TypeKey getOwner() {
+        return CollectionUtil.getFirst(getInnerClassKeys());
     }
     private ParameterisedTypeKey changeParameterName(ParameterName name) {
         if (ObjectsUtil.equals(getParameterName(), name)) {
@@ -94,70 +102,52 @@ public class ParameterisedTypeKey implements Key {
         return create(name, getProtoKey());
     }
     private ParameterisedTypeKey changeParameterName(TypeKey typeKey) {
-        TypeKey key = getNameTypeKey();
+        TypeKey key = getRawType();
         if (key == null || ObjectsUtil.equals(key, typeKey)) {
             return this;
         }
         return changeParameterName(getParameterName().changeName(typeKey));
     }
-    private TypeKey getInnerClassKey() {
+    Iterator<TypeKey> getInnerClassKeys() {
+        if (!isInnerType()) {
+            ParameterisedTypeKey key = getProtoKey().getReturnType();
+            if (key != null) {
+                return key.getInnerClassKeys(this.getRawType());
+            }
+        }
+        return EmptyIterator.of();
+    }
+    Iterator<TypeKey> getInnerClassKeys(TypeKey outer) {
+        if (outer == null || !isInnerType()) {
+            return EmptyIterator.of();
+        }
+        TypeKey inner = buildInnerClassKey(outer);
         ParameterisedTypeKey key = getProtoKey().getReturnType();
-        if (key == null) {
+        if (key != null) {
+            return CombiningIterator.two(key.getInnerClassKeys(inner), SingleIterator.of(inner));
+        }
+        return SingleIterator.of(inner);
+    }
+    private TypeKey buildInnerClassKey(TypeKey outer) {
+        if (outer == null) {
             return null;
         }
-        ParameterName innerName = key.getParameterName();
+        ParameterName innerName = getParameterName();
         if (innerName == null || !innerName.isInnerName()) {
             return null;
         }
-        ParameterName parameterName = getParameterName();
-        if (parameterName == null) {
-            return null;
-        }
-        String name = parameterName.getName();
+        String name = outer.getTypeName();
+        // remove semicolon char ;
+        name = name.substring(0, name.length() - 1);
+
         String inner = innerName.getName().replace('.', '$');
         return TypeKey.create(name + inner + ";");
     }
-    private ParameterisedTypeKey changeInnerKey(TypeKey innerKey) {
-        TypeKey key = getInnerClassKey();
-        if (key == null || key.equals(innerKey)) {
-            return this;
-        }
-        ParameterisedProtoKey protoKey = getProtoKey();
-        ParameterisedTypeKey returnType = protoKey.getReturnType();
-        if (returnType == null) {
-            return this;
-        }
-        ParameterName name = returnType.getParameterName();
-        if (!(name instanceof InnerClassName)) {
-            return this;
-        }
-        InnerClassName innerClassName = (InnerClassName) name;
-        String inner = innerClassName.createInnerName(innerKey);
-        if (inner == null) {
-            return this;
-        }
-        TypeKey outerKey = innerClassName.createOuterKey(innerKey);
-        if (outerKey == null) {
-            return this;
-        }
-        innerClassName = innerClassName.changeName(inner);
-        returnType = returnType.changeParameterName(innerClassName);
-        protoKey = protoKey.changeReturnType(returnType);
-        ParameterisedTypeKey result = this.changeProtoKey(protoKey);
-        result = result.changeParameterName(outerKey);
-        return result;
-    }
-
     public Iterator<TypeKey> getTypes() {
-        Iterator<TypeKey> iterator = CombiningIterator.singleTwo(getInnerClassKey(),
-                getProtoKey().getTypes(),
-                SingleIterator.of(getNameTypeKey()));
-        return new IterableIterator<TypeKey, TypeKey>(iterator) {
-            @Override
-            public Iterator<TypeKey> iterator(TypeKey element) {
-                return element.mentionedKeys();
-            }
-        };
+        return CombiningIterator.three(
+                getInnerClassKeys(),
+                SingleIterator.of(getRawType()),
+                getProtoKey().getTypes());
     }
 
     void buildSignature(DalvikSignatureBuilder builder) {
@@ -176,16 +166,39 @@ public class ParameterisedTypeKey implements Key {
         }
     }
 
+    private ParameterisedTypeKey replaceType(TypeKey outer, TypeKey search, TypeKey replace) {
+        ParameterName name = getParameterName();
+        if (name != null) {
+            if (name.isClassType()) {
+                outer = name.getDeclaring();
+                if (search.equals(outer)) {
+                    return changeParameterName(name.changeName(replace));
+                }
+            } else if (name.isInnerName() && search.equals(outer)) {
+                return changeParameterName(name.changeName(replace.getSimpleInnerName()));
+            }
+        }
+        if (outer != null) {
+            ParameterisedProtoKey protoKey = getProtoKey();
+            ParameterisedTypeKey returnType = protoKey.getReturnType();
+            if (returnType != null && returnType.isInnerType()) {
+                outer = returnType.buildInnerClassKey(outer);
+                return changeProtoKey(protoKey.changeReturnType(
+                        returnType.replaceType(outer, search, replace)));
+            }
+        }
+        return this;
+    }
     @Override
     public ParameterisedTypeKey replaceKey(Key search, Key replace) {
         if (search.equals(this)) {
             return (ParameterisedTypeKey) replace;
         }
         ParameterisedTypeKey result = this;
-        if (ObjectsUtil.equals(result.getInnerClassKey(), search)) {
-            result = result.changeInnerKey((TypeKey) replace);
+        if (search instanceof TypeKey) {
+            result = result.replaceType(null, (TypeKey) search, (TypeKey) replace);
         }
-        if (ObjectsUtil.equals(result.getNameTypeKey(), search)) {
+        if (ObjectsUtil.equals(result.getRawType(), search)) {
             result = result.changeParameterName((TypeKey) replace);
         }
         ParameterisedProtoKey protoKey = result.getProtoKey();
@@ -195,7 +208,7 @@ public class ParameterisedTypeKey implements Key {
     }
 
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
+    public Iterator<? extends Key> contents() {
         return getTypes();
     }
 
@@ -557,48 +570,13 @@ public class ParameterisedTypeKey implements Key {
 
         @Override
         public InnerClassName changeName(String name) {
+            if (!StringsUtil.isEmpty(name) && name.charAt(0) != '.') {
+                name = '.' + name;
+            }
             if (getName().equals(name)) {
                 return this;
             }
             return new InnerClassName(name);
-        }
-        public String createInnerName(TypeKey typeKey) {
-            String[] simpleNames = StringsUtil.split(typeKey.getSimpleName(), '$');
-            String name = getName();
-            String[] current = StringsUtil.split(name.substring(1), '.');
-            int length = current.length;
-            int simpleNamesLength = simpleNames.length;
-            int index = simpleNamesLength - length;
-            if (index <= 0) {
-                return null;
-            }
-            StringBuilder builder = new StringBuilder();
-            for (int i = index; i < simpleNamesLength; i++) {
-                builder.append('.');
-                builder.append(simpleNames[i]);
-            }
-            return builder.toString();
-        }
-        public TypeKey createOuterKey(TypeKey typeKey) {
-            String[] simpleNames = StringsUtil.split(typeKey.getSimpleName(), '$');
-            String name = getName();
-            String[] current = StringsUtil.split(name.substring(1), '.');
-            int length = current.length;
-            int simpleNamesLength = simpleNames.length;
-            int end = simpleNamesLength - length;
-            if (end <= 0) {
-                return null;
-            }
-            StringBuilder builder = new StringBuilder();
-            builder.append(typeKey.getPackageName());
-            for (int i = 0; i < end; i++) {
-                if (i != 0) {
-                    builder.append('$');
-                }
-                builder.append(simpleNames[i]);
-            }
-            builder.append(';');
-            return TypeKey.create(builder.toString());
         }
 
         static InnerClassName readInnerClassName(SmaliReader reader) {
@@ -657,6 +635,7 @@ public class ParameterisedTypeKey implements Key {
             return true;
         }
 
+        @Override
         public boolean isClassType() {
             String name = getName();
             int length = name.length();
@@ -691,6 +670,14 @@ public class ParameterisedTypeKey implements Key {
             }
         }
 
+        static TypeUse create(TypeKey typeKey) {
+            if (typeKey == null || typeKey.isPrimitiveComponent()) {
+                return null;
+            }
+            String name = typeKey.getTypeName();
+            name = name.substring(0, name.length() - 1);
+            return new TypeUse(name);
+        }
         static TypeUse readTypeUse(SmaliReader reader) {
             int start = reader.position();
             int end = start + reader.available();
@@ -794,13 +781,38 @@ public class ParameterisedTypeKey implements Key {
         }
 
         @Override
-        public TypeUsePrimitive changeName(String name) {
+        public TypeKey getDeclaring() {
+            return TypeKey.create(getName());
+        }
+
+        @Override
+        public ParameterName changeName(String name) {
             if (getName().equals(name)) {
                 return this;
             }
-            return new TypeUsePrimitive(name);
+            return changeName(TypeKey.create(name));
         }
 
+        @Override
+        public ParameterName changeName(TypeKey typeKey) {
+            if (typeKey == null) {
+                return this;
+            }
+            if (typeKey.equalsName(getName())) {
+                return this;
+            }
+            if (typeKey.isPrimitiveComponent()) {
+                return new TypeUsePrimitive(typeKey.getTypeName());
+            }
+            return TypeUse.create(typeKey);
+        }
+
+        static TypeUsePrimitive create(TypeKey typeKey) {
+            if (typeKey == null || !typeKey.isPrimitiveComponent()) {
+                return null;
+            }
+            return new TypeUsePrimitive(typeKey.getTypeName());
+        }
         static TypeUsePrimitive readTypeUsePrimitive(SmaliReader reader) {
             int start = reader.position();
             int end = start + reader.available();

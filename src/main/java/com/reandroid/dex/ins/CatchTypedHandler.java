@@ -63,6 +63,7 @@ public class CatchTypedHandler extends ExceptionHandler {
     public void setKey(TypeKey typeKey) {
         getTypeUle128().setKey(typeKey);
     }
+
     @Override
     public boolean isCatchAll() {
         return false;

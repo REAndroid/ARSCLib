@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
-public class DebugEndSequence extends DebugElement{
+public class DebugEndSequence extends DebugElementBlock {
 
     private DebugEndSequence() {
         super(0, DebugElementType.END_SEQUENCE);

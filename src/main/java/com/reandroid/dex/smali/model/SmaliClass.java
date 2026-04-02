@@ -18,6 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
@@ -117,6 +118,19 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
     public Iterator<SmaliField> getInstanceFields() {
         return fields.getInstanceFields();
     }
+    @Override
+    public Iterator<SmaliField> declaredFields() {
+        return fields.iterator();
+    }
+    @Override
+    public int getDeclaredFieldsCount() {
+        return fields.size();
+    }
+    @Override
+    public boolean hasDeclaredFields() {
+        return !fields.isEmpty();
+    }
+
     public void addFields(Iterator<SmaliField> iterator) {
         fields.addAll(iterator);
     }
@@ -127,6 +141,28 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
     @Override
     public Iterator<SmaliMethod> getVirtualMethods() {
         return methods.getVirtualMethods();
+    }
+    @Override
+    public Iterator<SmaliMethod> declaredMethods() {
+        return methods.iterator();
+    }
+    @Override
+    public int getDeclaredMethodsCount() {
+        return methods.size();
+    }
+    @Override
+    public boolean hasDeclaredMethods() {
+        return !methods.isEmpty();
+    }
+
+    public SmaliMethod getDeclaredMethod(MethodKey methodKey) {
+        return this.methods.get(methodKey);
+    }
+    public SmaliMethod getDeclaredMethod(String name, ProtoKey protoKey) {
+        return this.methods.get(name, protoKey);
+    }
+    public SmaliMethod getDeclaredMethod(String name, TypeListKey parameters, TypeKey returnType) {
+        return this.methods.get(name, parameters, returnType);
     }
     public void addMethods(Iterator<SmaliMethod> iterator) {
         methods.addAll(iterator);
@@ -184,6 +220,7 @@ public class SmaliClass extends SmaliDef implements ClassProgram {
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, SmaliDirective.CLASS);
         setAccessFlags(AccessFlag.parse(reader));
+        setOrigin(reader.getCurrentOrigin(false));
         setKey(TypeKey.read(reader));
         while (parseNext(reader)) {
             reader.skipWhitespacesOrComment();

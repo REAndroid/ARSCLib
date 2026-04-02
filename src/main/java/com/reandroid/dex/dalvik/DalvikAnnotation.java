@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.dalvik;
 
+import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.program.AnnotatedProgram;
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
@@ -34,11 +35,23 @@ public class DalvikAnnotation {
         return getAnnotatedProgram().getAnnotation(getAnnotationType());
     }
     public void setKey(AnnotationItemKey key) {
-        if (!getAnnotationType().equals(key.getType())) {
-            throw new IllegalArgumentException("Different annotation type: "
-                    + getAnnotationType() + ", " + key.getType());
+        if (key == null) {
+            getAnnotatedProgram().removeAnnotation(getAnnotationType());
+        } else {
+            if (!getAnnotationType().equals(key.getType())) {
+                throw new IllegalArgumentException("Different annotation type: "
+                        + getAnnotationType() + ", " + key.getType());
+            }
+            getAnnotatedProgram().addAnnotation(key);
         }
-        getAnnotatedProgram().addAnnotation(key);
+    }
+    public AnnotationItemKey getOrCreateKey() {
+        AnnotationItemKey key = getKey();
+        if (key == null) {
+            key = AnnotationItemKey.create(AnnotationVisibility.SYSTEM, getAnnotationType());
+            setKey(key);
+        }
+        return key;
     }
     public TypeKey getAnnotationType() {
         return annotationType;
@@ -46,16 +59,82 @@ public class DalvikAnnotation {
     public AnnotatedProgram getAnnotatedProgram() {
         return annotatedProgram;
     }
+    public void removeSelf() {
+        getAnnotatedProgram().removeAnnotation(getAnnotationType());
+    }
+    public boolean isRemoved() {
+        return !getAnnotatedProgram().hasAnnotation(getAnnotationType());
+    }
 
     Key readValue(String name) {
-        return getKey().getValue(name);
+        AnnotationItemKey key = getKey();
+        if (key != null) {
+            return key.getValue(name);
+        }
+        return null;
     }
     void writeValue(String name, Key value) {
-        setKey(getKey().add(name, value));
+        setKey(getOrCreateKey().add(name, value));
     }
 
     @Override
     public String toString() {
-        return getKey().toString();
+        AnnotationItemKey key = getKey();
+        if (key == null) {
+            return "# REMOVED";
+        }
+        return key.toString();
+    }
+
+    public static DalvikAnnotation of(TypeKey dalvikAnnotationType, AnnotatedProgram annotatedProgram) {
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingClass)) {
+            return DalvikEnclosingClass.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingMethod)) {
+            return DalvikEnclosingMethod.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_InnerClass)) {
+            return DalvikInnerClass.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MemberClass)) {
+            return DalvikMemberClass.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MethodParameters)) {
+            return DalvikMethodParameters.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Signature)) {
+            return DalvikSignature.of(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Throws)) {
+            return DalvikThrows.of(annotatedProgram);
+        }
+        return null;
+    }
+    public static DalvikAnnotation getOrCreate(TypeKey dalvikAnnotationType, AnnotatedProgram annotatedProgram) {
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_AnnotationDefault)) {
+            return DalvikAnnotationDefault.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingClass)) {
+            return DalvikEnclosingClass.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_EnclosingMethod)) {
+            return DalvikEnclosingMethod.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_InnerClass)) {
+            return DalvikInnerClass.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MemberClass)) {
+            return DalvikMemberClass.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_MethodParameters)) {
+            return DalvikMethodParameters.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Signature)) {
+            return DalvikSignature.getOrCreate(annotatedProgram);
+        }
+        if (dalvikAnnotationType.equals(TypeKey.DALVIK_Throws)) {
+            return DalvikThrows.getOrCreate(annotatedProgram);
+        }
+        return null;
     }
 }

@@ -38,7 +38,7 @@ public class FileByteSource implements ByteSource {
         int length = (int) file.length();
         byte[] array = this.array;
         if(array == null || length > array.length) {
-            array = new byte[length];
+            array = new byte[length << 2];
             this.array = array;
         }
         this.length = length;

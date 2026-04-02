@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.program.InstructionLabelType;
+
 public class InsPackedSwitch extends InsSwitch {
 
     private InsSparseSwitch mReplacement;
@@ -40,12 +42,16 @@ public class InsPackedSwitch extends InsSwitch {
             sparseSwitch = replace(Opcode.SPARSE_SWITCH);
             this.mReplacement = sparseSwitch;
             sparseSwitch.setRegister(reg);
-            sparseSwitch.clearExtraLines();
+            sparseSwitch.clearReferenceLabels();
             sparseSwitch.setTargetAddress(target);
         }
         return sparseSwitch;
     }
 
+    @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.P_SWITCH_DATA;
+    }
     @Override
     String getLabelPrefix(){
         return ":pswitch_data_";

@@ -28,11 +28,11 @@ import com.reandroid.utils.collection.SingleIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DebugSetSourceFile extends DebugElement {
+public class DebugSetSourceFileBlock extends DebugElementBlock {
 
     private final Base1Ule128IdItemReference<StringId> mName;
 
-    public DebugSetSourceFile() {
+    public DebugSetSourceFileBlock() {
         super(1, DebugElementType.SET_SOURCE_FILE);
         this.mName = new Base1Ule128IdItemReference<>(SectionType.STRING_ID);
         addChild(1, mName);
@@ -60,7 +60,7 @@ public class DebugSetSourceFile extends DebugElement {
     }
 
     @Override
-    public DebugElementType<DebugSetSourceFile> getElementType() {
+    public DebugElementType<DebugSetSourceFileBlock> getElementType() {
         return DebugElementType.SET_SOURCE_FILE;
     }
 
@@ -69,9 +69,9 @@ public class DebugSetSourceFile extends DebugElement {
         return SingleIterator.of(mName.getItem());
     }
     @Override
-    public void merge(DebugElement element){
+    public void merge(DebugElementBlock element){
         super.merge(element);
-        DebugSetSourceFile coming = (DebugSetSourceFile) element;
+        DebugSetSourceFileBlock coming = (DebugSetSourceFileBlock) element;
         this.mName.setKey(coming.mName.getKey());
     }
     @Override
@@ -81,8 +81,8 @@ public class DebugSetSourceFile extends DebugElement {
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
-        super.appendExtra(writer);
+    public void appendLabelName(SmaliWriter writer) throws IOException {
+        super.appendLabelName(writer);
         this.mName.append(writer);
     }
 

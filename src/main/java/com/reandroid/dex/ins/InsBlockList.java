@@ -19,10 +19,11 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.AlignItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
-import com.reandroid.dex.debug.DebugElement;
+import com.reandroid.dex.debug.DebugElementBlock;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -38,7 +39,7 @@ public class InsBlockList extends BlockList<Ins> {
     private final AlignItem blockAlign;
     private final IntegerReference codeUnitsReference;
     private final IntegerReference outSizReference;
-    private final Iterable<? extends ExtraLine> extraLines;
+    private final Iterable<? extends InstructionLabel> externalLabels;
 
     private NullInstruction mNullInstruction;
 
@@ -51,12 +52,12 @@ public class InsBlockList extends BlockList<Ins> {
     public InsBlockList(AlignItem blockAlign,
                         IntegerReference codeUnitsReference,
                         IntegerReference outSizReference,
-                        Iterable<? extends ExtraLine> extraLines) {
+                        Iterable<? extends InstructionLabel> externalLabels) {
 
         this.blockAlign = blockAlign;
         this.codeUnitsReference = codeUnitsReference;
         this.outSizReference = outSizReference;
-        this.extraLines = extraLines;
+        this.externalLabels = externalLabels;
     }
 
     public Ins getPrevious(Ins ins) {
@@ -64,22 +65,22 @@ public class InsBlockList extends BlockList<Ins> {
     }
     public Ins getNext(Ins ins) {
         int index = indexOf(ins);
-        if(index >= 0) {
+        if (index >= 0) {
             return get(index + 1);
         }
         return null;
     }
-    public Ins getAtAddress(int address){
+    public Ins getAtAddress(int address) {
         int size = size();
         int codeUnits = 0;
         for (int i = 0; i < size; i++) {
             Ins ins = get(i);
-            if(codeUnits == address) {
+            if (codeUnits == address) {
                 return ins;
             }
             codeUnits += ins.getCodeUnits();
         }
-        if(address == codeUnits) {
+        if (address == codeUnits) {
             return getOrCreateNullInstruction();
         }
         return null;
@@ -89,12 +90,12 @@ public class InsBlockList extends BlockList<Ins> {
         int address = 0;
         for(int i = 0; i < count; i++) {
             Ins ins = get(i);
-            if(ins == instruction) {
+            if (ins == instruction) {
                 return address;
             }
             address += ins.getCodeUnits();
         }
-        if(instruction == getNullInstruction()) {
+        if (instruction == getNullInstruction()) {
             return address;
         }
         return -1;
@@ -111,23 +112,23 @@ public class InsBlockList extends BlockList<Ins> {
         }
         return map;
     }
-    public Iterator<Label> getLabels() {
-        return  new IterableIterator<Ins, Label>(iterator()) {
+    public Iterator<InstructionLabel> getLabels() {
+        return  new IterableIterator<Ins, InstructionLabel>(iterator()) {
             @Override
-            public Iterator<Label> iterator(Ins element) {
-                Iterator<Label> iterator = null;
-                if(element instanceof LabelsSet) {
-                    iterator = ObjectsUtil.cast(((LabelsSet) element).getLabels());
+            public Iterator<InstructionLabel> iterator(Ins element) {
+                Iterator<InstructionLabel> iterator = null;
+                if (element instanceof InstructionLabelSet) {
+                    iterator = ObjectsUtil.cast(((InstructionLabelSet) element).getLabels());
                 }
-                if(element instanceof Label) {
-                    Label label = (Label) element;
-                    if(iterator == null) {
+                if (element instanceof InstructionLabel) {
+                    InstructionLabel label = (InstructionLabel) element;
+                    if (iterator == null) {
                         iterator = SingleIterator.of(label);
                     } else {
                         iterator = CombiningIterator.singleOne(label, iterator);
                     }
                 }
-                if(iterator == null) {
+                if (iterator == null) {
                     iterator = EmptyIterator.of();
                 }
                 return iterator;
@@ -136,7 +137,7 @@ public class InsBlockList extends BlockList<Ins> {
     }
 
     public void onEditingInternal(InsBlockList insBlockList) {
-        if(this.isLinked() && !insBlockList.isLinked()) {
+        if (this.isLinked() && !insBlockList.isLinked()) {
             insBlockList.linkLocked();
             insBlockList.mLocked = false;
             insBlockList.mLockedBy = null;
@@ -170,7 +171,7 @@ public class InsBlockList extends BlockList<Ins> {
         return obj;
     }
     public void link() {
-        if(mLinked || isLocked()) {
+        if (mLinked || isLocked()) {
             return;
         }
         mLocked = true;
@@ -183,38 +184,38 @@ public class InsBlockList extends BlockList<Ins> {
         mSecondUpdateRequired = false;
         int count = size();
         for(int i = 0; i < count; i++) {
-            get(i).linkTargetIns();
+            get(i).linkTargetInstruction();
         }
     }
     private void linkExtraLines() {
-        Iterator<? extends ExtraLine> iterator = extraLines.iterator();
-        if(!iterator.hasNext()) {
+        Iterator<? extends InstructionLabel> iterator = externalLabels.iterator();
+        if (!iterator.hasNext()) {
             return;
         }
         Ins[] map = buildAddressMap();
         int length = map.length;
         while (iterator.hasNext()) {
-            ExtraLine extraLine = iterator.next();
-            if(extraLine.isRemoved() ||
-                    extraLine.getTargetIns() != null) {
+            InstructionLabel label = iterator.next();
+            if (label.isRemoved() ||
+                    label.getTargetInstruction() != null) {
                 continue;
             }
-            int address = extraLine.getTargetAddress();
-            if(extraLine instanceof DebugElement) {
-                if(address < 0 || address >= length || map[address] == null) {
+            int address = label.getTargetAddress();
+            if (label instanceof DebugElementBlock) {
+                if (address < 0 || address >= length || map[address] == null) {
                     continue;
                 }
             }
             Ins target;
-            if(address == length) {
+            if (address == length) {
                 target = getOrCreateNullInstruction();
             } else {
                 target = map[address];
             }
-            if(target == null) {
-                throw new NullPointerException("Invalid address " + address + ": " + extraLine);
+            if (target == null) {
+                throw new NullPointerException("Invalid address " + address + ": " + label);
             }
-            extraLine.setTargetIns(target);
+            label.setTargetInstruction(target);
         }
     }
 
@@ -225,18 +226,18 @@ public class InsBlockList extends BlockList<Ins> {
         unlink(obj, false);
     }
     public void unlink(Object obj, boolean update) {
-        if(update) {
+        if (update) {
             mSecondUpdateRequired = true;
         }
-        if(mLocked) {
+        if (mLocked) {
             return;
         }
-        if(obj == null || obj != mLockedBy) {
+        if (obj == null || obj != mLockedBy) {
             return;
         }
         mLocked = true;
-        if(!mLinked) {
-            if(!update) {
+        if (!mLinked) {
+            if (!update) {
                 mLocked = false;
                 mLockedBy = null;
                 return;
@@ -244,7 +245,7 @@ public class InsBlockList extends BlockList<Ins> {
             linkTargetIns();
             linkExtraLines();
         }
-        if(update || mSecondUpdateRequired) {
+        if (update || mSecondUpdateRequired) {
             update();
         }
         unlinkTargets();
@@ -252,7 +253,7 @@ public class InsBlockList extends BlockList<Ins> {
         mLockedBy = null;
     }
     public void unlink() {
-        if(!mLinked || isLocked()) {
+        if (!mLinked || isLocked()) {
             mSecondUpdateRequired = true;
             return;
         }
@@ -265,11 +266,11 @@ public class InsBlockList extends BlockList<Ins> {
     private void unlinkTargets() {
         int size = size();
         for(int i = 0; i < size; i++) {
-            get(i).unLinkTargetIns();
+            get(i).detachTargetInstructions();
         }
         removeNullInstruction();
-        for (ExtraLine extraLine : this.extraLines) {
-            extraLine.setTargetIns(null);
+        for (InstructionLabel label : this.externalLabels) {
+            label.setTargetInstruction(null);
         }
         mLinked = false;
     }
@@ -277,7 +278,7 @@ public class InsBlockList extends BlockList<Ins> {
         mSecondUpdateRequired = false;
         updateInsTarget();
         updateExtraLines();
-        if(mSecondUpdateRequired) {
+        if (mSecondUpdateRequired) {
             updateInsTarget();
             updateExtraLines();
             mSecondUpdateRequired = false;
@@ -290,15 +291,15 @@ public class InsBlockList extends BlockList<Ins> {
         }
     }
     private void updateExtraLines() {
-        for (ExtraLine extraLine : extraLines) {
-            extraLine.updateTarget();
+        for (InstructionLabel label : externalLabels) {
+            label.updateTarget();
         }
     }
     private String getCurrentMethodForDebug() {
         InstructionList instructionList = getParentInstance(InstructionList.class);
-        if(instructionList != null) {
+        if (instructionList != null) {
             MethodDef methodDef = instructionList.getCodeItem().getMethodDef();
-            if(methodDef != null) {
+            if (methodDef != null) {
                 return methodDef.getKey().toString();
             }
         }
@@ -306,7 +307,7 @@ public class InsBlockList extends BlockList<Ins> {
     }
     public NullInstruction getNullInstruction() {
         NullInstruction nullInstruction = this.mNullInstruction;
-        if(nullInstruction != null) {
+        if (nullInstruction != null) {
             nullInstruction.setParent(this);
             nullInstruction.setIndex(getCount());
         }
@@ -314,7 +315,7 @@ public class InsBlockList extends BlockList<Ins> {
     }
     public NullInstruction getOrCreateNullInstruction() {
         NullInstruction nullInstruction = this.mNullInstruction;
-        if(nullInstruction == null) {
+        if (nullInstruction == null) {
             nullInstruction = new NullInstruction();
             this.mNullInstruction = nullInstruction;
         }
@@ -324,7 +325,7 @@ public class InsBlockList extends BlockList<Ins> {
     }
     public void removeNullInstruction() {
         NullInstruction nullInstruction = this.mNullInstruction;
-        if(nullInstruction != null) {
+        if (nullInstruction != null) {
             this.mNullInstruction = null;
             nullInstruction.setParent(null);
             nullInstruction.setIndex(-1);
@@ -369,14 +370,14 @@ public class InsBlockList extends BlockList<Ins> {
         int count = (insCodeUnits + 1) / 2;
         ensureCapacity(count);
 
-        while (reader.getPosition() < position){
+        while (reader.getPosition() < position) {
             Opcode<?> opcode = Opcode.read(reader);
             Ins ins = opcode.newInstance();
             add(ins);
             ins.readBytes(reader);
         }
         trimToSize();
-        if(position != reader.getPosition()){
+        if (position != reader.getPosition()) {
             // should not reach here
             reader.seek(position);
         }
@@ -387,8 +388,8 @@ public class InsBlockList extends BlockList<Ins> {
         mLinked = false;
         mLockedBy = null;
     }
-    public void merge(InsBlockList insBlockList){
-        if(insBlockList == this) {
+    public void merge(InsBlockList insBlockList) {
+        if (insBlockList == this) {
             return;
         }
         mLockedBy = new Object();

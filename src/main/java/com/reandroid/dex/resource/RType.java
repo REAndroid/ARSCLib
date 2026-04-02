@@ -47,7 +47,7 @@ public class RType extends RTypeItem implements Iterable<REntry> {
         if(dexClass.getInstanceFields().hasNext()) {
             return false;
         }
-        Iterator<DexMethod> declaredMethods = dexClass.getDeclaredMethods();
+        Iterator<DexMethod> declaredMethods = dexClass.declaredMethods();
         while (declaredMethods.hasNext()) {
             DexMethod dexMethod = declaredMethods.next();
             if(!dexMethod.isConstructor()) {

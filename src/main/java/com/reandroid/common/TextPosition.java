@@ -57,7 +57,7 @@ public class TextPosition {
         if(i == -1) {
             builder.append("--");
         }else {
-            builder.append(" line=");
+            builder.append("line=");
             builder.append(i);
         }
         i = getColumnNumber();

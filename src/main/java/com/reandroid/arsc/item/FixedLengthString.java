@@ -17,6 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.nio.charset.StandardCharsets;
 
@@ -27,6 +28,15 @@ public class FixedLengthString  extends StringItem {
         this.bytesLength = bytesLength;
         setBytesLength(bytesLength);
     }
+
+    @Override
+    public void set(String str) {
+        if (str == null) {
+            str = StringsUtil.EMPTY;
+        }
+        super.set(str);
+    }
+
     @Override
     protected byte[] encodeString(String text){
         if(text == null){

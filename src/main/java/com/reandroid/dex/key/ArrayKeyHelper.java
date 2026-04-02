@@ -17,11 +17,31 @@ package com.reandroid.dex.key;
 
 class ArrayKeyHelper {
 
-    public static boolean isAllTypeOf(Class<? extends Key> keyClass, ArrayKey arrayKey) {
+    public static int getInt(ArrayKey<?> arrayKey, int index) {
+        Key key = arrayKey.get(index);
+        if (key instanceof PrimitiveKey) {
+            return (int) ((PrimitiveKey) key).getValueAsLong();
+        }
+        return 0;
+    }
+    public static String getString(ArrayKey<?> arrayKey, int index) {
+        Key key = arrayKey.get(index);
+        if (key instanceof StringKey) {
+            return ((StringKey) key).getString();
+        }
+        return null;
+    }
+    public static boolean isAllTypeOf(Class<? extends Key> keyClass, ArrayKey<?> arrayKey) {
         int size = arrayKey.size();
         if (size == 0) { return false; }
         for (int i = 0; i < size; i++) {
-            if (!keyClass.isInstance(arrayKey.get(i))) {
+            Key key = arrayKey.get(i);
+            if (!keyClass.isInstance(key)) {
+                if (key instanceof NullValueKey) {
+                    if (!PrimitiveKey.class.isAssignableFrom(keyClass)) {
+                        continue;
+                    }
+                }
                 return false;
             }
         }
@@ -130,17 +150,20 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static String[] toStringValues(ArrayKey arrayKey) {
+    public static String[] toStringValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(StringKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         String[] results = new String[size];
         for (int i = 0; i < size; i++) {
-            results[i] = ((StringKey) arrayKey.get(i)).getString();
+            Key key = arrayKey.get(i);
+            if (key instanceof StringKey) {
+                results[i] = ((StringKey) key).getString();
+            }
         }
         return results;
     }
 
-    public static byte[] toByteValues(ArrayKey arrayKey) {
+    public static byte[] toByteValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.ByteKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         byte[] results = new byte[size];
@@ -150,7 +173,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static short[] toShortValues(ArrayKey arrayKey) {
+    public static short[] toShortValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.ShortKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         short[] results = new short[size];
@@ -160,7 +183,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static int[] toIntValues(ArrayKey arrayKey) {
+    public static int[] toIntValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.IntegerKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         int[] results = new int[size];
@@ -170,7 +193,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static long[] toLongValues(ArrayKey arrayKey) {
+    public static long[] toLongValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.LongKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         long[] results = new long[size];
@@ -180,7 +203,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static float[] toFloatValues(ArrayKey arrayKey) {
+    public static float[] toFloatValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.FloatKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         float[] results = new float[size];
@@ -190,7 +213,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static double[] toDoubleValues(ArrayKey arrayKey) {
+    public static double[] toDoubleValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.DoubleKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         double[] results = new double[size];
@@ -200,7 +223,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static char[] toCharValues(ArrayKey arrayKey) {
+    public static char[] toCharValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.CharKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         char[] results = new char[size];
@@ -210,7 +233,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static boolean[] toBooleanValues(ArrayKey arrayKey) {
+    public static boolean[] toBooleanValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.BooleanKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         boolean[] results = new boolean[size];
@@ -220,7 +243,7 @@ class ArrayKeyHelper {
         return results;
     }
 
-    public static long[] toNumberValues(ArrayKey arrayKey) {
+    public static long[] toNumberValues(ArrayKey<?> arrayKey) {
         if (!isAllTypeOf(PrimitiveKey.NumberKey.class, arrayKey)) { return null; }
         int size = arrayKey.size();
         long[] results = new long[size];

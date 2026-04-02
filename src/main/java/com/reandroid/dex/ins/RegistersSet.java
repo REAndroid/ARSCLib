@@ -25,26 +25,25 @@ public interface RegistersSet {
     int getRegister(int index);
     void setRegister(int index, int value);
 
-    int getRegisterLimit(int index);
     default int getRegister() {
         return getRegister(0);
     }
-    default void setRegister(int register){
+    default void setRegister(int register) {
         setRegister(0, register);
     }
-    default RegisterFormat getRegisterFormat(){
-        return null;
+    default RegisterFormat getRegisterFormat() {
+        throw new RuntimeException("getRegisterFormat not implemented at: " + getClass());
     }
-    default boolean removeRegisterAt(int index){
-        if(index < 0) {
+    default boolean removeRegisterAt(int index) {
+        if (index < 0) {
             return false;
         }
         int count = getRegistersCount();
-        if(index >= count) {
+        if (index >= count) {
             return false;
         }
         int last = count - 1;
-        if(getRegisterFormat().isRange()) {
+        if (getRegisterFormat().isRange()) {
             if(index == 0) {
                 setRegister(getRegister() + 1);
                 return true;
@@ -56,14 +55,62 @@ public interface RegistersSet {
             // Can not remove from middle of registers range
             return false;
         }
-        for(int i = index; i < last; i ++) {
+        for (int i = index; i < last; i ++) {
             setRegister(i, getRegister(i + 1));
         }
         setRegister(last, 0);
         setRegistersCount(last);
         return true;
     }
-    default boolean isWideRegisterAt(int index){
-        return false;
+
+    default int[] getRegisters() {
+        int count = getRegistersCount();
+        int[] results;
+        if (count == 0) {
+            results = null;
+        } else {
+            results = new int[count];
+        }
+        for (int i = 0; i < count; i++) {
+            results[i] = getRegister(i);
+        }
+        return results;
     }
+    default void setRegisters(int[] registers) {
+        int length;
+        if (registers == null) {
+            length = 0;
+        } else {
+            length = registers.length;
+        }
+        setRegistersCount(length);
+        for (int i = 0; i < length; i++) {
+            setRegister(i, registers[i]);
+        }
+    }
+
+    RegistersSet NO_REGISTERS = new RegistersSet() {
+        @Override
+        public int getRegistersCount() {
+            return 0;
+        }
+        @Override
+        public void setRegistersCount(int count) {
+        }
+        @Override
+        public int getRegister(int index) {
+            return -1;
+        }
+        @Override
+        public void setRegister(int index, int value) {
+        }
+        @Override
+        public int getRegister() {
+            return -1;
+        }
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+    };
 }

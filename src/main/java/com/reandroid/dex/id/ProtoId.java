@@ -18,7 +18,11 @@ package com.reandroid.dex.id;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.data.TypeList;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ProtoKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.reference.TypeListReference;
@@ -61,7 +65,13 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
     }
     @Override
     public ProtoKey getKey() {
-        return checkKey(ProtoKey.create(getParameters(), getReturnType()));
+        ProtoKey lastKey = getLastKey();
+        TypeKey returnType = getReturnType();
+        TypeListKey parameters = getParameters();
+        if (lastKey != null && lastKey.equals(returnType, parameters)) {
+            return lastKey;
+        }
+        return checkKey(ProtoKey.create(parameters, returnType));
     }
     @Override
     public void setKey(Key key){

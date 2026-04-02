@@ -45,10 +45,6 @@ public class Ins11x extends Size2Ins implements RegistersSet {
     public void setRegister(int index, int value) {
         setByte(1, value);
     }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
-    }
 
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {

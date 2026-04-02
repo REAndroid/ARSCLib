@@ -28,6 +28,15 @@ public class StringUle128Reference extends Ule128IdItemReference<StringId> imple
         super(SectionType.STRING_ID, usageType);
     }
 
+    @Override
+    public StringKey getKey() {
+        StringId stringId = getItem();
+        if (stringId != null) {
+            return stringId.getKey();
+        }
+        return null;
+    }
+
     public String getString(){
         StringId stringId = getItem();
         if(stringId != null){

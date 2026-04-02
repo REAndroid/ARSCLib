@@ -25,7 +25,6 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class TypeId extends IdItem implements Comparable<TypeId> {
 
@@ -44,8 +43,13 @@ public class TypeId extends IdItem implements Comparable<TypeId> {
         return SectionType.TYPE_ID;
     }
     @Override
-    public TypeKey getKey(){
-        return checkKey(TypeKey.create(getName()));
+    public TypeKey getKey() {
+        TypeKey lastKey = getLastKey();
+        String typeName = getName();
+        if (lastKey != null && lastKey.equalsName(typeName)) {
+            return lastKey;
+        }
+        return checkKey(TypeKey.create(typeName));
     }
     @Override
     public void setKey(Key key){
@@ -54,7 +58,7 @@ public class TypeId extends IdItem implements Comparable<TypeId> {
     }
     public void setKey(TypeKey key){
         TypeKey old = getKey();
-        if(Objects.equals(key, old)){
+        if (ObjectsUtil.equals(key, old)) {
             return;
         }
         nameReference.setString(key.getTypeName());

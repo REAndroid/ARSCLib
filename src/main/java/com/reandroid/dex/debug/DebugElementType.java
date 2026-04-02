@@ -21,21 +21,21 @@ import com.reandroid.dex.smali.SmaliDirective;
 
 import java.io.IOException;
 
-public class DebugElementType<T extends DebugElement> implements BlockCreator<T>{
+public class DebugElementType<T extends DebugElementBlock> {
 
     public static final DebugElementType<?>[] VALUES;
 
-    public static final DebugElementType<DebugStartLocal> START_LOCAL;
-    public static final DebugElementType<DebugEndLocal> END_LOCAL;
-    public static final DebugElementType<DebugRestartLocal> RESTART_LOCAL;
-    public static final DebugElementType<DebugPrologue> PROLOGUE;
-    public static final DebugElementType<DebugEpilogue> EPILOGUE;
-    public static final DebugElementType<DebugSetSourceFile> SET_SOURCE_FILE;
+    public static final DebugElementType<DebugStartLocalBlock> START_LOCAL;
+    public static final DebugElementType<DebugEndLocalBlock> END_LOCAL;
+    public static final DebugElementType<DebugRestartLocalBlock> RESTART_LOCAL;
+    public static final DebugElementType<DebugPrologueBlock> PROLOGUE;
+    public static final DebugElementType<DebugEpilogueBlock> EPILOGUE;
+    public static final DebugElementType<DebugSetSourceFileBlock> SET_SOURCE_FILE;
     public static final DebugElementType<DebugEndSequence> END_SEQUENCE;
     public static final DebugElementType<DebugAdvancePc> ADVANCE_PC;
     public static final DebugElementType<DebugAdvanceLine> ADVANCE_LINE;
     public static final DebugElementType<DebugStartLocalExtended> START_LOCAL_EXTENDED;
-    public static final DebugElementType<DebugLineNumber> LINE_NUMBER;
+    public static final DebugElementType<DebugLineNumberBlock> LINE_NUMBER;
 
 
     static {
@@ -55,7 +55,7 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
         VALUES[0x02] = ADVANCE_LINE;
 
         START_LOCAL = new DebugElementType<>("START_LOCAL", SmaliDirective.LOCAL,
-                0x03, DebugStartLocal::new);
+                0x03, DebugStartLocalBlock::new);
         VALUES[0x03] = START_LOCAL;
 
         START_LOCAL_EXTENDED = new DebugElementType<>("START_LOCAL_EXTENDED", SmaliDirective.LOCAL,
@@ -63,43 +63,43 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
         VALUES[0x04] = START_LOCAL_EXTENDED;
 
         END_LOCAL = new DebugElementType<>("END_LOCAL", SmaliDirective.END_LOCAL,
-                0x05, DebugEndLocal::new);
+                0x05, DebugEndLocalBlock::new);
         VALUES[0x05] = END_LOCAL;
 
         RESTART_LOCAL = new DebugElementType<>("RESTART_LOCAL", SmaliDirective.RESTART_LOCAL,
-                0x06, DebugRestartLocal::new);
+                0x06, DebugRestartLocalBlock::new);
         VALUES[0x06] = RESTART_LOCAL;
 
         PROLOGUE = new DebugElementType<>("PROLOGUE", SmaliDirective.PROLOGUE,
-                0x07, DebugPrologue::new);
+                0x07, DebugPrologueBlock::new);
         VALUES[0x07] = PROLOGUE;
 
         EPILOGUE = new DebugElementType<>("EPILOGUE", SmaliDirective.EPILOGUE,
-                0x08, DebugEpilogue::new);
+                0x08, DebugEpilogueBlock::new);
         VALUES[0x08] = EPILOGUE;
 
         SET_SOURCE_FILE = new DebugElementType<>("SET_SOURCE_FILE", SmaliDirective.SET_SOURCE_FILE,
-                0x09, DebugSetSourceFile::new);
+                0x09, DebugSetSourceFileBlock::new);
         VALUES[0x09] = SET_SOURCE_FILE;
 
         LINE_NUMBER = new DebugElementType<>("LINE_NUMBER", SmaliDirective.LINE,
-                0x0A, DebugLineNumber::new);
+                0x0A, DebugLineNumberBlock::new);
         VALUES[0x0A] = LINE_NUMBER;
     }
 
     private final String name;
     private final SmaliDirective directive;
     private final int flag;
-    private final BlockCreator<T> creator;
+    private final BlockCreator<T> blockCreator;
 
-    private DebugElementType(String name, SmaliDirective directive, int flag, BlockCreator<T> creator){
+    private DebugElementType(String name, SmaliDirective directive, int flag, BlockCreator<T> blockCreator){
         this.name = name;
         this.directive = directive;
         this.flag = flag;
-        this.creator = creator;
+        this.blockCreator = blockCreator;
     }
-    private DebugElementType(String name, int flag, BlockCreator<T> creator){
-        this(name, null, flag, creator);
+    private DebugElementType(String name, int flag, BlockCreator<T> blockCreator){
+        this(name, null, flag, blockCreator);
     }
 
     public String getName() {
@@ -111,9 +111,12 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
     public int getFlag() {
         return flag;
     }
-    @Override
+
     public T newInstance() {
-        return creator.newInstance();
+        return blockCreator.newInstance();
+    }
+    public T newDebugBlock() {
+        return blockCreator.newInstance();
     }
 
     public boolean is(DebugElementType<?> type){

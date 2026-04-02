@@ -206,6 +206,17 @@ public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> imp
     }
 
     @Override
+    public boolean uses(Key key) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            if (get(i).uses(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<Def<?>, IdItem>(iterator()) {
             @Override

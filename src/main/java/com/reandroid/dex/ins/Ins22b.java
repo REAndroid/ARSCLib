@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins22b extends Ins22 implements RegistersSet {
+import com.reandroid.arsc.item.IntegerReference;
+
+public class Ins22b extends Ins22 implements RegistersSet, IntegerReference {
 
     public Ins22b(Opcode<?> opcode) {
         super(opcode);
@@ -28,10 +30,6 @@ public class Ins22b extends Ins22 implements RegistersSet {
     @Override
     public void setRegister(int index, int value) {
         setByte(1 + index, value);
-    }
-    @Override
-    public int getRegisterLimit(int index){
-        return 0xff;
     }
 
     @Override
@@ -47,5 +45,14 @@ public class Ins22b extends Ins22 implements RegistersSet {
     @Override
     public void setData(int data){
         setByte(3, data);
+    }
+
+    @Override
+    public int get() {
+        return getSignedData();
+    }
+    @Override
+    public void set(int value) {
+        setData(value);
     }
 }

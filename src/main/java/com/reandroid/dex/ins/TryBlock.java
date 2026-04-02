@@ -26,6 +26,9 @@ import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
@@ -37,7 +40,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class TryBlock extends FixedDexContainerWithTool implements
-        Creator<TryItem>, Iterable<TryItem>, LabelsSet, IdUsageIterator {
+        Creator<TryItem>, Iterable<TryItem>, InstructionLabelSet, IdUsageIterator {
 
     private final CodeItem codeItem;
     private HandlerOffsetArray handlerOffsetArray;
@@ -64,7 +67,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return tryItemArray.getCount();
     }
     @Override
-    public Iterator<Label> getLabels() {
+    public Iterator<InstructionLabel> getLabels() {
         return new ExpandIterator<>(iterator());
     }
 
@@ -434,6 +437,17 @@ public class TryBlock extends FixedDexContainerWithTool implements
     public void fromSmali(SmaliCodeTryItem smaliCodeTryItem) {
         createNext().fromSmali(smaliCodeTryItem);
         updateHandlerOffsets();
+    }
+
+    @Override
+    public boolean uses(Key key) {
+        Iterator<TryItem> iterator = iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().uses(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

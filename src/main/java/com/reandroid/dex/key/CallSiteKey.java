@@ -22,78 +22,83 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class CallSiteKey implements Key {
 
-    private final MethodHandleKey methodHandle;
-    private final StringKey name;
-    private final ProtoKey proto;
-    private final ArrayKey<?> arguments;
+    private final NamedTypeKey nameAndType;
+    private final BootstrapMethodKey bootstrap;
 
-    public CallSiteKey(MethodHandleKey methodHandle, StringKey name, ProtoKey proto, ArrayKey<?> arguments) {
-        this.methodHandle = methodHandle;
-        this.name = name;
-        this.proto = proto;
-        this.arguments = arguments;
+    private CallSiteKey(NamedTypeKey nameAndType, BootstrapMethodKey bootstrap) {
+        this.nameAndType = nameAndType;
+        this.bootstrap = bootstrap;
     }
 
+    public NamedTypeKey getNameAndType() {
+        return nameAndType;
+    }
+    public BootstrapMethodKey getBootstrap() {
+        return bootstrap;
+    }
     public MethodHandleKey getMethodHandle() {
-        return methodHandle;
+        return getBootstrap().getMethodHandle();
     }
-    public StringKey getName() {
-        return name;
+    public String getName() {
+        return getNameAndType().getName();
     }
-    public ProtoKey getProto() {
-        return proto;
+    public Key getType() {
+        return getNameAndType().getType();
     }
     public ArrayKey<?> getArguments() {
-        return arguments;
+        return getBootstrap().getArguments();
     }
     public ArrayKey<?> toArrayKey() {
         ArrayKey<?> arguments = getArguments();
         int argumentsLength = arguments.size();
-        Key[] elements = new Key[3 + arguments.size()];
+        Key[] elements = new Key[3 + argumentsLength];
         elements[0] = getMethodHandle();
-        elements[1] = getName();
-        elements[2] = getProto();
+        NamedTypeKey namedTypeKey = getNameAndType();
+        elements[1] = namedTypeKey.getNameKey();
+        elements[2] = namedTypeKey.getType();
         for (int i = 0; i < argumentsLength; i++) {
             elements[i + 3] = arguments.get(i);
         }
         return ArrayKey.create(elements);
     }
-    public CallSiteKey changeMethodHandle(MethodHandleKey methodHandle) {
-        if (methodHandle.equals(getMethodHandle())) {
+    public CallSiteKey changeNamedKey(NamedTypeKey namedTypeKey) {
+        if (namedTypeKey.equals(getNameAndType())) {
             return this;
         }
-        return new CallSiteKey(methodHandle, getName(), getProto(), getArguments());
+        return create(namedTypeKey, getBootstrap());
+    }
+    public CallSiteKey changeBootstrap(BootstrapMethodKey bootstrap) {
+        if (bootstrap.equals(getBootstrap())) {
+            return this;
+        }
+        return create(getNameAndType(), bootstrap);
+    }
+    public CallSiteKey changeMethodHandle(MethodHandleKey methodHandle) {
+        return changeBootstrap(getBootstrap().changeMethodHandle(methodHandle));
     }
     public CallSiteKey changeName(StringKey name) {
-        if (name.equals(getName())) {
-            return this;
-        }
-        return new CallSiteKey(getMethodHandle(), name, getProto(), getArguments());
+        return changeNamedKey(getNameAndType().changeName(name));
     }
-    public CallSiteKey changeProto(ProtoKey proto) {
-        if (proto.equals(getProto())) {
-            return this;
-        }
-        return new CallSiteKey(getMethodHandle(), getName(), proto, getArguments());
+    public CallSiteKey changeType(TypeDescriptorKey type) {
+        return changeNamedKey(getNameAndType().changeType(type));
     }
     public CallSiteKey changeArguments(ArrayKey<?> arguments) {
-        if (arguments.equals(getArguments())) {
-            return this;
-        }
-        return new CallSiteKey(getMethodHandle(), getName(), getProto(), arguments);
+        return changeBootstrap(getBootstrap().changeArguments(arguments));
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append('(');
-        getName().append(writer);
+        getNameAndType().getNameKey().append(writer);
         writer.append(", ");
-        getProto().append(writer);
+        getType().append(writer);
         ArrayKey<?> arguments = getArguments();
         int size = arguments.size();
         for (int i = 0; i < size; i++) {
@@ -107,6 +112,13 @@ public class CallSiteKey implements Key {
     }
 
     @Override
+    public Iterator<? extends Key> contents() {
+        return CombiningIterator.singleTwo(this,
+                getNameAndType().contents(),
+                getBootstrap().contents());
+    }
+
+    @Override
     public int compareTo(Object obj) {
         if (obj == this) {
             return 0;
@@ -115,19 +127,17 @@ public class CallSiteKey implements Key {
             return StringsUtil.compareToString(this, obj);
         }
         CallSiteKey key = (CallSiteKey) obj;
-        int i = CompareUtil.compare(this.getMethodHandle(), key.getMethodHandle());
+        int i = CompareUtil.compare(this.getBootstrap(), key.getBootstrap());
         if (i == 0) {
-            i = CompareUtil.compare(this.getArguments(), key.getArguments());
-            if (i == 0) {
-                i = CompareUtil.compare(this.getName(), key.getName());
-                if (i == 0) {
-                    i = CompareUtil.compare(this.getProto(), key.getProto());
-                }
-            }
+            i = CompareUtil.compare(this.getNameAndType(), key.getNameAndType());
         }
         return i;
     }
 
+    public boolean equals(NamedTypeKey nameAndType, BootstrapMethodKey bootstrap) {
+        return getNameAndType().equals(nameAndType) &&
+                getBootstrap().equals(bootstrap);
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -137,25 +147,22 @@ public class CallSiteKey implements Key {
             return false;
         }
         CallSiteKey other = (CallSiteKey) obj;
-        return ObjectsUtil.equals(getMethodHandle(), other.getMethodHandle()) &&
-                ObjectsUtil.equals(getName(), other.getName()) &&
-                ObjectsUtil.equals(getProto(), other.getProto()) &&
-                ObjectsUtil.equals(getArguments(), other.getArguments());
+        return ObjectsUtil.equals(getBootstrap(), other.getBootstrap()) &&
+                ObjectsUtil.equals(getNameAndType(), other.getNameAndType());
     }
 
     @Override
     public int hashCode() {
-        return ObjectsUtil.hash(getMethodHandle(),
-                getName(), getProto(), getArguments());
+        return ObjectsUtil.hash(getBootstrap(), getNameAndType());
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append('(');
-        builder.append(getName());
+        builder.append(getNameAndType().getNameKey());
         builder.append(", ");
-        builder.append(getProto());
+        builder.append(getType());
         ArrayKey<?> arguments = getArguments();
         if (!arguments.isEmpty()) {
             builder.append(", ");
@@ -172,21 +179,48 @@ public class CallSiteKey implements Key {
         return builder.toString();
     }
 
+    public static CallSiteKey create(NamedTypeKey nameAndType, BootstrapMethodKey bootstrap) {
+        if (nameAndType == null || bootstrap == null) {
+            return null;
+        }
+        return new CallSiteKey(nameAndType, bootstrap);
+    }
+    public static CallSiteKey create(StringKey name, TypeDescriptorKey type, BootstrapMethodKey bootstrap) {
+        if (name == null || type == null || bootstrap == null) {
+            return null;
+        }
+        return create(NamedTypeKey.create(name, type), bootstrap);
+    }
+    public static CallSiteKey create(NamedTypeKey nameAndType, ArrayKey<?> arguments, MethodHandleKey methodHandle) {
+        if (nameAndType == null || methodHandle == null) {
+            return null;
+        }
+        return create(nameAndType, BootstrapMethodKey.create(arguments, methodHandle));
+    }
+    public static CallSiteKey create(StringKey name, TypeDescriptorKey type, ArrayKey<?> arguments, MethodHandleKey methodHandle) {
+        if (name == null || type == null || methodHandle == null) {
+            return null;
+        }
+        return create(name, type, BootstrapMethodKey.create(arguments, methodHandle));
+    }
     public static CallSiteKey read(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();
         String label = readCallSiteLabel(reader);
         SmaliParseException.expect(reader, '(');
-        StringKey name = StringKey.read(reader);
-        reader.skipWhitespacesOrComment();
-        SmaliParseException.expect(reader, ',');
-        ProtoKey protoKey = ProtoKey.read(reader);
+        NamedTypeKey nameAndType = NamedTypeKey.readCall(reader);
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, ',');
         ArrayKey<?> arguments = ArrayKey.read(reader, ')');
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, '@');
-        MethodHandleKey methodHandleKey = MethodHandleKey.read(MethodHandleType.INVOKE_STATIC, reader);
-        return new CallSiteKey(methodHandleKey, name, protoKey, arguments);
+        MethodHandleType handleType;
+        if (nameAndType.getType() instanceof TypeKey) {
+            handleType = MethodHandleType.STATIC_GET;
+        } else {
+            handleType = MethodHandleType.INVOKE_STATIC;
+        }
+        MethodHandleKey methodHandleKey = MethodHandleKey.read(handleType, reader);
+        return create(nameAndType, arguments, methodHandleKey);
     }
 
     public static CallSiteKey parse(String text) {

@@ -16,7 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugEndLocal;
+import com.reandroid.dex.debug.DebugEndLocalBlock;
 
 public class SmaliDebugEndLocal extends SmaliDebugRegister {
 
@@ -25,7 +25,7 @@ public class SmaliDebugEndLocal extends SmaliDebugRegister {
     }
 
     @Override
-    public DebugElementType<DebugEndLocal> getDebugElementType() {
+    public DebugElementType<DebugEndLocalBlock> getDebugElementType() {
         return DebugElementType.END_LOCAL;
     }
 }

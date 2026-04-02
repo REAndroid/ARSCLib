@@ -15,6 +15,8 @@
  */
 package com.reandroid.utils.collection;
 
+import com.reandroid.utils.ObjectsUtil;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
@@ -107,6 +109,12 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         }
     }
     public static<T1> Iterator<T1> of(Iterator<? extends T1> iterator,  Predicate<? super T1> filter){
+        if (filter == null) {
+            if (iterator == null) {
+                return EmptyIterator.of();
+            }
+            return ObjectsUtil.cast(iterator);
+        }
         if(iterator == null || !iterator.hasNext()){
             return EmptyIterator.of();
         }

@@ -92,7 +92,7 @@ public class ArrayDataEntry extends NumberBlock implements PayloadEntry {
     }
 
     @Override
-    public InsArrayData getPayload() {
+    public InsArrayData getOwnerInstruction() {
         return getParentInstance(InsArrayData.class);
     }
 
