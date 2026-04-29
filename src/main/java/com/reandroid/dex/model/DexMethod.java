@@ -190,7 +190,8 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
     public Iterator<DexInstruction> getInstructionsIfKey(Predicate<? super Key> predicate) {
         return getInstructionsIfIns(ins -> {
             if (ins instanceof SizeXIns) {
-                return predicate.test(((SizeXIns) ins).getKey());
+                Key key = ((SizeXIns) ins).getKey();
+                return key != null && predicate.test(key);
             }
             return false;
         });
@@ -494,7 +495,12 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
     @Override
     public void refresh() {
         if (!isRemoved()) {
-            getDefinition().refresh();
+            MethodDef definition = getDefinition();
+            definition.refresh();
+            InstructionList instructionList = definition.getInstructionList();
+            if (instructionList != null) {
+                instructionList.refresh();
+            }
         }
     }
     @Override
