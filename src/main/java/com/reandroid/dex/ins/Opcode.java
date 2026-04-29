@@ -748,7 +748,7 @@ public class Opcode<T extends Ins> implements InstructionOpcode, BlockCreator<T>
         SUB_LONG_2ADDR = new Opcode<>(0xbc, 2, "sub-long/2addr", format12xRw4WRead4W);
         values[0xbc] = SUB_LONG_2ADDR;
         MUL_LONG_2ADDR = new Opcode<>(0xbd, 2, "mul-long/2addr",
-                new OpcodeFormat.Format12x(RegisterFormat.WRITE4W_READ4W));
+                new OpcodeFormat.Format12x(RegisterFormat.RW4W_READ4W));
         values[0xbd] = MUL_LONG_2ADDR;
         DIV_LONG_2ADDR = new Opcode<>(0xbe, 2, "div-long/2addr", format12xRw4WRead4W);
         values[0xbe] = DIV_LONG_2ADDR;

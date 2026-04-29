@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.ins;
 
-public interface ConstNumberLong extends ConstNumber{
+import com.reandroid.arsc.item.LongReference;
+
+public interface ConstNumberLong extends ConstNumber, LongReference {
     long getLong();
     void set(long value);
     @Override

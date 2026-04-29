@@ -144,6 +144,13 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         }
         return instructionList.createAt(shiftLabels, getIndex() + 1, opcode);
     }
+    public<T1 extends Ins> T1 createPrevious(boolean shiftLabels, Opcode<T1> opcode) {
+        InstructionList instructionList = getInstructionList();
+        if (instructionList == null) {
+            throw new DexException("Parent " + getClass().getSimpleName() + " == null");
+        }
+        return instructionList.createAt(shiftLabels, getIndex(), opcode);
+    }
     public void moveTo(int index) {
         InstructionList instructionList = getInstructionList();
         if (instructionList == null) {

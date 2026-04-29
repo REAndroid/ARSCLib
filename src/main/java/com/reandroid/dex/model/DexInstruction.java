@@ -265,6 +265,12 @@ public class DexInstruction extends DexCode implements Instruction {
     public boolean is(Opcode<?> opcode) {
         return opcode == getOpcode();
     }
+    public boolean isConst() {
+        Opcode<?> opcode = getOpcode();
+        return opcode.isConstNumber() ||
+                opcode.isConstString() ||
+                opcode == Opcode.CONST_CLASS;
+    }
     public boolean isConstString() {
         return getOpcode().isConstString();
     }
@@ -376,6 +382,13 @@ public class DexInstruction extends DexCode implements Instruction {
             ((InstructionLabel) edit()).setTargetAddress(address);
         }
     }
+    public void setTargetInstruction(DexInstruction target) {
+        if (getIns() instanceof InstructionLabel) {
+            InstructionLabel label = (InstructionLabel) edit();
+            label.setTargetAddress(target.getAddress());
+            label.setTargetInstruction(target.getIns());
+        }
+    }
     public IntegerReference getAsIntegerReference() {
         Ins ins = getIns();
         if (ins instanceof ConstNumber) {
@@ -410,50 +423,66 @@ public class DexInstruction extends DexCode implements Instruction {
             }
             return getString();
         }
+        if (isConstWide()) {
+            long value = getAsLong();
+            if (valueType == null || TypeKey.TYPE_J.equals(valueType)) {
+                return value;
+            }
+            if (TypeKey.TYPE_D.equals(valueType)) {
+                return Double.longBitsToDouble(value);
+            }
+            return getAsConstNumberValue(valueType, value);
+        }
         if (isConstInteger()) {
             int value = getAsInteger();
             if (valueType == null || TypeKey.TYPE_I.equals(valueType)) {
                 return value;
             }
-            if (TypeKey.TYPE_B.equals(valueType)) {
-                return (byte) value;
-            }
-            if (TypeKey.TYPE_S.equals(valueType)) {
-                return (short) value;
-            }
-            if (TypeKey.TYPE_C.equals(valueType)) {
-                return (char) value;
-            }
             if (TypeKey.TYPE_F.equals(valueType)) {
                 return Float.intBitsToFloat(value);
             }
-            if (TypeKey.TYPE_Z.equals(valueType)) {
-                if (value == 1) {
-                    return true;
-                }
-                if (value == 0) {
-                    return false;
-                }
-                return null;
-            }
-            if (valueType.isPrimitive()) {
-                return value;
-            }
-            if (!valueType.isPrimitive() && value == 0) {
-                // TODO: make null value instead
-                return null;
-            }
-            // TODO
+            return getAsConstNumberValue(valueType, value);
+        }
+        if (is(Opcode.ARRAY_PAYLOAD)) {
+            // TODO: make for array payloads
             return null;
         }
-        if (isConstWide()) {
-            long value = getAsLong();
-            if (TypeKey.TYPE_D.equals(valueType)) {
-                return Double.longBitsToDouble(value);
-            }
+        // TODO: confirm this is unreachable
+        return null;
+    }
+    private Object getAsConstNumberValue(TypeKey valueType, long value) {
+        if (valueType == null) {
             return value;
         }
-        // TODO: confirm this is unreachable
+        if (TypeKey.TYPE_I.equals(valueType)) {
+            return (int) value;
+        }
+        if (TypeKey.TYPE_B.equals(valueType)) {
+            return (byte) value;
+        }
+        if (TypeKey.TYPE_S.equals(valueType)) {
+            return (short) value;
+        }
+        if (TypeKey.TYPE_C.equals(valueType)) {
+            return (char) value;
+        }
+        if (TypeKey.TYPE_Z.equals(valueType)) {
+            if (value == 1) {
+                return true;
+            }
+            if (value == 0) {
+                return false;
+            }
+            return null;
+        }
+        if (valueType.isPrimitive()) {
+            return value;
+        }
+        if (!valueType.isPrimitive() && value == 0) {
+            // TODO: make null value instead
+            return null;
+        }
+        // TODO: throw ?
         return null;
     }
     public void setAsInteger(int value) {
@@ -508,6 +537,9 @@ public class DexInstruction extends DexCode implements Instruction {
         DexInstruction dexInstruction = createNext(smaliInstruction.getOpcode());
         dexInstruction.getIns().fromSmali(smaliInstruction);
         return dexInstruction;
+    }
+    public DexInstruction createPrevious(boolean shiftLabels, Opcode<?> opcode) {
+        return DexInstruction.create(getDexMethod(), edit().createPrevious(shiftLabels, opcode));
     }
     public DexInstruction replaceWithSmali(String smaliString) throws IOException {
         return replaceWithSmali(SmaliReader.of(smaliString));

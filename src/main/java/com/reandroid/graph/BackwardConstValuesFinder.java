@@ -38,6 +38,13 @@ public class BackwardConstValuesFinder {
         this.mDiscoveredAddresses = new HashSet<>();
     }
 
+    public Object findSingleConstValue(int parameterIndex, DexInstruction instruction) {
+        Object[] values = findConstValues(parameterIndex, instruction);
+        if (values != null && values.length == 1) {
+            return values[0];
+        }
+        return null;
+    }
     public Object[] findConstValues(int parameterIndex, DexInstruction instruction) {
         TypeKey valueType;
         if (instruction.isMethodInvoke()) {
