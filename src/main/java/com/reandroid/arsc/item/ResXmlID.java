@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.ObjectsStore;
+import com.reandroid.utils.HashSetStore;
 
 import java.util.Iterator;
 
@@ -33,20 +33,20 @@ public class ResXmlID extends IntegerItem implements Comparable<ResXmlID> {
     }
 
     public void addReference(ReferenceItem reference) {
-        this.mReferencedList = ObjectsStore.add(mReferencedList, reference);
+        this.mReferencedList = HashSetStore.add(mReferencedList, reference);
     }
     public void removeReference(ReferenceItem reference) {
-        mReferencedList = ObjectsStore.remove(mReferencedList, reference);
+        mReferencedList = HashSetStore.remove(mReferencedList, reference);
     }
     public int getReferenceCount() {
-        return ObjectsStore.size(mReferencedList);
+        return HashSetStore.size(mReferencedList);
     }
     public boolean hasReference() {
-        return !ObjectsStore.isEmpty(mReferencedList);
+        return !HashSetStore.isEmpty(mReferencedList);
     }
     public boolean hasReference(Block block) {
         if (block != null) {
-            Iterator<ReferenceItem> iterator = ObjectsStore.iterator(mReferencedList);
+            Iterator<ReferenceItem> iterator = HashSetStore.iterator(mReferencedList);
             while (iterator.hasNext()) {
                 ReferenceItem item = iterator.next();
                 if (item.getReferredParent(block.getClass()) == block) {
