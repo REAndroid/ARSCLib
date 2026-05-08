@@ -874,8 +874,8 @@ public class DexInstruction extends DexCode implements Instruction {
         DexInstruction previous = getPrevious();
         while (previous != null) {
             Opcode<?> opcode = previous.getOpcode();
-            if (opcode.isMove() && previous.getRegister(1) == register) {
-                register = previous.getRegister(0);
+            if (opcode.isMove() && previous.getRegister(0) == register) {
+                register = previous.getRegister(1);
             } else {
                 RegisterFormat format = opcode.getRegisterFormat();
                 int size = previous.getRegistersCount();
