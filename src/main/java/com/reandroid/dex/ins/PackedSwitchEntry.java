@@ -81,6 +81,9 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
     @Override
     public void appendLabelName(SmaliWriter writer) throws IOException {
         writer.appendLabelName(getLabelName());
+    }
+    @Override
+    public void appendLabelComment(SmaliWriter writer) throws IOException {
         writer.appendComment(HexUtil.toSignedHex(get()));
     }
 
@@ -122,8 +125,7 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
             return false;
         }
         SwitchEntry entry = (SwitchEntry) obj;
-        return getTargetAddress() == entry.getTargetAddress() &&
-                this.get() == entry.get();
+        return getTargetAddress() == entry.getTargetAddress();
     }
 
     private PackedSwitchDataList getParentDataList() {

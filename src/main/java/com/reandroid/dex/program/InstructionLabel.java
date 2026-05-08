@@ -74,6 +74,8 @@ public interface InstructionLabel extends InstructionStatement {
     default void appendLabelName(SmaliWriter writer) throws IOException {
         writer.appendLabelName(getLabelName());
     }
+    default void appendLabelComment(SmaliWriter writer) throws IOException {
+    }
 
     default int compareLabel(InstructionLabel label) {
         return compareLabels(this, label);
@@ -161,6 +163,10 @@ public interface InstructionLabel extends InstructionStatement {
         @Override
         public void appendLabelName(SmaliWriter writer) throws IOException {
             getBaseLabel().appendLabelName(writer);
+        }
+        @Override
+        public void appendLabelComment(SmaliWriter writer) throws IOException {
+            getBaseLabel().appendLabelComment(writer);
         }
 
         @Override

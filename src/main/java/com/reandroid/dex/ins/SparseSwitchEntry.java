@@ -130,8 +130,7 @@ public class SparseSwitchEntry implements SwitchEntry {
             return false;
         }
         SwitchEntry entry = (SwitchEntry) obj;
-        return getTargetAddress() == entry.getTargetAddress() &&
-                this.get() == entry.get();
+        return getTargetAddress() == entry.getTargetAddress();
     }
 
     @Override
@@ -147,6 +146,9 @@ public class SparseSwitchEntry implements SwitchEntry {
     @Override
     public void appendLabelName(SmaliWriter writer) throws IOException {
         writer.appendLabelName(getLabelName());
+    }
+    @Override
+    public void appendLabelComment(SmaliWriter writer) throws IOException {
         writer.appendComment(HexUtil.toSignedHex(get()));
     }
 

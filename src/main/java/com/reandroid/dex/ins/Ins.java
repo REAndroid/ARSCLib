@@ -299,6 +299,7 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         while (iterator.hasNext()) {
             label = iterator.next();
             if (previous != null && label.equalsLabel(previous)) {
+                label.appendLabelComment(writer);
                 continue;
             }
             writer.newLine();
@@ -307,6 +308,7 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
                 writer.newLine();
             }
             label.appendLabelName(writer);
+            label.appendLabelComment(writer);
             hasHandler = append;
             previous = label;
         }
