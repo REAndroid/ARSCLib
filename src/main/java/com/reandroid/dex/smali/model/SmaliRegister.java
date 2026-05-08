@@ -133,11 +133,6 @@ public class SmaliRegister extends Smali{
                         + " Wide high register " + this.toString() + "(r" + r + ", r" + rHigh
                         + ") is out of bounds (check .local/.registers definition)");
             }
-            if (!is_parameter && rHigh >= localRegistersCount) {
-                throw new IOException(reader.getOrigin(position)
-                        + " Wide register " + this.toString() + "(r" + r + ", r" + rHigh
-                        + ") low part is v but high part is p  (check .local/.registers definition)");
-            }
         }
     }
 
