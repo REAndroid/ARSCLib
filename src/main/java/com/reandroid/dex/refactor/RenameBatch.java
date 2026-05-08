@@ -24,7 +24,9 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,6 +76,12 @@ public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?>
     }
     public Iterator<Rename<?>> iterator(SmaliDirective directive) {
         return FilterIterator.of(iterator(), rename -> rename.getSmaliDirective() == directive);
+    }
+    public<T extends Rename<?>> Iterator<T> iterator(Class<T> instance) {
+        return InstanceIterator.of(iterator(), instance);
+    }
+    public<T extends Rename<?>> T getFirst(Class<T> instance) {
+        return CollectionUtil.getFirst(iterator(instance));
     }
     public void removeIf(Predicate<Rename<?>> predicate) {
         renameList.removeIf(predicate);

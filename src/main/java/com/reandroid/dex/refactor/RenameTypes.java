@@ -179,9 +179,9 @@ public class RenameTypes extends Rename<TypeKey> {
             return 0;
         }
         renameStringIds(classRepository);
-        renameAnnotationSignatures(classRepository);
+        int size = renameAnnotationSignatures(classRepository);
         applyReferences(classRepository.getExternalReferences());
-        int size = renamedStrings.size();
+        size += renamedStrings.size();
         if (size != 0) {
             classRepository.clearPoolMap();
         }
@@ -230,7 +230,8 @@ public class RenameTypes extends Rename<TypeKey> {
             }
         }
     }
-    private void renameAnnotationSignatures(DexClassRepository classRepository) {
+    private int renameAnnotationSignatures(DexClassRepository classRepository) {
+        int count = 0;
         Iterator<DalvikSignature> iterator = ComputeIterator.of(
                 classRepository.getItems(SectionType.ANNOTATION_ITEM),
                 annotationItem -> DalvikSignature.of(annotationItem.asAnnotated()));
@@ -244,8 +245,10 @@ public class RenameTypes extends Rename<TypeKey> {
             DalvikSignatureKey update = replaceInKey(signatureKey);
             if (signatureKey != update) {
                 dalvikSignature.setSignature(update);
+                count ++;
             }
         }
+        return count;
     }
 
     public boolean scanReferences(Iterator<? extends KeyReference> iterator) {

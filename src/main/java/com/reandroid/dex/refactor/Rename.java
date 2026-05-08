@@ -198,13 +198,47 @@ public abstract class Rename<T extends Key>
         return false;
     }
     public boolean contains(Key key) {
-        return get(key) != null || getFlipped(key) != null;
+        return find(key) != null;
     }
     public KeyPair<T, T> get(Key search) {
         return keyPairMap.get(new KeyPair<>(search, null));
     }
     public KeyPair<T, T> getFlipped(Key replace) {
         return flippedKeyMap.get(new KeyPair<>(replace, null));
+    }
+    public KeyPair<T, T> find(Key key) {
+        KeyPair<T, T> result = get(key);
+        if (result == null) {
+            result = getFlipped(key);
+        }
+        return result;
+    }
+    public KeyPair<T, T> removeKey(Key key) {
+        return remove(find(key));
+    }
+    public KeyPair<T, T> remove(KeyPair<T, T> keyPair) {
+        if (keyPair == null) {
+            return null;
+        }
+        KeyPair<T, T> flipped = keyPair.flip();
+        KeyPair<T, T> result = keyPairMap.remove(keyPair);
+        KeyPair<T, T> p = keyPairMap.remove(flipped);
+        if (result == null) {
+            result = p;
+        }
+        p = flippedKeyMap.remove(flipped);
+        if (result == null) {
+            result = p;
+        }
+        p = flippedKeyMap.remove(keyPair);
+        if (result == null) {
+            result = p;
+        }
+        lockedKeys.remove(keyPair);
+        lockedKeys.remove(flipped);
+        lockedFlippedKeys.remove(keyPair);
+        lockedFlippedKeys.remove(flipped);
+        return result;
     }
     public T getReplace(Key search) {
         KeyPair<T, T> keyPair = get(search);
