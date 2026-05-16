@@ -54,7 +54,7 @@ public class EntryItemOffsetList extends OffsetReferenceList<OffsetItem> {
     public int findSortPoint(int idx) {
         int size = size();
         for (int i = 0; i < size; i++) {
-            if (idx > get(i).getIdx()) {
+            if (get(i).getIdx() > idx) {
                 return i;
             }
         }
