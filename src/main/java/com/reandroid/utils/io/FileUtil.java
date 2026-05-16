@@ -80,143 +80,184 @@ public class FileUtil {
     public static File toTmpName(File file) {
         File dir = file.getParentFile();
         String name = file.getName() + ".tmp";
-        if(dir == null){
+        if (dir == null) {
             return new File(name);
         }
         return new File(dir, name);
     }
-    @Deprecated
-    public static void writeUtf8(File file, String content) throws IOException {
-        IOUtil.writeUtf8(content, file);
+    public static File toUniqueTmpName(File file) {
+        File dir = file.getParentFile();
+        String name = file.getName();
+        int max = Integer.MAX_VALUE;
+        String suffix = ".tmp";
+        String tmpName = name + suffix;
+        for (int i = 0; i < max; i++) {
+            File result;
+            if (dir == null) {
+                result = new File(tmpName);
+            } else {
+                result = new File(dir, tmpName);
+            }
+            if (!result.exists()) {
+                return result;
+            }
+            tmpName = name + suffix + i;
+        }
+        throw new IllegalStateException("Failed to create tmp file tried = "
+                + max + ": " + file);
     }
-    public static String combineFilePath(String parent, String name){
+    public static String combineFilePath(String parent, String name) {
         return combinePath(File.separatorChar, parent, name);
     }
-    public static String combineUnixPath(String parent, String name){
+    public static String combineUnixPath(String parent, String name) {
         return combinePath('/', parent, name);
     }
-    public static String combinePath(char separator, String parent, String name){
-        if(StringsUtil.isEmpty(parent)){
+    public static String combinePath(char separator, String parent, String name) {
+        if (StringsUtil.isEmpty(parent)) {
             return name;
         }
-        if(StringsUtil.isEmpty(name)){
+        if (StringsUtil.isEmpty(name)) {
             return parent;
         }
         StringBuilder builder = new StringBuilder(parent.length() + name.length() + 1);
         builder.append(parent);
-        if(parent.charAt(parent.length() - 1) != separator){
+        if (parent.charAt(parent.length() - 1) != separator) {
             builder.append(separator);
         }
         builder.append(name);
         return builder.toString();
     }
-    public static String shortPath(File file, int depth){
+    public static String shortPath(File file, int depth) {
         File tmp = file;
-        while (depth > 0){
+        while (depth > 0) {
             File dir = tmp.getParentFile();
-            if(dir == null){
+            if (dir == null) {
                 break;
             }
             tmp = dir;
             depth --;
         }
-        if(file == tmp){
+        if (file == tmp) {
             return file.getName();
         }
         int i = tmp.getAbsolutePath().length() + 1;
         return file.getAbsolutePath().substring(i);
     }
-    public static String getParent(String path){
-        if(StringsUtil.isEmpty(path)){
+    public static String getParent(String path) {
+        if (StringsUtil.isEmpty(path)) {
             return StringsUtil.EMPTY;
         }
         int i = path.lastIndexOf('/');
-        if(i < 0){
+        if (i < 0) {
             i = path.lastIndexOf('\\');
         }
-        if(i <= 0){
+        if (i <= 0) {
             return StringsUtil.EMPTY;
         }
         return path.substring(0, i + 1);
     }
-    public static String getFileName(String path){
-        if(path == null){
+    public static String getFileName(String path) {
+        if (path == null) {
             return null;
         }
         int i = path.lastIndexOf('/');
-        if(i < 0){
+        if (i < 0) {
             i = path.lastIndexOf('\\');
         }
-        if(i >= 0){
+        if (i >= 0) {
             return path.substring(i + 1);
         }
         return path;
     }
-    public static String getNameWoExtension(File file){
+    public static String getNameWoExtension(File file) {
         return getNameWoExtensionForSimpleName(file.getName());
     }
-    public static String getNameWoExtension(String name){
+    public static String getNameWoExtension(String name) {
         return getNameWoExtensionForSimpleName(getFileName(name));
     }
-    private static String getNameWoExtensionForSimpleName(String simpleName){
+    private static String getNameWoExtensionForSimpleName(String simpleName) {
         String ninePng = ".9.png";
-        if(simpleName.endsWith(ninePng)) {
+        if (simpleName.endsWith(ninePng)) {
             return simpleName.substring(0, simpleName.length() - ninePng.length());
         }
         int i = simpleName.lastIndexOf('.');
-        if(i < 0){
+        if (i < 0) {
             return simpleName;
         }
         return simpleName.substring(0, i);
     }
 
-    public static String getExtension(File file){
+    public static String getExtension(File file) {
         return getExtensionForSimpleName(file.getName());
     }
-    public static String getExtension(String name){
+    public static String getExtension(String name) {
         return getExtensionForSimpleName(getFileName(name));
     }
-    private static String getExtensionForSimpleName(String simpleName){
+    private static String getExtensionForSimpleName(String simpleName) {
         String ninePng = ".9.png";
-        if(simpleName.endsWith(ninePng)) {
+        if (simpleName.endsWith(ninePng)) {
             return ninePng;
         }
         int i = simpleName.lastIndexOf('.');
-        if(i < 0){
+        if (i < 0) {
             return StringsUtil.EMPTY;
         }
         return simpleName.substring(i);
     }
-    public static String toReadableFileSize(long size){
-        if(size < 0){
+    public static String toReadableFileSize(long size) {
+        if (size < 0) {
             return Long.toString(size);
         }
-        String[] sizeUnits = FILE_SIZE_UNITS;
+        String[] sizeUnits = getFileSizeUnits();
         String unit = "";
         long result = size;
         long dec = 0;
-        for(int i = 0; i < sizeUnits.length; i++){
-            long div;
-            if(i == 0){
-                div = 1024;
-            }else {
-                div = 1000;
-            }
+        long div = 1024;
+        int i;
+        int length = sizeUnits.length;
+        for (i = 0; i < length; i++) {
             unit = sizeUnits[i];
             size = size / div;
-            if(size == 0){
+            if (size == 0) {
                 break;
             }
             dec = (result - (size * div));
             result = size;
+            div = 1000;
         }
-        if(dec == 0){
-            return result + unit;
+        StringBuilder builder = new StringBuilder();
+        builder.append(result);
+        if (i != 0) {
+            builder.append('.');
+            if (dec < 10) {
+                builder.append("00");
+            } else if (dec < 100) {
+                builder.append("0");
+            }
+            builder.append(dec);
         }
-        return result + "." + dec + unit;
+        builder.append(unit);
+        return builder.toString();
     }
+
+    private static String[] getFileSizeUnits() {
+        String[] sizeUnits = FILE_SIZE_UNITS;
+        if (sizeUnits == null) {
+            sizeUnits = new String[]{
+                    " bytes",
+                    " Kb",
+                    " Mb",
+                    " Gb",
+                    " Tb",
+                    " Pb"
+            };
+            FILE_SIZE_UNITS = sizeUnits;
+        }
+        return sizeUnits;
+    }
+
     public static FileChannel openReadChannel(File file) throws IOException {
-        if(!file.isFile()){
+        if (!file.isFile()) {
             throw new FileNotFoundException("No such file: " + file);
         }
         return new FileInputStream(file).getChannel();
@@ -232,7 +273,7 @@ public class FileUtil {
         return new FileOutputStream(file).getChannel();
     }
     public static InputStream inputStream(File file) throws IOException{
-        if(!file.isFile()){
+        if (!file.isFile()) {
             throw new FileNotFoundException("No such file: " + file);
         }
         return new FileInputStream(file);
@@ -241,79 +282,79 @@ public class FileUtil {
         ensureParentDirectory(file);
         return new FileOutputStream(file);
     }
-    public static void ensureParentDirectory(File file){
+    public static void ensureParentDirectory(File file) {
         File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
+        if (dir != null && !dir.exists()) {
             dir.mkdirs();
         }
     }
     public static void createNewFile(File file) throws IOException {
         ensureParentDirectory(file);
-        if(file.isFile()){
+        if (file.isFile()) {
             file.delete();
         }
         file.createNewFile();
     }
-    public static void deleteDirectory(File dir){
-        if(dir.isFile()){
+    public static void deleteDirectory(File dir) {
+        if (dir.isFile()) {
             dir.delete();
             return;
         }
-        if(!dir.isDirectory()){
+        if (!dir.isDirectory()) {
             return;
         }
         File[] files = dir.listFiles();
-        if(files == null){
+        if (files == null) {
             dir.delete();
             return;
         }
-        for(File file : files){
+        for(File file : files) {
             deleteDirectory(file);
         }
         dir.delete();
     }
-    public static void deleteEmptyDirectory(File dir){
-        if(dir == null || !dir.isDirectory()){
+    public static void deleteEmptyDirectory(File dir) {
+        if (dir == null || !dir.isDirectory()) {
             return;
         }
         File[] files = dir.listFiles();
-        if(files == null || files.length == 0){
+        if (files == null || files.length == 0) {
             dir.delete();
             return;
         }
-        for(File file : files){
-            if(!file.isDirectory()){
+        for(File file : files) {
+            if (!file.isDirectory()) {
                 return;
             }
             deleteEmptyDirectory(file);
         }
         deleteIfEmptyDirectory(dir);
     }
-    private static void deleteIfEmptyDirectory(File dir){
-        if(dir == null || !dir.isDirectory()){
+    private static void deleteIfEmptyDirectory(File dir) {
+        if (dir == null || !dir.isDirectory()) {
             return;
         }
         File[] files = dir.listFiles();
-        if(files == null || files.length == 0){
+        if (files == null || files.length == 0) {
             dir.delete();
         }
     }
-    public static File getTempDir(){
+    public static File getTempDir() {
         return getTempDir(null);
     }
     public static File getTempDir(String rootName) {
-        synchronized (FileUtil.class){
-            if(rootName == null){
+        synchronized (FileUtil.class) {
+            if (rootName == null) {
                 rootName = getDefRootName();
             }
             File dir = TEMP_DIRS.get(rootName);
-            if(dir == null){
+            if (dir == null) {
                 dir = getWritableTempDir(rootName);
-                if(dir != null){
+                if (dir != null) {
                     dir.deleteOnExit();
                     TEMP_DIRS.put(rootName, dir);
                 }
-            }else if(!dir.exists()){
+            }else if (!dir.exists()) {
                 dir.mkdir();
                 dir.deleteOnExit();
             }
@@ -323,15 +364,15 @@ public class FileUtil {
     private static File getWritableTempDir(String rootName) {
         String path = System.getProperty("java.io.tmpdir", null);
         File dir = getWritableTempDir(path, rootName);
-        if(dir == null){
+        if (dir == null) {
             path = System.getProperty("user.home", null);
             dir = getWritableTempDir(path, rootName);
         }
-        if(dir == null){
+        if (dir == null) {
             File file = new File("tmp");
             file = new File(file.getAbsolutePath());
             dir = file.getParentFile();
-            if(dir == null){
+            if (dir == null) {
                 dir = file;
             }
             path = dir.getAbsolutePath();
@@ -340,14 +381,14 @@ public class FileUtil {
         return dir;
     }
     private static File getWritableTempDir(String path, String rootName) {
-        if(path == null){
+        if (path == null) {
             return null;
         }
         return getWritableTempDir(new File(path), rootName);
     }
     private static File getWritableTempDir(File baseDir, String rootName) {
         File dir = new File(baseDir, rootName);
-        if(!dir.isDirectory() && !dir.mkdirs()){
+        if (!dir.isDirectory() && !dir.mkdirs()) {
             return null;
         }
         String testName = "test_" + System.currentTimeMillis() + "-";
@@ -356,11 +397,11 @@ public class FileUtil {
         for (i = 0; i < max; i++) {
             String name = testName + i;
             File file = new File(dir, name);
-            if(file.exists()){
+            if (file.exists()) {
                 continue;
             }
             try {
-                if(!file.createNewFile() || !file.delete()){
+                if (!file.createNewFile() || !file.delete()) {
                     return null;
                 }
                 return dir;
@@ -372,11 +413,11 @@ public class FileUtil {
     }
 
     public static void setDefaultTempPrefix(String prefix) {
-        synchronized (FileUtil.class){
-            if(ObjectsUtil.equals(prefix, def_prefix)){
+        synchronized (FileUtil.class) {
+            if (ObjectsUtil.equals(prefix, def_prefix)) {
                 return;
             }
-            if(def_prefix != null){
+            if (def_prefix != null) {
                 TEMP_DIRS.remove(def_prefix);
             }
             def_prefix = prefix;
@@ -384,7 +425,7 @@ public class FileUtil {
     }
 
     private static String getDefRootName() {
-        if(def_prefix == null){
+        if (def_prefix == null) {
             def_prefix = "tmp_" + ARSCLib.getName() + "-" + ARSCLib.getVersion();
         }
         return def_prefix;
@@ -394,12 +435,5 @@ public class FileUtil {
 
     private static final Map<String, File> TEMP_DIRS = new HashMap<>();
 
-    private static final String[] FILE_SIZE_UNITS = new String[]{
-            " bytes",
-            " Kb",
-            " Mb",
-            " Gb",
-            " Tb",
-            " Pb"
-    };
+    private static String[] FILE_SIZE_UNITS;
 }

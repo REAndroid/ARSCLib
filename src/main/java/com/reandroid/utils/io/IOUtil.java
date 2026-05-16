@@ -31,11 +31,11 @@ public class IOUtil {
     }
     public static void writeUtf8(String content, File file) throws IOException {
         File tmp = file;
-        if(file.isFile()) {
+        if (file.isFile()) {
             tmp = FileUtil.toTmpName(file);
         }
         writeUtf8(content, FileUtil.outputStream(tmp));
-        if(!tmp.equals(file)) {
+        if (!tmp.equals(file)) {
             file.delete();
             tmp.renameTo(file);
         }
@@ -45,14 +45,33 @@ public class IOUtil {
         outputStream.write(bytes, 0, bytes.length);
         outputStream.close();
     }
+    public static void write(byte[] bytes, File file) throws IOException {
+        write(bytes, 0, bytes.length, file);
+    }
+    public static void write(byte[] bytes, int start, int length, File file) throws IOException {
+        File tmp = FileUtil.toUniqueTmpName(file);
+        OutputStream outputStream = null;
+        try {
+            file.delete();
+            outputStream = FileUtil.outputStream(tmp);
+            outputStream.write(bytes, start, length);
+            outputStream.close();
+            file.delete();
+            tmp.renameTo(file);
+        } catch (IOException e) {
+            closeQuietly(outputStream);
+            tmp.delete();
+            throw e;
+        }
+    }
     public static void writeAll(InputStream inputStream, File file) throws IOException {
         FileUtil.ensureParentDirectory(file);
         File tmp = file;
-        if(tmp.isFile()) {
+        if (tmp.isFile()) {
             tmp = FileUtil.toTmpName(tmp);
         }
         writeAll(inputStream, FileUtil.outputStream(tmp), true);
-        if(!tmp.equals(file)) {
+        if (!tmp.equals(file)) {
             file.delete();
             tmp.renameTo(file);
         }
@@ -67,15 +86,15 @@ public class IOUtil {
 
         byte[] buffer = new byte[bufferLength];
         int read;
-        while ((read = inputStream.read(buffer, 0, buffer.length)) >= 0){
+        while ((read = inputStream.read(buffer, 0, buffer.length)) >= 0) {
             outputStream.write(buffer, 0, read);
             bufferLength = buffer.length;
-            if(read == bufferLength && bufferLength < maxBuffer){
+            if (read == bufferLength && bufferLength < maxBuffer) {
                 bufferLength = bufferLength + bufferStep;
                 buffer = new byte[bufferLength];
             }
         }
-        if(close) {
+        if (close) {
             inputStream.close();
             outputStream.close();
         }
@@ -89,12 +108,20 @@ public class IOUtil {
         return outputStream.toByteArray();
     }
     @Deprecated
-    public static String shortPath(File file, int depth){
+    public static String shortPath(File file, int depth) {
         return FileUtil.shortPath(file, depth);
     }
     public static void close(Object obj) throws IOException {
-        if(obj instanceof Closeable){
+        if (obj instanceof Closeable) {
             ((Closeable)obj).close();
+        }
+    }
+    public static void closeQuietly(Object obj) {
+        if (obj instanceof Closeable) {
+            try {
+                ((Closeable)obj).close();
+            } catch (Throwable ignored) {
+            }
         }
     }
 }
