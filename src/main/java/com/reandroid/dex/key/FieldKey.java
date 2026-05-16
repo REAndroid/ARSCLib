@@ -20,6 +20,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -113,9 +114,12 @@ public class FieldKey extends NamedTypeKey implements MemberKey {
         if (obj == null) {
             return -1;
         }
+        if (!(obj instanceof FieldKey)) {
+            return StringsUtil.compareToString(this, obj);
+        }
         FieldKey key = (FieldKey) obj;
         int i = CompareUtil.compare(getDeclaring(), key.getDeclaring());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getNameKey(), key.getNameKey());
@@ -126,7 +130,7 @@ public class FieldKey extends NamedTypeKey implements MemberKey {
     }
 
     public boolean equalsDeclaring(TypeKey declaring) {
-        if(declaring == null){
+        if (declaring == null) {
             return false;
         }
         return getDeclaring().equals(declaring);
@@ -141,7 +145,7 @@ public class FieldKey extends NamedTypeKey implements MemberKey {
         return getDeclaring().equals(other.getDeclaring());
     }
     public boolean equalsIgnoreDeclaring(FieldKey other) {
-        if( other == null) {
+        if (other == null) {
             return false;
         }
         if (other == this) {
@@ -150,8 +154,8 @@ public class FieldKey extends NamedTypeKey implements MemberKey {
         return getName().equals(other.getName()) &&
                 getType().equals(other.getType());
     }
-    public boolean equalsIgnoreName(FieldKey other){
-        if( other == null) {
+    public boolean equalsIgnoreName(FieldKey other) {
+        if (other == null) {
             return false;
         }
         if (other == this) {
