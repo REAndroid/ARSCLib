@@ -198,7 +198,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         onChanged();
     }
     public boolean sort(Comparator<? super T> comparator) {
-        if (size() < 2) {
+        if (!needsSort(comparator)) {
             return false;
         }
         boolean sorted = mItems.sortItems(comparator);
