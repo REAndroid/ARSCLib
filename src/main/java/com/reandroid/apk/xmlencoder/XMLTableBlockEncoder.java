@@ -187,7 +187,6 @@ public class XMLTableBlockEncoder {
             filePathEncoder.encodePackageResDir(packageBlock, resDir);
 
             packageBlock.sortTypes();
-            packageBlock.refresh();
         }
     }
     private void encodeAttrs(List<File> pubXmlFileList) throws IOException, XmlPullParserException {

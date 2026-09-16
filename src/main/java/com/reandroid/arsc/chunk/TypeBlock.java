@@ -186,10 +186,6 @@ public class TypeBlock extends Chunk<TypeHeader>
         return getParent(SpecTypePair.class);
     }
     public Entry getOrCreateDefinedEntry(String name) {
-        Entry entry = getEntry(name);
-        if (entry != null) {
-            return entry;
-        }
         PackageBlock packageBlock = getPackageBlock();
         if (packageBlock == null) {
             return null;
@@ -197,6 +193,21 @@ public class TypeBlock extends Chunk<TypeHeader>
         int id = packageBlock.resolveResourceId(getId(), name);
         if (id == 0) {
             return null;
+        }
+        Entry entry = getEntry(id & 0xffff);
+        if (entry != null) {
+            String entryName = entry.getName();
+            if (name.equals(entryName)) {
+                return entry;
+            }
+            if (entryName != null && !entry.isNull()) {
+                // The defined id holds a different name; fall back to
+                // scanning this type block by name.
+                Entry existing = getEntry(name);
+                if (existing != null) {
+                    return existing;
+                }
+            }
         }
         SpecStringPool stringPool = packageBlock.getSpecStringPool();
         SpecString specString = stringPool.getOrCreate(name);

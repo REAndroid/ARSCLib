@@ -198,19 +198,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         onChanged();
     }
     public boolean sort(Comparator<? super T> comparator) {
-        if (size() < 2) {
+        if (!needsSort(comparator)) {
             return false;
         }
-        boolean sorted = mItems.sort(comparator, (i, j) -> {
-            T item1 = get(i);
-            T item2 = get(j);
-            if (item1 != null) {
-                item1.setIndex(i);
-            }
-            if (item2 != null) {
-                item2.setIndex(j);
-            }
-        });
+        boolean sorted = mItems.sortItems(comparator);
         if (sorted) {
             updateIndex();
         }
