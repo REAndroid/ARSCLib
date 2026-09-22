@@ -22,13 +22,14 @@ import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.program.Instruction;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliInstruction extends SmaliCode{
+public class SmaliInstruction extends SmaliCode implements Instruction {
 
     private Opcode<?> opcode;
     private SmaliRegisterSet registerSet;
@@ -86,6 +87,7 @@ public class SmaliInstruction extends SmaliCode{
         }
         return 0;
     }
+    @Override
     public int getAddress() {
         return address;
     }
@@ -93,9 +95,23 @@ public class SmaliInstruction extends SmaliCode{
         this.address = address;
     }
 
+    @Override
+    public Opcode<?> getOpcode() {
+        return opcode;
+    }
+    @Override
     public int getCodeUnits() {
         return getOpcode().size() / 2;
     }
+    @Override
+    public void addReferencingLabel(Object label) {
+        // TODO
+    }
+    @Override
+    public boolean isRemoved() {
+        return false;
+    }
+
     public Register getRegister() {
         return getRegister(0);
     }
@@ -149,10 +165,6 @@ public class SmaliInstruction extends SmaliCode{
         }
         SmaliInstructionOperand.SmaliLabelOperand smaliLabelOperand = (SmaliInstructionOperand.SmaliLabelOperand) operand;
         return label.equals(smaliLabelOperand.getLabel());
-    }
-
-    public Opcode<?> getOpcode() {
-        return opcode;
     }
     public SmaliMethod getParentMethod() {
         return getParentInstance(SmaliMethod.class);

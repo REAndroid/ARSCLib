@@ -238,10 +238,10 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
     }
     public void fromSmali(SmaliCodeExceptionHandler smaliCodeExceptionHandler) {
-        getHandlerLabel().setTargetAddress(smaliCodeExceptionHandler.getAddress());
-        getStartLabel().setTargetAddress(smaliCodeExceptionHandler.getStart().getAddress());
-        getEndLabel().setTargetAddress(smaliCodeExceptionHandler.getEnd().getAddress());
-        getCatchLabel().setTargetAddress(smaliCodeExceptionHandler.getCatchLabel().getAddress());
+        getHandlerLabel().setTargetAddress(smaliCodeExceptionHandler.getTargetAddress());
+        getStartLabel().setTargetAddress(smaliCodeExceptionHandler.getStart().getTargetAddress());
+        getEndLabel().setTargetAddress(smaliCodeExceptionHandler.getEnd().getTargetAddress());
+        getCatchLabel().setTargetAddress(smaliCodeExceptionHandler.getCatchLabel().getTargetAddress());
     }
 
     @Override

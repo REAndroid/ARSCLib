@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -42,12 +43,22 @@ public class SmaliCodeCatch extends SmaliCodeExceptionHandler{
     }
 
     @Override
+    public InstructionLabelType getLabelType() {
+        return InstructionLabelType.CATCH_HANDLER;
+    }
+
+    @Override
     public void appendType(SmaliWriter writer) throws IOException {
-        getType().append(writer);
+        TypeKey typeKey = getType();
+        if (typeKey != null) {
+            typeKey.append(writer);
+        } else {
+            writer.append("#Error: null type");
+        }
         writer.append(' ');
     }
     @Override
-    void parseType(SmaliReader reader) throws IOException {
+    protected void parseType(SmaliReader reader) throws IOException {
         setType(TypeKey.read(reader));
     }
 }

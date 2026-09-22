@@ -30,6 +30,7 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
 import com.reandroid.utils.collection.FilterIterator;
@@ -460,6 +461,15 @@ public class TryBlock extends FixedDexContainerWithTool implements
         };
     }
 
+    public void sortTryItems() {
+        BlockList<TryItem> tryItemArray = this.tryItemArray;
+        HandlerOffsetArray handlerOffsetArray = this.handlerOffsetArray;
+        if (tryItemArray == null || handlerOffsetArray == null
+                || handlerOffsetArray.size() < 2) {
+            return;
+        }
+        tryItemArray.sort(CompareUtil.getComparableComparator(), handlerOffsetArray);
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

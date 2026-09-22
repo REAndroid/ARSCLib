@@ -31,14 +31,20 @@ import com.reandroid.dex.smali.model.SmaliCodeCatch;
 import com.reandroid.dex.smali.model.SmaliCodeCatchAll;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.dex.smali.model.SmaliSet;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.ExpandIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 
-public class TryItem extends FixedDexContainerWithTool implements
+public class TryItem extends FixedDexContainerWithTool implements Comparable<TryItem>,
         Iterable<InstructionLabel>, IdUsageIterator {
 
     private final HandlerOffsetArray handlerOffsetArray;
@@ -481,6 +487,27 @@ public class TryItem extends FixedDexContainerWithTool implements
     public Iterator<IdItem> usedIds() {
         return ComputeIterator.of(getCatchTypedHandlers(),
                 CatchTypedHandler::getTypeId);
+    }
+
+    @Override
+    public int compareTo(TryItem tryItem) {
+        if (tryItem == this) {
+            return 0;
+        }
+        int i = CompareUtil.compare(getStartAddress(), tryItem.getStartAddress());
+        if (i != 0) {
+            return i;
+        }
+        boolean compact = this.isCompact();
+        boolean compactOther = tryItem.isCompact();
+        i = CompareUtil.compare(compact, compactOther);
+        if (i != 0) {
+            return i;
+        }
+        if (compact) {
+            return this.getTryItem().compareTo(tryItem.getTryItem());
+        }
+        return 0;
     }
 
     @Override

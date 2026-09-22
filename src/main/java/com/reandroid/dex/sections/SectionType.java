@@ -833,6 +833,20 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
                 HIDDEN_API
         );
     }
+    public static Predicate<SectionType<?>> classNames() {
+        return type -> {
+            if (type == null) {
+                return false;
+            }
+            if (type.isSpecialSection()) {
+                return true;
+            }
+            return type == CLASS_ID
+                    || type == STRING_ID
+                    || type == STRING_DATA
+                    || type == TYPE_ID;
+        };
+    }
     public static Predicate<SectionType<?>> except(SectionType<?> ... types) {
         if (types == null || types.length == 0) {
             return CollectionUtil.getAcceptAll();

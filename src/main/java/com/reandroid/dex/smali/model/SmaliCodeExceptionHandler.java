@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
@@ -25,20 +26,20 @@ public abstract class SmaliCodeExceptionHandler extends SmaliCode implements Sma
     private final SmaliLabel end;
     private final SmaliLabel catchLabel;
 
-    public SmaliCodeExceptionHandler(){
+    public SmaliCodeExceptionHandler() {
         super();
-        this.start = new SmaliLabel();
-        this.end = new SmaliLabel();
-        this.catchLabel = new SmaliLabel();
+        this.start = new SmaliHandlerBoundLabel(InstructionLabelType.TRY_START);
+        this.end = new SmaliHandlerBoundLabel(InstructionLabelType.TRY_END);
+        this.catchLabel = new SmaliHandlerCatchLabel(this);
 
         this.start.setParent(this);
         this.end.setParent(this);
         this.catchLabel.setParent(this);
     }
 
-    public int getAddress(){
+    public int getTargetAddress() {
         SmaliCodeTryItem tryItem = getTryItem();
-        if(tryItem == null){
+        if (tryItem == null) {
             return -1;
         }
         return tryItem.getAddress();
@@ -53,7 +54,18 @@ public abstract class SmaliCodeExceptionHandler extends SmaliCode implements Sma
         return catchLabel;
     }
 
-    SmaliCodeTryItem getTryItem(){
+    public abstract InstructionLabelType getLabelType();
+
+    public void setLabelNames(String start, String end, String catchLabel) {
+        getStart().setLabelName(start);
+        getEnd().setLabelName(end);
+        getCatchLabel().setLabelName(catchLabel);
+    }
+    public void setLabelNames(SmaliLabel start, SmaliLabel end, SmaliLabel catchLabel) {
+        setLabelNames(start.getLabelName(), end.getLabelName(), catchLabel.getLabelName());
+    }
+
+    SmaliCodeTryItem getTryItem() {
         return getParentInstance(SmaliCodeTryItem.class);
     }
     @Override
@@ -68,26 +80,94 @@ public abstract class SmaliCodeExceptionHandler extends SmaliCode implements Sma
         writer.append(' ');
         getCatchLabel().append(writer);
     }
-    public void appendType(SmaliWriter writer) throws IOException {
+    protected void appendType(SmaliWriter writer) throws IOException {
 
     }
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        reader.skipSpaces();
+        reader.skipWhitespaces();
         SmaliParseException.expect(reader, getSmaliDirective());
         parseType(reader);
-        reader.skipSpaces();
+        reader.skipWhitespaces();
         SmaliParseException.expect(reader, '{');
+        reader.skipWhitespaces();
         getStart().parse(reader);
-        reader.skipSpaces();
+        reader.skipWhitespaces();
         SmaliParseException.expect(reader, '.');
         SmaliParseException.expect(reader, '.');
         getEnd().parse(reader);
-        reader.skipSpaces();
+        reader.skipWhitespaces();
         SmaliParseException.expect(reader, '}');
         getCatchLabel().parse(reader);
     }
-    void parseType(SmaliReader reader) throws IOException {
+    protected void parseType(SmaliReader reader) throws IOException {
+    }
+
+    static class SmaliHandlerBoundLabel extends SmaliLabel {
+
+        private final InstructionLabelType labelType;
+
+        public SmaliHandlerBoundLabel(InstructionLabelType labelType) {
+            super();
+            this.labelType = labelType;
+        }
+
+        @Override
+        public InstructionLabelType getLabelType() {
+            return labelType;
+        }
+        @Override
+        public SmaliLabel getDestinationLabel() {
+            SmaliLabel label = super.getDestinationLabel();
+            if (label != null) {
+                label.setLabelType(labelType);
+            }
+            return label;
+        }
+
+        @Override
+        public boolean isSourceLabel() {
+            return true;
+        }
+        @Override
+        public boolean isDestinationLabel() {
+            return false;
+        }
+    }
+
+    static class SmaliHandlerCatchLabel extends SmaliLabel {
+
+        private final SmaliCodeExceptionHandler handler;
+
+        public SmaliHandlerCatchLabel(SmaliCodeExceptionHandler handler) {
+            super();
+            this.handler = handler;
+        }
+
+        @Override
+        public InstructionLabelType getLabelType() {
+            if (handler instanceof SmaliCodeCatch) {
+                return InstructionLabelType.CATCH;
+            }
+            return InstructionLabelType.CATCH_ALL;
+        }
+        @Override
+        public SmaliLabel getDestinationLabel() {
+            SmaliLabel label = super.getDestinationLabel();
+            if (label != null) {
+                label.setLabelType(getLabelType());
+            }
+            return label;
+        }
+
+        @Override
+        public boolean isSourceLabel() {
+            return true;
+        }
+        @Override
+        public boolean isDestinationLabel() {
+            return false;
+        }
     }
 }

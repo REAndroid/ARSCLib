@@ -34,6 +34,7 @@ import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.fix.SmaliGotoFix;
+import com.reandroid.dex.smali.fix.SmaliOverlappingTryFix;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
@@ -219,7 +220,7 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
     }
     private void runFixes(SmaliReader reader) {
         if (reader.isFixGoto()) {
-            new SmaliGotoFix(this).apply();
+            SmaliGotoFix.INSTANCE.apply(this);
         }
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {

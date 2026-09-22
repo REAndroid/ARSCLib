@@ -19,16 +19,17 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.InstanceIterator;
+import com.reandroid.utils.collection.Swappable;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class SmaliSet<T extends Smali> extends Smali{
+public class SmaliSet<T extends Smali> extends Smali implements Swappable {
 
     private final ArrayCollection<T> body;
 
-    public SmaliSet(){
+    public SmaliSet() {
         super();
         this.body = new ArrayCollection<>();
         this.body.setMonitor(new SmaliSetMonitor<>(this));
@@ -58,55 +59,119 @@ public class SmaliSet<T extends Smali> extends Smali{
     public<T2> Iterator<T2> reversedIterator(int start, Class<T2> instance) {
         return InstanceIterator.of(body.reversedIterator(start), instance);
     }
-    public int size(){
+    public int size() {
         return body.size();
     }
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return size() == 0;
     }
 
     public int indexOf(T smali) {
+        if (smali == null) {
+            return -1;
+        }
+        int index = smali.getIndex();
+        if (smali.equals(get(index))) {
+            return index;
+        }
         return body.indexOf(smali);
     }
     public int indexOfIdentity(T smali) {
+        if (smali == null) {
+            return -1;
+        }
+        int index = smali.getIndex();
+        if (smali == get(index)) {
+            return index;
+        }
         return body.indexOfExact(smali);
     }
     public T get(int i) {
+        if (i < 0 || i >= size()) {
+            return null;
+        }
         return body.get(i);
     }
-    public boolean add(T smali){
-        if (smali != null && smali.getParent() == null) {
-            smali.setParent(this);
+    public T getFirst() {
+        return get(0);
+    }
+    public T getLast() {
+        return get(size() - 1);
+    }
+    public boolean add(T smali) {
+        if (smali == null) {
+            return false;
+        }
+        Smali parent = smali.getParent();
+        if (parent == null) {
+            parent = this;
+            smali.setParent(parent);
+        }
+        if (parent == this) {
+            smali.setIndex(size());
         }
         return body.add(smali);
     }
-    public void add(int i, T smali){
-        if (smali != null && smali.getParent() == null) {
-            smali.setParent(this);
+    public void add(int i, T smali) {
+        if (smali == null) {
+            return;
+        }
+        Smali parent = smali.getParent();
+        if (parent == null) {
+            parent = this;
+            smali.setParent(parent);
         }
         body.add(i, smali);
+        if (parent == this) {
+            smali.setIndex(i);
+            updateIndexes(i + 1);
+        }
     }
-    public void addAll(Iterator<? extends T> iterator){
+    public void addAll(Iterator<? extends T> iterator) {
         while (iterator.hasNext()) {
             add(iterator.next());
         }
     }
-    public boolean contains(T smali){
+    public boolean contains(T smali) {
         return body.contains(smali);
     }
-    public boolean remove(T smali){
+    public boolean remove(T smali) {
         return body.remove(smali);
     }
     public T remove(int i) {
         return body.remove(i);
     }
-    public boolean removeIf(Predicate<? super T> filter){
+    public void moveTo(T smali, int to) {
+        moveTo(indexOfIdentity(smali), to);
+    }
+    public void moveTo(int from, int to) {
+        body.move(from, to);
+        updateIndexes(from);
+    }
+    
+    @Override
+    public boolean swap(int from, int to) {
+        ArrayCollection<T> body = this.body;
+        if (body.swap(from, to)) {
+            T item = body.get(from);
+            if (item != null) {
+                item.setIndex(to);
+            }
+            item = body.get(to);
+            if (item != null) {
+                item.setIndex(from);
+            }
+            return true;
+        }
+        return false;
+    }
+    public boolean removeIf(Predicate<? super T> filter) {
         return body.removeIf(filter);
     }
-    public boolean removeInstances(Class<?> instance){
+    public boolean removeInstances(Class<?> instance) {
         return body.removeIf(instance::isInstance);
     }
-    public void clear(){
+    public void clear() {
         for (T smali : body) {
             smali.setParent(null);
         }
@@ -120,6 +185,19 @@ public class SmaliSet<T extends Smali> extends Smali{
     void onAdded(T item) {
         if(item != null) {
             item.setParent(this);
+        }
+    }
+
+    public void updateIndexes() {
+        updateIndexes(0);
+    }
+    protected void updateIndexes(int start) {
+        int size = size();
+        if (start < 0) {
+            start = 0;
+        }
+        for (int i = start; i < size; i++) {
+            get(i).setIndex(i);
         }
     }
     @Override
@@ -152,7 +230,7 @@ public class SmaliSet<T extends Smali> extends Smali{
 
         private final SmaliSet<T> smaliSet;
 
-        SmaliSetMonitor(SmaliSet<T> smaliSet){
+        SmaliSetMonitor(SmaliSet<T> smaliSet) {
             this.smaliSet = smaliSet;
         }
         @Override

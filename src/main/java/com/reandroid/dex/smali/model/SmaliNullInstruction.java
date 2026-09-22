@@ -46,6 +46,15 @@ public class SmaliNullInstruction extends SmaliInstruction {
     }
 
     @Override
+    public int getIndex() {
+        SmaliCodeSet codeSet = getCodeSet();
+        if (codeSet != null) {
+            return codeSet.size();
+        }
+        return -1;
+    }
+
+    @Override
     public void parse(SmaliReader reader) throws IOException {
     }
     @Override

@@ -16,21 +16,26 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Set;
 
 public class SmaliCodeSet extends SmaliSet<SmaliCode> {
 
     private int addressOffset;
     private SmaliNullInstruction nullInstruction;
 
-    public SmaliCodeSet(){
+    public SmaliCodeSet() {
         super();
     }
 
@@ -43,19 +48,23 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
 
     public void updateAddresses() {
         int address = getAddressOffset();
-        Iterator<SmaliInstruction> iterator = getInstructions();
-        while (iterator.hasNext()) {
-            SmaliInstruction ins = iterator.next();
-            ins.setAddress(address);
-            address += ins.getCodeUnits();
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            SmaliCode code = getSuper(i);
+            code.setIndex(i);
+            if (code instanceof SmaliInstruction) {
+                SmaliInstruction ins = (SmaliInstruction) code;
+                ins.setAddress(address);
+                address += ins.getCodeUnits();
+            }
         }
         SmaliInstruction instruction = getNullInstruction();
-        if(instruction != null) {
+        if (instruction != null) {
             instruction.setAddress(address);
         }
     }
     public Iterator<SmaliInstruction> getInstructions(SmaliLabel label) {
-        if(label != null) {
+        if (label != null) {
             return FilterIterator.of(getInstructions(),
                     smaliInstruction -> smaliInstruction.hasLabelOperand(label));
         }
@@ -85,14 +94,14 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
 
     public SmaliInstruction getNullInstruction() {
         SmaliNullInstruction nullInstruction = this.nullInstruction;
-        if(needsNullInstruction()) {
-            if(nullInstruction == null) {
+        if (needsNullInstruction()) {
+            if (nullInstruction == null) {
                 nullInstruction = new SmaliNullInstruction();
                 nullInstruction.setParent(this);
                 this.nullInstruction = nullInstruction;
             }
         } else {
-            if(nullInstruction != null) {
+            if (nullInstruction != null) {
                 nullInstruction.setParent(null);
                 nullInstruction = null;
                 this.nullInstruction = null;
@@ -101,10 +110,11 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
         return nullInstruction;
     }
     private boolean needsNullInstruction() {
-        if(isEmpty()) {
-            return false;
+        int size = size();
+        if (size != 0) {
+            return !(getSuper(size - 1) instanceof SmaliInstruction);
         }
-        return !(get(size() - 1) instanceof SmaliInstruction);
+        return false;
     }
 
     public SmaliInstruction newInstruction(Opcode<?> opcode) {
@@ -112,9 +122,61 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
         add(instruction);
         return instruction;
     }
+    public SmaliInstruction getNextInstruction(int index) {
+        if (index < 0) {
+            return null;
+        }
+        int size = size();
+        for (int i = index; i < size; i++) {
+            SmaliCode code = get(i);
+            if (code instanceof SmaliInstruction) {
+                return (SmaliInstruction) code;
+            }
+        }
+        if (index == size) {
+            return getNullInstruction();
+        }
+        return null;
+    }
+    public SmaliLabel newLabelAtIndex(int index, InstructionLabelType type) {
+        return newLabelAtIndex(index, type.prefix());
+    }
+    public SmaliLabel newLabelAtIndex(int index, String prefix) {
+        SmaliLabel label = new SmaliLabel();
+        label.setLabelName(generateUniqueLabelName(prefix));
+        add(index, label);
+        return label;
+    }
+    public String generateUniqueLabelName(String prefix) {
+        if (prefix.charAt(0) != ':') {
+            prefix = ":" + prefix;
+        }
+        Set<String> uniqueSet = CollectionUtil.toHashSet(
+                ComputeIterator.of(iterator(SmaliLabel.class), SmaliLabel::getLabelName));
+        int i = 0;
+        while (i < Integer.MAX_VALUE) {
+            String name = HexUtil.toHex(prefix, i, 1);
+            if (!uniqueSet.contains(name)) {
+                return name;
+            }
+            i ++;
+        }
+        throw new IllegalStateException("Can not generate unique name, tried: " + i);
+    }
+    @Override
+    public SmaliCode get(int i) {
+        if (i == size()) {
+            return this.getNullInstruction();
+        }
+        return getSuper(i);
+    }
+    private SmaliCode getSuper(int i) {
+        return super.get(i);
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        if(isEmpty()){
+        if (isEmpty()) {
             return;
         }
         writer.newLine();
@@ -129,63 +191,63 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
     @Override
     SmaliCode createNext(SmaliReader reader) {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
-        if(directive != null){
+        if (directive != null) {
             return createFor(directive);
         }
         reader.skipWhitespaces();
-        if(reader.get() == ':'){
+        if (reader.get() == ':') {
             return new SmaliLabel();
         }
         Opcode<?> opcode = Opcode.parseSmali(reader, false);
-        if(opcode != null){
+        if (opcode != null) {
             return new SmaliInstruction();
         }
         return null;
     }
-    private static SmaliCode createFor(SmaliDirective directive){
-        if(directive == SmaliDirective.LINE){
+    private static SmaliCode createFor(SmaliDirective directive) {
+        if (directive == SmaliDirective.LINE) {
             return new SmaliLineNumber();
         }
-        if(directive == SmaliDirective.CATCH || directive == SmaliDirective.CATCH_ALL){
+        if (directive == SmaliDirective.CATCH || directive == SmaliDirective.CATCH_ALL) {
             return new SmaliCodeTryItem();
         }
-        if(directive == SmaliDirective.PARAM){
+        if (directive == SmaliDirective.PARAM) {
             return new SmaliMethodParameter();
         }
-        if(directive == SmaliDirective.END_LOCAL){
+        if (directive == SmaliDirective.END_LOCAL) {
             return new SmaliDebugEndLocal();
         }
-        if(directive == SmaliDirective.LOCAL){
+        if (directive == SmaliDirective.LOCAL) {
             return new SmaliDebugLocal();
         }
-        if(directive == SmaliDirective.RESTART_LOCAL){
+        if (directive == SmaliDirective.RESTART_LOCAL) {
             return new SmaliDebugRestartLocal();
         }
-        if(directive == SmaliDirective.ARRAY_DATA){
+        if (directive == SmaliDirective.ARRAY_DATA) {
             return new SmaliPayloadArray();
         }
-        if(directive == SmaliDirective.PACKED_SWITCH){
+        if (directive == SmaliDirective.PACKED_SWITCH) {
             return new SmaliPayloadPackedSwitch();
         }
-        if(directive == SmaliDirective.SPARSE_SWITCH){
+        if (directive == SmaliDirective.SPARSE_SWITCH) {
             return new SmaliPayloadSparseSwitch();
         }
-        if(directive == SmaliDirective.PROLOGUE){
+        if (directive == SmaliDirective.PROLOGUE) {
             return new SmaliDebugPrologue();
         }
-        if(directive == SmaliDirective.EPILOGUE){
+        if (directive == SmaliDirective.EPILOGUE) {
             return new SmaliDebugEpilogue();
         }
         return null;
     }
 
-    public static SmaliInstruction createInstruction(Opcode<?> opcode){
+    public static SmaliInstruction createInstruction(Opcode<?> opcode) {
         SmaliInstruction instruction;
         if (opcode == Opcode.ARRAY_PAYLOAD) {
             instruction = new SmaliPayloadArray();
-        } else if(opcode == Opcode.PACKED_SWITCH_PAYLOAD) {
+        } else if (opcode == Opcode.PACKED_SWITCH_PAYLOAD) {
             instruction = new SmaliPayloadPackedSwitch();
-        } else if(opcode == Opcode.SPARSE_SWITCH_PAYLOAD) {
+        } else if (opcode == Opcode.SPARSE_SWITCH_PAYLOAD) {
             instruction = new SmaliPayloadSparseSwitch();
         } else {
             instruction = new SmaliInstruction(opcode);

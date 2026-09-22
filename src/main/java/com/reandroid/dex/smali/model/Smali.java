@@ -26,9 +26,26 @@ import java.io.IOException;
 public abstract class Smali implements SmaliFormat, SmaliParser {
 
     private Smali parent;
+    private int mIndex;
+
     private Origin origin;
 
-    public Smali(){
+    public Smali() {
+        this.mIndex = -1;
+    }
+
+    public int getIndex() {
+        Smali parent = getParent();
+        if (parent instanceof SmaliSet) {
+            SmaliSet<?> codeSet = (SmaliSet<?>) parent;
+            if (codeSet.get(mIndex) != this) {
+                codeSet.updateIndexes();
+            }
+        }
+        return mIndex;
+    }
+    public void setIndex(int index) {
+        this.mIndex = index;
     }
 
     public Origin getOrigin() {

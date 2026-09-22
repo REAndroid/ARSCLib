@@ -16,30 +16,32 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Objects;
 
-public class SmaliLabel extends SmaliCode {
+public class SmaliLabel extends SmaliCode implements InstructionLabel {
 
     private String labelName;
+    private InstructionLabelType labelType;
 
-    public SmaliLabel(){
+    public SmaliLabel() {
         super();
+        this.labelType = InstructionLabelType.DEBUG;
     }
 
+    @Override
     public String getLabelName() {
         return labelName;
     }
     public void setLabelName(String labelName) {
-        if (labelName.charAt(0) == ':') {
-            labelName = labelName.substring(1);
+        if (labelName.charAt(0) != ':') {
+            labelName = ":" + labelName;
         }
         setLabelNameInternal(labelName);
     }
@@ -47,61 +49,88 @@ public class SmaliLabel extends SmaliCode {
         this.labelName = labelName;
     }
 
+    public SmaliLabel getDestinationLabel() {
+        SmaliCodeSet codeSet = getCodeSet();
+        if (codeSet == null) {
+            return null;
+        }
+        if (codeSet == this.getParent()) {
+            return this;
+        }
+        int i = codeSet.indexOf(this);
+        if (i < 0) {
+            return null;
+        }
+        return (SmaliLabel) codeSet.get(i);
+    }
     public int getIntegerData() {
-        int address = getAddress();
+        int address = getTargetAddress();
         if (address == -1) {
             throw new DexException("Missing target label '" + getLabelName() + "'" + buildOrigin());
         }
         return address;
     }
-    public int getAddress() {
-        return searchAddress();
-    }
-    private int searchAddress() {
-        SmaliCodeSet codeSet = getCodeSet();
-        if(codeSet == null){
-            return -1;
-        }
-        if(codeSet != getParent()){
-            int i = codeSet.indexOf(this);
-            if(i < 0){
-                return -1;
-            }
-            SmaliLabel label = (SmaliLabel) codeSet.get(i);
-            return label.getAddress();
-        }
-        Iterator<SmaliInstruction> iterator = codeSet.iterator(codeSet.indexOf(this) + 1,
-                SmaliInstruction.class);
-        if(iterator.hasNext()) {
-            return iterator.next().getAddress();
-        }
-        SmaliInstruction nullInstruction = codeSet.getNullInstruction();
-        if(nullInstruction != null) {
-            return nullInstruction.getAddress();
+    public int getTargetAddress() {
+        SmaliInstruction instruction = getTargetInstruction();
+        if (instruction != null) {
+            return instruction.getAddress();
         }
         return -1;
     }
+    @Override
+    public void setTargetAddress(int address) {
+        // TODO
+        throw new RuntimeException("Method not implemented");
+    }
+    @Override
     public SmaliInstruction getTargetInstruction() {
         SmaliCodeSet codeSet = getCodeSet();
-        if(codeSet == null) {
+        if (codeSet != null) {
+            return codeSet.getNextInstruction(codeSet.indexOf(this));
+        }
+        return null;
+    }
+
+    @Override
+    public int getOwnerAddress() {
+        SmaliInstruction owner = getOwnerInstruction();
+        if (owner != null) {
+            return owner.getAddress();
+        }
+        return -1;
+    }
+    @Override
+    public SmaliInstruction getOwnerInstruction() {
+        Smali parent = getParent();
+        if (parent == null || (parent instanceof SmaliCodeSet)) {
             return null;
         }
-        int i = codeSet.indexOf(this);
-        if(i < 0) {
-            return null;
+        if (parent instanceof SmaliInstruction) {
+            return (SmaliInstruction) parent;
         }
-        SmaliInstruction instruction = CollectionUtil.getFirst(codeSet.iterator(i + 1,
-                SmaliInstruction.class));
-        if(instruction == null) {
-            instruction = codeSet.getNullInstruction();
-        }
-        return instruction;
+        return parent.getParentInstance(SmaliInstruction.class);
+    }
+
+    public boolean isDestinationLabel() {
+        Smali parent = getParent();
+        return getParent() instanceof SmaliCodeSet;
+    }
+    public boolean isSourceLabel() {
+        Smali parent = getParent();
+        return parent != null && !(parent instanceof SmaliCodeSet);
+    }
+    @Override
+    public InstructionLabelType getLabelType() {
+        // TODO: implement properly
+        return labelType;
+    }
+    public void setLabelType(InstructionLabelType labelType) {
+        this.labelType = labelType;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(':');
-        writer.append(getLabelName());
+        writer.appendLabelName(getLabelName());
     }
 
     @Override
@@ -109,12 +138,13 @@ public class SmaliLabel extends SmaliCode {
         reader.skipWhitespaces();
         setOrigin(reader.getCurrentOrigin());
         SmaliParseException.expect(reader, ':');
+        reader.skip(-1);
         int i1 = reader.indexOfWhiteSpaceOrComment();
         int i2 = reader.indexOfBeforeLineEnd('}');
         int i;
-        if(i2 >= 0 && i2 < i1){
+        if (i2 >= 0 && i2 < i1) {
             i = i2;
-        }else {
+        } else {
             i = i1;
         }
         int length = i - reader.position();
@@ -134,6 +164,6 @@ public class SmaliLabel extends SmaliCode {
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getLabelName());
+        return ObjectsUtil.hash(getLabelName());
     }
 }

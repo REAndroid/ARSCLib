@@ -53,7 +53,7 @@ public abstract class SmaliSwitchPayload<T extends SmaliSwitchEntry> extends Sma
                     return null;
                 }
                 SmaliLabel label = (SmaliLabel) smaliCode;
-                if(address == label.getAddress()) {
+                if(address == label.getTargetAddress()) {
                     Iterator<SmaliInstruction> instructions = codeSet.getInstructions(label);
                     while (instructions.hasNext()) {
                         SmaliInstruction instruction = instructions.next();
