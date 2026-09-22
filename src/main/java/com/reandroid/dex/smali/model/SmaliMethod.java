@@ -222,6 +222,8 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
         if (reader.isFixGoto()) {
             SmaliGotoFix.INSTANCE.apply(this);
         }
+        // TODO: implement reader.isFixOverlappingTryItem
+        SmaliOverlappingTryFix.INSTANCE.apply(this);
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
