@@ -133,7 +133,7 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
                 return (SmaliInstruction) code;
             }
         }
-        if (index == size) {
+        if (index <= size) {
             return getNullInstruction();
         }
         return null;
