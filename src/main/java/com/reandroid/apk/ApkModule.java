@@ -1154,9 +1154,7 @@ public class ApkModule implements ApkFile, Closeable {
             tableBlock = (TableBlock) ((BlockInputSource<?>) inputSource).getBlock();
         } else {
             setTableOriginalSource(inputSource);
-            InputStream inputStream = inputSource.openStream();
-            tableBlock = TableBlock.load(inputStream);
-            inputStream.close();
+            tableBlock = parseTableBlock(inputSource);
         }
         BlockInputSource<TableBlock> blockInputSource = new BlockInputSource<>(
                 inputSource.getName(), tableBlock);
@@ -1220,13 +1218,20 @@ public class ApkModule implements ApkFile, Closeable {
         merge(module, false);
     }
     public void merge(ApkModule module, boolean force) throws IOException {
+        merge(module, force, true);
+    }
+    /**
+     * @param refreshTable whether to refresh the merged table afterwards. {@link ApkBundle}
+     *                     merges every module first and refreshes the table once at the end.
+     */
+    void merge(ApkModule module, boolean force, boolean refreshTable) throws IOException {
         if (module == null || module == this) {
             return;
         }
         logMessage("Merging: " + module.getModuleName());
         validateMerge(module, force);
         mergeDexFiles(module);
-        mergeTable(module);
+        mergeTable(module, refreshTable);
         mergeFiles(module);
         getUncompressedFiles().merge(module.getUncompressedFiles());
         mergeFusedModules(module);
@@ -1291,20 +1296,50 @@ public class ApkModule implements ApkFile, Closeable {
         }
         logMessage(msg);
     }
-    private void mergeTable(ApkModule module) {
+    private void mergeTable(ApkModule module, boolean refresh) throws IOException {
         if (!module.hasTableBlock()) {
             return;
         }
+        TableBlock coming = module.getLoadedTableBlock();
+        if (coming == null) {
+            // Parsed for this merge only, so nothing else holds it: it can become the merged
+            // table as is, or be dropped once merged
+            coming = module.loadDetachedTableBlock();
+            if (coming != null && !hasTableBlock()) {
+                addInputSource(new BlockInputSource<>(TableBlock.FILE_NAME, coming));
+                return;
+            }
+            if (coming == null) {
+                coming = module.getTableBlock();
+            }
+        }
         TableBlock exist;
         if (!hasTableBlock()) {
-            exist=new TableBlock();
-            BlockInputSource<TableBlock> inputSource=new BlockInputSource<>(TableBlock.FILE_NAME, exist);
-            addInputSource(inputSource);
+            exist = new TableBlock();
+            addInputSource(new BlockInputSource<>(TableBlock.FILE_NAME, exist));
         } else {
-            exist=getTableBlock();
+            exist = getTableBlock();
         }
-        TableBlock coming=module.getTableBlock();
-        exist.merge(coming);
+        exist.merge(coming, refresh);
+    }
+    /**
+     * Parses resources.arsc without caching it on this module, or returns null when the
+     * table source is already a block rather than an archive entry.
+     */
+    private TableBlock loadDetachedTableBlock() throws IOException {
+        InputSource inputSource = getInputSource(TableBlock.FILE_NAME);
+        if (inputSource == null || inputSource instanceof BlockInputSource) {
+            return null;
+        }
+        return parseTableBlock(inputSource);
+    }
+    private static TableBlock parseTableBlock(InputSource inputSource) throws IOException {
+        InputStream inputStream = inputSource.openStream();
+        try {
+            return TableBlock.load(inputStream);
+        } finally {
+            inputStream.close();
+        }
     }
     private void mergeFiles(ApkModule module) {
         ZipEntryMap entryMapExist = getZipEntryMap();
@@ -1328,7 +1363,8 @@ public class ApkModule implements ApkFile, Closeable {
         }
     }
     private void mergeDexFiles(ApkModule module) {
-        UncompressedFiles uncompressedFiles = module.getUncompressedFiles();
+        UncompressedFiles comingUncompressed = module.getUncompressedFiles();
+        UncompressedFiles uncompressed = getUncompressedFiles();
         List<DexFileInputSource> existList = listDexFiles();
         List<DexFileInputSource> comingList = module.listDexFiles();
         ZipEntryMap zipEntryMap = getZipEntryMap();
@@ -1342,8 +1378,13 @@ public class ApkModule implements ApkFile, Closeable {
             }
         }
         for (DexFileInputSource source : comingList) {
-            uncompressedFiles.removePath(source.getAlias());
             String name = DexFileInputSource.getDexName(index);
+            if (comingUncompressed.isUncompressed(source.getAlias())) {
+                // Keep a stored dex stored under its new name, so it is copied as is
+                // instead of being deflated while writing
+                uncompressed.addPath(name);
+            }
+            comingUncompressed.removePath(source.getAlias());
             DexFileInputSource add = new DexFileInputSource(name, source.getInputSource());
             zipEntryMap.add(add);
             logMessage("Added [" + module.getModuleName() +"] "
