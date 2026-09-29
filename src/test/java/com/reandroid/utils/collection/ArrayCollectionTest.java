@@ -20,6 +20,8 @@ public class ArrayCollectionTest {
         int free = collection.availableCapacity();
         collection.ensureCapacity(free + 5);
         Assert.assertTrue(collection.availableCapacity() >= free + 5);
+        collection.ensureCapacity(free + 2);
+        Assert.assertTrue(collection.availableCapacity() >= free + 5);
     }
 
     @Test

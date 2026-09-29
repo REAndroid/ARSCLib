@@ -1026,12 +1026,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     private void slideRight(int position, int amount){
         boolean locked = mLocked;
         this.mLocked = true;
-        if(availableCapacity() < amount){
-            // Grow by the usual step rather than by exactly 'amount', otherwise
-            // inserting n items one by one reallocates and copies the array n times
-            int grow = calculateGrow();
-            ensureCapacity(grow > amount ? grow : amount);
-        }
+        ensureCapacity(amount);
         Object[] elements = this.mElements;
         int size = this.size;
         int i = size - 1;
@@ -1095,15 +1090,13 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(capacity <= 0){
             return;
         }
-        capacity = capacity - availableCapacity();
-        if(capacity <= 0){
+        if(capacity - availableCapacity() <= 0){
             return;
         }
         int size = this.size;
-        Object[] elements = this.mElements;
-        // 'capacity' is what is still missing on top of the free slots
-        int length = elements.length + capacity;
+        int length = size + capacity;
         Object[] update = getNewArray(length);
+        Object[] elements = this.mElements;
         if(elements.length == 0 || size == 0){
             this.mElements = update;
             return;
