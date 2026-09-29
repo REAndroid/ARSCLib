@@ -377,6 +377,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             return;
         }
         ensureStringLinkUnlockedInternal();
+        getStringsArray().ensureCapacity(stringPool.size());
         for (T stringItem : stringPool) {
             if (!containsInternal(stringItem)) {
                 createNewString().merge(stringItem);
