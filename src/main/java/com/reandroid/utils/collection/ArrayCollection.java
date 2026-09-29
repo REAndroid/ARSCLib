@@ -905,6 +905,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         boolean locked = mLocked;
         this.mLocked = true;
+        if (availableCapacity() == 0) {
+            ensureCapacity(calculateGrow());
+        }
         slideRight(i, 1);
         this.mElements[i] = item;
         notifyAdd(i, item);
@@ -976,6 +979,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         boolean locked = mLocked;
         this.mLocked = true;
+        ensureCapacity(length);
         slideRight(index, length);
         Object[] elements = this.mElements;
         int i = index;
