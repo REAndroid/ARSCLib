@@ -1084,6 +1084,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         return new Object[length];
     }
+    public void ensureMinCapacity(int capacity) {
+        ensureCapacity(calculateGrow(capacity));
+    }
     private void ensureCapacity(){
         if(availableCapacity() > 0){
             return;
@@ -1111,14 +1114,16 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public int availableCapacity(){
         return this.mElements.length - size;
     }
-
-    private int calculateGrow(){
-        if(this.size == 0){
-            return 1;
+    private int calculateGrow() {
+        return calculateGrow(0);
+    }
+    private int calculateGrow(int min) {
+        if (this.size == 0) {
+            return NumbersUtil.max(min, 1);
         }
         int amount = this.mLastGrow;
         if(amount >= GROW_LIMIT){
-            return amount;
+            return NumbersUtil.max(min, amount);
         }
         if(amount == 0){
             amount = 1;
@@ -1132,6 +1137,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         if(amount > GROW_LIMIT){
             amount = GROW_LIMIT;
+        }
+        if (min > amount) {
+            return min;
         }
         this.mLastGrow = amount;
         if(this.size < 4){
