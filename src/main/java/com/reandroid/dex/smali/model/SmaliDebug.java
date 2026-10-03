@@ -42,7 +42,7 @@ public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
     public SmaliInstruction getTargetInstruction() {
         SmaliCodeSet codeSet = getCodeSet();
         if (codeSet != null) {
-            return codeSet.getNextInstruction(getIndex() - 1);
+            return codeSet.getNextInstruction(getIndex() + 1);
         }
         return null;
     }
