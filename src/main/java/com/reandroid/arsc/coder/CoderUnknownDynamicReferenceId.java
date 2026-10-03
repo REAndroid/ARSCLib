@@ -16,41 +16,42 @@
 package com.reandroid.arsc.coder;
 
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.HexUtil;
 
-public class CoderNull extends Coder {
+public class CoderUnknownDynamicReferenceId extends Coder {
 
-    public CoderNull() {
+    public CoderUnknownDynamicReferenceId() {
         super();
     }
 
     @Override
     public EncodeResult encode(String text) {
-        if (text.equals("@null")) {
-            return new EncodeResult(ValueType.REFERENCE, 0);
+        if (text == null || text.length() != LENGTH || !text.startsWith(PREFIX)){
+            return null;
         }
-        if (text.equals("@@null")) {
-            return new EncodeResult(ValueType.DYNAMIC_REFERENCE, 0);
-        }
-        if (text.equals("@empty")) {
-            return new EncodeResult(ValueType.NULL, 1);
+        Integer value = parseHex(text.substring(2));
+        if (value != null) {
+            return new EncodeResult(getValueType(), value);
         }
         return null;
     }
-
     @Override
     public String decode(int data) {
-        return data == 0 ? "@null" : "@empty";
+        return HexUtil.toHex8(PREFIX, data);
     }
-
     @Override
     public ValueType getValueType() {
-        return ValueType.NULL;
+        return ValueType.DYNAMIC_REFERENCE;
     }
-
     @Override
     boolean canStartWith(char first) {
-        return first == '@';
+        return first == PREFIX_CHAR;
     }
 
-    public static final CoderNull INS = new CoderNull();
+    public static final CoderUnknownDynamicReferenceId INS = new CoderUnknownDynamicReferenceId();
+
+    private static final char PREFIX_CHAR = '@';
+    private static final String PREFIX = "@@0x";
+    private static final int LENGTH = 4 + 8;
+
 }

@@ -119,7 +119,7 @@ public class TableBlock extends Chunk<TableHeader>
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(staged);
             if(resourceEntry != null){
-                return resourceEntry;
+                return resourceEntry.setStageAliasId(resourceId);
             }
         }
         return null;
@@ -145,7 +145,7 @@ public class TableBlock extends Chunk<TableHeader>
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(staged);
             if(resourceEntry != null){
-                return resourceEntry;
+                return resourceEntry.setStageAliasId(resourceId);
             }
         }
         return null;

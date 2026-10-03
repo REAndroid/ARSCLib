@@ -147,7 +147,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         int typeId = (alias >> 16 ) & 0xff;
         int entryId = alias & 0xffff;
-        return getResource(typeId, entryId);
+        return getResource(typeId, entryId)
+                .setStageAliasId(resourceId);
     }
     public ResourceEntry getResource(int typeId, int entryId){
         SpecTypePair specTypePair =
