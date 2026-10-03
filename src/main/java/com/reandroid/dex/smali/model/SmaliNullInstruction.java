@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.program.InstructionOpcode;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
@@ -24,27 +25,13 @@ import java.io.IOException;
 public class SmaliNullInstruction extends SmaliInstruction {
 
     public SmaliNullInstruction() {
-        super();
+        super(Opcode.NOP);
     }
 
     @Override
     public int getCodeUnits() {
         return 0;
     }
-
-    @Override
-    public Opcode<?> getOpcode() {
-        return Opcode.NOP;
-    }
-    @Override
-    public SmaliRegisterSet getRegisterSet() {
-        return SmaliRegisterSet.NO_REGISTER_SET;
-    }
-    @Override
-    public SmaliInstructionOperand getOperand() {
-        return SmaliInstructionOperand.NO_OPERAND;
-    }
-
     @Override
     public int getIndex() {
         SmaliCodeSet codeSet = getCodeSet();
@@ -53,7 +40,10 @@ public class SmaliNullInstruction extends SmaliInstruction {
         }
         return -1;
     }
-
+    @Override
+    public boolean is(InstructionOpcode opcode) {
+        return false;
+    }
     @Override
     public void parse(SmaliReader reader) throws IOException {
     }

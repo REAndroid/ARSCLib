@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.smali.fix;
 
-import com.reandroid.dex.smali.model.SmaliCodeTryItem;
+import com.reandroid.dex.smali.model.SmaliTryItem;
 import com.reandroid.dex.smali.model.SmaliMethod;
 
 import java.util.Iterator;
@@ -35,14 +35,15 @@ public class SmaliOverlappingTryFix extends SmaliMethodFix {
             flattenAll(smaliMethod);
             result = fixOverlappingStart(smaliMethod);
             result = fixOverlappingHandler(smaliMethod) || result;
+            compactAll(smaliMethod);
         }
         return result;
     }
 
     private boolean fixOverlappingStart(SmaliMethod smaliMethod) {
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
         while (iterator.hasNext()) {
-            SmaliCodeTryItem tryItem = iterator.next();
+            SmaliTryItem tryItem = iterator.next();
             if (fixOverlappingStart(tryItem, smaliMethod)) {
                 fixOverlappingStart(smaliMethod);
                 return true;
@@ -50,12 +51,12 @@ public class SmaliOverlappingTryFix extends SmaliMethodFix {
         }
         return false;
     }
-    private boolean fixOverlappingStart(SmaliCodeTryItem previous, SmaliMethod smaliMethod) {
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+    private boolean fixOverlappingStart(SmaliTryItem previous, SmaliMethod smaliMethod) {
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
         int startPrev = previous.getStartAddress();
         int position = previous.getAddress();
         while (iterator.hasNext()) {
-            SmaliCodeTryItem tryItem = iterator.next();
+            SmaliTryItem tryItem = iterator.next();
             if (tryItem == previous) {
                 continue;
             }
@@ -68,12 +69,10 @@ public class SmaliOverlappingTryFix extends SmaliMethodFix {
         }
         return false;
     }
-
-
     private boolean fixOverlappingHandler(SmaliMethod smaliMethod) {
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
         while (iterator.hasNext()) {
-            SmaliCodeTryItem tryItem = iterator.next();
+            SmaliTryItem tryItem = iterator.next();
             if (fixOverlappingHandler(tryItem, smaliMethod)) {
                 fixOverlappingHandler(smaliMethod);
                 return true;
@@ -81,11 +80,11 @@ public class SmaliOverlappingTryFix extends SmaliMethodFix {
         }
         return false;
     }
-    private boolean fixOverlappingHandler(SmaliCodeTryItem previous, SmaliMethod smaliMethod) {
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+    private boolean fixOverlappingHandler(SmaliTryItem previous, SmaliMethod smaliMethod) {
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
         int startPrev = previous.getStartAddress();
         while (iterator.hasNext()) {
-            SmaliCodeTryItem tryItem = iterator.next();
+            SmaliTryItem tryItem = iterator.next();
             if (tryItem == previous) {
                 continue;
             }
@@ -96,12 +95,11 @@ public class SmaliOverlappingTryFix extends SmaliMethodFix {
         }
         return false;
     }
-
     private boolean haveNestedTryItems(SmaliMethod smaliMethod) {
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
         int position = -2;
         while (iterator.hasNext()) {
-            SmaliCodeTryItem tryItem = iterator.next();
+            SmaliTryItem tryItem = iterator.next();
             if (position == -2) {
                 position = tryItem.getAddress();
                 continue;
@@ -113,13 +111,23 @@ public class SmaliOverlappingTryFix extends SmaliMethodFix {
         }
         return false;
     }
-
     private void flattenAll(SmaliMethod smaliMethod) {
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
         while (iterator.hasNext()) {
-            SmaliCodeTryItem tryItem = iterator.next();
+            SmaliTryItem tryItem = iterator.next();
             if (tryItem.flatten()) {
                 flattenAll(smaliMethod);
+                break;
+            }
+        }
+    }
+    private void compactAll(SmaliMethod smaliMethod) {
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
+        while (iterator.hasNext()) {
+            SmaliTryItem tryItem = iterator.next();
+            if (tryItem.compact()) {
+                compactAll(smaliMethod);
+                break;
             }
         }
     }

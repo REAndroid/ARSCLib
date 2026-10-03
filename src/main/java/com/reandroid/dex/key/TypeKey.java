@@ -698,10 +698,11 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         int position = reader.position();
         byte b = reader.get();
         if (b != 'L' && b != '[') {
-            TypeKey typeKey = primitiveType(reader.readASCII());
+            char c = reader.readASCII();
+            TypeKey typeKey = primitiveType(c);
             if (typeKey == null) {
                 reader.position(position);
-                throw new SmaliParseException("Invalid type", reader);
+                throw new SmaliParseException("Invalid type '" + c + "'.", reader);
             }
             return typeKey;
         }
@@ -712,9 +713,10 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         }
         b = reader.get(position);
         if (b != 'L') {
-            TypeKey typeKey = primitiveType((char) b);
+            char c = (char) b;
+            TypeKey typeKey = primitiveType(c);
             if (typeKey == null) {
-                throw new SmaliParseException("Invalid type name", reader);
+                throw new SmaliParseException("Invalid type name '" + c + "'", reader);
             }
             reader.skip(arrayLength + 1);
             if (arrayLength != 0) {
@@ -728,7 +730,7 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         }
         int length = (i - reader.position()) + 1;
         if ((length - arrayLength) < 3) {
-            throw new SmaliParseException("Invalid type nameXX", reader);
+            throw new SmaliParseException("Invalid type name", reader);
         }
         // TODO: support white space name for dex V040+
         return getOrCreate(reader.readString(length));
@@ -764,9 +766,6 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         return null;
     }
     private static TypeKey getOrCreate(String name) {
-        if ("Ljava/lang/Object;".equals(name)) {
-            String junk = "";
-        }
         int length = name.length();
         //Ljava/lang/Exception;
         if (length > 12  && length < 22 && name.charAt(1) == 'j') {

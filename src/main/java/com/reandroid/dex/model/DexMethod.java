@@ -25,7 +25,7 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.ins.SizeXIns;
-import com.reandroid.dex.ins.TryBlock;
+import com.reandroid.dex.ins.InsTryBlock;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -310,7 +310,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
         return getDexTry(-1);
     }
     public Iterator<DexTry> getDexTry(int address) {
-        TryBlock tryBlock = getDefinition().getTryBlock();
+        InsTryBlock tryBlock = getDefinition().getTryBlock();
         if (tryBlock == null) {
             return EmptyIterator.of();
         }
@@ -318,7 +318,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
                 tryBlock.getTriesForAddress(address));
     }
     public DexTry createDexTry() {
-        TryBlock tryBlock = getDefinition().getOrCreateTryBlock();
+        InsTryBlock tryBlock = getDefinition().getOrCreateTryBlock();
         return DexTry.create(this, tryBlock.createNext());
     }
     public DexInstruction getInstruction(int i) {
@@ -338,7 +338,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
         return parseInstruction(index, reader);
     }
     public DexInstruction parseInstruction(int index, SmaliReader reader) throws IOException {
-        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        SmaliInstruction smaliInstruction = new SmaliInstruction(Opcode.parseSmali(reader, false));
         smaliInstruction.parse(reader);
         InstructionList instructionList = getDefinition().getOrCreateInstructionList();
         Ins ins = instructionList.createAt(index, smaliInstruction.getOpcode());

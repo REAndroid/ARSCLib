@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.ExceptionHandler;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
@@ -23,18 +24,24 @@ import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliCodeCatch extends SmaliCodeExceptionHandler{
+public class SmaliCatchTypedHandler extends SmaliExceptionHandler {
 
     private TypeKey type;
 
-    public SmaliCodeCatch(){
+    public SmaliCatchTypedHandler() {
         super();
     }
 
-    public TypeKey getType() {
+    @Override
+    public boolean isCatchAll() {
+        return false;
+    }
+
+    @Override
+    public TypeKey getKey() {
         return type;
     }
-    public void setType(TypeKey type) {
+    public void setKey(TypeKey type) {
         this.type = type;
     }
     @Override
@@ -49,7 +56,7 @@ public class SmaliCodeCatch extends SmaliCodeExceptionHandler{
 
     @Override
     public void appendType(SmaliWriter writer) throws IOException {
-        TypeKey typeKey = getType();
+        TypeKey typeKey = getKey();
         if (typeKey != null) {
             typeKey.append(writer);
         } else {
@@ -59,6 +66,12 @@ public class SmaliCodeCatch extends SmaliCodeExceptionHandler{
     }
     @Override
     protected void parseType(SmaliReader reader) throws IOException {
-        setType(TypeKey.read(reader));
+        setKey(TypeKey.read(reader));
+    }
+
+    @Override
+    public void fromProgram(ExceptionHandler handler) {
+        setKey(handler.getKey());
+        super.fromProgram(handler);
     }
 }

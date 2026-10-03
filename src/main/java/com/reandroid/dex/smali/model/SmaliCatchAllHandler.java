@@ -15,18 +15,28 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
 
-public class SmaliCodeCatchAll extends SmaliCodeExceptionHandler{
+public class SmaliCatchAllHandler extends SmaliExceptionHandler {
 
-    public SmaliCodeCatchAll(){
+    public SmaliCatchAllHandler(){
         super();
     }
 
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.CATCH_ALL;
+    }
+
+    @Override
+    public boolean isCatchAll() {
+        return true;
+    }
+    @Override
+    public TypeKey getKey() {
+        return null;
     }
     @Override
     public InstructionLabelType getLabelType() {

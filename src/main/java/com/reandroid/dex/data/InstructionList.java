@@ -28,7 +28,7 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.ins.ConstNumber;
 import com.reandroid.dex.ins.ConstNumberLong;
 import com.reandroid.dex.ins.ConstString;
-import com.reandroid.dex.ins.ExceptionHandler;
+import com.reandroid.dex.ins.InsExceptionHandler;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.InsBlockList;
 import com.reandroid.dex.ins.InsNop;
@@ -378,8 +378,8 @@ public class InstructionList extends FixedBlockContainer implements
         return item;
     }
     public boolean isLonelyInTryCatch(Ins ins) {
-        Iterator<ExceptionHandler.TryStartLabel> iterator = ins.getReferencingLabels(
-                ExceptionHandler.TryStartLabel.class);
+        Iterator<InsExceptionHandler.TryStartLabel> iterator = ins.getReferencingLabels(
+                InsExceptionHandler.TryStartLabel.class);
         if (!iterator.hasNext()) {
             return false;
         }
@@ -388,7 +388,7 @@ public class InstructionList extends FixedBlockContainer implements
         int codeUnits = ins.getCodeUnits();
         boolean result = false;
         while (iterator.hasNext()) {
-            ExceptionHandler.TryStartLabel startLabel = iterator.next();
+            InsExceptionHandler.TryStartLabel startLabel = iterator.next();
             int handlerCodeUnits = startLabel.getHandler().getCodeUnit();
             if (handlerCodeUnits <= codeUnits) {
                 result = true;

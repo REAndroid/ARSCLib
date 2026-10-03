@@ -17,6 +17,7 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.Swappable;
@@ -66,15 +67,21 @@ public class SmaliSet<T extends Smali> extends Smali implements Swappable {
         return size() == 0;
     }
 
-    public int indexOf(T smali) {
-        if (smali == null) {
+    @SuppressWarnings("all")
+    public int indexOf(Object obj) {
+        if (obj == null) {
             return -1;
         }
-        int index = smali.getIndex();
-        if (smali.equals(get(index))) {
-            return index;
+        if (obj instanceof Smali) {
+            Smali smali = (Smali) obj;
+            if (smali.getParent() == this) {
+                int index = smali.getIndex();
+                if (obj.equals(get(index))) {
+                    return index;
+                }
+            }
         }
-        return body.indexOf(smali);
+        return body.indexOf(obj);
     }
     public int indexOfIdentity(T smali) {
         if (smali == null) {
@@ -91,6 +98,12 @@ public class SmaliSet<T extends Smali> extends Smali implements Swappable {
             return null;
         }
         return body.get(i);
+    }
+    public T get(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        return get(indexOf(obj));
     }
     public T getFirst() {
         return get(0);
@@ -146,7 +159,7 @@ public class SmaliSet<T extends Smali> extends Smali implements Swappable {
     }
     public void moveTo(int from, int to) {
         body.move(from, to);
-        updateIndexes(from);
+        updateIndexes(NumbersUtil.min(from, to));
     }
     
     @Override
@@ -178,12 +191,12 @@ public class SmaliSet<T extends Smali> extends Smali implements Swappable {
         body.clear();
     }
     void onRemoved(T item) {
-        if(item != null) {
+        if (item != null) {
             item.setParent(null);
         }
     }
     void onAdded(T item) {
-        if(item != null) {
+        if (item != null) {
             item.setParent(this);
         }
     }
@@ -212,18 +225,30 @@ public class SmaliSet<T extends Smali> extends Smali implements Swappable {
         }
     }
     public T parseNext(SmaliReader reader) throws IOException {
-        if(reader.finished()) {
+        return parseAdd(size(), reader);
+    }
+    public T parseAdd(int index, SmaliReader reader) throws IOException {
+        if (reader.finished()) {
             return null;
         }
         T item = createNext(reader);
-        if(item != null) {
-            add(item);
+        if (item != null) {
+            add(index, item);
             item.parse(reader);
         }
         return item;
     }
     T createNext(SmaliReader reader) {
         throw new RuntimeException("Method not implemented");
+    }
+
+    @Override
+    public void validate() throws IOException {
+        super.validate();
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).validate();
+        }
     }
 
     static class SmaliSetMonitor<T extends Smali> implements ArrayCollection.Monitor<T> {
