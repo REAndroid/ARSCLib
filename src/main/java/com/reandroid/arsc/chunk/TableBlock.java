@@ -795,12 +795,21 @@ public class TableBlock extends Chunk<TableHeader>
         refresh();
     }
     public void merge(TableBlock tableBlock){
+        merge(tableBlock, true);
+    }
+    /**
+     * @param refresh whether to refresh this table afterwards. A caller merging several tables
+     *                can skip it for all but the last, as refreshing a large table is costly.
+     */
+    public void merge(TableBlock tableBlock, boolean refresh){
         if(tableBlock == null || tableBlock == this){
             return;
         }
         getStringPool().merge(tableBlock.getStringPool());
         getPackageArray().merge(tableBlock.getPackageArray());
-        refresh();
+        if(refresh){
+            refresh();
+        }
     }
     @Override
     public byte[] getBytes(){
