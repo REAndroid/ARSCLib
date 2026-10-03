@@ -15,7 +15,12 @@ public class ArrayCollectionTest {
         // insertions leave spare capacity behind, growing must still fit
         collection.setSize(1500);
         Assert.assertEquals(1500, collection.size());
+
         collection.ensureCapacity(10);
+        int capacity = collection.availableCapacity();
+        collection.ensureMinCapacity(5);
+        Assert.assertEquals(capacity, collection.availableCapacity());
+
         Assert.assertTrue(collection.availableCapacity() >= 10);
         int free = collection.availableCapacity();
         collection.ensureCapacity(free + 5);

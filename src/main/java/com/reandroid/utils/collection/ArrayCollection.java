@@ -1085,7 +1085,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return new Object[length];
     }
     public void ensureMinCapacity(int capacity) {
-        ensureCapacity(calculateGrow(capacity));
+        if (capacity > availableCapacity()) {
+            ensureCapacity(calculateGrow(capacity));
+        }
     }
     private void ensureCapacity(){
         if(availableCapacity() > 0){
