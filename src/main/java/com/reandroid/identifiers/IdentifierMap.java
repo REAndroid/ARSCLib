@@ -15,6 +15,8 @@
  */
 package com.reandroid.identifiers;
 
+import com.reandroid.utils.io.FileUtil;
+
 import java.util.*;
 
 class IdentifierMap<CHILD extends Identifier> extends Identifier
@@ -29,7 +31,7 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
         super(id, name);
         this.idMap = new HashMap<>();
         this.nameMap = new HashMap<>();
-        this.mCaseInsensitive = CASE_INSENSITIVE_FS;
+        this.mCaseInsensitive = FileUtil.isCaseInsensitiveFileSystem();
     }
 
     public int getMaxId(){
