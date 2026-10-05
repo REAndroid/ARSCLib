@@ -730,7 +730,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         }
         JSONArray jsonArray = new JSONArray(size);
         for (int i = 0; i < size; i++) {
-            jsonArray.put(i, blockList.get(i).toJson());
+            Object item = blockList.get(i).toJson();
+            if (item != null) {
+                jsonArray.put(item);
+            }
         }
         return jsonArray;
     }
