@@ -32,55 +32,55 @@ import java.util.List;
 
 public class ApkSplitInfoCleaner {
 
-    public static void cleanSplitInfo(ApkModule apkModule){
+    public static void cleanSplitInfo(ApkModule apkModule) {
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         cleanSplitInfoAttributes(manifestBlock.getManifestElement());
         cleanSplitInfoMeta(apkModule);
         cleanActivities(apkModule);
     }
 
-    private static void cleanActivities(ApkModule apkModule){
+    private static void cleanActivities(ApkModule apkModule) {
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         ResXmlElement manifest = manifestBlock.getManifestElement();
         List<ResXmlElement> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveElements(), ApkSplitInfoCleaner::isSplitElement));
-        for(ResXmlElement metaElement : removeList){
+        for (ResXmlElement metaElement : removeList) {
             cleanElement(apkModule, metaElement);
         }
     }
-    private static void cleanSplitInfoMeta(ApkModule apkModule){
+    private static void cleanSplitInfoMeta(ApkModule apkModule) {
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         ResXmlElement manifest = manifestBlock.getManifestElement();
         List<ResXmlElement> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveElements(), ApkSplitInfoCleaner::isSplitMetaElement));
-        for(ResXmlElement metaElement : removeList){
+        for (ResXmlElement metaElement : removeList) {
             cleanElement(apkModule, metaElement);
         }
     }
-    private static void cleanElement(ApkModule apkModule, ResXmlElement metaElement){
-        if(metaElement.getAttributeCount() < 2){
+    private static void cleanElement(ApkModule apkModule, ResXmlElement metaElement) {
+        if (metaElement.getAttributeCount() < 2) {
             metaElement.removeSelf();
             return;
         }
         Iterator<ResXmlAttribute> iterator = metaElement.getAttributes();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             ResXmlAttribute attribute = iterator.next();
-            if(attribute.getValueType() == ValueType.REFERENCE){
+            if (attribute.getValueType() == ValueType.REFERENCE) {
                 cleanElement(apkModule, attribute.getData());
             }
         }
         metaElement.removeSelf();
     }
-    private static void cleanElement(ApkModule apkModule, int resourceId){
-        if(resourceId == 0){
+    private static void cleanElement(ApkModule apkModule, int resourceId) {
+        if (resourceId == 0) {
             return;
         }
         TableBlock tableBlock = apkModule.getTableBlock();
         List<Entry> resolvedList = tableBlock.resolveReference(resourceId);
         ZipEntryMap zipEntryMap = apkModule.getZipEntryMap();
-        for(Entry entry : resolvedList){
+        for (Entry entry : resolvedList) {
             ResValue resValue = entry.getResValue();
-            if(resValue != null){
+            if (resValue != null) {
                 zipEntryMap.remove(resValue.getValueAsString());
                 resValue.setValueAsBoolean(false);
             }
@@ -89,11 +89,11 @@ public class ApkSplitInfoCleaner {
             specTypePair.removeNullEntries(entry.getId());
         }
     }
-    private static void cleanSplitInfoAttributes(ResXmlElement manifest){
+    private static void cleanSplitInfoAttributes(ResXmlElement manifest) {
         List<ResXmlAttribute> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveAttributes(), attribute -> {
                     int resourceId = attribute.getNameId();
-                    if(resourceId != 0){
+                    if (resourceId != 0) {
                         return resourceId == AndroidManifestBlock.ID_isSplitRequired ||
                                 resourceId == AndroidManifestBlock.ID_isFeatureSplit ||
                                 resourceId == AndroidManifestBlock.ID_extractNativeLibs;
@@ -102,11 +102,11 @@ public class ApkSplitInfoCleaner {
                             attribute.equalsName(AndroidManifestBlock.NAME_splitTypes);
 
                 }));
-        for(ResXmlAttribute attribute : removeList){
+        for (ResXmlAttribute attribute : removeList) {
             attribute.removeSelf();
         }
     }
-    static boolean isSplitElement(ResXmlElement element){
+    static boolean isSplitElement(ResXmlElement element) {
         return element != null &&
 
                 ( element.equalsName(AndroidManifestBlock.TAG_activity) ||
@@ -114,20 +114,20 @@ public class ApkSplitInfoCleaner {
 
                 isSplitElement(AndroidManifestBlock.getAndroidNameValue(element));
     }
-    private static boolean isSplitElement(String name){
-        if(name == null){
+    private static boolean isSplitElement(String name) {
+        if (name == null) {
             return false;
         }
         return name.startsWith("com.google.android.play.core.missingsplits.")
                 || name.startsWith("com.google.android.play.core.assetpacks.");
     }
-    static boolean isSplitMetaElement(ResXmlElement element){
+    static boolean isSplitMetaElement(ResXmlElement element) {
         return element != null &&
                 element.equalsName(AndroidManifestBlock.TAG_meta_data) &&
                 isSplitMetaNamePrefix(AndroidManifestBlock.getAndroidNameValue(element));
     }
-    private static boolean isSplitMetaNamePrefix(String name){
-        if(name == null){
+    private static boolean isSplitMetaNamePrefix(String name) {
+        if (name == null) {
             return false;
         }
         return name.startsWith("com.android.vending.")

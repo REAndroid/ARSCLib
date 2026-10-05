@@ -26,23 +26,23 @@ import java.util.zip.ZipEntry;
 
 public class DexFileRawEncoder implements DexEncoder {
     private APKLogger apkLogger;
-    public DexFileRawEncoder(){
+    public DexFileRawEncoder() {
     }
 
     @Override
     public List<InputSource> buildDexFiles(ApkModuleEncoder encoder, File mainDirectory) throws IOException {
         File dexDir = new File(mainDirectory,
                 DexFileInputSource.DEX_DIRECTORY_NAME);
-        if(!dexDir.isDirectory()){
+        if (!dexDir.isDirectory()) {
             return new ArrayList<>();
         }
         List<File> dexFileList = DexFileInputSource.listDexFiles(dexDir);
         List<InputSource> results = new ArrayList<>(dexFileList.size());
-        if(dexFileList.size() == 0){
+        if (dexFileList.size() == 0) {
             logMessage("WARN: No dex files found on: " + dexDir);
             return results;
         }
-        for(File file : dexFileList){
+        for (File file : dexFileList) {
             String name = file.getName();
             FileInputSource fileInputSource = new FileInputSource(file, name);
             fileInputSource.setMethod(ZipEntry.STORED);
@@ -62,20 +62,20 @@ public class DexFileRawEncoder implements DexEncoder {
     }
     void logMessage(String msg) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
     }
     void logError(String msg, Throwable tr) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger == null || (msg == null && tr == null)){
+        if (apkLogger == null || (msg == null && tr == null)) {
             return;
         }
         apkLogger.logError(msg, tr);
     }
     void logVerbose(String msg) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logVerbose(msg);
         }
     }

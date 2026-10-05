@@ -40,11 +40,11 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     private final Map<Integer, Set<ResConfig>> decodedEntries;
     private boolean keepResPath;
 
-    public ApkModuleXmlDecoder(ApkModule apkModule){
+    public ApkModuleXmlDecoder(ApkModule apkModule) {
         super(apkModule);
         this.decodedEntries = new HashMap<>();
     }
-    public void setKeepResPath(boolean keepResPath){
+    public void setKeepResPath(boolean keepResPath) {
         this.keepResPath = keepResPath;
     }
     public boolean keepResPath() {
@@ -52,7 +52,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     }
 
     @Override
-    void initialize(){
+    void initialize() {
         super.initialize();
         validateResourceNames();
     }
@@ -69,12 +69,12 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
             decodePackageInfo(mainDirectory, tableBlock);
             decodePublicXml(mainDirectory, tableBlock);
             addDecodedPath(TableBlock.FILE_NAME);
-        }catch (IOException exception){
+        }catch (IOException exception) {
             logOrThrow("Error decoding resource table", exception);
         }
     }
     private void decodePackageInfo(File mainDirectory, TableBlock tableBlock) throws IOException {
-        for(PackageBlock packageBlock:tableBlock.listPackages()){
+        for (PackageBlock packageBlock:tableBlock.listPackages()) {
             decodePackageInfo(mainDirectory, packageBlock);
         }
     }
@@ -85,29 +85,29 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         jsonObject.write(packageJsonFile);
     }
     private void decodeResFiles(File mainDirectory) throws IOException{
-        if(keepResPath()){
+        if (keepResPath()) {
             logMessage("Res files: " + TableBlock.RES_FILES_DIRECTORY_NAME);
-        }else {
+        } else {
             logMessage("Res files: " + TableBlock.DIRECTORY_NAME);
         }
         List<ResFile> resFileList = getApkModule().listResFiles();
-        for(ResFile resFile:resFileList){
+        for (ResFile resFile:resFileList) {
             decodeResFile(mainDirectory, resFile);
         }
     }
     private void decodeResFile(File mainDirectory, ResFile resFile)
             throws IOException{
-        if(resFile.isBinaryXml()){
+        if (resFile.isBinaryXml()) {
             try{
                 decodeResXml(mainDirectory, resFile);
-            }catch (Exception ex){
+            }catch (Exception ex) {
                 logOrThrow("Failed to decode: "
                         + resFile.getFilePath(), ex);
             }
             return;
         }
         String path = resFile.getFilePath();
-        if(path.endsWith(".xml")){
+        if (path.endsWith(".xml")) {
             logMessage("Ignore non bin xml: " + path);
             return;
         }
@@ -122,7 +122,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         InputSource inputSource = resFile.getInputSource();
         logVerbose(inputSource.getAlias());
         inputSource.write(file);
-        if(!keepResPath()){
+        if (!keepResPath()) {
             addDecodedEntry(entry);
         }
         addDecodedPath(inputSource.getAlias());
@@ -138,18 +138,18 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         logVerbose(inputSource.getAlias());
         serializeXml(packageBlock, resFile.getInputSource(), file);
 
-        if(!keepResPath()){
+        if (!keepResPath()) {
             addDecodedEntry(entry);
         }
         addDecodedPath(inputSource.getAlias());
     }
-    private File toDecodeResFile(File mainDirectory, ResFile resFile, PackageBlock packageBlock){
+    private File toDecodeResFile(File mainDirectory, ResFile resFile, PackageBlock packageBlock) {
         String path;
         File dir;
-        if(keepResPath()){
+        if (keepResPath()) {
             path = resFile.getInputSource().getAlias();
             dir = new File(mainDirectory, TableBlock.RES_FILES_DIRECTORY_NAME);
-        }else {
+        } else {
             path = resFile.buildPath(PackageBlock.RES_DIRECTORY_NAME);
             dir = toPackageDirectory(mainDirectory, packageBlock);
             resFile.setFilePath(path);
@@ -159,10 +159,10 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     }
     private void decodePublicXml(File mainDirectory, TableBlock tableBlock)
             throws IOException{
-        for(PackageBlock packageBlock:tableBlock.listPackages()){
+        for (PackageBlock packageBlock:tableBlock.listPackages()) {
             decodePublicXml(mainDirectory, packageBlock);
         }
-        if(tableBlock.size() == 0){
+        if (tableBlock.size() == 0) {
             decodeEmptyTable(mainDirectory, tableBlock);
         }
     }
@@ -191,14 +191,14 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     @Override
     public void decodeAndroidManifest(File mainDirectory)
             throws IOException {
-        if(containsDecodedPath(AndroidManifest.FILE_NAME)){
+        if (containsDecodedPath(AndroidManifest.FILE_NAME)) {
             return;
         }
-        if(!getApkModule().hasAndroidManifest()){
+        if (!getApkModule().hasAndroidManifest()) {
             decodeEmptyAndroidManifestXml(mainDirectory);
-        }else if(isExcluded(AndroidManifest.FILE_NAME)){
+        } else if (isExcluded(AndroidManifest.FILE_NAME)) {
             decodeAndroidManifestBin(mainDirectory);
-        }else {
+        } else {
             decodeAndroidManifestXml(mainDirectory);
         }
     }
@@ -222,11 +222,11 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         File file = new File(mainDirectory, AndroidManifest.FILE_NAME);
         logMessage("Decoding: " + file.getName());
         PackageBlock packageBlock = manifestBlock.getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             int packageId = manifestBlock.guessCurrentPackageId();
             TableBlock tableBlock = getApkModule().getTableBlock();
             packageBlock = tableBlock.pickOne(packageId);
-            if(packageBlock == null){
+            if (packageBlock == null) {
                 packageBlock = tableBlock.pickOne();
             }
         }
@@ -239,7 +239,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         logMessage("Decode manifest binary: " + file.getName());
         ApkModule apkModule = getApkModule();
         InputSource inputSource = apkModule.getManifestOriginalSource();
-        if(inputSource == null){
+        if (inputSource == null) {
             inputSource = apkModule.getInputSource(AndroidManifest.FILE_NAME);
         }
         inputSource.write(file);
@@ -247,7 +247,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     }
     private void serializeXml(PackageBlock packageBlock, ResXmlDocument document, File outFile)
             throws IOException {
-        if(packageBlock != null && document.getPackageBlock() == null){
+        if (packageBlock != null && document.getPackageBlock() == null) {
             document.setPackageBlock(packageBlock);
         }
         XmlSerializer serializer = XMLFactory.newSerializer(outFile, document.getEncoding());
@@ -261,21 +261,21 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         document.setPackageBlock(packageBlock);
         serializeXml(packageBlock, document, outFile);
     }
-    private void addDecodedEntry(Entry entry){
-        if(entry.isNull()){
+    private void addDecodedEntry(Entry entry) {
+        if (entry.isNull()) {
             return;
         }
         int resourceId= entry.getResourceId();
         Set<ResConfig> resConfigSet = decodedEntries.get(resourceId);
-        if(resConfigSet==null){
-            resConfigSet=new HashSet<>();
+        if (resConfigSet == null) {
+            resConfigSet = new HashSet<>();
             decodedEntries.put(resourceId, resConfigSet);
         }
         resConfigSet.add(entry.getResConfig());
     }
-    private boolean containsDecodedEntry(Entry entry){
+    private boolean containsDecodedEntry(Entry entry) {
         Set<ResConfig> resConfigSet = decodedEntries.get(entry.getResourceId());
-        if(resConfigSet == null){
+        if (resConfigSet == null) {
             return false;
         }
         return resConfigSet.contains(entry.getResConfig());
@@ -292,7 +292,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     }
     private void decodeOverlayable(File mainDirectory, PackageBlock packageBlock) throws IOException {
         OverlayableList overlayableList = packageBlock.getOverlayableList();
-        if(overlayableList.isEmpty()) {
+        if (overlayableList.isEmpty()) {
             return;
         }
         logMessage("Decode: overlayable");

@@ -38,23 +38,23 @@ import java.util.zip.ZipEntry;
     private final ApkModule frameworkApk;
     private APKLogger apkLogger;
     private boolean mOptimizing;
-    public FrameworkOptimizer(ApkModule frameworkApk){
+    public FrameworkOptimizer(ApkModule frameworkApk) {
         this.frameworkApk = frameworkApk;
         this.apkLogger = frameworkApk.getApkLogger();
     }
-    public void optimize(){
-        if(mOptimizing){
+    public void optimize() {
+        if (mOptimizing) {
             return;
         }
         mOptimizing = true;
-        if(!frameworkApk.hasTableBlock()){
+        if (!frameworkApk.hasTableBlock()) {
             logMessage("Don't have: "+TableBlock.FILE_NAME);
             mOptimizing = false;
             return;
         }
         FrameworkTable frameworkTable = getFrameworkTable();
         AndroidManifestBlock manifestBlock = null;
-        if(frameworkApk.hasAndroidManifest()){
+        if (frameworkApk.hasAndroidManifest()) {
             manifestBlock = frameworkApk.getAndroidManifest();
         }
         optimizeTable(frameworkTable, manifestBlock);
@@ -64,19 +64,19 @@ import java.util.zip.ZipEntry;
         clearFiles(frameworkApk.getZipEntryMap());
         logMessage("Optimized");
     }
-    private void clearFiles(ZipEntryMap zipEntryMap){
+    private void clearFiles(ZipEntryMap zipEntryMap) {
         int size = zipEntryMap.size();
-        if(size == 2){
+        if (size == 2) {
             return;
         }
         logMessage("Removing files from: " + size);
         InputSource tableSource = zipEntryMap.getInputSource(TableBlock.FILE_NAME);
         InputSource manifestSource = zipEntryMap.getInputSource(AndroidManifestBlock.FILE_NAME);
         zipEntryMap.clear();
-        if(tableSource!=null){
+        if (tableSource != null) {
             tableSource.setMethod(ZipEntry.DEFLATED);
         }
-        if(manifestSource!=null){
+        if (manifestSource != null) {
             manifestSource.setMethod(ZipEntry.DEFLATED);
         }
         zipEntryMap.add(tableSource);
@@ -84,17 +84,17 @@ import java.util.zip.ZipEntry;
         size = size - zipEntryMap.size();
         logMessage("Removed files: "+size);
     }
-    private void optimizeTable(FrameworkTable table, AndroidManifestBlock manifestBlock){
-        if(table.isOptimized()){
+    private void optimizeTable(FrameworkTable table, AndroidManifestBlock manifestBlock) {
+        if (table.isOptimized()) {
             return;
         }
         logMessage("Optimizing ...");
         int prev = table.countBytes();
         int version = 0;
         String name = "framework";
-        if(manifestBlock !=null){
+        if (manifestBlock != null) {
             Integer code = manifestBlock.getVersionCode();
-            if(code!=null){
+            if (code != null) {
                 version = code;
             }
             name = manifestBlock.getPackageName();
@@ -109,16 +109,16 @@ import java.util.zip.ZipEntry;
         mOptimizing = false;
     }
 
-    private FrameworkTable getFrameworkTable(){
+    private FrameworkTable getFrameworkTable() {
         TableBlock tableBlock = frameworkApk.getTableBlock();
-        if(tableBlock instanceof FrameworkTable){
+        if (tableBlock instanceof FrameworkTable) {
             return (FrameworkTable) tableBlock;
         }
         FrameworkTable frameworkTable = toFramework(tableBlock);
         frameworkApk.setTableBlock(frameworkTable);
         return frameworkTable;
     }
-    private FrameworkTable toFramework(TableBlock tableBlock){
+    private FrameworkTable toFramework(TableBlock tableBlock) {
         logMessage("Converting to framework ...");
         BlockReader reader = new BlockReader(tableBlock.getBytes());
         FrameworkTable frameworkTable = new FrameworkTable();
@@ -129,7 +129,7 @@ import java.util.zip.ZipEntry;
         }
         return frameworkTable;
     }
-    private void compressManifest(AndroidManifestBlock manifestBlock){
+    private void compressManifest(AndroidManifestBlock manifestBlock) {
         logMessage("Compressing manifest ...");
         int prev = manifestBlock.countBytes();
         ResXmlElement manifest = manifestBlock.getDocumentElement();
@@ -141,7 +141,7 @@ import java.util.zip.ZipEntry;
             }
         });
         ResXmlElement application = manifestBlock.getApplicationElement();
-        if(application!=null){
+        if (application != null) {
             application.clear();
         }
         ResXmlStringPool stringPool = manifestBlock.getStringPool();
@@ -151,15 +151,15 @@ import java.util.zip.ZipEntry;
         long percent=(diff*100L)/prev;
         logMessage("Manifest size reduced by: "+percent+" %");
     }
-    private void backupManifestValue(AndroidManifestBlock manifestBlock, TableBlock tableBlock){
+    private void backupManifestValue(AndroidManifestBlock manifestBlock, TableBlock tableBlock) {
         logMessage("Backup manifest values ...");
         ResXmlElement application = manifestBlock.getApplicationElement();
         ResXmlAttribute iconAttribute = null;
         int iconReference = 0;
-        if(application!=null){
+        if (application != null) {
             ResXmlAttribute attribute = application
                     .searchAttributeByResourceId(AndroidManifestBlock.ID_icon);
-            if(attribute!=null && attribute.getValueType()==ValueType.REFERENCE){
+            if (attribute != null && attribute.getValueType()==ValueType.REFERENCE) {
                 iconAttribute = attribute;
                 iconReference = attribute.getData();
             }
@@ -168,91 +168,91 @@ import java.util.zip.ZipEntry;
         ResXmlElement element = manifestBlock.getDocumentElement();
         backupAttributeValues(tableBlock, element);
 
-        if(iconAttribute!=null){
+        if (iconAttribute != null) {
             iconAttribute.setTypeAndData(ValueType.REFERENCE, iconReference);
         }
     }
-    private void backupAttributeValues(TableBlock tableBlock, ResXmlElement element){
-        if(element == null){
+    private void backupAttributeValues(TableBlock tableBlock, ResXmlElement element) {
+        if (element == null) {
             return;
         }
         Iterator<ResXmlAttribute> attributes = element.getAttributes();
-        while (attributes.hasNext()){
+        while (attributes.hasNext()) {
             ResXmlAttribute attribute = attributes.next();
             backupAttributeValues(tableBlock, attribute);
         }
         Iterator<ResXmlElement> iterator = element.getElements();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             backupAttributeValues(tableBlock, iterator.next());
         }
     }
-    private void backupAttributeValues(TableBlock tableBlock, ResXmlAttribute attribute){
-        if(attribute==null){
+    private void backupAttributeValues(TableBlock tableBlock, ResXmlAttribute attribute) {
+        if (attribute == null) {
             return;
         }
         ValueType valueType = attribute.getValueType();
-        if(valueType!=ValueType.REFERENCE && valueType!=ValueType.ATTRIBUTE){
+        if (valueType!=ValueType.REFERENCE && valueType!=ValueType.ATTRIBUTE) {
             return;
         }
         int reference = attribute.getData();
         Entry entry = getEntryWithValue(tableBlock, reference);
-        if(entry == null || isReferenceEntry(entry) || entry.isComplex()){
+        if (entry == null || isReferenceEntry(entry) || entry.isComplex()) {
             return;
         }
         ResTableEntry resTableEntry = (ResTableEntry) entry.getTableEntry();
         ResValue resValue = resTableEntry.getValue();
         valueType = resValue.getValueType();
-        if(valueType==ValueType.STRING){
+        if (valueType==ValueType.STRING) {
             String value = resValue.getValueAsString();
             attribute.setValueAsString(value);
-        }else {
+        } else {
             int data = resValue.getData();
             attribute.setTypeAndData(valueType, data);
         }
     }
-    private Entry getEntryWithValue(TableBlock tableBlock, int resourceId){
+    private Entry getEntryWithValue(TableBlock tableBlock, int resourceId) {
         Set<Integer> circularReference = new HashSet<>();
         return getEntryWithValue(tableBlock, resourceId, circularReference);
     }
-    private Entry getEntryWithValue(TableBlock tableBlock, int resourceId, Set<Integer> circularReference){
-        if(circularReference.contains(resourceId)){
+    private Entry getEntryWithValue(TableBlock tableBlock, int resourceId, Set<Integer> circularReference) {
+        if (circularReference.contains(resourceId)) {
             return null;
         }
         circularReference.add(resourceId);
         ResourceEntry entryGroup = tableBlock.getResource(resourceId);
         Entry entry = entryGroup.get();
-        if(entry==null){
+        if (entry == null) {
             return null;
         }
-        if(isReferenceEntry(entry)){
+        if (isReferenceEntry(entry)) {
             return getEntryWithValue(
                     tableBlock,
                     ((ResValue)entry.getTableEntry().getValue()).getData(),
                     circularReference);
         }
-        if(!entry.isNull()){
+        if (!entry.isNull()) {
             return entry;
         }
         Iterator<Entry> itr = entryGroup.iterator(true);
-        while (itr.hasNext()){
+        while (itr.hasNext()) {
             entry = itr.next();
-            if(!isReferenceEntry(entry)){
-                if(!entry.isNull()){
+            if (!isReferenceEntry(entry)) {
+                if (!entry.isNull()) {
                     return entry;
                 }
             }
         }
         return null;
     }
-    private boolean isReferenceEntry(Entry entry){
-        if(entry==null || entry.isNull()){
+    private boolean isReferenceEntry(Entry entry) {
+        if (entry == null || entry.isNull()) {
             return false;
         }
         TableEntry<?, ?> tableEntry = entry.getTableEntry();
-        if(tableEntry instanceof CompoundEntry){
+        if (tableEntry instanceof CompoundEntry) {
             return false;
         }
-        if(!(tableEntry instanceof ResTableEntry)){
+        if (!(tableEntry instanceof ResTableEntry)) {
             return false;
         }
         ResTableEntry resTableEntry = (ResTableEntry) tableEntry;
@@ -264,24 +264,24 @@ import java.util.zip.ZipEntry;
                 || valueType == ValueType.ATTRIBUTE;
     }
 
-    APKLogger getApkLogger(){
+    APKLogger getApkLogger() {
         return apkLogger;
     }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
     void logMessage(String msg) {
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
     }
     private void logError(String msg, Throwable tr) {
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logError(msg, tr);
         }
     }
     private void logVerbose(String msg) {
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logVerbose(msg);
         }
     }

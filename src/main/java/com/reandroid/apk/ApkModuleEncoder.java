@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class ApkModuleEncoder extends ApkModuleCoder{
     private DexEncoder mDexEncoder;
     private DexProfileEncoder mDexProfileEncoder;
-    public ApkModuleEncoder(){
+    public ApkModuleEncoder() {
         super();
     }
 
@@ -54,9 +54,9 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         dropNullTableBlock();
         onScanDirectoryComplete();
     }
-    public void encodeBinaryManifest(File mainDirectory){
+    public void encodeBinaryManifest(File mainDirectory) {
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             return;
         }
         logMessage("Using binary xml: " + file.getName());
@@ -68,51 +68,51 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     public abstract ApkModule getApkModule();
 
 
-    void onScanDirectoryComplete(){
+    void onScanDirectoryComplete() {
     }
-    void refreshTable(){
+    void refreshTable() {
         logMessage("Refreshing resource table ...");
         getApkModule().refreshTable();
         logMessage(getApkModule().getTableBlock().toString());
     }
-    private void dropEmptyManifest(){
+    private void dropEmptyManifest() {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasAndroidManifest()){
+        if (!apkModule.hasAndroidManifest()) {
             return;
         }
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         ResXmlElement element = manifestBlock.getDocumentElement();
-        if(element.equalsName(AndroidManifest.EMPTY_MANIFEST_TAG) &&
-                element.getElementsCount() == 0){
+        if (element.equalsName(AndroidManifest.EMPTY_MANIFEST_TAG) &&
+                element.getElementsCount() == 0) {
             apkModule.setManifest(null);
             logMessage("Removed empty: " + AndroidManifest.FILE_NAME);
         }
     }
-    private void dropNullTableBlock(){
+    private void dropNullTableBlock() {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasTableBlock()){
+        if (!apkModule.hasTableBlock()) {
             return;
         }
         TableBlock loadedTableBlock = apkModule.getLoadedTableBlock();
         TableBlock tableBlock = loadedTableBlock;
-        if(tableBlock == null){
+        if (tableBlock == null) {
             tableBlock = apkModule.getTableBlock(false);
         }
-        if(tableBlock.isEmpty() && tableBlock.isNull()){
+        if (tableBlock.isEmpty() && tableBlock.isNull()) {
             apkModule.setTableBlock(null);
             logMessage("Removed empty: " + TableBlock.FILE_NAME);
-        }else if(loadedTableBlock == null){
+        } else if (loadedTableBlock == null) {
             apkModule.discardTableBlockChanges();
         }
     }
-    private void sortFiles(){
+    private void sortFiles() {
         logMessage("Sorting files ...");
         ZipEntryMap archive = getApkModule().getZipEntryMap();
         archive.autoSortApkFiles();
     }
     private void restoreSignatures(File mainDirectory) throws IOException {
         File sigDir = new File(mainDirectory, SIGNATURE_DIRECTORY_NAME);
-        if(!sigDir.isDirectory()){
+        if (!sigDir.isDirectory()) {
             return;
         }
         logMessage("Loading signatures ...");
@@ -123,7 +123,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     }
     private void restorePathMap(File mainDirectory) throws IOException{
         File file = new File(mainDirectory, PathMap.JSON_FILE);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             return;
         }
         logMessage("Restoring original file paths ...");
@@ -132,12 +132,12 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         pathMap.fromJson(jsonArray);
         pathMap.restore(getApkModule());
     }
-    private void scanRootDir(File mainDirectory){
+    private void scanRootDir(File mainDirectory) {
         logMessage("Scanning root directory ...");
         File root = new File(mainDirectory, ROOT_DIRECTORY_NAME);
         ZipEntryMap archive = getApkModule().getZipEntryMap();
         List<File> rootFileList = ApkUtil.recursiveFiles(root);
-        for(File file:rootFileList){
+        for (File file:rootFileList) {
             String path = ApkUtil.toArchivePath(root, file);
             FileInputSource inputSource = new FileInputSource(file, path);
             archive.add(inputSource);
@@ -150,7 +150,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         ApkModule apkModule = getApkModule();
         apkModule.addAll(dexList);
         DexEncoder dexEncoder = getDexEncoder();
-        if(dexEncoder != null){
+        if (dexEncoder != null) {
             dexList = dexEncoder.buildDexFiles(this, mainDirectory);
             apkModule.addAll(dexList);
         }

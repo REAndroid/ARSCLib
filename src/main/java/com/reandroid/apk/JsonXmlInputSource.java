@@ -49,38 +49,38 @@ public class JsonXmlInputSource extends InputSource {
         ResXmlDocument resXmlDocument =newInstance();
         InputStream inputStream=inputSource.openStream();
         try{
-            JSONObject jsonObject=new JSONObject(inputStream);
+            JSONObject jsonObject = new JSONObject(inputStream);
             resXmlDocument.fromJson(jsonObject);
-        }catch (JSONException ex){
+        }catch (JSONException ex) {
             throw new IOException(inputSource.getAlias()+": "+ex.getMessage(), ex);
         }
         return resXmlDocument;
     }
-    ResXmlDocument newInstance(){
+    ResXmlDocument newInstance() {
         return new ResXmlDocument();
     }
     void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
     void logMessage(String msg) {
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
     }
     private void logError(String msg, Throwable tr) {
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logError(msg, tr);
         }
     }
     private void logVerbose(String msg) {
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logVerbose(msg);
         }
     }
 
-    public static JsonXmlInputSource fromFile(File rootDir, File jsonFile){
+    public static JsonXmlInputSource fromFile(File rootDir, File jsonFile) {
         String path=ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
-        FileInputSource fileInputSource=new FileInputSource(jsonFile, path);
+        FileInputSource fileInputSource = new FileInputSource(jsonFile, path);
         return new JsonXmlInputSource(fileInputSource);
     }
 }

@@ -28,18 +28,18 @@ import java.io.IOException;
 import java.util.List;
 
 public class TableBlockJsonBuilder {
-    public TableBlockJsonBuilder(){
+    public TableBlockJsonBuilder() {
     }
     public TableBlock scanDirectory(File resourcesDir) throws IOException {
-        if(!resourcesDir.isDirectory()){
+        if (!resourcesDir.isDirectory()) {
             throw new IOException("No such directory: "+resourcesDir);
         }
         List<File> packageDirectories = ApkUtil.listPackageDirectories(resourcesDir);
-        if(packageDirectories.size() == 0){
+        if (packageDirectories.size() == 0) {
             throw new IOException("No package sub directory found in : "+resourcesDir);
         }
         TableBlock tableBlock = new TableBlock();
-        for(File packageDir : packageDirectories){
+        for (File packageDir : packageDirectories) {
             scanPackageDirectory(tableBlock, packageDir);
         }
         tableBlock.sortPackages();
@@ -48,7 +48,7 @@ public class TableBlockJsonBuilder {
     }
     private void scanPackageDirectory(TableBlock tableBlock, File packageDir) throws IOException{
         File packageJsonFile = new File(packageDir, PackageBlock.JSON_FILE_NAME);
-        if(!packageJsonFile.isFile()){
+        if (!packageJsonFile.isFile()) {
             throw new IOException("Invalid package directory! Package file missing: "
                     + packageJsonFile);
         }
@@ -56,7 +56,7 @@ public class TableBlockJsonBuilder {
         PackageBlock packageBlock = tableBlock.getPackageArray()
                 .getOrCreate(jsonObject.getInt(PackageBlock.NAME_package_id));
         packageBlock.setName(jsonObject.optString(PackageBlock.NAME_package_name));
-        if(jsonObject.has(PackageBlock.NAME_staged_aliases)){
+        if (jsonObject.has(PackageBlock.NAME_staged_aliases)) {
             JSONArray stagedJson = jsonObject.getJSONArray(PackageBlock.NAME_staged_aliases);
             StagedAlias stagedAlias = new StagedAlias();
             stagedAlias.getStagedAliasEntryArray().fromJson(stagedJson);
@@ -64,7 +64,7 @@ public class TableBlockJsonBuilder {
         }
         List<File> typeFileList = ApkUtil.listFiles(packageDir, ApkUtil.JSON_FILE_EXTENSION);
         typeFileList.remove(packageJsonFile);
-        for(File typeFile:typeFileList){
+        for (File typeFile:typeFileList) {
             loadType(packageBlock, typeFile);
         }
         packageBlock.sortTypes();

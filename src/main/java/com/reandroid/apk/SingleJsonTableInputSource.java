@@ -64,7 +64,7 @@ public class SingleJsonTableInputSource extends BlockInputSource<TableBlock> {
         return outputStream.getValue();
     }
     public TableBlock getTableBlock() throws IOException{
-        if(mCache != null){
+        if (mCache != null) {
             return mCache;
         }
         TableBlock tableBlock = new TableBlock();
@@ -72,13 +72,13 @@ public class SingleJsonTableInputSource extends BlockInputSource<TableBlock> {
         try{
             JSONObject jsonObject = new JSONObject(inputStream);
             tableBlock.fromJson(jsonObject);
-        }catch (JSONException ex){
+        }catch (JSONException ex) {
             throw new IOException(inputSource.getAlias(), ex);
         }
         mCache = tableBlock;
         return tableBlock;
     }
-    public static SingleJsonTableInputSource fromFile(File rootDir, File jsonFile){
+    public static SingleJsonTableInputSource fromFile(File rootDir, File jsonFile) {
         String path = ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
         FileInputSource fileInputSource = new FileInputSource(jsonFile, path);
         return new SingleJsonTableInputSource(fileInputSource);

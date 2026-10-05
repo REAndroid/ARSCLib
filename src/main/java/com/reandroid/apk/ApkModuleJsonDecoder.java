@@ -27,11 +27,11 @@ import java.io.IOException;
 public class ApkModuleJsonDecoder extends ApkModuleDecoder{
     private final boolean splitTypes;
 
-    public ApkModuleJsonDecoder(ApkModule apkModule, boolean splitTypes){
+    public ApkModuleJsonDecoder(ApkModule apkModule, boolean splitTypes) {
         super(apkModule);
         this.splitTypes = splitTypes;
     }
-    public ApkModuleJsonDecoder(ApkModule apkModule){
+    public ApkModuleJsonDecoder(ApkModule apkModule) {
         this(apkModule, false);
     }
     @Override
@@ -42,12 +42,12 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
     private void decodeResFiles(File mainDirectory) throws IOException {
         ApkModule apkModule = getApkModule();
         logMessage("Decoding res files ...");
-        for(ResFile resFile:apkModule.listResFiles()){
+        for (ResFile resFile:apkModule.listResFiles()) {
             decodeResFile(mainDirectory, resFile);
         }
     }
     private void decodeResFile(File mainDirectory, ResFile resFile) throws IOException {
-        if(resFile.isBinaryXml()){
+        if (resFile.isBinaryXml()) {
             decodeResFileXml(mainDirectory, resFile);
         }
     }
@@ -63,7 +63,7 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
         addDecodedPath(path);
     }
     private void decodeTable(File dir) throws IOException {
-        if(!splitTypes){
+        if (!splitTypes) {
             writeTableSingle(dir);
             return;
         }
@@ -71,7 +71,7 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
     }
     private void writeTableSplit(File dir) throws IOException {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasTableBlock()){
+        if (!apkModule.hasTableBlock()) {
             return;
         }
         TableBlock tableBlock = apkModule.getTableBlock();
@@ -82,7 +82,7 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
     }
     private void writeTableSingle(File mainDirectory) throws IOException {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasTableBlock()){
+        if (!apkModule.hasTableBlock()) {
             return;
         }
         TableBlock tableBlock = apkModule.getTableBlock();
@@ -93,7 +93,7 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
     }
     void decodeAndroidManifest(File mainDirectory) throws IOException {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasAndroidManifest()){
+        if (!apkModule.hasAndroidManifest()) {
             return;
         }
         AndroidManifestBlock manifest = apkModule.getAndroidManifest();
@@ -101,7 +101,7 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
         manifest.toJson().write(file);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
-    private File toResJson(File mainDirectory, String path){
+    private File toResJson(File mainDirectory, String path) {
         File file = new File(mainDirectory, TableBlock.RES_JSON_DIRECTORY_NAME);
         path = path + ApkUtil.JSON_FILE_EXTENSION;
         path = path.replace('/', File.separatorChar);

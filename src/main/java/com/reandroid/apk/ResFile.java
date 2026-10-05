@@ -44,7 +44,7 @@ public class ResFile implements Iterable<Entry> {
     private String mFileExtension;
     private Entry mSelectedEntry;
 
-    public ResFile(InputSource inputSource, List<Entry> entryList){
+    public ResFile(InputSource inputSource, List<Entry> entryList) {
         this.inputSource = inputSource;
         this.entryList = entryList;
     }
@@ -63,7 +63,7 @@ public class ResFile implements Iterable<Entry> {
         return getEntries().get(i);
     }
     public Entry getFirst() {
-        if(size() != 0) {
+        if (size() != 0) {
             return get(0);
         }
         return null;
@@ -72,30 +72,30 @@ public class ResFile implements Iterable<Entry> {
         delete(true);
     }
     public void delete(boolean keepResourceId) {
-        for(Entry entry : this) {
+        for (Entry entry : this) {
             entry.setNull(true);
-            if(!keepResourceId){
+            if (!keepResourceId) {
                 entry.getTypeBlock().removeNullEntries(entry.getId());
             }
         }
         getEntries().clear();
     }
-    private List<Entry> getEntries(){
+    private List<Entry> getEntries() {
         return entryList;
     }
     @Deprecated
-    public List<Entry> getEntryList(){
+    public List<Entry> getEntryList() {
         return getEntries();
     }
-    public PackageBlock getPackageBlock(){
+    public PackageBlock getPackageBlock() {
         Entry entry = pickOne();
-        if(entry != null){
+        if (entry != null) {
             return entry.getPackageBlock();
         }
         return null;
     }
     public ResXmlDocument getResXmlDocument() {
-        if(!isBinaryXml()) {
+        if (!isBinaryXml()) {
             return null;
         }
         try {
@@ -106,10 +106,10 @@ public class ResFile implements Iterable<Entry> {
     }
     public ResXmlDocument readAsXmlDocument() throws IOException {
         InputSource inputSource = getInputSource();
-        if(inputSource instanceof BlockInputSource){
+        if (inputSource instanceof BlockInputSource) {
             BlockInputSource<?> bis = (BlockInputSource<?>) inputSource;
             Block block = bis.getBlock();
-            if(block instanceof ResXmlDocument){
+            if (block instanceof ResXmlDocument) {
                 return (ResXmlDocument) block;
             }
         }
@@ -120,34 +120,34 @@ public class ResFile implements Iterable<Entry> {
     }
     public String validateTypeDirectoryName() {
         String root = getRootNameFromPath();
-        if(StringsUtil.isEmpty(root)) {
+        if (StringsUtil.isEmpty(root)) {
             root = PackageBlock.RES_DIRECTORY_NAME;
         }
         return validateTypeDirectoryName(root);
     }
-    public String validateTypeDirectoryName(String root){
+    public String validateTypeDirectoryName(String root) {
         Entry entry = pickOne();
-        if(entry == null){
+        if (entry == null) {
             return null;
         }
         String path = FileUtil.combineUnixPath(root,
                 entry.getTypeName() + entry.getResConfig().getQualifiers());
         return FileUtil.combineUnixPath(path, getSimpleName());
     }
-    public Entry pickOne(){
-        if(mSelectedEntry == null){
+    public Entry pickOne() {
+        if (mSelectedEntry == null) {
             mSelectedEntry = selectMatching();
         }
         return mSelectedEntry;
     }
-    public String getFilePath(){
+    public String getFilePath() {
         return getInputSource().getAlias();
     }
-    public void setFilePath(String filePath){
+    public void setFilePath(String filePath) {
         getInputSource().setAlias(filePath);
-        for(Entry entry : this){
+        for (Entry entry : this) {
             ResValue resValue = entry.getResValue();
-            if(resValue != null) {
+            if (resValue != null) {
                 resValue.setValueAsString(filePath);
             }
         }
@@ -155,30 +155,30 @@ public class ResFile implements Iterable<Entry> {
     public InputSource getInputSource() {
         return inputSource;
     }
-    public boolean isBinaryXml(){
-        if(mBinXmlChecked){
+    public boolean isBinaryXml() {
+        if (mBinXmlChecked) {
             return mBinXml;
         }
         mBinXmlChecked = true;
         InputSource inputSource = getInputSource();
-        if((inputSource instanceof XMLEncodeSource)
-                || (inputSource instanceof JsonXmlInputSource)){
+        if ((inputSource instanceof XMLEncodeSource)
+                || (inputSource instanceof JsonXmlInputSource)) {
             mBinXml = true;
-        }else if (inputSource instanceof BlockInputSource){
+        } else if (inputSource instanceof BlockInputSource) {
             BlockInputSource<?> bis = (BlockInputSource<?>) inputSource;
             Block block = bis.getBlock();
-            if(block instanceof ResXmlDocument){
+            if (block instanceof ResXmlDocument) {
                 mBinXml = true;
             }
         }
-        if(!mBinXml){
+        if (!mBinXml) {
             try {
                 mBinXml = ResXmlDocument.isResXmlBlock(
                         inputSource.getBytes(InfoHeader.INFO_MIN_SIZE));
             } catch (IOException ignored) {
             }
             // Header could be obfuscated lets try load the whole document
-            if(!mBinXml && getFilePath().endsWith(".xml")){
+            if (!mBinXml && getFilePath().endsWith(".xml")) {
                 try {
                     ResXmlDocument resXmlDocument = readAsXmlDocument();
                     mBinXml = !resXmlDocument.getStringPool().isEmpty();
@@ -188,24 +188,24 @@ public class ResFile implements Iterable<Entry> {
         }
         return mBinXml;
     }
-    public File buildOutFile(File dir){
+    public File buildOutFile(File dir) {
         String path = getFilePath();
         path = path.replace('/', File.separatorChar);
         return new File(dir, path);
     }
     public String buildPath() {
         String root = getRootNameFromPath();
-        if(StringsUtil.isEmpty(root)) {
+        if (StringsUtil.isEmpty(root)) {
             root = PackageBlock.RES_DIRECTORY_NAME;
         }
         return buildPath(root);
     }
-    public String buildPath(String root){
+    public String buildPath(String root) {
         Entry entry = pickOne();
         StringBuilder builder = new StringBuilder();
-        if(root != null){
+        if (root != null) {
             builder.append(root);
-            if(!root.endsWith("/")){
+            if (!root.endsWith("/")) {
                 builder.append('/');
             }
         }
@@ -218,44 +218,44 @@ public class ResFile implements Iterable<Entry> {
     }
     private Entry selectMatching() {
         int size = size();
-        if(size < 2) {
+        if (size < 2) {
             return getFirst();
         }
         String typeName = getTypeNameFromPath();
-        if(typeName == null) {
+        if (typeName == null) {
             return getFirst();
         }
         List<Entry> typeMatchingList = CollectionUtil.toList(iterator(
                 entry -> typeName.equals(entry.getTypeName())));
-        if(typeMatchingList.isEmpty()) {
+        if (typeMatchingList.isEmpty()) {
             return getFirst();
         }
-        if(typeMatchingList.size() == 1) {
+        if (typeMatchingList.size() == 1) {
             return typeMatchingList.get(0);
         }
         String entryName = getEntryNameFromPath();
-        if(entryName == null){
+        if (entryName == null) {
             return typeMatchingList.get(0);
         }
         List<Entry> nameMatchingList = CollectionUtil.toList(iterator(
                 entry -> entryName.equals(entry.getName())));
-        if(nameMatchingList.isEmpty()) {
+        if (nameMatchingList.isEmpty()) {
             return typeMatchingList.get(0);
         }
         return selectConfigMatching(nameMatchingList);
     }
     private Entry selectConfigMatching(List<Entry> candidates) {
-        if(candidates.size() == 1) {
+        if (candidates.size() == 1) {
             return candidates.get(0);
         }
         ResConfig resConfig = getResConfigFromPath();
         Entry result = null;
-        for(Entry entry : candidates) {
+        for (Entry entry : candidates) {
             ResConfig config = entry.getResConfig();
-            if(config.equals(resConfig)) {
+            if (config.equals(resConfig)) {
                 return entry;
             }
-            if(result == null ||
+            if (result == null ||
                     (!result.getResConfig().isDefault() && config.isDefault())) {
                 result = entry;
             }
@@ -265,12 +265,12 @@ public class ResFile implements Iterable<Entry> {
     private ResConfig getResConfigFromPath() {
         String[] split = splitPath();
         ResConfig resConfig = null;
-        if(split.length == 3) {
+        if (split.length == 3) {
             String qualifiers = split[1];
             int i = qualifiers.indexOf('-');
-            if(i > 0) {
+            if (i > 0) {
                 qualifiers = qualifiers.substring(i);
-            }else {
+            } else {
                 qualifiers = StringsUtil.EMPTY;
             }
             resConfig = ResConfig.parse(qualifiers);
@@ -280,10 +280,10 @@ public class ResFile implements Iterable<Entry> {
     public String getTypeNameFromPath() {
         String[] split = splitPath();
         String type = null;
-        if(split.length == 3) {
+        if (split.length == 3) {
             type = split[1];
             int i = type.indexOf('-');
-            if(i > 0) {
+            if (i > 0) {
                 type = type.substring(0, i);
             }
         }
@@ -292,14 +292,14 @@ public class ResFile implements Iterable<Entry> {
     public String getEntryNameFromPath() {
         String[] split = splitPath();
         String name = null;
-        if(split.length == 3) {
+        if (split.length == 3) {
             name = split[2];
             String ninePng = EXT_9_PNG;
-            if(name.endsWith(ninePng)){
+            if (name.endsWith(ninePng)) {
                 name = name.substring(0, name.length() - ninePng.length());
-            }else {
+            } else {
                 int i = name.lastIndexOf('.');
-                if(i > 0) {
+                if (i > 0) {
                     name = name.substring(0, i);
                 }
             }
@@ -308,7 +308,7 @@ public class ResFile implements Iterable<Entry> {
     }
     public String getRootNameFromPath() {
         String[] split = splitPath();
-        if(split.length > 1){
+        if (split.length > 1) {
             return split[0];
         }
         return null;
@@ -322,22 +322,22 @@ public class ResFile implements Iterable<Entry> {
     }
     public String getFileExtension() {
         String ext = this.mFileExtension;
-        if(ext == null) {
+        if (ext == null) {
             ext = computeFileExtension();
             this.mFileExtension = ext;
         }
         return ext;
     }
-    private String computeFileExtension(){
-        if(isBinaryXml()){
+    private String computeFileExtension() {
+        if (isBinaryXml()) {
             return ".xml";
         }
         String path = getFilePath();
-        if(path.endsWith(EXT_9_PNG)){
+        if (path.endsWith(EXT_9_PNG)) {
             return EXT_9_PNG;
         }
         int i = path.lastIndexOf('.');
-        if(i > 0){
+        if (i > 0) {
             return path.substring(i);
         }
         String ext = null;
@@ -345,17 +345,17 @@ public class ResFile implements Iterable<Entry> {
             ext = FileMagic.getExtensionFromMagic(getInputSource());
         } catch (IOException ignored) {}
 
-        if(ext == null) {
+        if (ext == null) {
             ext = StringsUtil.EMPTY;
         }
         return ext;
     }
     @Override
     public boolean equals(Object obj) {
-        if(obj == this) {
+        if (obj == this) {
             return true;
         }
-        if(!(obj instanceof ResFile)) {
+        if (!(obj instanceof ResFile)) {
             return false;
         }
         ResFile resFile = (ResFile) obj;
@@ -366,7 +366,7 @@ public class ResFile implements Iterable<Entry> {
         return getFilePath().hashCode();
     }
     @Override
-    public String toString(){
+    public String toString() {
         return getFilePath();
     }
 

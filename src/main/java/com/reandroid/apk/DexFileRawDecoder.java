@@ -20,7 +20,7 @@ import java.io.IOException;
 
 public class DexFileRawDecoder implements DexDecoder{
     private APKLogger apkLogger;
-    public DexFileRawDecoder(){
+    public DexFileRawDecoder() {
     }
 
     @Override
@@ -34,9 +34,9 @@ public class DexFileRawDecoder implements DexDecoder{
     public void setApkLogger(APKLogger apkLogger) {
         this.apkLogger = apkLogger;
     }
-    private void logVerbose(String msg){
+    private void logVerbose(String msg) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger != null){
+        if (apkLogger != null) {
             apkLogger.logVerbose(msg);
         }
     }

@@ -25,10 +25,10 @@ public class JsonManifestInputSource extends JsonXmlInputSource {
     public JsonManifestInputSource(InputSource inputSource) {
         super(inputSource);
     }
-    AndroidManifestBlock newInstance(){
+    AndroidManifestBlock newInstance() {
         return new AndroidManifestBlock();
     }
-    public static JsonManifestInputSource fromFile(File rootDir, File jsonFile){
+    public static JsonManifestInputSource fromFile(File rootDir, File jsonFile) {
         String path = ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
         FileInputSource fileInputSource = new FileInputSource(jsonFile, path);
         return new JsonManifestInputSource(fileInputSource);

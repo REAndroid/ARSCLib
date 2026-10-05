@@ -33,9 +33,9 @@ public class ApkModuleRawDecoder extends ApkModuleDecoder{
         ApkModule apkModule = getApkModule();
         apkModule.discardTableBlockChanges();
         InputSource inputSource = apkModule.getTableOriginalSource();
-        if(inputSource == null){
+        if (inputSource == null) {
             logMessage("File NOT found: " + TableBlock.FILE_NAME);
-        }else {
+        } else {
             File file = new File(mainDirectory, TableBlock.FILE_NAME);
             inputSource.write(file);
             addDecodedPath(TableBlock.FILE_NAME);
@@ -47,9 +47,9 @@ public class ApkModuleRawDecoder extends ApkModuleDecoder{
         ApkModule apkModule = getApkModule();
         apkModule.discardManifestChanges();
         InputSource inputSource = apkModule.getManifestOriginalSource();
-        if(inputSource == null){
+        if (inputSource == null) {
             logMessage("File NOT found: " + AndroidManifestBlock.FILE_NAME);
-        }else {
+        } else {
             File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
             inputSource.write(file);
             addDecodedPath(AndroidManifestBlock.FILE_NAME);

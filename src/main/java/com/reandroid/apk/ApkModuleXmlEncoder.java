@@ -32,10 +32,10 @@ import java.util.List;
 
 public class ApkModuleXmlEncoder extends ApkModuleEncoder{
     private final XMLTableBlockEncoder tableBlockEncoder;
-    public ApkModuleXmlEncoder(){
+    public ApkModuleXmlEncoder() {
         this.tableBlockEncoder = new XMLTableBlockEncoder();
     }
-    public ApkModuleXmlEncoder(ApkModule module, TableBlock tableBlock){
+    public ApkModuleXmlEncoder(ApkModule module, TableBlock tableBlock) {
         this.tableBlockEncoder = new XMLTableBlockEncoder(module, tableBlock);
     }
 
@@ -47,7 +47,7 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         scanResFilesDirectory(mainDirectory);
     }
     @Override
-    public ApkModule getApkModule(){
+    public ApkModule getApkModule() {
         return tableBlockEncoder.getApkModule();
     }
 
@@ -57,7 +57,7 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
     }
     private void encodeManifestBinary(File mainDirectory) {
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             return;
         }
         logMessage("Encode binary manifest: " + file.getName());
@@ -68,23 +68,23 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         getApkModule().add(inputSource);
     }
     private void encodeManifestXml(File mainDirectory) {
-        if(mainDirectory == null){
+        if (mainDirectory == null) {
             return;
         }
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             return;
         }
         logMessage("Add manifest: " + file.getName());
         TableBlock tableBlock = getApkModule().getTableBlock();
         PackageBlock packageBlock;
         Integer packageId = this.tableBlockEncoder.getMainPackageId();
-        if(packageId != null){
+        if (packageId != null) {
             packageBlock = tableBlock.pickOne(packageId);
-        }else {
+        } else {
             packageBlock = tableBlock.pickOne();
         }
-        if(packageBlock != null){
+        if (packageBlock != null) {
             tableBlock.setCurrentPackage(packageBlock);
         }
         XMLParserSource xmlSource =
@@ -98,38 +98,38 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
     }
     private void scanResFilesDirectory(File mainDirectory) {
         File resFilesDirectory = new File(mainDirectory, TableBlock.RES_FILES_DIRECTORY_NAME);
-        if(!resFilesDirectory.isDirectory()){
+        if (!resFilesDirectory.isDirectory()) {
             return;
         }
         logMessage("Searching files: " + resFilesDirectory.getName());
         List<File> fileList = ApkUtil.recursiveFiles(resFilesDirectory);
-        for(File file : fileList){
+        for (File file : fileList) {
             encodeResFile(resFilesDirectory, file);
         }
     }
-    private void encodeResFile(File resFilesDirectory, File file){
+    private void encodeResFile(File resFilesDirectory, File file) {
         String path = ApkUtil.toArchivePath(resFilesDirectory, file);
         logVerbose(path);
         Entry entry = getEntry(path);
-        if(entry == null){
+        if (entry == null) {
             logMessage("Un registered file: " + file);
             return;
         }
-        if(file.getName().endsWith(".xml")){
+        if (file.getName().endsWith(".xml")) {
             XMLParserSource xmlSource =
                     new XMLFileParserSource(path, file);
             XMLEncodeSource xmlEncodeSource =
                     new XMLEncodeSource(entry.getPackageBlock(), xmlSource);
             xmlEncodeSource.setApkLogger(getApkLogger());
             getApkModule().add(xmlEncodeSource);
-        }else {
+        } else {
             FileInputSource inputSource = new FileInputSource(file, path);
             getApkModule().add(inputSource);
         }
     }
-    private Entry getEntry(String path){
+    private Entry getEntry(String path) {
         List<Entry> entryList = getApkModule().listReferencedEntries(path);
-        if(entryList.size() > 0){
+        if (entryList.size() > 0) {
             return entryList.get(0);
         }
         return null;

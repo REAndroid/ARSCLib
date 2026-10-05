@@ -50,10 +50,10 @@ public class XMLTableBlockEncoder {
     private final ApkModule apkModule;
     private Integer mMainPackageId;
 
-    public XMLTableBlockEncoder(ApkModule apkModule, TableBlock tableBlock){
+    public XMLTableBlockEncoder(ApkModule apkModule, TableBlock tableBlock) {
         this.apkModule = apkModule;
         this.tableBlock = tableBlock;
-        if(!apkModule.hasTableBlock()){
+        if (!apkModule.hasTableBlock()) {
             BlockInputSource<TableBlock> inputSource =
                     new BlockInputSource<>(TableBlock.FILE_NAME, tableBlock);
             inputSource.setMethod(ZipEntry.STORED);
@@ -63,7 +63,7 @@ public class XMLTableBlockEncoder {
         }
         apkLogger = apkModule.getApkLogger();
     }
-    public XMLTableBlockEncoder(){
+    public XMLTableBlockEncoder() {
         this(new ApkModule("encoded",
                 new ZipEntryMap()), new TableBlock());
     }
@@ -72,10 +72,10 @@ public class XMLTableBlockEncoder {
         return mMainPackageId;
     }
 
-    public TableBlock getTableBlock(){
+    public TableBlock getTableBlock() {
         return tableBlock;
     }
-    public ApkModule getApkModule(){
+    public ApkModule getApkModule() {
         return apkModule;
     }
     public void scanMainDirectory(File mainDirectory) throws IOException {
@@ -92,13 +92,13 @@ public class XMLTableBlockEncoder {
     }
     private void ensureEmptyTable() {
         TableBlock tableBlock = this.getTableBlock();
-        if(tableBlock.initializeAsEmpty()) {
+        if (tableBlock.initializeAsEmpty()) {
             logMessage("Using <NULL> resource table");
         }
     }
     private void scanResourceFiles(File resourcesDirectory) throws IOException, XmlPullParserException {
         List<File> pubXmlFileList = ApkUtil.listPublicXmlFiles(resourcesDirectory);
-        if(pubXmlFileList.size() == 0){
+        if (pubXmlFileList.size() == 0) {
             throw new IOException("No .*/values/"
                     + PackageBlock.PUBLIC_XML
                     + "  file found in '" +resourcesDirectory + "'");
@@ -117,7 +117,7 @@ public class XMLTableBlockEncoder {
 
     }
     private void loadPublicXmlFiles(List<File> pubXmlFileList) throws IOException {
-        for(File pubXmlFile:pubXmlFileList){
+        for (File pubXmlFile:pubXmlFileList) {
             loadPublicXmlFile(pubXmlFile);
         }
     }
@@ -134,36 +134,36 @@ public class XMLTableBlockEncoder {
     }
     private void loadPackageJson(PackageBlock packageBlock, File publicXml) throws IOException {
         File json = toPackageJson(publicXml);
-        if(json == null){
+        if (json == null) {
             return;
         }
         packageBlock.fromJson(new JSONObject(json));
     }
-    private File toPackageJson(File publicXml){
+    private File toPackageJson(File publicXml) {
         File dir = publicXml.getParentFile();
         //values
-        if(dir == null || !"values".equals(dir.getName())){
+        if (dir == null || !"values".equals(dir.getName())) {
             return null;
         }
         dir = dir.getParentFile();
         //res
-        if(dir == null){
+        if (dir == null) {
             return null;
         }
         dir = dir.getParentFile();
-        if(dir == null){
+        if (dir == null) {
             return null;
         }
         File json = new File(dir, "package.json");
-        if(!json.isFile()){
+        if (!json.isFile()) {
             return null;
         }
         return json;
     }
     private void initializeFrameworkFromManifest(List<File> pubXmlFileList) throws  IOException {
-        for(File pubXmlFile:pubXmlFileList){
+        for (File pubXmlFile:pubXmlFileList) {
             File manifestFile = toAndroidManifest(pubXmlFile);
-            if(!manifestFile.isFile()){
+            if (!manifestFile.isFile()) {
                 continue;
             }
             initializeFrameworkFromManifest(manifestFile);
@@ -175,7 +175,7 @@ public class XMLTableBlockEncoder {
         FilePathEncoder filePathEncoder = new FilePathEncoder(getApkModule());
         TableBlock tableBlock = getTableBlock();
 
-        for(File pubXmlFile:pubXmlFileList){
+        for (File pubXmlFile:pubXmlFileList) {
             addParsedFiles(pubXmlFile);
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             tableBlock.setCurrentPackage(packageBlock);
@@ -195,17 +195,17 @@ public class XMLTableBlockEncoder {
 
         TableBlock tableBlock = getTableBlock();
 
-        for(File pubXmlFile : pubXmlFileList){
+        for (File pubXmlFile : pubXmlFileList) {
             addParsedFiles(pubXmlFile);
 
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             tableBlock.setCurrentPackage(packageBlock);
 
             List<File> attrFiles = listAttrs(pubXmlFile);
-            if(attrFiles.size() == 0){
+            if (attrFiles.size() == 0) {
                 continue;
             }
-            for(File file : attrFiles){
+            for (File file : attrFiles) {
                 logVerbose("Encoding: " + FileUtil.shortPath(file, 4));
                 XmlCoder xmlCoder = XmlCoder.getInstance();
                 xmlCoder.VALUES_XML.encode(file, packageBlock);
@@ -215,7 +215,7 @@ public class XMLTableBlockEncoder {
         }
     }
     private void initializeFrameworkFromManifest(File manifestFile) throws IOException {
-        if(AndroidManifestBlock.FILE_NAME_BIN.equals(manifestFile.getName())){
+        if (AndroidManifestBlock.FILE_NAME_BIN.equals(manifestFile.getName())) {
             initializeFrameworkFromBinaryManifest();
             return;
         }
@@ -227,14 +227,14 @@ public class XMLTableBlockEncoder {
         }
         TableBlock tableBlock = getTableBlock();
         FrameworkApk frameworkApk = getApkModule().initializeAndroidFramework(xmlDocument);
-        if(frameworkApk != null){
+        if (frameworkApk != null) {
             tableBlock.addFramework(frameworkApk.getTableBlock());
         }
         initializeMainPackageId(xmlDocument);
     }
     private void initializeFrameworkFromBinaryManifest() throws IOException {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasTableBlock() || !apkModule.hasAndroidManifest()){
+        if (!apkModule.hasTableBlock() || !apkModule.hasAndroidManifest()) {
             return;
         }
         logMessage("Initialize framework from binary manifest ...");
@@ -244,27 +244,27 @@ public class XMLTableBlockEncoder {
     }
     private void initializeMainPackageId(XMLDocument xmlDocument) {
         XMLElement manifestRoot = xmlDocument.getDocumentElement();
-        if(manifestRoot == null){
+        if (manifestRoot == null) {
             return;
         }
         XMLElement application = manifestRoot.getElement(AndroidManifestBlock.TAG_application);
-        if(application == null){
+        if (application == null) {
             return;
         }
 
         String iconReference = application.getAttributeValue(AndroidManifestBlock.NAME_icon);
-        if(iconReference == null){
+        if (iconReference == null) {
             return;
         }
         logMessage("Set main package id from manifest: " + iconReference);
         ReferenceString ref = ReferenceString.parseReference(iconReference);
-        if(ref == null){
+        if (ref == null) {
             logMessage("Something wrong on : " + AndroidManifestBlock.NAME_icon);
             return;
         }
         TableBlock tableBlock = getTableBlock();
         int resourceId = tableBlock.resolveResourceId(ref.packageName, ref.type, ref.name);
-        if(resourceId == 0){
+        if (resourceId == 0) {
             logMessage("WARN: failed to resolve: " + ref);
             return;
         }
@@ -276,16 +276,16 @@ public class XMLTableBlockEncoder {
     private void encodeResDir(File resDir) throws IOException, XmlPullParserException {
         preloadStyledStrings(resDir);
         List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
-        for(File valuesDir : valuesDirList){
+        for (File valuesDir : valuesDirList) {
             encodeValuesDir(valuesDir);
         }
     }
     private void preloadStyledStrings(File resDir) throws IOException, XmlPullParserException {
         logVerbose("Preloading styled strings ...");
         List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
-        for(File valuesDir : valuesDirList){
+        for (File valuesDir : valuesDirList) {
             List<File> xmlFiles = ApkUtil.listFiles(valuesDir, "strings.xml");
-            for(File file : xmlFiles){
+            for (File file : xmlFiles) {
                 preloadStyledStringsXml(file);
             }
         }
@@ -297,7 +297,7 @@ public class XMLTableBlockEncoder {
         TableStringPool stringPool = getTableBlock().getStringPool();
         while (iterator.hasNext()) {
             XMLElement element = iterator.next();
-            if(element.hasChildElements()) {
+            if (element.hasChildElements()) {
                 stringPool.getOrCreate(StyleDocument.copyInner(element));
             }
         }
@@ -305,11 +305,11 @@ public class XMLTableBlockEncoder {
     private void encodeValuesDir(File valuesDir) throws IOException, XmlPullParserException {
         List<File> xmlFiles = ApkUtil.listFiles(valuesDir, ".xml");
         EncodeUtil.sortValuesXml(xmlFiles);
-        for(File file:xmlFiles){
-            if(isAlreadyParsed(file)){
+        for (File file:xmlFiles) {
+            if (isAlreadyParsed(file)) {
                 continue;
             }
-            if(addNonTypeValueFile(file)){
+            if (addNonTypeValueFile(file)) {
                 continue;
             }
             addParsedFiles(file);
@@ -326,7 +326,7 @@ public class XMLTableBlockEncoder {
         }
         TableBlock tableBlock = getTableBlock();
 
-        for(File pubXmlFile:pubXmlFileList){
+        for (File pubXmlFile:pubXmlFileList) {
             addParsedFiles(pubXmlFile);
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             tableBlock.setCurrentPackage(packageBlock);
@@ -367,59 +367,59 @@ public class XMLTableBlockEncoder {
         }
         return false;
     }
-    private File toAndroidManifest(File pubXmlFile){
+    private File toAndroidManifest(File pubXmlFile) {
         File resDirectory = toResDirectory(pubXmlFile);
         File packageDirectory = resDirectory.getParentFile();
         File resourcesDir = packageDirectory.getParentFile();
         File root = resourcesDir.getParentFile();
         File file = new File(root, AndroidManifestBlock.FILE_NAME_BIN);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             file = new File(root, AndroidManifestBlock.FILE_NAME);
         }
         return file;
     }
-    private File toResDirectory(File pubXmlFile){
+    private File toResDirectory(File pubXmlFile) {
         return pubXmlFile
                 .getParentFile()
                 .getParentFile();
     }
-    private List<File> listAttrs(File pubXmlFile){
+    private List<File> listAttrs(File pubXmlFile) {
         return listValuesXml(pubXmlFile, "attr");
     }
-    private List<File> listValuesXml(File pubXmlFile, String type){
+    private List<File> listValuesXml(File pubXmlFile, String type) {
         List<File> results = new ArrayList<>();
         File resDir = toResDirectory(pubXmlFile);
         List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
-        for(File valuesDir : valuesDirList){
+        for (File valuesDir : valuesDirList) {
             results.addAll(findValuesXml(valuesDir, type));
         }
         return results;
     }
-    private List<File> findValuesXml(File valuesDir, String type){
+    private List<File> findValuesXml(File valuesDir, String type) {
         List<File> results = new ArrayList<>();
         File[] xmlFiles = valuesDir.listFiles();
-        if(xmlFiles == null){
+        if (xmlFiles == null) {
             return results;
         }
-        for(File file : xmlFiles){
-            if(!file.isFile()){
+        for (File file : xmlFiles) {
+            if (!file.isFile()) {
                 continue;
             }
             String name = file.getName();
-            if(!name.endsWith(".xml")){
+            if (!name.endsWith(".xml")) {
                 continue;
             }
             name = EncodeUtil.sanitizeType(name);
-            if(name.equals(type)){
+            if (name.equals(type)) {
                 results.add(file);
             }
         }
         return results;
     }
-    private boolean isAlreadyParsed(File file){
+    private boolean isAlreadyParsed(File file) {
         return parsedFiles.contains(file);
     }
-    private void addParsedFiles(File file){
+    private void addParsedFiles(File file) {
         parsedFiles.add(file);
     }
 
@@ -428,19 +428,19 @@ public class XMLTableBlockEncoder {
     }
     public void setApkLogger(APKLogger logger) {
         this.apkLogger = logger;
-        if(logger != null && apkModule.getApkLogger() == null){
+        if (logger != null && apkModule.getApkLogger() == null) {
             this.apkModule.setAPKLogger(logger);
         }
     }
     private void logMessage(String msg) {
         APKLogger apkLogger = getApkLogger();
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
     }
     private void logVerbose(String msg) {
         APKLogger apkLogger = getApkLogger();
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logVerbose(msg);
         }
     }

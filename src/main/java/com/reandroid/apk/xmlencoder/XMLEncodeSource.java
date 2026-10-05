@@ -39,7 +39,7 @@ public class XMLEncodeSource extends ByteInputSource {
     @Override
     public long write(OutputStream outputStream) throws IOException {
         byte[] bytes = getArray();
-        if(bytes == DISPOSED){
+        if (bytes == DISPOSED) {
             throw new IOException("Disposed source: " + getAlias());
         }
         outputStream.write(bytes, 0, bytes.length);
@@ -54,11 +54,11 @@ public class XMLEncodeSource extends ByteInputSource {
         }
     }
     @Override
-    public void disposeInputSource(){
+    public void disposeInputSource() {
         array = DISPOSED;
     }
     private byte[] getArray() throws IOException{
-        if(array != null){
+        if (array != null) {
             return array;
         }
         try {
@@ -84,12 +84,12 @@ public class XMLEncodeSource extends ByteInputSource {
         IOUtil.close(parser);
         return resXmlDocument;
     }
-    public void setApkLogger(APKLogger logger){
+    public void setApkLogger(APKLogger logger) {
         this.mLogger = logger;
     }
-    private void logVerbose(String msg){
+    private void logVerbose(String msg) {
         APKLogger logger = this.mLogger;
-        if(logger != null){
+        if (logger != null) {
             logger.logVerbose(msg);
         }
     }

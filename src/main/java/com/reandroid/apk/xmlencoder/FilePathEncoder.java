@@ -37,19 +37,19 @@ public class FilePathEncoder {
     private final ApkModule apkModule;
     private APKLogger mLogger;
     private PackageBlock mCurrentPackage;
-    public FilePathEncoder(ApkModule apkModule){
+    public FilePathEncoder(ApkModule apkModule) {
         this.apkModule = apkModule;
         this.mLogger = apkModule.getApkLogger();
     }
     private PackageBlock getCurrentPackage() {
         PackageBlock packageBlock = mCurrentPackage;
-        if(packageBlock == null){
+        if (packageBlock == null) {
             TableBlock tableBlock = apkModule.getTableBlock();
-            if(tableBlock == null){
+            if (tableBlock == null) {
                 throw new NullPointerException("TableBlock == null");
             }
             packageBlock = tableBlock.pickOne();
-            if(packageBlock == null){
+            if (packageBlock == null) {
                 throw new NullPointerException("PackageBlock == null");
             }
             mCurrentPackage = packageBlock;
@@ -64,8 +64,8 @@ public class FilePathEncoder {
                 + File.separator + resDir.getName();
         logMessage("Scan: " + simpleName);
         List<File> dirList = ApkUtil.listDirectories(resDir);
-        for(File dir:dirList){
-            if(ApkUtil.isValuesDirectoryName(dir.getName(), true)){
+        for (File dir:dirList) {
+            if (ApkUtil.isValuesDirectoryName(dir.getName(), true)) {
                 continue;
             }
             count += encodeTypeDir(dir);
@@ -74,7 +74,7 @@ public class FilePathEncoder {
     }
     public int encodeTypeDir(File dir) throws IOException {
         List<File> fileList = ApkUtil.listFiles(dir, null);
-        for(File file:fileList){
+        for (File file:fileList) {
             encodeTypeFileEntry(file);
         }
         return fileList.size();
@@ -88,7 +88,7 @@ public class FilePathEncoder {
         PackageBlock packageBlock = getCurrentPackage();
         ResourceEntry resourceEntry = packageBlock.getTableBlock()
                 .getLocalResource(packageBlock, type, name);
-        if(resourceEntry == null){
+        if (resourceEntry == null) {
             throw new XmlEncodeException("Local resource not defined: @" + type + "/" + name
                     + ", for path: " + path);
         }
@@ -98,46 +98,46 @@ public class FilePathEncoder {
                 resourceEntry.getPackageBlock(), path, resFile);
         addInputSource(inputSource);
     }
-    private InputSource createInputSource(PackageBlock packageBlock, String path, File resFile){
-        if(isXmlFile(resFile)){
+    private InputSource createInputSource(PackageBlock packageBlock, String path, File resFile) {
+        if (isXmlFile(resFile)) {
             return createXMLEncodeInputSource(packageBlock, path, resFile);
         }
         return createRawFileInputSource(path, resFile);
     }
-    private InputSource createRawFileInputSource(String path, File resFile){
+    private InputSource createRawFileInputSource(String path, File resFile) {
         FileInputSource inputSource = new FileInputSource(resFile, path);
         inputSource.setMethod(ZipEntry.STORED);
         return inputSource;
     }
-    private InputSource createXMLEncodeInputSource(PackageBlock packageBlock, String path, File resFile){
+    private InputSource createXMLEncodeInputSource(PackageBlock packageBlock, String path, File resFile) {
         XMLParserSource xmlSource = new XMLFileParserSource(path, resFile);
         XMLEncodeSource encodeSource = new XMLEncodeSource(packageBlock, xmlSource);
         encodeSource.setApkLogger(mLogger);
         return encodeSource;
     }
-    private boolean isXmlFile(File resFile){
+    private boolean isXmlFile(File resFile) {
         String name=resFile.getName();
-        if(!name.endsWith(".xml")){
+        if (!name.endsWith(".xml")) {
             return false;
         }
         String type = EncodeUtil.getTypeNameFromResFile(resFile);
-        if(!"raw".equals(type)){
+        if (!"raw".equals(type)) {
             return true;
         }
         logMessage("WARN: Using un-encoded raw xml: " + resFile);
         return false;
     }
-    private void addInputSource(InputSource inputSource){
-        if(inputSource != null){
+    private void addInputSource(InputSource inputSource) {
+        if (inputSource != null) {
             apkModule.add(inputSource);
         }
     }
-    public void setApkLogger(APKLogger logger){
+    public void setApkLogger(APKLogger logger) {
         this.mLogger = logger;
     }
-    private void logMessage(String msg){
+    private void logMessage(String msg) {
         APKLogger apkLogger = this.mLogger;
-        if(apkLogger != null){
+        if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
     }

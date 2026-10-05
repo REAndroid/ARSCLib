@@ -28,11 +28,11 @@ import java.io.IOException;
 
 public class SplitJsonResourceDecoder {
     private final TableBlock tableBlock;
-    public SplitJsonResourceDecoder(TableBlock tableBlock){
+    public SplitJsonResourceDecoder(TableBlock tableBlock) {
         this.tableBlock = tableBlock;
     }
     public void decodeSplitJsonFiles(File resourcesDir) throws IOException {
-        for(PackageBlock packageBlock: tableBlock.listPackages()){
+        for (PackageBlock packageBlock: tableBlock.listPackages()) {
             decodeSplitPackageJson(resourcesDir, packageBlock);
         }
     }
@@ -41,8 +41,8 @@ public class SplitJsonResourceDecoder {
 
         writeSplitPackageInfoJson(packageDir, packageBlock);
 
-        for(SpecTypePair specTypePair: packageBlock.listSpecTypePairs()){
-            for(TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()){
+        for (SpecTypePair specTypePair: packageBlock.listSpecTypePairs()) {
+            for (TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()) {
                 writeSplitTypeJsonFiles(packageDir, typeBlock);
             }
         }
@@ -56,7 +56,7 @@ public class SplitJsonResourceDecoder {
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
         StagedAlias stagedAlias=StagedAlias
                 .mergeAll(packageBlock.getStagedAliasList().getChildes());
-        if(stagedAlias!=null){
+        if (stagedAlias != null) {
             jsonObject.put(PackageBlock.NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());
         }

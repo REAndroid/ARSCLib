@@ -20,7 +20,7 @@ import com.reandroid.apk.FrameworkApk;
 public abstract class FrameworkManager {
     private FrameworkApk mCurrent;
 
-    public FrameworkManager(){
+    public FrameworkManager() {
     }
     public abstract FrameworkApk get(int version);
     public abstract FrameworkApk getBestMatch(int version);
@@ -28,18 +28,18 @@ public abstract class FrameworkManager {
     public abstract Integer getLatestVersion();
     public abstract FrameworkApk getLatest();
 
-    public void setCurrent(FrameworkApk current){
-        synchronized (this){
+    public void setCurrent(FrameworkApk current) {
+        synchronized (this) {
             mCurrent = current;
         }
     }
-    public FrameworkApk getCurrent(){
-        synchronized (this){
+    public FrameworkApk getCurrent() {
+        synchronized (this) {
             FrameworkApk current = mCurrent;
-            if(current == null){
+            if (current == null) {
                 return null;
             }
-            if(current.isDestroyed()){
+            if (current.isDestroyed()) {
                 mCurrent = null;
                 return null;
             }

@@ -49,8 +49,8 @@ public class FrameworkApk extends ApkModule{
     }
 
     @Override
-    public void destroy(){
-        synchronized (mLock){
+    public void destroy() {
+        synchronized (mLock) {
             this.versionCode = -1;
             this.versionName = "-1";
             this.packageName = "destroyed";
@@ -59,11 +59,11 @@ public class FrameworkApk extends ApkModule{
         }
     }
     public boolean isDestroyed() {
-        synchronized (mLock){
-            if(!mDestroyed){
+        synchronized (mLock) {
+            if (!mDestroyed) {
                 return false;
             }
-            if(hasTableBlock()){
+            if (hasTableBlock()) {
                 this.versionCode = 0;
                 this.versionName = null;
                 this.packageName = null;
@@ -75,20 +75,20 @@ public class FrameworkApk extends ApkModule{
     }
 
     public int getVersionCode() {
-        if(this.versionCode == 0){
+        if (this.versionCode == 0) {
             initValues();
         }
         return this.versionCode;
     }
     public String getVersionName() {
-        if(this.versionName == null){
+        if (this.versionName == null) {
             initValues();
         }
         return this.versionName;
     }
     @Override
     public String getPackageName() {
-        if(this.packageName == null){
+        if (this.packageName == null) {
             initValues();
         }
         return this.packageName;
@@ -99,41 +99,41 @@ public class FrameworkApk extends ApkModule{
         this.packageName = null;
     }
     private void initValues() {
-        if(hasAndroidManifest()){
+        if (hasAndroidManifest()) {
             AndroidManifestBlock manifest = getAndroidManifest();
             Integer code = manifest.getVersionCode();
-            if(code != null){
+            if (code != null) {
                 this.versionCode = code;
             }
-            if(this.versionName == null){
+            if (this.versionName == null) {
                 this.versionName = manifest.getVersionName();
             }
-            if(this.packageName == null){
+            if (this.packageName == null) {
                 this.packageName = manifest.getPackageName();
             }
         }
-        if(hasTableBlock()){
+        if (hasTableBlock()) {
             FrameworkTable table = getTableBlock();
-            if(table.isOptimized() && this.versionCode == 0){
+            if (table.isOptimized() && this.versionCode == 0) {
                 int version = table.getVersionCode();
-                if(version!=0){
+                if (version!=0) {
                     versionCode = version;
-                    if(this.versionName == null){
+                    if (this.versionName == null) {
                         this.versionName = String.valueOf(version);
                     }
                 }
             }
-            if(this.packageName == null){
+            if (this.packageName == null) {
                 PackageBlock packageBlock = table.pickOne();
-                if(packageBlock!=null){
+                if (packageBlock != null) {
                     this.packageName = packageBlock.getName();
                 }
             }
         }
     }
     @Override
-    public void setManifest(AndroidManifestBlock manifestBlock){
-        synchronized (mLock){
+    public void setManifest(AndroidManifestBlock manifestBlock) {
+        synchronized (mLock) {
             super.setManifest(manifestBlock);
             this.versionCode = 0;
             this.versionName = null;
@@ -141,8 +141,8 @@ public class FrameworkApk extends ApkModule{
         }
     }
     @Override
-    public void setTableBlock(TableBlock tableBlock){
-        synchronized (mLock){
+    public void setTableBlock(TableBlock tableBlock) {
+        synchronized (mLock) {
             super.setTableBlock(tableBlock);
             this.versionCode = 0;
             this.versionName = null;
@@ -161,30 +161,30 @@ public class FrameworkApk extends ApkModule{
     FrameworkTable loadTableBlock() throws IOException {
         ZipEntryMap archive= getZipEntryMap();
         InputSource inputSource = archive.getInputSource(TableBlock.FILE_NAME);
-        if(inputSource==null){
+        if (inputSource == null) {
             throw new IOException("Entry not found: "+TableBlock.FILE_NAME);
         }
         InputStream inputStream = inputSource.openStream();
         FrameworkTable frameworkTable=FrameworkTable.load(inputStream);
         frameworkTable.setApkFile(this);
 
-        BlockInputSource<FrameworkTable> blockInputSource=new BlockInputSource<>(inputSource.getName(), frameworkTable);
+        BlockInputSource<FrameworkTable> blockInputSource = new BlockInputSource<>(inputSource.getName(), frameworkTable);
         blockInputSource.setMethod(inputSource.getMethod());
         blockInputSource.setSort(inputSource.getSort());
         archive.add(blockInputSource);
         return frameworkTable;
     }
-    public void optimize(){
-        synchronized (mLock){
-            if(mOptimizing){
+    public void optimize() {
+        synchronized (mLock) {
+            if (mOptimizing) {
                 return;
             }
-            if(!hasTableBlock()){
+            if (!hasTableBlock()) {
                 mOptimizing = false;
                 return;
             }
             FrameworkTable frameworkTable = getTableBlock();
-            if(frameworkTable.isOptimized()){
+            if (frameworkTable.isOptimized()) {
                 mOptimizing = false;
                 initValues();
                 return;
@@ -195,33 +195,33 @@ public class FrameworkApk extends ApkModule{
             initValues();
         }
     }
-    public String getName(){
-        if(isDestroyed()){
+    public String getName() {
+        if (isDestroyed()) {
             return "destroyed";
         }
         String pkg = getPackageName();
-        if(pkg==null){
+        if (pkg == null) {
             return "";
         }
         return pkg + "-" + getVersionCode();
     }
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return Objects.hash(getClass(), getName());
     }
     @Override
-    public boolean equals(Object obj){
-        if(obj==this){
+    public boolean equals(Object obj) {
+        if (obj==this) {
             return true;
         }
-        if(getClass()!=obj.getClass()){
+        if (getClass()!=obj.getClass()) {
             return false;
         }
         FrameworkApk other = (FrameworkApk) obj;
         return getName().equals(other.getName());
     }
     @Override
-    public String toString(){
+    public String toString() {
         return getName();
     }
     public static FrameworkApk loadApkFile(File apkFile) throws IOException {
@@ -233,12 +233,12 @@ public class FrameworkApk extends ApkModule{
     private static FrameworkApk loadApkFile(File apkFile, boolean addManifest) throws IOException {
         ArchiveFile archive = new ArchiveFile(apkFile);
         InputSource table = archive.getEntrySource(TableBlock.FILE_NAME);
-        if(table == null){
+        if (table == null) {
             throw new IOException("Missing " + TableBlock.FILE_NAME + ", on " + apkFile);
         }
         ZipEntryMap zipEntryMap = new ZipEntryMap();
         zipEntryMap.add(table);
-        if(addManifest){
+        if (addManifest) {
             zipEntryMap.add(archive.getEntrySource(AndroidManifestBlock.FILE_NAME));
         }
         FrameworkApk frameworkApk = new FrameworkApk(zipEntryMap);
@@ -253,15 +253,15 @@ public class FrameworkApk extends ApkModule{
         return frameworkApk;
     }
     public static boolean isFramework(ApkModule apkModule) {
-        if(!apkModule.hasAndroidManifest()){
+        if (!apkModule.hasAndroidManifest()) {
             return false;
         }
         return isFramework(apkModule.getAndroidManifest());
     }
-    public static boolean isFramework(AndroidManifestBlock manifestBlock){
+    public static boolean isFramework(AndroidManifestBlock manifestBlock) {
         ResXmlElement root = manifestBlock.getManifestElement();
         ResXmlAttribute attribute = root.searchAttributeByName(AndroidManifestBlock.NAME_coreApp);
-        if(attribute==null || attribute.getValueType()!= ValueType.BOOLEAN){
+        if (attribute == null || attribute.getValueType()!= ValueType.BOOLEAN) {
             return false;
         }
         return attribute.getValueAsBoolean();

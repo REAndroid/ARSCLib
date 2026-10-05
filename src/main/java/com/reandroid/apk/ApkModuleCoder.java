@@ -17,7 +17,7 @@ package com.reandroid.apk;
 
 public abstract class ApkModuleCoder {
     private APKLogger apkLogger;
-    public ApkModuleCoder(){
+    public ApkModuleCoder() {
 
     }
 
@@ -30,20 +30,20 @@ public abstract class ApkModuleCoder {
     }
     void logMessage(String msg) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
     }
     void logError(String msg, Throwable tr) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger == null || (msg == null && tr == null)){
+        if (apkLogger == null || (msg == null && tr == null)) {
             return;
         }
         apkLogger.logError(msg, tr);
     }
     void logVerbose(String msg) {
         APKLogger apkLogger = this.apkLogger;
-        if(apkLogger!=null){
+        if (apkLogger != null) {
             apkLogger.logVerbose(msg);
         }
     }

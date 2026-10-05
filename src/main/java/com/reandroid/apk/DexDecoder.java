@@ -25,7 +25,7 @@ public interface DexDecoder {
     void decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException;
     default void decodeDex(ApkModule apkModule, File mainDirectory) throws IOException {
         List<DexFileInputSource> dexList = apkModule.listDexFiles();
-        for(DexFileInputSource inputSource : dexList) {
+        for (DexFileInputSource inputSource : dexList) {
             decodeDex(inputSource, mainDirectory);
         }
     }

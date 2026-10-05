@@ -20,91 +20,91 @@ import java.util.Comparator;
 import java.util.List;
 
 public class EncodeUtil {
-    public static void sortValuesXml(List<File> fileList){
+    public static void sortValuesXml(List<File> fileList) {
         Comparator<File> cmp= (f1, f2) -> {
-            String n1=getValuesXmlCompare(f1);
-            String n2=getValuesXmlCompare(f2);
+            String n1 = getValuesXmlCompare(f1);
+            String n2 = getValuesXmlCompare(f2);
             return n1.compareTo(n2);
         };
         fileList.sort(cmp);
     }
-    private static String getValuesXmlCompare(File file){
+    private static String getValuesXmlCompare(File file) {
         String name=file.getName().toLowerCase();
-        if(name.equals("public.xml")){
+        if (name.equals("public.xml")) {
             return "0";
         }
-        if(name.equals("ids.xml")){
+        if (name.equals("ids.xml")) {
             return "1";
         }
-        if(name.contains("attr")){
+        if (name.contains("attr")) {
             return "2";
         }
         return "3 "+name;
     }
-    public static boolean isEmpty(String text){
-        if(text==null){
+    public static boolean isEmpty(String text) {
+        if (text == null) {
             return true;
         }
         text=text.trim();
-        return text.length()==0;
+        return text.length() == 0;
     }
-    public static String getEntryPathFromResFile(File resFile){
+    public static String getEntryPathFromResFile(File resFile) {
         File typeDir=resFile.getParentFile();
         File resDir=typeDir.getParentFile();
         return resDir.getName()
                 +"/"+typeDir.getName()
                 +"/"+resFile.getName();
     }
-    public static String getEntryNameFromResFile(File resFile){
+    public static String getEntryNameFromResFile(File resFile) {
         String name=resFile.getName();
         String ninePatch=".9.png";
-        if(name.endsWith(ninePatch)){
+        if (name.endsWith(ninePatch)) {
             return name.substring(0, name.length()-ninePatch.length());
         }
         int i=name.lastIndexOf('.');
-        if(i>0){
+        if (i>0) {
             name = name.substring(0, i);
         }
         return name;
     }
-    public static String getQualifiersFromResFile(File resFile){
+    public static String getQualifiersFromResFile(File resFile) {
         String name=resFile.getParentFile().getName();
         int i=name.indexOf('-');
-        if(i>0){
+        if (i>0) {
             return name.substring(i);
         }
         return "";
     }
-    public static String getTypeNameFromResFile(File resFile){
+    public static String getTypeNameFromResFile(File resFile) {
         String name=resFile.getParentFile().getName();
         int i=name.indexOf('-');
-        if(i>0){
+        if (i>0) {
             name=name.substring(0, i);
         }
-        if(!name.equals("plurals") && name.endsWith("s")){
+        if (!name.equals("plurals") && name.endsWith("s")) {
             name=name.substring(0, name.length()-1);
         }
         return name;
     }
-    public static String sanitizeType(String type){
-        if(type.length() < 2){
+    public static String sanitizeType(String type) {
+        if (type.length() < 2) {
             return type;
         }
         char first = type.charAt(0);
-        if(first == '^' || first == '+' || first == '*'){
+        if (first == '^' || first == '+' || first == '*') {
             type = type.substring(1);
         }
         char[] chars = type.toCharArray();
         StringBuilder builder = new StringBuilder();
-        for(char ch : chars){
-            if(ch <= 'z' && ch >= 'a'){
+        for (char ch : chars) {
+            if (ch <= 'z' && ch >= 'a') {
                 builder.append(ch);
-            }else {
+            } else {
                 break;
             }
         }
         type = builder.toString();
-        if(!"plurals".equals(type) && type.endsWith("s")){
+        if (!"plurals".equals(type) && type.endsWith("s")) {
             type = type.substring(0, type.length()-1);
         }
         return type;

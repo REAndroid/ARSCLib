@@ -20,15 +20,15 @@ import java.util.Set;
 
 public class DecodeFilter {
     private final Set<String> mExcludePaths;
-    public DecodeFilter(){
+    public DecodeFilter() {
         mExcludePaths = new HashSet<>();
     }
-    public void addExclude(String path){
-        if(path != null){
+    public void addExclude(String path) {
+        if (path != null) {
             mExcludePaths.add(path);
         }
     }
-    public boolean isExcluded(String path){
+    public boolean isExcluded(String path) {
         return mExcludePaths.contains(path);
     }
 }

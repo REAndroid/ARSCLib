@@ -25,7 +25,7 @@ import java.util.List;
 public class ApkModuleJsonEncoder extends ApkModuleEncoder {
 
     private ApkModule apkModule;
-    public ApkModuleJsonEncoder(){
+    public ApkModuleJsonEncoder() {
         super();
     }
 
@@ -38,27 +38,27 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder {
 
     @Override
     public ApkModule getApkModule() {
-        if(apkModule == null){
+        if (apkModule == null) {
             apkModule = new ApkModule();
             apkModule.setLoadDefaultFramework(false);
             apkModule.setAPKLogger(getApkLogger());
         }
         return apkModule;
     }
-    private void scanResJsonDirs(File mainDirectory){
+    private void scanResJsonDirs(File mainDirectory) {
         File resJsonDir = new File(mainDirectory, TableBlock.RES_JSON_DIRECTORY_NAME);
         List<File> jsonFileList = ApkUtil.recursiveFiles(resJsonDir);
-        for(File file:jsonFileList){
+        for (File file:jsonFileList) {
             scanResJsonFile(resJsonDir, file);
         }
     }
-    private void scanResJsonFile(File resJsonDir, File file){
+    private void scanResJsonFile(File resJsonDir, File file) {
         JsonXmlInputSource inputSource = JsonXmlInputSource.fromFile(resJsonDir, file);
         getApkModule().add(inputSource);
     }
-    private void scanManifest(File mainDirectory){
+    private void scanManifest(File mainDirectory) {
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_JSON);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             return;
         }
         JsonManifestInputSource inputSource=JsonManifestInputSource.fromFile(mainDirectory, file);
@@ -67,16 +67,16 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder {
     }
     private void scanTable(File mainDirectory) throws IOException{
         boolean singleFound = scanTableSingleJson(mainDirectory);
-        if(singleFound){
+        if (singleFound) {
             logMessage("Building as single json");
             return;
         }
         boolean splitFound = scanTableSplitJson(mainDirectory);
-        if(splitFound){
+        if (splitFound) {
             logMessage("Building as split json");
             return;
         }
-        if(getApkModule().hasTableBlock()){
+        if (getApkModule().hasTableBlock()) {
             logMessage("WARN: Can not determine json type! " +
                     "Ignore building resource table");
             return;
@@ -86,7 +86,7 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder {
     }
     private boolean scanTableSplitJson(File mainDirectory) {
         File resourcesDir = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
-        if(!resourcesDir.isDirectory()){
+        if (!resourcesDir.isDirectory()) {
             return false;
         }
         SplitJsonTableInputSource inputSource = new SplitJsonTableInputSource(resourcesDir);
@@ -96,7 +96,7 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder {
     private boolean scanTableSingleJson(File mainDirectory) {
         File resourcesDir = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
         File file = new File(resourcesDir, TableBlock.JSON_FILE_NAME);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             return false;
         }
         SingleJsonTableInputSource inputSource = SingleJsonTableInputSource

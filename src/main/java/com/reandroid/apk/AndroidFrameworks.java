@@ -23,17 +23,17 @@ public class AndroidFrameworks {
     private static FrameworkManager frameworkManager;
     private static FrameworkApk mCurrent;
 
-    public static void setCurrent(FrameworkApk current){
-        synchronized (AndroidFrameworks.class){
+    public static void setCurrent(FrameworkApk current) {
+        synchronized (AndroidFrameworks.class) {
             mCurrent = current;
         }
     }
-    public static FrameworkApk getCurrent(){
+    public static FrameworkApk getCurrent() {
         FrameworkApk current = mCurrent;
-        if(current==null){
+        if (current == null) {
             return null;
         }
-        if(current.isDestroyed()){
+        if (current.isDestroyed()) {
             mCurrent = null;
             return null;
         }
@@ -42,13 +42,13 @@ public class AndroidFrameworks {
     public static FrameworkApk getLatest() {
         return getFrameworkManager().getLatest();
     }
-    public static FrameworkApk getBestMatch(int version){
+    public static FrameworkApk getBestMatch(int version) {
         return getFrameworkManager().getBestMatch(version);
     }
-    public static FrameworkManager getFrameworkManager(){
-        synchronized (AndroidFrameworks.class){
+    public static FrameworkManager getFrameworkManager() {
+        synchronized (AndroidFrameworks.class) {
             FrameworkManager manager = AndroidFrameworks.frameworkManager;
-            if(manager == null){
+            if (manager == null) {
                 manager = InternalFrameworks.INSTANCE;
                 AndroidFrameworks.frameworkManager = manager;
             }
@@ -56,7 +56,7 @@ public class AndroidFrameworks {
         }
     }
     public static void setFrameworkManager(FrameworkManager frameworkManager) {
-        synchronized (AndroidFrameworks.class){
+        synchronized (AndroidFrameworks.class) {
             AndroidFrameworks.frameworkManager = frameworkManager;
         }
     }

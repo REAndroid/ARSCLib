@@ -28,7 +28,7 @@ public class ApkModuleRawEncoder extends ApkModuleEncoder {
     private final ApkModule apkModule;
     private boolean mKeepOriginal;
 
-    public ApkModuleRawEncoder(){
+    public ApkModuleRawEncoder() {
         ZipEntryMap zipEntryMap = new ZipEntryMap();
         String name = "encoded_raw" + String.valueOf(zipEntryMap.hashCode()).substring(1);
         this.apkModule = new ApkModule(name, zipEntryMap);
@@ -50,11 +50,11 @@ public class ApkModuleRawEncoder extends ApkModuleEncoder {
         return apkModule;
     }
     @Override
-    public void encodeBinaryManifest(File mainDirectory){
+    public void encodeBinaryManifest(File mainDirectory) {
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME);
-            if(!file.isFile() || !AndroidManifestBlock.isResXmlBlock(file)){
+            if (!file.isFile() || !AndroidManifestBlock.isResXmlBlock(file)) {
                 logMessage("WARN: Missing file " + AndroidManifestBlock.FILE_NAME_BIN);
                 return;
             }
@@ -63,13 +63,13 @@ public class ApkModuleRawEncoder extends ApkModuleEncoder {
         FileInputSource inputSource = new FileInputSource(file, AndroidManifestBlock.FILE_NAME);
         ApkModule apkModule = getApkModule();
         apkModule.add(inputSource);
-        if(isKeepOriginal()){
+        if (isKeepOriginal()) {
             apkModule.discardManifestChanges();
         }
     }
-    private void addTableBlock(File mainDirectory){
+    private void addTableBlock(File mainDirectory) {
         File file = new File(mainDirectory, TableBlock.FILE_NAME);
-        if(!file.isFile()){
+        if (!file.isFile()) {
             logMessage("Warn: File not found: " + TableBlock.FILE_NAME);
             return;
         }
@@ -77,19 +77,19 @@ public class ApkModuleRawEncoder extends ApkModuleEncoder {
         InputSource inputSource = new FileInputSource(file, TableBlock.FILE_NAME);
         ApkModule apkModule = getApkModule();
         apkModule.add(inputSource);
-        if(isKeepOriginal()){
+        if (isKeepOriginal()) {
             apkModule.discardManifestChanges();
         }
     }
     @Override
-    void refreshTable(){
-        if(!isKeepOriginal() && getApkModule().getLoadedTableBlock() != null){
+    void refreshTable() {
+        if (!isKeepOriginal() && getApkModule().getLoadedTableBlock() != null) {
             super.refreshTable();
         }
     }
     @Override
     void onScanDirectoryComplete() {
-        if(isKeepOriginal()){
+        if (isKeepOriginal()) {
             ApkModule apkModule = getApkModule();
             apkModule.discardTableBlockChanges();
             apkModule.discardManifestChanges();

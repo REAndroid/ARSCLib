@@ -89,7 +89,7 @@ public class ApkModule implements ApkFile, Closeable {
     public ApkModule(String moduleName, ZipEntryMap zipEntryMap) {
         this.moduleName = moduleName;
         this.zipEntryMap = zipEntryMap;
-        this.mUncompressedFiles=new UncompressedFiles();
+        this.mUncompressedFiles = new UncompressedFiles();
         this.mUncompressedFiles.addPath(zipEntryMap);
         this.mExternalFrameworks = new ArrayCollection<>();
         this.zipEntryMap.setModuleName(moduleName);
@@ -601,7 +601,7 @@ public class ApkModule implements ApkFile, Closeable {
     }
     public void validateResourcesDir() {
         List<ResFile> resFileList = listResFiles();
-        Set<String> existPaths=new HashSet<>();
+        Set<String> existPaths = new HashSet<>();
         InputSource[] sourceList = getInputSources();
         for (InputSource inputSource:sourceList) {
             existPaths.add(inputSource.getAlias());
@@ -627,7 +627,7 @@ public class ApkModule implements ApkFile, Closeable {
     }
     public void setResourcesRootDir(String dirName) {
         List<ResFile> resFileList = listResFiles();
-        Set<String> existPaths=new HashSet<>();
+        Set<String> existPaths = new HashSet<>();
         InputSource[] sourceList = getInputSources();
         for (InputSource inputSource:sourceList) {
             existPaths.add(inputSource.getAlias());
@@ -744,7 +744,7 @@ public class ApkModule implements ApkFile, Closeable {
         if (!hasTableBlock()) {
             return null;
         }
-        TableBlock tableBlock=getTableBlock();
+        TableBlock tableBlock = getTableBlock();
         PackageArray pkgArray = tableBlock.getPackageArray();
         PackageBlock pkg = pkgArray.get(0);
         if (pkg == null) {
@@ -753,14 +753,14 @@ public class ApkModule implements ApkFile, Closeable {
         return pkg.getName();
     }
     public void setPackageName(String name) {
-        String old=getPackageName();
+        String old = getPackageName();
         if (hasAndroidManifest()) {
             getAndroidManifest().setPackageName(name);
         }
         if (!hasTableBlock()) {
             return;
         }
-        TableBlock tableBlock=getTableBlock();
+        TableBlock tableBlock = getTableBlock();
         PackageArray pkgArray = tableBlock.getPackageArray();
         for (PackageBlock pkg:pkgArray.listItems()) {
             if (pkgArray.size()==1) {
@@ -1297,13 +1297,13 @@ public class ApkModule implements ApkFile, Closeable {
         }
         TableBlock exist;
         if (!hasTableBlock()) {
-            exist=new TableBlock();
-            BlockInputSource<TableBlock> inputSource=new BlockInputSource<>(TableBlock.FILE_NAME, exist);
+            exist = new TableBlock();
+            BlockInputSource<TableBlock> inputSource = new BlockInputSource<>(TableBlock.FILE_NAME, exist);
             addInputSource(inputSource);
         } else {
-            exist=getTableBlock();
+            exist = getTableBlock();
         }
-        TableBlock coming=module.getTableBlock();
+        TableBlock coming = module.getTableBlock();
         exist.merge(coming);
     }
     private void mergeFiles(ApkModule module) {
@@ -1332,10 +1332,10 @@ public class ApkModule implements ApkFile, Closeable {
         List<DexFileInputSource> existList = listDexFiles();
         List<DexFileInputSource> comingList = module.listDexFiles();
         ZipEntryMap zipEntryMap = getZipEntryMap();
-        int index=0;
-        if (existList.size()>0) {
-            index=existList.get(existList.size()-1).getDexNumber();
-            if (index==0) {
+        int index = 0;
+        if (existList.size() > 0) {
+            index = existList.get(existList.size() - 1).getDexNumber();
+            if (index == 0) {
                 index=2;
             } else {
                 index++;

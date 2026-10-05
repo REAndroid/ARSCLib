@@ -60,7 +60,7 @@ public class SplitJsonTableInputSource extends BlockInputSource<TableBlock> {
         return outputStream.getValue();
     }
     public TableBlock getTableBlock() throws IOException {
-        if(mCache!=null){
+        if (mCache != null) {
             return mCache;
         }
         TableBlockJsonBuilder builder = new TableBlockJsonBuilder();

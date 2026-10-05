@@ -29,104 +29,104 @@ public class PathMap implements JSONConvert<JSONArray> {
     private final Map<String, String> mNameAliasMap;
     private final Map<String, String> mAliasNameMap;
 
-    public PathMap(){
+    public PathMap() {
         this.mNameAliasMap = new HashMap<>();
         this.mAliasNameMap = new HashMap<>();
     }
 
-    public void restore(ApkModule apkModule){
-        if(apkModule.getLoadedTableBlock() != null){
+    public void restore(ApkModule apkModule) {
+        if (apkModule.getLoadedTableBlock() != null) {
             restoreResFile(apkModule.listResFiles());
         }
         restore(apkModule.getInputSources());
     }
-    public void restoreResFile(Collection<ResFile> files){
-        if(files == null){
+    public void restoreResFile(Collection<ResFile> files) {
+        if (files == null) {
             return;
         }
-        for(ResFile resFile:files){
+        for (ResFile resFile:files) {
             restoreResFile(resFile);
         }
     }
-    public void restoreResFile(ResFile resFile){
+    public void restoreResFile(ResFile resFile) {
         InputSource inputSource = resFile.getInputSource();
         String alias = restore(inputSource);
-        if(alias==null){
+        if (alias == null) {
             return;
         }
         resFile.setFilePath(alias);
     }
-    private void restore(InputSource[] sources){
-        for(InputSource inputSource:sources){
+    private void restore(InputSource[] sources) {
+        for (InputSource inputSource:sources) {
             restore(inputSource);
         }
     }
-    public String restore(InputSource inputSource){
-        if(inputSource==null){
+    public String restore(InputSource inputSource) {
+        if (inputSource == null) {
             return null;
         }
         String name = inputSource.getName();
         String alias = getName(name);
-        if(alias==null){
+        if (alias == null) {
             name = inputSource.getAlias();
             alias = getName(name);
         }
-        if(alias==null || alias.equals(inputSource.getAlias())){
+        if (alias == null || alias.equals(inputSource.getAlias())) {
             return null;
         }
         inputSource.setAlias(alias);
         return alias;
     }
 
-    public String getAlias(String name){
-        synchronized (mLock){
+    public String getAlias(String name) {
+        synchronized (mLock) {
             return mNameAliasMap.get(name);
         }
     }
-    public String getName(String alias){
-        synchronized (mLock){
+    public String getName(String alias) {
+        synchronized (mLock) {
             return mAliasNameMap.get(alias);
         }
     }
-    public int size(){
-        synchronized (mLock){
+    public int size() {
+        synchronized (mLock) {
             return mNameAliasMap.size();
         }
     }
-    public void clear(){
-        synchronized (mLock){
+    public void clear() {
+        synchronized (mLock) {
             mNameAliasMap.clear();
             mAliasNameMap.clear();
         }
     }
-    public void add(ZipEntryMap zipEntryMap){
-        if(zipEntryMap == null){
+    public void add(ZipEntryMap zipEntryMap) {
+        if (zipEntryMap == null) {
             return;
         }
         add(zipEntryMap.toArray());
     }
-    public void add(InputSource[] sources){
-        if(sources == null){
+    public void add(InputSource[] sources) {
+        if (sources == null) {
             return;
         }
-        for(InputSource inputSource:sources){
+        for (InputSource inputSource:sources) {
             add(inputSource);
         }
     }
-    public void add(InputSource inputSource){
-        if(inputSource==null){
+    public void add(InputSource inputSource) {
+        if (inputSource == null) {
             return;
         }
         add(inputSource.getName(), inputSource.getAlias());
     }
-    public void add(String name, String alias){
-        if(name==null || alias==null){
+    public void add(String name, String alias) {
+        if (name == null || alias == null) {
             return;
         }
-        if(name.equals(alias)){
+        if (name.equals(alias)) {
             return;
         }
-        synchronized (mLock){
+        synchronized (mLock) {
             mNameAliasMap.remove(name);
             mNameAliasMap.put(name, alias);
             mAliasNameMap.remove(alias);
@@ -134,8 +134,8 @@ public class PathMap implements JSONConvert<JSONArray> {
         }
     }
 
-    private void add(JSONObject json){
-        if(json==null){
+    private void add(JSONObject json) {
+        if (json == null) {
             return;
         }
         add(json.optString(NAME_name), json.optString(NAME_alias));
@@ -158,16 +158,16 @@ public class PathMap implements JSONConvert<JSONArray> {
     @Override
     public void fromJson(JSONArray json) {
         clear();
-        if(json==null){
+        if (json == null) {
             return;
         }
         int length = json.length();
-        for(int i=0;i<length;i++){
+        for (int i = 0; i < length; i++) {
             add(json.optJSONObject(i));
         }
     }
     @Override
-    public String toString(){
+    public String toString() {
         return "PathMap size="+size();
     }
 

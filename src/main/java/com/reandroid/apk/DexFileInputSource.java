@@ -26,10 +26,10 @@ import java.util.Comparator;
 import java.util.List;
 
 public class DexFileInputSource extends RenamedInputSource<InputSource> implements Comparable<DexFileInputSource>{
-    public DexFileInputSource(String name, InputSource inputSource){
+    public DexFileInputSource(String name, InputSource inputSource) {
         super(name, inputSource);
     }
-    public int getDexNumber(){
+    public int getDexNumber() {
         return InputSource.getDexNumber(getAlias());
     }
     @Override
@@ -37,11 +37,11 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
         return Integer.compare(getDexNumber(), source.getDexNumber());
     }
 
-    public static void sort(List<DexFileInputSource> sourceList){
+    public static void sort(List<DexFileInputSource> sourceList) {
         sourceList.sort(CompareUtil.getComparableComparator());
     }
 
-    public static void sortDexFiles(List<File> fileList){
+    public static void sortDexFiles(List<File> fileList) {
         fileList.sort(new Comparator<File>() {
             @Override
             public int compare(File file1, File file2) {
@@ -49,17 +49,17 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
             }
         });
     }
-    public static List<File> listDexFiles(File dir){
+    public static List<File> listDexFiles(File dir) {
         List<File> results = new ArrayList<>();
-        if(!dir.isDirectory()){
+        if (!dir.isDirectory()) {
             return results;
         }
         File[] files = dir.listFiles();
-        if(files == null){
+        if (files == null) {
             return results;
         }
-        for(File file : files){
-            if(file.isFile() && isDexName(file.getName())){
+        for (File file : files) {
+            if (file.isFile() && isDexName(file.getName())) {
                 results.add(file);
             }
         }
@@ -67,11 +67,11 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
         return results;
     }
 
-    public static boolean isDexName(String name){
-        return InputSource.getDexNumber(name)>=0;
+    public static boolean isDexName(String name) {
+        return InputSource.getDexNumber(name) >= 0;
     }
-    static String getDexName(int i){
-        if(i==0){
+    static String getDexName(int i) {
+        if (i == 0) {
             return "classes.dex";
         }
         return "classes" + i + ".dex";
