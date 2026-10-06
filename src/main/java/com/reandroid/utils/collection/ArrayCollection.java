@@ -1140,10 +1140,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(amount > GROW_LIMIT){
             amount = GROW_LIMIT;
         }
+        this.mLastGrow = amount;
         if (min > amount) {
             return min;
         }
-        this.mLastGrow = amount;
         if(this.size < 4){
             amount = 1;
         }
