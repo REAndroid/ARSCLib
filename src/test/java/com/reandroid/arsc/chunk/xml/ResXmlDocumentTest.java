@@ -1,9 +1,11 @@
 package com.reandroid.arsc.chunk.xml;
 
+import android.content.res.XmlResourceParser;
 import com.reandroid.apk.AndroidFrameworks;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -112,6 +114,22 @@ public class ResXmlDocumentTest {
 
         root.removeAttribute(attribute);
         Assert.assertEquals("Attribute count", 0, root.getAttributeCount());
+    }
+    @Test
+    public void testAttributeIntValueForReference() throws IOException, XmlPullParserException {
+        ResXmlDocument document = new ResXmlDocument();
+        ResXmlElement manifest = document.getOrCreateElement("manifest");
+        ResXmlElement app = manifest.newElement("application");
+        ResXmlAttribute icon = app.getOrCreateAndroidAttribute("icon", 0x7f010123);
+        int resourceId = 0x7f010123;
+        icon.setTypeAndData(ValueType.REFERENCE, resourceId);
+
+        XmlResourceParser parser = app.getResourceParser();
+        Assert.assertEquals(XmlPullParser.START_TAG, parser.next());
+        Assert.assertEquals(resourceId, parser.getAttributeIntValue(
+                ResourceLibrary.URI_ANDROID,
+                "icon",
+                -1));
     }
     @Test
     public void testEncodeDecodeXml() throws XmlPullParserException, IOException {
