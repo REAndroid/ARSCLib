@@ -60,9 +60,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         updateCreator();
     }
     public void ensureSize(int size) {
-        if (size > this.size()) {
+        int min = size - size();
+        if (min > 0) {
             unlockList();
-            mItems.ensureMinCapacity(size);
+            mItems.ensureMinCapacity(min);
             setSize(size);
         }
     }
