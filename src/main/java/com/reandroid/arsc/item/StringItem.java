@@ -407,7 +407,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         if (value == null) {
             return isNull();
         }
-        return value.equals(getXml());
+        return value.equals(get());
     }
     @Override
     public int compareTo(StringItem stringItem) {
