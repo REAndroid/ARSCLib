@@ -324,6 +324,7 @@ public class ApkModuleTest {
         createMoreStrings(packageBlock);
         addArrayBagStrings_1(packageBlock);
         testCreateDynamicReference(packageBlock);
+        createBooleanValues(packageBlock);
 
         tableBlock.refreshFull();
 
@@ -401,6 +402,26 @@ public class ApkModuleTest {
         Assert.assertNotNull(resValue);
         Assert.assertEquals(ValueType.DYNAMIC_ATTRIBUTE, resValue.getValueType());
         Assert.assertEquals("??0x01940007", resValue.decodeValue());
+    }
+
+    private void createBooleanValues(PackageBlock packageBlock) {
+        packageBlock.getOrCreate("-en", "bool", "test_bool_1")
+                .setValueAsBoolean(true);
+        packageBlock.getOrCreate("-fr", "bool", "test_bool_1")
+                .setValueAsBoolean(false);
+        packageBlock.getOrCreate("-land", "bool", "test_bool_1")
+                .setValueAsBoolean(true);
+        packageBlock.getOrCreate("-hdpi", "bool", "test_bool_1")
+                .setValueAsBoolean(true);
+
+        packageBlock.getOrCreate("-en", "bool", "test_bool_2")
+                .setValueAsBoolean(false);
+        packageBlock.getOrCreate("-fr", "bool", "test_bool_2")
+                .setValueAsBoolean(true);
+        packageBlock.getOrCreate("-land", "bool", "test_bool_2")
+                .setValueAsBoolean(false);
+        packageBlock.getOrCreate("-hdpi", "bool", "test_bool_2")
+                .setValueAsBoolean(true);
     }
     private void addArrayBagStrings_1(PackageBlock packageBlock){
 
