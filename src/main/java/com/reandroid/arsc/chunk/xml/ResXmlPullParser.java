@@ -209,11 +209,14 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
 
     private int getAttributeIntValue(ResXmlAttribute xmlAttribute, int defaultValue) {
         if(xmlAttribute != null) {
+            ValueType valueType = xmlAttribute.getValueType();
+            if(valueType != null && valueType.isReference()) {
+                return xmlAttribute.getData();
+            }
             int type = xmlAttribute.getType() & 0xff;
             if(type > 0x10 && type <= 0x1f) {
                 return xmlAttribute.getData();
             }
-            // TODO: resolve if type is REFERENCE
         }
         return defaultValue;
     }
