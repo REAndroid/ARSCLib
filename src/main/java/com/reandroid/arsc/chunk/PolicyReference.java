@@ -16,22 +16,28 @@
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.apk.xmlencoder.EncodeException;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.common.Mergeable;
 import com.reandroid.arsc.coder.CoderUnknownReferenceId;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.base.XmlReader;
+import com.reandroid.xml.base.XmlSerializable;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 
-public class PolicyItem extends IntegerItem {
+public class PolicyReference extends IntegerItem implements Mergeable<PolicyReference>,
+        XmlSerializable, XmlReader, JSONConvert<Integer> {
 
-    public PolicyItem() {
+    public PolicyReference() {
         super();
     }
 
@@ -43,6 +49,7 @@ public class PolicyItem extends IntegerItem {
         return null;
     }
 
+    @Override
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
         String name = parser.getAttributeValue(null, ATTR_name);
         if (StringsUtil.isEmpty(name)) {
@@ -53,7 +60,7 @@ public class PolicyItem extends IntegerItem {
             EncodeResult encodeResult = CoderUnknownReferenceId.INS.encode(name);
             if (encodeResult != null) {
                 this.set(encodeResult.value);
-                skipToEnd(parser);
+                XMLUtil.skipEndTag(parser);
                 return;
             }
         }
@@ -67,17 +74,10 @@ public class PolicyItem extends IntegerItem {
             throw new EncodeException(parser, "Unknown policy item: type = " + type + ", name = " + name + "");
         }
         this.set(resourceEntry.getResourceId());
-        skipToEnd(parser);
-    }
-    private void skipToEnd(XmlPullParser parser) throws IOException, XmlPullParserException {
-        parser.next();
-        XMLUtil.ensureTag(parser);
-        if(parser.getEventType() == XmlPullParser.END_TAG) {
-            parser.next();
-            XMLUtil.ensureTag(parser);
-        }
+        XMLUtil.skipEndTag(parser);
     }
 
+    @Override
     public void serialize(XmlSerializer serializer) throws IOException {
         serializer.startTag(null, TAG_item);
         ResourceEntry resourceEntry = getResourceEntry();
@@ -93,6 +93,23 @@ public class PolicyItem extends IntegerItem {
     }
 
     @Override
+    public Integer toJson() {
+        return get();
+    }
+    @Override
+    public void fromJson(Integer data) {
+        if (data != null) {
+            set(data);
+        }
+    }
+    @Override
+    public void merge(PolicyReference item) {
+        if (item == null || item == this) {
+            return;
+        }
+        set(item.get());
+    }
+    @Override
     public int hashCode() {
         return get();
     }
@@ -102,11 +119,11 @@ public class PolicyItem extends IntegerItem {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof PolicyItem)) {
+        if (!(obj instanceof PolicyReference)) {
             return false;
         }
-        PolicyItem reference = (PolicyItem) obj;
-        return get() == reference.get();
+        PolicyReference policyReference = (PolicyReference) obj;
+        return get() == policyReference.get();
     }
 
     @Override
@@ -122,4 +139,7 @@ public class PolicyItem extends IntegerItem {
     public static final String ATTR_type = ObjectsUtil.of("type");
 
     public static final String TAG_item = ObjectsUtil.of("item");
+
+    public static final Creator<PolicyReference> CREATOR = PolicyReference::new;
+
 }

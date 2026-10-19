@@ -16,79 +16,49 @@
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.header.OverlayablePolicyHeader;
-import com.reandroid.json.JSONArray;
-import com.reandroid.json.JSONConvert;
+import com.reandroid.json.JSONItem;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.base.XmlReader;
+import com.reandroid.xml.base.XmlSerializable;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
-        Iterable<PolicyItem>, JSONConvert<JSONObject> {
-
-    private final CountedBlockList<PolicyItem> itemList;
+public class OverlayablePolicy extends EntriesChunk<PolicyReference> implements
+        XmlSerializable, XmlReader, Iterable<PolicyReference> {
 
     public OverlayablePolicy() {
-        super(new OverlayablePolicyHeader(), 1);
-        this.itemList = new CountedBlockList<>(CREATOR, getHeaderBlock().getEntryCount());
-
-        addChild(this.itemList);
-    }
-
-    public PolicyItem get(int i) {
-        return getItemList().get(i);
-    }
-    public void add(PolicyItem policyItem) {
-        getItemList().add(policyItem);
-    }
-    public PolicyItem createNext() {
-        return getItemList().createNext();
-    }
-    @Override
-    public Iterator<PolicyItem> iterator() {
-        return itemList.iterator();
+        super(new OverlayablePolicyHeader(), PolicyReference.CREATOR);
+        itemList().setHasSameByteSizeEntries(true);
     }
 
     @Override
-    public boolean isNull() {
-        return getReferenceCount()==0;
+    public OverlayablePolicyHeader getHeaderBlock() {
+        return (OverlayablePolicyHeader) super.getHeaderBlock();
     }
-    public int getReferenceCount(){
-        return itemList.size();
-    }
+
     public int getFlags() {
-        return getHeaderBlock().getFlags().get();
+        return getHeaderBlock().flags().get();
     }
-    public void setFlags(int flags){
-        getHeaderBlock().getFlags().set(flags);
+    public void setFlags(int flags) {
+        getHeaderBlock().flags().set(flags);
     }
-    public void setFlags(PolicyFlag[] policyFlags){
+    public void setFlags(PolicyFlag ... policyFlags) {
         setFlags(PolicyFlag.sum(policyFlags));
     }
-    public void addFlag(PolicyFlag policyFlag){
-        int i = policyFlag == null ? 0 : policyFlag.flag();
-        setFlags(getFlags() | i);
+    public void addFlag(PolicyFlag flag) {
+        setFlags(getFlags() | (flag == null ? 0 : flag.flag()));
     }
-    public PolicyFlag[] getPolicyFlags(){
+    public PolicyFlag[] getPolicyFlags() {
         return PolicyFlag.valuesOf(getFlags());
     }
 
-    public CountedBlockList<PolicyItem> getItemList() {
-        return itemList;
-    }
-
     @Override
-    protected void onChunkRefreshed() {
-    }
-
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
         if (parser.getEventType() != XmlPullParser.START_TAG) {
             throw new XmlPullParserException("Parser not in START_TAG event: " + parser.getEventType());
@@ -102,22 +72,24 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
         XMLUtil.ensureTag(parser);
         while (parser.getEventType() != XmlPullParser.END_TAG &&
                 parser.getEventType() != XmlPullParser.END_DOCUMENT) {
-            PolicyItem policyItem = createNext();
-            policyItem.parse(parser);
+            createNext().parse(parser);
             XMLUtil.ensureTag(parser);
         }
         if (parser.getEventType() == XmlPullParser.END_TAG) {
             parser.next();
         }
     }
+
+    @Override
     public void serialize(XmlSerializer serializer) throws IOException {
         serializer.startTag(null, TAG_policy);
-        String flags = PolicyFlag.toString(getPolicyFlags());
-        if (!StringsUtil.isEmpty(flags)) {
-            serializer.attribute(null, "type", flags);
+        int flags = getFlags();
+        if (flags != 0) {
+            serializer.attribute(null, "type", PolicyFlag.toString(flags));
         }
-        for (PolicyItem reference : this) {
-            reference.serialize(serializer);
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).serialize(serializer);
         }
         serializer.endTag(null, TAG_policy);
     }
@@ -125,57 +97,45 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(NAME_flags, getFlags());
-        JSONArray jsonArray = new JSONArray();
-        for(PolicyItem reference : this) {
-            jsonArray.put(reference.get());
+        if (!isEmpty()) {
+            jsonObject.put(NAME_references, super.toJson());
         }
-        jsonObject.put(NAME_references, jsonArray);
         return jsonObject;
     }
-    @Override
-    public void fromJson(JSONObject json) {
-        setFlags(json.getInt(NAME_flags));
-        JSONArray jsonArray = json.getJSONArray(NAME_references);
-        int length = jsonArray.length();
-        CountedBlockList<PolicyItem> referenceList = getItemList();
-        referenceList.setSize(length);
 
-        for(int i = 0; i < length; i++) {
-            PolicyItem ref = referenceList.get(i);
-            ref.set(jsonArray.getInt(i));
-        }
+    @Override
+    public void fromJson(JSONItem jsonItem) {
+        JSONObject json = (JSONObject) jsonItem;
+        setFlags(json.getInt(NAME_flags));
+        super.fromJson(json.optJSONArray(NAME_references));
     }
-    public void merge(OverlayablePolicy policy){
-        if(policy == null || policy == this){
+
+    @Override
+    public boolean canMerge(PolicyReference item) {
+        return !itemList().contains(item);
+    }
+
+    @Override
+    public void merge(EntriesChunk<? extends PolicyReference> entriesChunk) {
+        if (entriesChunk == null || entriesChunk == this) {
             return;
         }
+        OverlayablePolicy policy = (OverlayablePolicy) entriesChunk;
         setFlags(this.getFlags() | policy.getFlags());
-
-        CountedBlockList<PolicyItem> exist = this.getItemList();
-        Iterator<PolicyItem> iterator = policy.getItemList()
-                .iterator();
-
-        while (iterator.hasNext()){
-            PolicyItem coming = iterator.next();
-            if(!exist.contains(coming)) {
-                PolicyItem reference = new PolicyItem();
-                reference.set(coming.get());
-                exist.add(reference);
-            }
-        }
+        super.merge(entriesChunk);
     }
 
     @Override
-    public String toString(){
-        return getClass().getSimpleName()+
-                ": flags="+ PolicyFlag.toString(getPolicyFlags())
-                +"', count="+ getReferenceCount();
+    public String toString() {
+        return getClass().getSimpleName() +
+                ": flags=" + PolicyFlag.toString(getFlags())
+                +", count=" + size();
     }
 
-    private static final Creator<PolicyItem> CREATOR = PolicyItem::new;
+    public static final Creator<OverlayablePolicy> CREATOR = OverlayablePolicy::new;
 
-    public static final String NAME_flags = "flags";
-    public static final String NAME_references = "references";
+    public static final String NAME_flags = ObjectsUtil.of("flags");
+    public static final String NAME_references = ObjectsUtil.of("references");
 
     public static final String TAG_policy = ObjectsUtil.of("policy");
 }

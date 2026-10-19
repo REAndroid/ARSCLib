@@ -66,7 +66,7 @@ public class ResXmlIDList extends CountedBlockList<ResXmlID> {
     }
 
     @Override
-    protected boolean hasSimilarEntries() {
+    protected boolean hasSameByteSizeEntries() {
         return true;
     }
 

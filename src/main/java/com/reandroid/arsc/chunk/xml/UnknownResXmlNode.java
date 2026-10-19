@@ -88,8 +88,7 @@ public class UnknownResXmlNode extends ResXmlNode {
         }
     }
     public int getChunkType() {
-        return getChunk().getHeaderBlock()
-                .getType() & 0xffff;
+        return getChunk().getHeaderBlock().getType();
     }
     @Override
     public JSONObject toJson() {

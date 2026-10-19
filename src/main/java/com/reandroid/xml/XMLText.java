@@ -68,6 +68,13 @@ public class XMLText extends XMLNode implements Text {
         }
         this.text = this.text + text;
     }
+    public int getLength() {
+        String text = getText();
+        if (text != null) {
+            return text.length();
+        }
+        return 0;
+    }
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
         serializer.text(getText());

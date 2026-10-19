@@ -16,9 +16,12 @@ import java.io.IOException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ApkModuleCoderTest {
+
     private static ApkModule apkModule;
     private static File mDir_xml;
     private static File mDir_json;
+    private static File mDir_json_split;
+
     @Test
     public void a_testDecodeToXml() throws IOException {
         ApkModule apkModule = getApkModule();
@@ -88,6 +91,52 @@ public class ApkModuleCoderTest {
         FileUtil.deleteDirectory(mDir_json);
         Assert.assertFalse("Failed to delete: " + mDir_json, mDir_json.exists());
         compare(apkModule, apkModule_encoded);
+    }
+    @Test
+    public void e_testDecodeToJsonSplit() throws IOException {
+        ApkModule apkModule = getApkModule();
+        Assert.assertNotNull(apkModule);
+        File dir = TestUtils.getTempDir();
+        dir = new File(dir, "decode_json_split");
+        ApkModuleJsonDecoder decoder = new ApkModuleJsonDecoder(apkModule, true);
+        decoder.decode(dir);
+        mDir_json_split = dir;
+    }
+    @Test
+    public void f_testEncodeJsonSplit() throws IOException {
+        ApkModule apkModule = getApkModule();
+        Assert.assertNotNull(apkModule);
+        ApkModuleJsonEncoder encoder = new ApkModuleJsonEncoder();
+        encoder.scanDirectory(mDir_json_split);
+        ApkModule apkModule_encoded = encoder.getApkModule();
+        Assert.assertNotNull(apkModule_encoded.getAndroidManifest());
+        apkModule_encoded.getAndroidManifest().refreshFull();
+        apkModule.getAndroidManifest().removeUnusedNamespaces();
+        apkModule.getAndroidManifest().getStringPool().removeUnusedStrings();
+        apkModule.getAndroidManifest().refreshFull();
+
+        // Preserve generated apk for signing and install on device
+        File apk = new File(TestUtils.getTesApkDirectory(), "encoded_json_split.apk");
+
+        apkModule_encoded.writeApk(apk);
+        TestUtils.log("Generated apk: " + apk.getAbsolutePath());
+
+        apkModule_encoded = ApkModule.loadApkFile(apk);
+        FileUtil.deleteDirectory(mDir_json_split);
+        Assert.assertFalse("Failed to delete: " + mDir_json_split, mDir_json_split.exists());
+        compare(apkModule, apkModule_encoded);
+    }
+    @Test
+    public void g_testMergeApkModule() throws IOException {
+        ApkModule apkModule = getApkModule();
+        ApkModule apkModule2 = ApkModule.readApkBytes(apkModule.writeApkBytes());
+        apkModule2.removeInputSource("classes.dex");
+        ApkBundle bundle = new ApkBundle();
+        bundle.addModule(apkModule);
+        bundle.addModule(apkModule2);
+        ApkModule merged = bundle.mergeModules();
+        merged.addExternalFrameworks(apkModule.getLoadedFrameworks());
+        compare(apkModule, merged);
     }
     private void compare(ApkModule module1, ApkModule module2) throws IOException {
         Assert.assertEquals(module1.getZipEntryMap().size(), module2.getZipEntryMap().size());

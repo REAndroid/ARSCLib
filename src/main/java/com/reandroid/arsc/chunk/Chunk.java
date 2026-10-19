@@ -58,10 +58,7 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
     public SingleBlockContainer<Block> getFirstPlaceHolder() {
         return firstPlaceHolder;
     }
-    void setHeaderLoaded(HeaderBlock.HeaderLoaded headerLoaded) {
-        getHeaderBlock().setHeaderLoaded(headerLoaded);
-    }
-    public final T getHeaderBlock() {
+    public T getHeaderBlock() {
         return mHeaderBlock;
     }
     @Override
@@ -76,7 +73,9 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
         alignItem.setSize(0);
         alignItem.align(this);
     }
-    protected abstract void onChunkRefreshed();
+    protected void onChunkRefreshed() {
+
+    }
     public void onChunkLoaded() {
 
     }

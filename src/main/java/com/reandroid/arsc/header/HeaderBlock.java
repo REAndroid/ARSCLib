@@ -15,158 +15,111 @@
  */
 package com.reandroid.arsc.header;
 
-import com.reandroid.arsc.base.BlockContainer;
+import com.reandroid.arsc.base.DirectStreamReader;
+import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.container.BlockList;
-import com.reandroid.arsc.container.ExpandableBlockContainer;
-import com.reandroid.arsc.io.BlockLoad;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.BlockItem;
-import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.item.CountedBlockItem;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.utils.HexBytesWriter;
 import com.reandroid.utils.HexUtil;
 
-import java.io.*;
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
 
-public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
+public class HeaderBlock extends FixedBlockContainer implements DirectStreamReader {
+    
     private final ShortItem mType;
     private final ShortItem mHeaderSize;
     private final IntegerItem mChunkSize;
-    private HeaderLoaded mHeaderLoaded;
-    private final ByteArray extraBytes;
-    public HeaderBlock(short type){
-        super(3);
-        this.mType=new ShortItem(type);
-        this.mHeaderSize=new ShortItem();
-        this.mChunkSize=new IntegerItem();
-        this.extraBytes=new ByteArray();
-        addChild(mType);
-        addChild(mHeaderSize);
-        addChild(mChunkSize);
-        this.mType.setBlockLoad(this);
-        this.mHeaderSize.setBlockLoad(this);
-        this.mChunkSize.setBlockLoad(this);
+    private final CountedBlockItem extraBytes;
+
+    public HeaderBlock(int childesCount, int type) {
+        super(childesCount + 4);
+        this.mType = new ShortItem(type);
+        this.mHeaderSize = new ShortItem();
+        this.mChunkSize = new IntegerItem();
+        this.extraBytes = new ExtraBytesBlock(this);
+        addChild(0, mType);
+        addChild(1, mHeaderSize);
+        addChild(2, mChunkSize);
+        addChild(childesCount + 3, extraBytes);
     }
-    public HeaderBlock(ChunkType chunkType){
-        this(chunkType.ID);
+    public HeaderBlock(int childesCount, ChunkType chunkType) {
+        this(childesCount, chunkType.ID);
     }
-    public int getMinimumSize(){
+    public HeaderBlock(ChunkType chunkType) {
+        this(0, chunkType.ID);
+    }
+    
+    public int getMinimumSize() {
         return countBytes();
     }
-    public ByteArray getExtraBytes() {
+
+    public CountedBlockItem getExtraBytes() {
         return extraBytes;
     }
-    public void setHeaderLoaded(HeaderLoaded headerLoaded){
-        this.mHeaderLoaded=headerLoaded;
+    public ChunkType getChunkType() {
+        return ChunkType.get(mType.get());
     }
-    public ChunkType getChunkType(){
-        return ChunkType.get(mType.getShort());
+    public int getType() {
+        return mType.get();
     }
-    public short getType(){
-        return mType.getShort();
+    public void setType(ChunkType chunkType) {
+        setType(chunkType == null ? 0 : chunkType.ID);
     }
-    public void setType(ChunkType chunkType){
-        short type;
-        if(chunkType==null){
-            type=0;
-        }else {
-            type=chunkType.ID;
-        }
-        setType(type);
-    }
-    public void setType(short type){
+    public void setType(int type) {
         mType.set(type);
     }
 
-    public int getHeaderSize(){
-        return mHeaderSize.unsignedInt();
+    public int getHeaderSize() {
+        return headerSize().get();
     }
-    public void setHeaderSize(short headerSize){
-        mHeaderSize.set(headerSize);
+    public void setHeaderSize(int headerSize) {
+        headerSize().set(headerSize);
     }
-    public int getChunkSize(){
-        return mChunkSize.get();
+    public int getChunkSize() {
+        return chunkSize().get();
     }
-    public void setChunkSize(int chunkSize){
-        mChunkSize.set(chunkSize);
+    public void setChunkSize(int chunkSize) {
+        chunkSize().set(chunkSize);
     }
 
-    public final void refreshHeader(){
+    public IntegerReference type() {
+        return mType;
+    }
+    public IntegerReference headerSize() {
+        return mHeaderSize;
+    }
+    public IntegerItem chunkSize() {
+        return mChunkSize;
+    }
+
+    public final void refreshHeader() {
         refreshHeaderSize();
         refreshChunkSize();
     }
-    private void refreshHeaderSize(){
-        setHeaderSize((short)countBytes());
+    private void refreshHeaderSize() {
+        setHeaderSize(countBytes());
     }
-    private void refreshChunkSize(){
-        Block parent=getParent();
-        if(parent==null){
-            return;
+    private void refreshChunkSize() {
+        Block parent = getParentInstance(Chunk.class);
+        if (parent != null) {
+            setChunkSize(parent.countBytes());
         }
-        int count=parent.countBytes();
-        setChunkSize(count);
     }
-    /**Non buffering reader*/
-    public int readBytes(InputStream inputStream) throws IOException{
-        int result = onReadBytes(inputStream);
+    boolean readExtraBytes() {
+        return true;
+    }
+
+    @Override
+    public int readBytes(InputStream inputStream) throws IOException {
+        int result = DirectStreamReader.Util.readBlock(this, inputStream);
         super.notifyBlockLoad();
         return result;
-    }
-    private int onReadBytes(InputStream inputStream) throws IOException {
-        int readCount = readBytes(inputStream, this);
-        int difference = getHeaderSize() - readCount;
-        initExtraBytes(this.extraBytes, difference);
-        if(this.extraBytes.size()>0){
-            readCount += extraBytes.readBytes(inputStream);
-        }
-        return readCount;
-    }
-    private int readBytes(InputStream inputStream, Block block) throws IOException{
-        int result=0;
-        if(block instanceof BlockItem){
-            result = ((BlockItem)block).readBytes(inputStream);
-        }else if(block instanceof BlockList){
-            List<? extends Block> childes=
-                    ((BlockList<? extends Block>) block).getChildes();
-            for(Block child:childes){
-                result+=readBytes(inputStream, child);
-            }
-        }else if(block instanceof BlockContainer){
-            Block[] childes =
-                    ((BlockContainer<? extends Block>) block).getChildes();
-            for(Block child:childes){
-                result+=readBytes(inputStream, child);
-            }
-        }else {
-            throw new IOException("Can not read block type: "+block.getClass());
-        }
-        return result;
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        int start=reader.getPosition();
-        super.onReadBytes(reader);
-        int readActual=reader.getPosition() - start;
-        int difference=getHeaderSize()-readActual;
-        initExtraBytes(this.extraBytes, difference);
-        if(this.extraBytes.size()>0){
-            this.extraBytes.readBytes(reader);
-        }
-    }
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==this.mType){
-            onChunkTypeLoaded(mType.getShort());
-        }else if(sender==this.mHeaderSize){
-            onHeaderSizeLoaded(mHeaderSize.unsignedInt());
-        }else if(sender==this.mChunkSize){
-            onChunkSizeLoaded(mHeaderSize.unsignedInt(),
-                    mChunkSize.get());
-        }
     }
 
     @Override
@@ -174,54 +127,27 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         // Not required, the parent should call refreshHeader()
     }
     @Override
-    protected void refreshChildes(){
+    protected void refreshChildes() {
         // Not required
-    }
-    void initExtraBytes(ByteArray extraBytes, int difference){
-        if(difference==0){
-            return;
-        }
-        if(extraBytes.getParent()==null){
-            addChild(extraBytes);
-        }
-        extraBytes.setSize(difference);
-    }
-    void onChunkTypeLoaded(short chunkType){
-        HeaderLoaded headerLoaded = mHeaderLoaded;
-        if(headerLoaded!=null){
-            headerLoaded.onChunkTypeLoaded(chunkType);
-        }
-    }
-    void onHeaderSizeLoaded(int size){
-        HeaderLoaded headerLoaded = mHeaderLoaded;
-        if(headerLoaded!=null){
-            headerLoaded.onHeaderSizeLoaded(size);
-        }
-    }
-    void onChunkSizeLoaded(int headerSize, int chunkSize){
-        HeaderLoaded headerLoaded = mHeaderLoaded;
-        if(headerLoaded!=null){
-            headerLoaded.onChunkSizeLoaded(headerSize, chunkSize);
-        }
     }
     /**
      * Prints bytes in hex for debug/testing
      * */
-    public String toHex(){
+    public String toHex() {
         return HexBytesWriter.toHex(getBytes());
     }
     @Override
-    public String toString(){
-        short t = getType();
+    public String toString() {
+        int t = getType();
         ChunkType type = ChunkType.get(t);
         StringBuilder builder = new StringBuilder();
-        if(type!=null){
+        if (type != null) {
             builder.append(type.toString());
-        }else {
+        } else {
             builder.append("Unknown type=");
-            builder.append(HexUtil.toHex4(t));
+            builder.append(HexUtil.toHex(t, 4));
         }
-        builder.append("{ValueHeader=");
+        builder.append("{Header=");
         builder.append(getHeaderSize());
         builder.append(", Chunk=");
         builder.append(getChunkSize());
@@ -229,9 +155,44 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         return builder.toString();
     }
 
-    public interface HeaderLoaded{
-        void onChunkTypeLoaded(short type);
-        void onHeaderSizeLoaded(int headerSize);
-        void onChunkSizeLoaded(int headerSize, int chunkSize);
+    static class ExtraBytesBlock extends CountedBlockItem implements IntegerReference {
+
+        private final HeaderBlock header;
+
+        public ExtraBytesBlock(HeaderBlock header) {
+            super(null);
+            this.header = header;
+        }
+        @Override
+        public IntegerReference countReference() {
+            return this;
+        }
+
+        @Override
+        public boolean isNull() {
+            return !header.readExtraBytes();
+        }
+
+        @Override
+        public int get() {
+            HeaderBlock header = this.header;
+            int count = 0;
+            if (header.readExtraBytes()) {
+                count = header.countBytes() - this.countBytes();
+                count = header.headerSize().get() - count;
+                if (count < 0) {
+                    count = 0;
+                }
+            }
+            return count;
+        }
+        @Override
+        public void set(int value) {
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(countBytes());
+        }
     }
 }

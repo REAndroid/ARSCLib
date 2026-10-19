@@ -25,6 +25,7 @@ import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.list.ExtraChunkList;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.AttributeType;
@@ -48,7 +49,6 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.Predicate;
 
 public class XmlCoder {
@@ -65,7 +65,7 @@ public class XmlCoder {
 
     public CoderSetting getSetting() {
         CoderSetting setting = this.setting;
-        if(setting == null) {
+        if (setting == null) {
             setting = new CoderSetting();
             this.setting = setting;
         }
@@ -100,7 +100,7 @@ public class XmlCoder {
         private final BagChild BAG_CHILD;
         private final XmlCoder xmlCoder;
 
-        public ValuesXml(XmlCoder xmlCoder){
+        public ValuesXml(XmlCoder xmlCoder) {
             this.xmlCoder = xmlCoder;
             this.BAG_CHILD = new BagChild(this);
         }
@@ -124,8 +124,9 @@ public class XmlCoder {
         public void decodeTable(ValuesSerializerFactory serializerFactory,
                                   TableBlock tableBlock,
                                   Predicate<Entry> decodedEntries) throws IOException {
-            for (PackageBlock packageBlock : tableBlock.listPackages()){
-                decodePackage(serializerFactory, packageBlock, decodedEntries);
+            int size = tableBlock.size();
+            for (int i = 0; i < size; i++) {
+                decodePackage(serializerFactory, tableBlock.get(i), decodedEntries);
             }
         }
         public void decodePackage(ValuesSerializerFactory serializerFactory,
@@ -134,13 +135,15 @@ public class XmlCoder {
 
             packageBlock.sortTypes();
 
-            Iterable<SpecTypePair> specs = packageBlock.listSpecTypePairs();
+            Iterator<SpecTypePair> specs = packageBlock.getSpecTypePairs();
 
-            for (SpecTypePair specTypePair : specs){
-                Set<ResConfig> configs = specTypePair.listResConfig();
-                int size = configs.size();
+            while (specs.hasNext()) {
+                SpecTypePair specTypePair = specs.next();
+                Iterator<ResConfig> configs = specTypePair.uniqueConfigs();
+                int size = specTypePair.countTypeBlocks();
                 int i = 0;
-                for(ResConfig resConfig : configs){
+                while (configs.hasNext()) {
+                    ResConfig resConfig = configs.next();
                     i ++;
                     TypeBlock typeBlock = specTypePair.getTypeBlock(resConfig);
                     logVerbose(i + "/" + size + " " + packageBlock.getName()
@@ -163,13 +166,13 @@ public class XmlCoder {
                            ResConfig resConfig,
                            Predicate<Entry> decodedEntries) throws IOException {
             int entriesCount = 0;
-            while (resources.hasNext()){
+            while (resources.hasNext()) {
                 ResourceEntry resourceEntry = resources.next();
                 boolean decoded = decode(serializer,
                         resourceEntry,
                         resConfig,
                         decodedEntries);
-                if(decoded){
+                if (decoded) {
                     entriesCount++;
                 }
             }
@@ -180,14 +183,14 @@ public class XmlCoder {
                            ResConfig resConfig,
                            Predicate<Entry> decodedEntries) throws IOException {
             Entry entry = resourceEntry.get(resConfig);
-            if(entry == null || decodedEntries.test(entry)){
+            if (entry == null || decodedEntries.test(entry)) {
                 return false;
             }
-            if(entry.isComplex()){
+            if (entry.isComplex()) {
                 decodeBag(serializer, entry);
-            }else if (!entry.isNull()){
+            } else if (!entry.isNull()) {
                 decodeScalar(serializer, entry);
-            }else {
+            } else {
                 return false;
             }
             return true;
@@ -200,14 +203,14 @@ public class XmlCoder {
         }
         private void decodeScalar(XmlSerializer serializer, Entry entry) throws IOException {
             String tag = startEntry(serializer, entry);
-            if(ignoreIdValue(entry)){
+            if (ignoreIdValue(entry)) {
                 endEntry(serializer, tag);
                 return;
             }
             ResValue resValue = entry.getResValue();
-            if(resValue.getValueType() == ValueType.STRING){
+            if (resValue.getValueType() == ValueType.STRING) {
                 getStringDecoder().serializeText(resValue.getDataAsPoolString(), serializer);
-            }else {
+            } else {
                 resValue.serializeText(serializer, false);
             }
             endEntry(serializer, tag);
@@ -223,24 +226,24 @@ public class XmlCoder {
             endEntry(serializer, tag, false);
         }
         private void endEntry(XmlSerializer serializer, String tag, boolean indent) throws IOException {
-            if(indent){
+            if (indent) {
                 XmlDecodeUtil.entryIndent(serializer);
             }
             serializer.endTag(null, tag);
         }
-        private boolean ignoreIdValue(Entry entry){
-            if(!TypeString.isTypeId(entry.getTypeName())){
+        private boolean ignoreIdValue(Entry entry) {
+            if (!TypeString.isTypeId(entry.getTypeName())) {
                 return false;
             }
-            if(isAapt()) {
+            if (isAapt()) {
                 return true;
             }
             ResValue resValue = entry.getResValue();
             ValueType valueType = resValue.getValueType();
-            if(valueType == ValueType.BOOLEAN){
+            if (valueType == ValueType.BOOLEAN) {
                 return true;
             }
-            if(valueType == ValueType.STRING){
+            if (valueType == ValueType.STRING) {
                 String value = resValue.getValueAsString();
                 return value == null || value.length() == 0;
             }
@@ -248,7 +251,14 @@ public class XmlCoder {
         }
         public void encode(File valuesXmlFile, PackageBlock packageBlock) throws IOException, XmlPullParserException {
             XmlPullParser parser = XMLFactory.newPullParser(valuesXmlFile);
-
+            File parent = valuesXmlFile.getParentFile();
+            if (parent == null || PackageBlock.DIRECTORY_NAME_VALUES.equalsIgnoreCase(parent.getName())) {
+                ExtraChunkList<?> chunkList = packageBlock.extraChunkListForFile(valuesXmlFile.getName());
+                if (chunkList != null) {
+                    chunkList.parse(parser);
+                    return;
+                }
+            }
             TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock(
                     XmlEncodeUtil.getQualifiersFromValuesXml(valuesXmlFile),
                     XmlEncodeUtil.getTypeFromValuesXml(valuesXmlFile));
@@ -269,7 +279,7 @@ public class XmlCoder {
             }
             if (PackageBlock.TAG_resources.equals(parser.getName())) {
                 parser.next();
-            } else if(documentStarted){
+            } else if (documentStarted) {
                 throw new XmlEncodeException(parser, "Expecting <resources> tag but found: " + parser.getName());
             }
             try {
@@ -282,33 +292,33 @@ public class XmlCoder {
             }
             IOUtil.close(parser);
         }
-        public void encodeEntry(XMLElement entryElement, TypeBlock typeBlock) throws IOException{
+        public void encodeEntry(XMLElement entryElement, TypeBlock typeBlock) throws IOException {
             Entry entry = typeBlock.getOrCreateDefinedEntry(
                     entryElement.getAttributeValue(ATTR_name));
-            if(entry == null){
+            if (entry == null) {
                 throw new XmlEncodeException("Undefined entry name: " + entryElement.getDebugText());
             }
-            if(isBag(entryElement)){
+            if (isBag(entryElement)) {
                 encodeBag(entryElement, entry);
-            }else {
+            } else {
                 encodeScalar(entryElement, entry);
             }
         }
-        public void encodeScalar(XMLElement element, Entry entry) throws IOException{
+        public void encodeScalar(XMLElement element, Entry entry) throws IOException {
             entry.ensureComplex(false);
-            if(isTypeId(element)){
+            if (isTypeId(element)) {
                 encodeScalarId(element, entry);
-            }else {
+            } else {
                 encodeScalarAny(element, entry);
             }
             checkVisibility(entry);
         }
 
-        public void encodeBag(XMLElement element, Entry entry) throws IOException{
+        public void encodeBag(XMLElement element, Entry entry) throws IOException {
             entry.ensureComplex(true);
             BAG_ROOT_ATTRIBUTE.encode(element, entry);
             Iterator<? extends XMLElement> childes = element.getElements();
-            while (childes.hasNext()){
+            while (childes.hasNext()) {
                 BAG_CHILD.encode(childes.next(), entry);
             }
             ResTableMapEntry resTableMapEntry = entry.getResTableMapEntry();
@@ -317,15 +327,15 @@ public class XmlCoder {
             }
             checkVisibility(entry);
         }
-        private boolean isBag(XMLElement element){
+        private boolean isBag(XMLElement element) {
             String tag = element.getName();
-            if("string".equals(tag)){
+            if ("string".equals(tag)) {
                 return false;
             }
-            if(element.hasChildElements()){
+            if (element.hasChildElements()) {
                 return true;
             }
-            if(element.hasTextNode()){
+            if (element.hasTextNode()) {
                 return false;
             }
             return element.hasAttribute(ATTR_parent)
@@ -333,62 +343,63 @@ public class XmlCoder {
                     || TypeString.isTypeArray(tag);
         }
         private void encodeScalarId(XMLElement element, Entry entry) throws IOException {
-            if(!element.hasTextNode()){
+            if (!element.hasTextNode()) {
                 entry.setValueAsBoolean(false);
-            }else {
+            } else {
                 encodeScalarAny(element, entry);
             }
             ValueHeader header = entry.getHeader();
             header.setPublic(true);
             header.setWeak(true);
         }
-        private void encodeScalarAny(XMLElement element, Entry entry) throws IOException{
+        private void encodeScalarAny(XMLElement element, Entry entry) throws IOException {
             ResValue resValue = entry.getResValue();
-            if(element.hasChildElements()){
+            if (element.hasChildElements()) {
                 resValue.setValueAsString(StyleDocument.copyInner(element));
                 return;
             }
             String text = element.getTextContent();
             EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), text);
-            if(encodeResult == null){
+            if (encodeResult == null) {
                 AttributeDataFormat dataFormat = AttributeDataFormat.fromValueTypeName(
                         element.getAttributeValue(ATTR_type));
-                if(dataFormat == null){
+                if (dataFormat == null) {
                     dataFormat = AttributeDataFormat.fromValueTypeName(element.getName());
-                    if(dataFormat != AttributeDataFormat.STRING){
+                    if (dataFormat != AttributeDataFormat.STRING) {
                         dataFormat = null;
                     }
                 }
                 encodeResult = ValueCoder.encode(text, dataFormat);
-                if(encodeResult == null && dataFormat != null && !dataFormat.contains(ValueType.STRING)){
+                if (encodeResult == null && dataFormat != null
+                        && !dataFormat.contains(ValueType.STRING)) {
                     throw new XmlEncodeException("Invalid value: " + element);
                 }
             }
-            if(encodeResult != null){
-                if(encodeResult.isError()){
+            if (encodeResult != null) {
+                if (encodeResult.isError()) {
                     throw new XmlEncodeException(encodeResult.getError()+ ": " + element.getDebugText());
                 }
                 resValue.setValue(encodeResult);
-            }else {
-                resValue.setValueAsString(StyleDocument.copyInner(element));
+            } else {
+                resValue.setValueAsString(XmlSanitizer.unEscapeUnQuote(text));
             }
         }
-        private boolean isTypeId(XMLElement element){
-            if(element.hasChildElements()){
+        private boolean isTypeId(XMLElement element) {
+            if (element.hasChildElements()) {
                 return false;
             }
             return TypeString.isTypeId(element.getName());
         }
-        private void checkVisibility(Entry entry){
+        private void checkVisibility(Entry entry) {
             ValueHeader valueHeader = entry.getHeader();
-            if(valueHeader == null){
+            if (valueHeader == null) {
                 return;
             }
             TypeBlock typeBlock = entry.getTypeBlock();
-            if(typeBlock == null){
+            if (typeBlock == null) {
                 return;
             }
-            if(typeBlock.isTypeAttr() || typeBlock.isTypeId()){
+            if (typeBlock.isTypeAttr() || typeBlock.isTypeId()) {
                 valueHeader.setPublic(true);
             }
         }
@@ -396,15 +407,15 @@ public class XmlCoder {
         public XmlCoderLogger getLogger() {
             return xmlCoder.getSetting().getLogger();
         }
-        private void logMessage(String message){
+        private void logMessage(String message) {
             XmlCoderLogger logger = getLogger();
-            if(logger != null){
+            if (logger != null) {
                 logger.logMessage("Decoding", message);
             }
         }
-        private void logVerbose(String message){
+        private void logVerbose(String message) {
             XmlCoderLogger logger = getLogger();
-            if(logger != null){
+            if (logger != null) {
                 logger.logMessage("Decoding", message);
             }
         }
@@ -419,12 +430,12 @@ public class XmlCoder {
         public XmlStringDecoder getStringDecoder() {
             return valuesXml.getStringDecoder();
         }
-        public void encode(XMLElement child, Entry entry) throws IOException{
+        public void encode(XMLElement child, Entry entry) throws IOException {
             ChildType childType = ChildType.getType(child);
-            if(childType == null){
+            if (childType == null) {
                 throw new XmlEncodeException("Unknown child bag: " + child.getDebugText());
             }
-            switch (childType){
+            switch (childType) {
                 case ATTR:
                     encodeAttr(child, entry);
                     break;
@@ -439,9 +450,9 @@ public class XmlCoder {
                     break;
             }
         }
-        public int decode(XmlSerializer serializer, Entry entry) throws IOException{
+        public int decode(XmlSerializer serializer, Entry entry) throws IOException {
             ChildType childType = ChildType.getType(entry);
-            switch (childType){
+            switch (childType) {
                 case ATTR:
                     return decodeAttr(serializer, entry);
                 case ARRAY:
@@ -479,15 +490,15 @@ public class XmlCoder {
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
             Iterator<ResValueMap> iterator = mapArray.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 ResValueMap valueMap = iterator.next();
                 AttributeType attributeType = valueMap.getAttributeType();
-                if(attributeType == null){
+                if (attributeType == null) {
                     continue;
                 }
                 startTag(serializer, TAG_item);
                 serializer.attribute(null, ATTR_quantity, attributeType.getName());
-                if(valueMap.getValueType() == ValueType.STRING) {
+                if (valueMap.getValueType() == ValueType.STRING) {
                     getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
                 } else {
                     valueMap.serializeText(serializer);
@@ -502,18 +513,18 @@ public class XmlCoder {
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
             Iterator<ResValueMap> iterator = mapArray.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 ResValueMap valueMap = iterator.next();
                 startTag(serializer, TAG_item);
                 String name = valueMap.decodeName(true);
                 boolean escapeValue = false;
-                if(name == null){
+                if (name == null) {
                     name = ValueCoder.decodeUnknownNameId(valueMap.getNameId());
                     escapeValue = true;
                 }
                 serializer.attribute(null, ATTR_name, name);
 
-                if(valueMap.getValueType() == ValueType.STRING) {
+                if (valueMap.getValueType() == ValueType.STRING) {
                     getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
                 } else {
                     valueMap.serializeText(serializer, escapeValue);
@@ -530,10 +541,10 @@ public class XmlCoder {
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
             Iterator<ResValueMap> iterator = mapArray.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 ResValueMap valueMap = iterator.next();
                 startTag(serializer, TAG_item);
-                if(valueMap.getValueType() == ValueType.STRING) {
+                if (valueMap.getValueType() == ValueType.STRING) {
                     getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
                 } else {
                     valueMap.serializeText(serializer, escapeValues);
@@ -543,7 +554,7 @@ public class XmlCoder {
             }
             return childCount;
         }
-        public void encodeAttr(XMLElement child, Entry entry) throws IOException{
+        public void encodeAttr(XMLElement child, Entry entry) throws IOException {
             AttributeDataFormat dataFormat = AttributeDataFormat.fromBagTypeName(child.getName());
             entry.ensureComplex(true);
             ResValueMapArray mapArray = entry.getResValueMapArray();
@@ -554,43 +565,47 @@ public class XmlCoder {
 
             ResourceEntry resourceEntry = valueMap.encodeIdName(attribute.getPrefix(),
                     attribute.getValueAsString());
-            if(resourceEntry == null){
+            if (resourceEntry == null) {
                 throw new XmlEncodeException("Unknown " + dataFormat.getName()
                         + " name: " + child.getDebugText());
             }
 
             EncodeResult encodeResult = ValueCoder.encode(getValue(child));
-            if(encodeResult == null){
+            if (encodeResult == null) {
                 // TODO: unbelievable! we always expect INT/HEX on enum/flags lets throw exception to see
                 throw new XmlEncodeException("Unexpected value: " + child.getDebugText());
             }
-            if(encodeResult.isError()){
+            if (encodeResult.isError()) {
                 throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
             }
             valueMap.setValue(encodeResult);
             entry.getHeader().setPublic(true);
         }
-        public void encodeArray(XMLElement child, Entry entry) throws IOException{
+        public void encodeArray(XMLElement child, Entry entry) throws IOException {
             entry.ensureComplex(true);
             ResValueMapArray mapArray = entry.getResValueMapArray();
 
             ResValueMap valueMap = mapArray.createNext();
             valueMap.setArrayIndex();
 
-            String text = child.getTextContent();
-            EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), text);
-            if(encodeResult == null){
-                AttributeDataFormat dataFormat = getParentArrayType(child);
-                encodeResult = ValueCoder.encode(text, dataFormat);
-            }
-            if(encodeResult != null){
-                if(encodeResult.isError()){
-                    throw new XmlEncodeException("Unexpected array value: " + child.getDebugText());
+            if (!child.hasChildElements()) {
+                String text = child.getTextContent();
+                EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), text);
+                if (encodeResult == null) {
+                    AttributeDataFormat dataFormat = getParentArrayType(child);
+                    encodeResult = ValueCoder.encode(text, dataFormat);
                 }
-                valueMap.setValue(encodeResult);
-                return;
+                if (encodeResult != null) {
+                    if (encodeResult.isError()) {
+                        throw new XmlEncodeException("Unexpected array value: " + child.getDebugText());
+                    }
+                    valueMap.setValue(encodeResult);
+                } else {
+                    valueMap.setValueAsString(XmlSanitizer.unEscapeUnQuote(text));
+                }
+            } else {
+                valueMap.setValueAsString(StyleDocument.copyInner(child));
             }
-            valueMap.setValueAsString(StyleDocument.copyInner(child));
         }
         private void startTag(XmlSerializer serializer, String name) throws IOException {
             XmlDecodeUtil.bagIndent(serializer);
@@ -599,23 +614,23 @@ public class XmlCoder {
         private void endTag(XmlSerializer serializer, String name) throws IOException {
             serializer.endTag(null, name);
         }
-        private AttributeDataFormat getParentArrayType(XMLElement child){
+        private AttributeDataFormat getParentArrayType(XMLElement child) {
             XMLElement parent = child.getParentElement();
-            if(parent == null){
+            if (parent == null) {
                 return null;
             }
             String name = parent.getName();
             int i = name.indexOf('-');
-            if(i < 0){
+            if (i < 0) {
                 return null;
             }
             name = name.substring(0, i);
             return AttributeDataFormat.fromValueTypeName(name);
         }
-        public void encodePlural(XMLElement child, Entry entry) throws IOException{
+        public void encodePlural(XMLElement child, Entry entry) throws IOException {
             AttributeType attributeType = AttributeType.fromName(
                     child.getAttributeValue(ATTR_quantity));
-            if(attributeType == null){
+            if (attributeType == null) {
                 throw new XmlEncodeException("Failed to get attribute '"
                         + ATTR_quantity + "'" + child.getDebugText());
             }
@@ -624,35 +639,39 @@ public class XmlCoder {
             ResValueMap valueMap = mapArray.createNext();
             valueMap.setAttributeType(attributeType);
 
-            String text = child.getTextContent();
-            EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), text);
-            if(encodeResult == null){
-                encodeResult = ValueCoder.encode(text);
-            }
-            if(encodeResult != null){
-                if(encodeResult.isError()){
-                    throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
+            if (!child.hasChildElements()) {
+                String text = child.getTextContent();
+                EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), text);
+                if (encodeResult == null) {
+                    encodeResult = ValueCoder.encode(text);
                 }
-                valueMap.setValue(encodeResult);
-                return;
+                if (encodeResult != null) {
+                    if (encodeResult.isError()) {
+                        throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
+                    }
+                    valueMap.setValue(encodeResult);
+                } else {
+                    valueMap.setValueAsString(XmlSanitizer.unEscapeUnQuote(text));
+                }
+            } else {
+                valueMap.setValueAsString(StyleDocument.copyInner(child));
             }
-            valueMap.setValueAsString(StyleDocument.copyInner(child));
         }
-        public void encodeStyle(XMLElement child, Entry entry) throws IOException{
+        public void encodeStyle(XMLElement child, Entry entry) throws IOException {
             entry.ensureComplex(true);
             ResValueMapArray mapArray = entry.getResValueMapArray();
 
             ResValueMap valueMap = mapArray.createNext();
             EncodeResult encodeResult = valueMap.encodeStyle(child);
-            if(encodeResult.isError()){
+            if (encodeResult.isError()) {
                 throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
             }
         }
         private String getValue(XMLElement element) {
             String value = element.getAttributeValue(ATTR_value);
-            if(value == null) {
+            if (value == null) {
                 value = element.getTextContent();
-                if(value != null) {
+                if (value != null) {
                     value = value.trim();
                 }
             }
@@ -665,16 +684,16 @@ public class XmlCoder {
             decodeAttrTypes(serializer, entry);
         }
         public void decodeAttrTypes(XmlSerializer serializer, Entry entry) throws IOException {
-            if(!entry.getTypeBlock().isTypeAttr()){
+            if (!entry.getTypeBlock().isTypeAttr()) {
                 return;
             }
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             Iterator<ResValueMap> iterator = mapArray.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 ResValueMap valueMap = iterator.next();
                 AttributeType attributeType = valueMap.getAttributeType();
-                if(attributeType == null){
+                if (attributeType == null) {
                     continue;
                 }
                 boolean ignore_empty = mapArray.size() > 1;
@@ -685,63 +704,63 @@ public class XmlCoder {
         public void decodeParent(XmlSerializer serializer, Entry entry) throws IOException {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             String parent = mapEntry.decodeParentId();
-            if(parent != null){
+            if (parent != null) {
                 serializer.attribute(null, ATTR_parent, parent);
                 return;
             }
-            if(mapEntry.isStyle()) {
-                if(mapEntry.childesCount() == 0 ||
+            if (mapEntry.isStyle()) {
+                if (mapEntry.childesCount() == 0 ||
                         entry.getName().indexOf('.') > 0 ||
                         entry.getResourceEntry().getConfigsCount() > 1) {
                     serializer.attribute(null, ATTR_parent, "");
                 }
             }
         }
-        public void encode(XMLElement element, Entry entry) throws IOException{
+        public void encode(XMLElement element, Entry entry) throws IOException {
             Iterator<? extends XMLAttribute> attributes = element.getAttributes();
-            while (attributes.hasNext()){
+            while (attributes.hasNext()) {
                 XMLAttribute xmlAttribute = attributes.next();
                 encode(xmlAttribute, entry);
             }
         }
-        public void encode(XMLAttribute xmlAttribute, Entry entry) throws IOException{
-            if(xmlAttribute.getPrefix() != null){
+        public void encode(XMLAttribute xmlAttribute, Entry entry) throws IOException {
+            if (xmlAttribute.getPrefix() != null) {
                 throw new XmlEncodeException("Unknown root attribute: " + xmlAttribute.getDebugText());
             }
             encode(xmlAttribute.getName(false),
                     xmlAttribute.getValueAsString(false), entry);
         }
-        public void encode(String name, String value, Entry entry) throws IOException{
-            if(name.equals(ATTR_name)){
+        public void encode(String name, String value, Entry entry) throws IOException {
+            if (name.equals(ATTR_name)) {
                 encodeName(value, entry);
-            }else if(name.equals(ATTR_parent)){
+            } else if (name.equals(ATTR_parent)) {
                 encodeParent(value, entry);
-            }else if(name.equals(ATTR_formats)){
+            } else if (name.equals(ATTR_formats)) {
                 encodeFormats(value, entry);
-            }else {
+            } else {
                 AttributeType attributeType = AttributeType.fromName(name);
-                if(attributeType != null){
+                if (attributeType != null) {
                     encodeType(attributeType, value, entry);
-                }else{
+                } else {
                     // TODO: what could be ?
                 }
             }
         }
-        public void encodeType(AttributeType attributeType, String value, Entry entry) throws IOException{
+        public void encodeType(AttributeType attributeType, String value, Entry entry) throws IOException {
             entry.ensureComplex(true);
             ResValueMapArray mapArray = entry.getResValueMapArray();
             ResValueMap valueMap = mapArray.getOrCreateType(attributeType);
             EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), value);
-            if(encodeResult != null){
-                if(encodeResult.isError()){
+            if (encodeResult != null) {
+                if (encodeResult.isError()) {
                     throw new XmlEncodeException(encodeResult.getError());
                 }
                 valueMap.setValue(encodeResult);
                 return;
             }
             encodeResult = ValueCoder.encode(value);
-            if(encodeResult != null){
-                if(encodeResult.isError()){
+            if (encodeResult != null) {
+                if (encodeResult.isError()) {
                     throw new XmlEncodeException(encodeResult.getError());
                 }
                 valueMap.setValue(encodeResult);
@@ -759,12 +778,12 @@ public class XmlCoder {
             AttributeDataFormat[] dataFormats = AttributeDataFormat.parseValueTypes(value);
             valueMap.setData(AttributeDataFormat.sum(dataFormats));
         }
-        public void encodeParent(String value, Entry entry) throws IOException{
+        public void encodeParent(String value, Entry entry) throws IOException {
             PackageBlock packageBlock = entry.getPackageBlock();
             EncodeResult parent = ValueCoder.encodeReference(packageBlock,
                     value);
-            if(parent != null){
-                if(parent.isError()){
+            if (parent != null) {
+                if (parent.isError()) {
                     throw new XmlEncodeException(parent.getError());
                 }
                 entry.ensureComplex(true);
@@ -772,12 +791,12 @@ public class XmlCoder {
             }
         }
         public void encodeName(String value, Entry entry) {
-            if(entry.isDefined()){
+            if (entry.isDefined()) {
                 return;
             }
             // TODO: confirm will never reach here
 
-            if(value == null || value.length() == 0){
+            if (value == null || value.length() == 0) {
                 return;
             }
             entry.setName(value);
@@ -788,50 +807,50 @@ public class XmlCoder {
         ARRAY,
         PLURAL,
         STYLE;
-        public static ChildType getType(XMLElement child){
+        public static ChildType getType(XMLElement child) {
             String tag = child.getName(false);
-            if(AttributeDataFormat.fromBagTypeName(tag) != null){
+            if (AttributeDataFormat.fromBagTypeName(tag) != null) {
                 return ATTR;
             }
-            if(!TAG_item.equals(tag)){
+            if (!TAG_item.equals(tag)) {
                 return null;
             }
-            if(child.getAttribute(ATTR_name) != null){
+            if (child.getAttribute(ATTR_name) != null) {
                 return STYLE;
             }
             int count = child.getAttributeCount();
-            if(count == 0 || (count == 1 && child.getAttribute(ATTR_type) != null)){
+            if (count == 0 || (count == 1 && child.getAttribute(ATTR_type) != null)) {
                 return ARRAY;
             }
 
             AttributeType attributeType = AttributeType.fromName(
                     child.getAttributeValue(ATTR_quantity));
-            if(attributeType != null && attributeType.isPlural()){
+            if (attributeType != null && attributeType.isPlural()) {
                 return PLURAL;
             }
             return STYLE;
         }
-        public static ChildType getType(Entry entry){
+        public static ChildType getType(Entry entry) {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
-            if(mapEntry.isAttr()){
+            if (mapEntry.isAttr()) {
                 return ATTR;
             }
-            if(mapEntry.isArray()){
+            if (mapEntry.isArray()) {
                 return ARRAY;
             }
-            if(mapEntry.isPlural()){
+            if (mapEntry.isPlural()) {
                 return PLURAL;
             }
             return STYLE;
         }
     }
 
-    public static XmlCoder getInstance(){
-        if(sInstance != null){
+    public static XmlCoder getInstance() {
+        if (sInstance != null) {
             return sInstance;
         }
-        synchronized (XmlCoder.class){
-            if(sInstance == null){
+        synchronized (XmlCoder.class) {
+            if (sInstance == null) {
                 sInstance = new XmlCoder();
             }
             return sInstance;

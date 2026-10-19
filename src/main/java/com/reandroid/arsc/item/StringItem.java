@@ -21,12 +21,14 @@ import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.list.StringItemList;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HashSetStore;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.xml.SpanSet;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -39,7 +41,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
+public class StringItem extends StringBlock implements
+        JSONConvert<Object>, Comparable<StringItem> {
 
     private boolean mUtf8;
     private Object mReferencedSet;
@@ -188,16 +191,16 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
         super.set(str);
     }
-    public void set(StyleDocument document) {
+    public void set(SpanSet<?> document) {
         String old = getXml();
         if (countBytes() == 0) {
             old = null;
         }
         clearStyle();
-        this.set(document.getStyledString(), false);
-        if (document.hasElements()) {
+        this.set(document.getRawText(), false);
+        if (document.hasSpans()) {
             StyleItem styleItem = getOrCreateStyle();
-            styleItem.parse(document);
+            styleItem.merge(document);
         }
         String update = getXml();
         onStringChanged(old, update);
@@ -209,10 +212,9 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
         clearStyle();
         this.set(jsonObject.getString(NAME_string), false);
-        JSONObject style = jsonObject.optJSONObject(NAME_style);
-        if (style != null) {
-            StyleItem styleItem = getOrCreateStyle();
-            styleItem.fromJson(style);
+        JSONArray spans = jsonObject.optJSONArray(NAME_spans);
+        if (spans != null) {
+            getOrCreateStyle().fromJson(spans);
         }
         String update = getXml();
         onStringChanged(old, update);
@@ -392,14 +394,14 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         Block array2 = stringItem.getParentInstance(StringItemList.class);
         return array1 != null && array2 != null && array1 != array2;
     }
-    public boolean equalsValue(StyleDocument styled) {
+    public boolean equalsValue(SpanSet<?> styled) {
         if (styled == null) {
             return isNull();
         }
         if (this.hasStyle()) {
-            return styled.equals(getStyleDocument());
-        } else if (!styled.hasElements()) {
-            return ObjectsUtil.equals(getXml(), styled.getXml());
+            return getStyle().equalsSpans(styled);
+        } else if (!styled.hasSpans()) {
+            return ObjectsUtil.equals(get(), styled.getRawText());
         }
         return false;
     }
@@ -408,6 +410,25 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             return isNull();
         }
         return value.equals(get());
+    }
+
+    public boolean equalsValue(StringItem stringItem) {
+        if (stringItem == this) {
+            return true;
+        }
+        if (stringItem == null) {
+            return isNull();
+        }
+        boolean style = this.hasStyle();
+        if (style != stringItem.hasStyle()
+                || this.isNull() != stringItem.isNull()
+                || !equalsValue(stringItem.get())) {
+            return false;
+        }
+        if (style) {
+            return getStyle().equalsSpans(stringItem.getStyle());
+        }
+        return true;
     }
     @Override
     public int compareTo(StringItem stringItem) {
@@ -434,18 +455,25 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return CompareUtil.compare(stringItem.getReferencesSize(), this.getReferencesSize());
     }
     @Override
-    public JSONObject toJson() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(NAME_string, get());
+    public Object toJson() {
+        String str = get();
         if (hasStyle()) {
-            jsonObject.put(NAME_style, getStyle().toJson());
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(NAME_string, str);
+            jsonObject.put(NAME_spans, getStyle().toJson());
+            return jsonObject;
         }
-        return jsonObject;
+        return str;
     }
     @Override
-    public void fromJson(JSONObject json) {
-        set(json);
+    public void fromJson(Object obj) {
+        if (obj instanceof String) {
+            set((String) obj);
+        } else {
+            set((JSONObject) obj);
+        }
     }
+
     @Override
     public String toString() {
         String xml = getXml();
@@ -598,7 +626,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     private static final CharsetDecoder DECODER_3B = ThreeByteCharsetDecoder.INSTANCE;
 
     public static final String NAME_string = ObjectsUtil.of("string");
-    public static final String NAME_style = ObjectsUtil.of("style");
+    public static final String NAME_spans = ObjectsUtil.of("spans");
 
     private static final Predicate<Object> NON_STYLE_INDEX = item ->
             !(item instanceof StyleItem.StyleIndexReference);

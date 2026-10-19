@@ -146,7 +146,7 @@ public class MultiMap<K, V> {
             }
             if(obj.getClass() == EntryList.class) {
                 EntryList<?> entryList = (EntryList<?>) obj;
-                int i = entryList.indexOfExact(value);
+                int i = entryList.indexOfIdentity(value);
                 if(i < 0) {
                     return null;
                 }

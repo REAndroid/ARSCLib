@@ -32,12 +32,6 @@ public abstract class XMLNode implements Node {
     public XMLNode(){
     }
 
-    int getLength(){
-        return 0;
-    }
-    int getTextLength(){
-        return 0;
-    }
     public XMLNode getParentNode(){
         return mParent;
     }

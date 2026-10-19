@@ -23,7 +23,8 @@ public class XmlIDMapHeader extends HeaderBlock {
     private final IntegerReference idsCount;
 
     public XmlIDMapHeader() {
-        super(ChunkType.XML_RESOURCE_MAP);
+        super(0, ChunkType.XML_RESOURCE_MAP);
+
         this.idsCount = new CountReference(this);
     }
 

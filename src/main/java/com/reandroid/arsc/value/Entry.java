@@ -46,85 +46,93 @@ import java.io.OutputStream;
 import java.util.Iterator;
 
 public class Entry extends Block implements JSONConvert<JSONObject> {
+
     private TableEntry<?, ?> mTableEntry;
     private IntegerItem mNullSpecReference;
 
-    public Entry(){
+    public Entry() {
         super();
     }
 
-    public Iterator<ValueItem> allValues(){
+    public Iterator<ValueItem> visitValues() {
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry != null){
-            return tableEntry.allValues();
+        if (tableEntry != null) {
+            return tableEntry.visitValues();
         }
         return EmptyIterator.of();
     }
-    public void linkTableStringsInternal(TableStringPool tableStringPool){
+    public void linkTableStringsInternal(TableStringPool tableStringPool) {
         TableEntry<?, ?> tableEntry = getTableEntry();
         tableEntry.linkTableStringsInternal(tableStringPool);
     }
-    public void linkSpecStringsInternal(SpecStringPool specStringPool){
+    public void linkSpecStringsInternal(SpecStringPool specStringPool) {
         TableEntry<?, ?> tableEntry = getTableEntry();
         ValueHeader header = tableEntry.getHeader();
         header.linkSpecStringsInternal(specStringPool);
     }
-    public ResValue getResValue(){
+    public ResValue getResValue() {
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry instanceof ResTableEntry){
+        if (tableEntry instanceof ResTableEntry) {
             return ((ResTableEntry)tableEntry).getValue();
         }
         return null;
     }
-    public ResValueMapArray getResValueMapArray(){
+    public ResValueMapArray getResValueMapArray() {
         ResTableMapEntry resTableMapEntry = getResTableMapEntry();
-        if(resTableMapEntry != null){
+        if (resTableMapEntry != null) {
             return resTableMapEntry.getValue();
         }
         return null;
     }
-    public ResTableMapEntry getResTableMapEntry(){
+    public ResTableMapEntry getResTableMapEntry() {
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry instanceof ResTableMapEntry){
+        if (tableEntry instanceof ResTableMapEntry) {
             return ((ResTableMapEntry)tableEntry);
         }
         return null;
     }
-    public String getXmlTag(){
+    public String getXmlTag() {
         String tag = TypeString.toXmlTagName(getTypeName());
-        if(tag == null || !tag.contains("array")){
+        if (tag == null || !tag.contains("array")) {
             return tag;
         }
         ResTableMapEntry mapEntry = getResTableMapEntry();
-        if(mapEntry == null){
+        if (mapEntry == null) {
             return tag;
         }
         ValueType allValueType = mapEntry.isAllSameValueType();
-        if(allValueType == null){
+        if (allValueType == null) {
             return tag;
         }
-        if(allValueType == ValueType.STRING){
+        if (allValueType == ValueType.STRING) {
             return "string-" + tag;
         }
-        if(allValueType == ValueType.DEC){
+        if (allValueType == ValueType.DEC) {
             return "integer-" + tag;
         }
         return tag;
     }
-    public SpecFlag getSpecFlag(){
+    public SpecFlag getSpecFlag() {
         SpecBlock specBlock = getSpecBlock();
-        if(specBlock == null){
+        if (specBlock == null) {
             return null;
         }
         return specBlock.getSpecFlag(getId());
     }
-    public void ensureComplex(boolean isComplex){
+    public SpecFlag getOrCreateSpecFlag() {
+        SpecBlock specBlock = getSpecBlock();
+        if (specBlock == null) {
+            return null;
+        }
+        return specBlock.getOrCreateFlag(getId());
+    }
+    public void ensureComplex(boolean isComplex) {
         ensureTableEntry(isComplex);
     }
-    public int getId(){
+    public int getId() {
         int id = getIndex();
         EntryItemList entryArray = getParentInstance(EntryItemList.class);
-        if(entryArray != null){
+        if (entryArray != null) {
             id = entryArray.getEntryId(id);
         }
         return id;
@@ -132,185 +140,185 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     /**
      * renames this entry and all configuration on this package
      * */
-    public SpecString reName(String name){
+    public SpecString reName(String name) {
         SpecTypePair specTypePair = getSpecTypePair();
-        if(specTypePair == null){
+        if (specTypePair == null) {
             return null;
         }
         SpecString specString = null;
         Iterator<Entry> iterator = specTypePair.getEntries(getId(), false);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Entry entry = iterator.next();
-            if(specString == null){
+            if (specString == null) {
                 specString = entry.setName(name);
-            }else {
+            } else {
                 entry.updateSpecReference(specString);
             }
         }
         return specString;
     }
-    public SpecString setName(String name){
+    public SpecString setName(String name) {
         return setName(name, false);
     }
     /**
      * Sets resource entry name
      * */
-    public SpecString setName(String name, boolean holdIfNull){
-        if(name == null){
+    public SpecString setName(String name, boolean holdIfNull) {
+        if (name == null) {
             unlinkNullSpecString();
             TableEntry<?, ?> tableEntry = getTableEntry();
-            if(tableEntry != null){
+            if (tableEntry != null) {
                 tableEntry.getHeader().setKey(null);
             }
             return null;
         }
-        if(!holdIfNull && isNull()){
+        if (!holdIfNull && isNull()) {
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return null;
         }
         SpecStringPool specStringPool = packageBlock.getSpecStringPool();
         int ref = getSpecReference();
         SpecString specString = specStringPool.get(ref);
-        if(specString != null && name.equals(specString.get())){
+        if (specString != null && name.equals(specString.get())) {
             return null;
         }
         specString = specStringPool.getOrCreate(name);
         setSpecReference(specString);
         return specString;
     }
-    public String getName(){
+    public String getName() {
         SpecString specString = getSpecString();
-        if(specString!=null){
+        if (specString != null) {
             return specString.get();
         }
         return null;
     }
-    public String getTypeName(){
+    public String getTypeName() {
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock!=null){
+        if (typeBlock != null) {
             return typeBlock.getTypeName();
         }
         return null;
     }
-    public int getTypeId(){
+    public int getTypeId() {
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock != null){
+        if (typeBlock != null) {
             return typeBlock.getId();
         }
         return 0;
     }
-    public int getResourceId(){
+    public int getResourceId() {
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock==null){
+        if (typeBlock == null) {
             return 0;
         }
         PackageBlock packageBlock = typeBlock.getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return 0;
         }
-        return (packageBlock.getId()<<24)
+        return (packageBlock.getId() << 24)
                 | (typeBlock.getId() << 16)
                 | getId();
     }
-    public int getSpecReference(){
+    public int getSpecReference() {
         IntegerItem nullReference = this.mNullSpecReference;
-        if(nullReference != null){
+        if (nullReference != null) {
             return nullReference.get();
         }
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry != null){
+        if (tableEntry != null) {
             return tableEntry.getHeader().getKey();
         }
         return -1;
     }
-    public TypeString getTypeString(){
+    public TypeString getTypeString() {
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock!=null){
+        if (typeBlock != null) {
             return typeBlock.getTypeString();
         }
         return null;
     }
-    public boolean isDefined(){
+    public boolean isDefined() {
         return getSpecReference() != -1;
     }
-    public boolean isDefault(){
+    public boolean isDefault() {
         ResConfig resConfig = getResConfig();
-        if(resConfig!=null){
+        if (resConfig != null) {
             return resConfig.isDefault();
         }
         return false;
     }
-    public void setSpecReference(SpecString specString){
-        if(isSameSpecString(specString)){
+    public void setSpecReference(SpecString specString) {
+        if (isSameSpecString(specString)) {
             return;
         }
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry != null){
+        if (tableEntry != null) {
             tableEntry.getHeader().setKey(specString);
             unlinkNullSpecString();
             return;
         }
         linkNullSpecString(specString);
     }
-    public void updateSpecReference(SpecString specString){
-        if(isSameSpecString(specString)){
+    public void updateSpecReference(SpecString specString) {
+        if (isSameSpecString(specString)) {
             return;
         }
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry != null){
+        if (tableEntry != null) {
             tableEntry.getHeader().setKey(specString);
             unlinkNullSpecString();
-        }else if(mNullSpecReference != null){
+        } else if (mNullSpecReference != null) {
             linkNullSpecString(specString);
-        }else if(specString == null){
+        } else if (specString == null) {
             unlinkNullSpecString();
         }
     }
-    public void setSpecReference(int ref){
-        if(ref == getSpecReference()){
+    public void setSpecReference(int ref) {
+        if (ref == getSpecReference()) {
             return;
         }
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry == null){
+        if (tableEntry == null) {
             linkNullSpecString(ref);
             return;
         }
         unlinkNullSpecString();
         tableEntry.getHeader().setKey(ref);
     }
-    private boolean isSameSpecString(SpecString specString){
+    private boolean isSameSpecString(SpecString specString) {
         int ref = getSpecReference();
-        if(specString == null){
+        if (specString == null) {
             return ref < 0;
         }
-        if(ref != specString.getIndex()){
+        if (ref != specString.getIndex()) {
             return false;
         }
         return mNullSpecReference == null
                 || getTableEntry() == null;
     }
-    private void linkNullSpecString(int ref){
-        if(ref < 0){
+    private void linkNullSpecString(int ref) {
+        if (ref < 0) {
             unlinkNullSpecString();
             return;
         }
         SpecStringPool specStringPool = getSpecStringPool();
-        if(specStringPool == null){
+        if (specStringPool == null) {
             unlinkNullSpecString();
             return;
         }
         linkNullSpecString(specStringPool.get(ref));
     }
-    private void linkNullSpecString(SpecString specString){
-        if(specString == null){
+    private void linkNullSpecString(SpecString specString) {
+        if (specString == null) {
             unlinkNullSpecString();
             return;
         }
         IntegerItem nullReference = this.mNullSpecReference;
-        if(nullReference != null && nullReference.get() == specString.getIndex()){
+        if (nullReference != null && nullReference.get() == specString.getIndex()) {
             return;
         }
         unlinkNullSpecString();
@@ -321,156 +329,178 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         specString.addReference(nullReference);
         this.mNullSpecReference = nullReference;
     }
-    private void unlinkNullSpecString(){
+    private void unlinkNullSpecString() {
         IntegerItem nullReference = this.mNullSpecReference;
-        if(nullReference == null){
+        if (nullReference == null) {
             return;
         }
         SpecStringPool specStringPool = getSpecStringPool();
-        if(specStringPool != null){
+        if (specStringPool != null) {
             specStringPool.removeReference(nullReference);
         }
         nullReference.setParent(null);
         nullReference.setIndex(-1);
         this.mNullSpecReference = null;
     }
-    private SpecStringPool getSpecStringPool(){
+    private SpecStringPool getSpecStringPool() {
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock != null){
+        if (packageBlock != null) {
             return packageBlock.getSpecStringPool();
         }
         return null;
     }
     public ValueType getValueType() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueType();
         }
         return null;
     }
     public String getValueAsString() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsString();
         }
         return null;
     }
     public StyleDocument getValueAsStyleDocument() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsStyleDocument();
         }
         return null;
     }
     public Boolean getValueAsBoolean() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsBoolean();
         }
         return null;
     }
     public AndroidColor getValueAsColor() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsColor();
         }
         return null;
     }
     public Float getValueAsFloat() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsFloat();
         }
         return null;
     }
     public Integer getValueAsInteger() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsInteger();
         }
         return null;
     }
     public ResourceEntry getValueAsReference() {
         ResValue resValue = getResValue();
-        if(resValue != null) {
+        if (resValue != null) {
             return resValue.getValueAsReference();
         }
         return null;
     }
-    public ResValue setValueAsRaw(ValueType valueType, int data){
+    public Object getValueAsEncoded() {
+        ResValue resValue = getResValue();
+        if (resValue != null) {
+            return resValue.getValueAsEncoded();
+        }
+        return null;
+    }
+    public ResValue setValueAsRaw(ValueType valueType, int data) {
         ResValue resValue = ensureScalar();
         resValue.setTypeAndData(valueType, data);
         return resValue;
     }
-    public ResValue setValueAsBoolean(boolean value){
+    public ResValue setValueAsBoolean(boolean value) {
         ResValue resValue = ensureScalar();
         resValue.setValueAsBoolean(value);
         return resValue;
     }
-    public ResValue setValueAsReference(int resourceId){
+    public ResValue setValueAsReference(int resourceId) {
         return setValueAsRaw(ValueType.REFERENCE, resourceId);
     }
-    public ResValue setValueAsString(StyleDocument styledString){
+    public ResValue setValueAsString(StyleDocument styledString) {
         TableEntry<?, ?> tableEntry = ensureTableEntry(false);
         ResValue resValue = (ResValue) tableEntry.getValue();
         resValue.setValueAsString(styledString);
         return resValue;
     }
-    public ResValue setValueAsString(String str){
+    public ResValue setValueAsString(String str) {
         ResValue resValue = ensureScalar();
         resValue.setValueAsString(str);
         return resValue;
     }
-    public ResValue setValueAsColor(AndroidColor color){
+    public ResValue setValueAsColor(AndroidColor color) {
         ResValue resValue = ensureScalar();
         resValue.setValue(color);
         return resValue;
     }
+    public ResValue setValueAsDecimal(int value) {
+        ResValue resValue = ensureScalar();
+        resValue.setValueAsDecimal(value);
+        return resValue;
+    }
+    public ResValue setValueAsHex(int value) {
+        ResValue resValue = ensureScalar();
+        resValue.setValueAsHex(value);
+        return resValue;
+    }
+    public ResValue setValueAsFloat(float value) {
+        ResValue resValue = ensureScalar();
+        resValue.setValueAsFloat(value);
+        return resValue;
+    }
 
-    public SpecString getSpecString(){
+    public SpecString getSpecString() {
         int ref = getSpecReference();
-        if(ref < 0){
+        if (ref < 0) {
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return null;
         }
         SpecStringPool specStringPool = packageBlock.getSpecStringPool();
         return specStringPool.get(ref);
     }
-    public ResConfig getResConfig(){
+    public ResConfig getResConfig() {
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock!=null){
+        if (typeBlock != null) {
             return typeBlock.getResConfig();
         }
         return null;
     }
-    public SpecBlock getSpecBlock(){
+    public SpecBlock getSpecBlock() {
         SpecTypePair specTypePair = getSpecTypePair();
-        if(specTypePair != null){
+        if (specTypePair != null) {
             return specTypePair.getSpecBlock();
         }
         return null;
     }
-    private SpecTypePair getSpecTypePair(){
+    private SpecTypePair getSpecTypePair() {
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock != null){
+        if (typeBlock != null) {
             return typeBlock.getParentSpecTypePair();
         }
         return null;
     }
-    public TypeBlock getTypeBlock(){
+    public TypeBlock getTypeBlock() {
         return getParent(TypeBlock.class);
     }
-    private String getPackageName(){
+    private String getPackageName() {
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock!=null){
+        if (packageBlock != null) {
             return packageBlock.getName();
         }
         return null;
     }
-    public PackageBlock getPackageBlock(){
+    public PackageBlock getPackageBlock() {
         return getParent(PackageBlock.class);
     }
     public ResourceEntry getResourceEntry() {
@@ -478,11 +508,11 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public ResourceName getResourceName() {
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null) {
+        if (packageBlock == null) {
             return null;
         }
         String name = getName();
-        if(name == null) {
+        if (name == null) {
             return null;
         }
         return new ResourceName(packageBlock.getName(), getTypeName(), name);
@@ -490,7 +520,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     private ResValue ensureScalar() {
         return (ResValue) ensureTableEntry(false).getValue();
     }
-    private TableEntry<?, ?> ensureTableEntry(boolean is_complex){
+    private TableEntry<?, ?> ensureTableEntry(boolean is_complex) {
         TableEntry<?, ?> tableEntry = getTableEntry();
 
         boolean is_correct_type = (is_complex && tableEntry instanceof ResTableMapEntry) || (!is_complex && tableEntry instanceof ResTableEntry);
@@ -501,59 +531,60 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return tableEntry;
     }
 
-    public TableEntry<?, ?> getTableEntry(){
+    public TableEntry<?, ?> getTableEntry() {
         return mTableEntry;
     }
-    public ValueHeader getHeader(){
+    public ValueHeader getHeader() {
         TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry!=null){
+        if (tableEntry != null) {
             return tableEntry.getHeader();
         }
         return null;
     }
 
     @Override
-    public boolean isNull(){
-        return getTableEntry()==null;
+    public boolean isNull() {
+        return getTableEntry() == null;
     }
     @Override
-    public void setNull(boolean is_null){
-        if(is_null){
+    public void setNull(boolean is_null) {
+        if (is_null) {
             setTableEntry(null);
+            unlinkNullSpecString();
         }
     }
     @Override
     public byte[] getBytes() {
-        if(isNull()){
+        if (isNull()) {
             return null;
         }
         return getTableEntry().getBytes();
     }
     @Override
     public int countBytes() {
-        if(isNull()){
+        if (isNull()) {
             return 0;
         }
         return getTableEntry().countBytes();
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
-        if(counter.FOUND){
+        if (counter.FOUND) {
             return;
         }
         counter.setCurrent(this);
-        if(counter.END==this){
+        if (counter.END==this) {
             counter.FOUND=true;
             return;
         }
-        if(isNull()){
+        if (isNull()) {
             return;
         }
         getTableEntry().onCountUpTo(counter);
     }
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {
-        if(isNull()){
+        if (isNull()) {
             return 0;
         }
         return getTableEntry().writeBytes(stream);
@@ -565,18 +596,18 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         tableEntry.readBytes(reader);
     }
 
-    public boolean isComplex(){
+    public boolean isComplex() {
         return getTableEntry() instanceof CompoundEntry;
     }
-    public boolean isScalar(){
+    public boolean isScalar() {
         return getTableEntry() instanceof ResTableEntry;
     }
-    public void setTableEntry(TableEntry<?, ?> tableEntry){
-        if(tableEntry == this.mTableEntry){
+    public void setTableEntry(TableEntry<?, ?> tableEntry) {
+        if (tableEntry == this.mTableEntry) {
             return;
         }
         onTableEntryRemoved();
-        if(tableEntry==null){
+        if (tableEntry == null) {
             return;
         }
         tableEntry.setIndex(0);
@@ -584,21 +615,21 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         this.mTableEntry = tableEntry;
         transferSpecReference(tableEntry);
     }
-    private void transferSpecReference(TableEntry<?, ?> tableEntry){
+    private void transferSpecReference(TableEntry<?, ?> tableEntry) {
         IntegerItem nullSpecReference = this.mNullSpecReference;
-        if(nullSpecReference == null){
+        if (nullSpecReference == null) {
             return;
         }
         int ref = nullSpecReference.get();
         unlinkNullSpecString();
         ValueHeader valueHeader = tableEntry.getHeader();
-        if(valueHeader.getKey() < 0){
+        if (valueHeader.getKey() < 0) {
             valueHeader.setKey(ref);
         }
     }
-    private void onTableEntryRemoved(){
+    private void onTableEntryRemoved() {
         TableEntry<?, ?> exist = this.mTableEntry;
-        if(exist == null){
+        if (exist == null) {
             return;
         }
         exist.onRemoved();
@@ -614,9 +645,9 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return createTableEntry(is_complex);
     }
     private TableEntry<?, ?> createTableEntry(boolean is_complex) {
-        if(is_complex){
+        if (is_complex) {
             return new ResTableMapEntry();
-        }else {
+        } else {
             return new ResTableEntry();
         }
     }
@@ -630,7 +661,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     @Override
     public void fromJson(JSONObject json) {
-        if(json==null){
+        if (json == null) {
             setNull(true);
             return;
         }
@@ -645,46 +676,46 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return packageBlock.getTableBlock()
                 .getResource(packageBlock, resourceId);
     }
-    public void merge(Entry entry){
-        if(canMerge(entry)){
+    public void merge(Entry entry) {
+        if (canMerge(entry)) {
             TableEntry<?, ?> tableEntry = entry.getTableEntry();
             TableEntry<?, ?> existEntry = ensureTableEntry(tableEntry instanceof ResTableMapEntry);
             existEntry.merge(tableEntry);
         }
     }
     public void mergeWithName(ResourceMergeOption mergeOption, Entry entry) {
-        if(canMerge(entry)) {
+        if (canMerge(entry)) {
             unlinkNullSpecString();
             TableEntry<?, ?> tableEntry = entry.getTableEntry();
             TableEntry<?, ?> existEntry = ensureTableEntry(tableEntry instanceof ResTableMapEntry);
             existEntry.mergeWithName(mergeOption, tableEntry);
         }
     }
-    private boolean canMerge(Entry coming){
-        if(coming == null || coming == this || coming.isNull()){
+    private boolean canMerge(Entry coming) {
+        if (coming == null || coming == this || coming.isNull()) {
             return false;
         }
-        if(this.isNull()){
+        if (this.isNull()) {
             return true;
         }
         return getTableEntry().canMerge(coming.getTableEntry());
     }
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(HexUtil.toHex8(getResourceId()));
         builder.append(' ');
         ResConfig resConfig = getResConfig();
-        if(resConfig!=null){
+        if (resConfig != null) {
             builder.append(resConfig);
             builder.append(' ');
         }
         SpecFlag specFlag = getSpecFlag();
-        if(specFlag!=null){
+        if (specFlag != null && specFlag.hasFlags()) {
             builder.append(specFlag);
             builder.append(' ');
         }
-        if(isNull()){
+        if (isNull()) {
             builder.append("NULL ");
         }
         builder.append('@');

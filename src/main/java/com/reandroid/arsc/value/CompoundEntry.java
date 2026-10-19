@@ -22,50 +22,52 @@ import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Iterator;
 import java.util.List;
 
 public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends CompoundItemArray<ITEM>>
-        extends TableEntry<EntryHeaderMap, ARRAY> implements Iterable<ITEM>{
-    public CompoundEntry(ARRAY mapArray){
+        extends TableEntry<EntryHeaderMap, ARRAY> implements Iterable<ITEM> {
+    
+    public CompoundEntry(ARRAY mapArray) {
         super(new EntryHeaderMap(), mapArray);
     }
 
     @Override
-    public Iterator<ValueItem> allValues(){
-        return new ComputeIterator<>(iterator(), item -> item);
+    public Iterator<ValueItem> visitValues() {
+        return ObjectsUtil.cast(iterator());
     }
     @Override
-    public Iterator<ITEM> iterator(){
+    public Iterator<ITEM> iterator() {
         return getValue().iterator();
     }
 
     // Valid for type attr
-    public AttributeDataFormat[] getAttributeTypeFormats(){
+    public AttributeDataFormat[] getAttributeTypeFormats() {
         ITEM item = getByType(AttributeType.FORMATS);
-        if(item != null){
+        if (item != null) {
             return item.getAttributeTypeFormats();
         }
         return null;
     }
-    public boolean containsType(AttributeType attributeType){
+    public boolean containsType(AttributeType attributeType) {
         return getValue().containsType(attributeType);
     }
-    public ITEM getByType(AttributeType attributeType){
+    public ITEM getByType(AttributeType attributeType) {
         return getValue().getByType(attributeType);
     }
-    public void refresh(){
+    public void refresh() {
         getHeader().setValuesCount(getValue().size());
     }
-    public List<ITEM> listResValueMap(){
+    public List<ITEM> listResValueMap() {
         return getValue().getChildes();
     }
 
-    public String decodeParentId(){
+    public String decodeParentId() {
         int parentId = getParentId();
-        if(parentId == 0){
+        if (parentId == 0) {
             return null;
         }
         return ValueCoder.decodeReference(
@@ -73,54 +75,54 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
                 ValueType.REFERENCE,
                 parentId);
     }
-    public int getParentId(){
+    public int getParentId() {
         return getHeader().getParentId();
     }
-    public void setParentId(int parentId){
+    public void setParentId(int parentId) {
         getHeader().setParentId(parentId);
     }
-    public int childesCount(){
+    public int childesCount() {
         return getValue().size();
     }
-    public void setValuesCount(int valuesCount){
+    public void setValuesCount(int valuesCount) {
         getHeader().setValuesCount(valuesCount);
         getValue().setSize(valuesCount);
     }
-    public ResourceEntry resolveParentId(){
+    public ResourceEntry resolveParentId() {
         int id = getParentId();
-        if(id == 0){
+        if (id == 0) {
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return null;
         }
         TableBlock tableBlock = packageBlock.getTableBlock();
-        if(tableBlock == null){
+        if (tableBlock == null) {
             return null;
         }
         return tableBlock.getResource(packageBlock, id);
     }
-    public PackageBlock getPackageBlock(){
+    public PackageBlock getPackageBlock() {
         Entry entry = getParentEntry();
-        if(entry != null){
+        if (entry != null) {
             return entry.getPackageBlock();
         }
         return null;
     }
     @Override
-    void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(ITEM item : listResValueMap()){
+    void linkTableStringsInternal(TableStringPool tableStringPool) {
+        for(ITEM item : listResValueMap()) {
             item.linkTableStrings(tableStringPool);
         }
     }
     @Override
-    void onHeaderLoaded(ARRAY value, EntryHeaderMap header){
+    void onHeaderLoaded(ARRAY value, EntryHeaderMap header) {
         value.setSize(header.getValuesCount());
     }
 
     @Override
-    void onRemoved(){
+    void onRemoved() {
         getHeader().onRemoved();
         getValue().onRemoved();
     }
@@ -141,21 +143,21 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(getHeader());
         List<ITEM> valueMaps = listResValueMap();
         int len = valueMaps.size();
         int max = len;
-        if(max>4){
+        if (max>4) {
             max = 4;
         }
-        for(int i=0;i<max;i++){
+        for(int i=0;i<max;i++) {
             builder.append("\n    ");
             builder.append(valueMaps.get(i));
         }
-        if(len>0){
-            if(max!=len){
+        if (len>0) {
+            if (max!=len) {
                 builder.append("\n    ...");
             }
             builder.append("\n   ");

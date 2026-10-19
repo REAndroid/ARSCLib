@@ -83,7 +83,7 @@ class DexFileLayoutController implements DexContainerBlock.LayoutBlockChangedLis
         List<DexLayout> dexLayoutList = this.dexLayoutList;
         for (int i = 0; i < dexLayoutList.size(); i++) {
             DexLayout layout = dexLayoutList.get(i);
-            if (!containerBlock.containsExact(layout.getDexLayoutBlock())) {
+            if (!containerBlock.containsIdentity(layout.getDexLayoutBlock())) {
                 dexLayoutList.remove(i);
                 i --;
             }

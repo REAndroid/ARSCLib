@@ -16,38 +16,30 @@
 package com.reandroid.arsc.list;
 
 import com.reandroid.arsc.chunk.Overlayable;
-import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.json.JSONArray;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.xml.XMLUtil;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlSerializer;
 
-import java.io.IOException;
+public class OverlayableList extends ExtraChunkList<Overlayable> {
 
-public class OverlayableList extends BlockList<Overlayable> implements
-        Iterable<Overlayable>, JSONConvert<JSONArray> {
-
-    public OverlayableList(){
-        super();
+    public OverlayableList() {
+        super(Overlayable.CREATOR);
     }
 
-    public boolean isEmpty() {
-        return size() == 0;
-    }
     public Overlayable get(String name) {
-        for(Overlayable overlayable : this){
-            if(ObjectsUtil.equals(name, overlayable.getName())){
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            Overlayable overlayable = get(i);
+            if (ObjectsUtil.equals(name, overlayable.getName())) {
                 return overlayable;
             }
         }
         return null;
     }
     public Overlayable get(String name, String actor) {
-        for (Overlayable overlayable : this) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            Overlayable overlayable = get(i);
             if (ObjectsUtil.equals(name, overlayable.getName()) ||
                     ObjectsUtil.equals(actor, overlayable.getActor())) {
                 return overlayable;
@@ -57,79 +49,50 @@ public class OverlayableList extends BlockList<Overlayable> implements
     }
 
     @Override
-    public Overlayable createNext() {
-        Overlayable overlayable = new Overlayable();
-        add(overlayable);
-        return overlayable;
-    }
-
-    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
-        if (parser.getEventType() == XmlPullParser.START_DOCUMENT) {
-            parser.next();
-        }
-        XMLUtil.ensureStartTag(parser);
-        if (PackageBlock.TAG_resources.equals(parser.getName())) {
-            parser.next();
-            XMLUtil.ensureStartTag(parser);
-        }
-        while (parser.getEventType() != XmlPullParser.END_TAG &&
-                parser.getEventType() != XmlPullParser.END_DOCUMENT) {
-            Overlayable overlayable = createNext();
-            overlayable.parse(parser);
-            XMLUtil.ensureTag(parser);
-        }
-        if (parser.getEventType() == XmlPullParser.END_TAG) {
-            parser.next();
-            XMLUtil.ensureTag(parser);
-        }
-        if (parser.getEventType() == XmlPullParser.END_TAG && PackageBlock.TAG_resources.equals(parser.getName())) {
-            parser.next();
-            XMLUtil.ensureTag(parser);
-        }
-    }
-    public void serialize(XmlSerializer serializer) throws IOException {
-        serializer.startDocument("utf-8", null);
-        serializer.startTag(null, PackageBlock.TAG_resources);
-        for (Overlayable overlayable : this) {
-            overlayable.serialize(serializer);
-        }
-        serializer.endTag(null, PackageBlock.TAG_resources);
-        serializer.endDocument();
-    }
-    @Override
     public JSONArray toJson() {
-        if (isEmpty()) {
-            return null;
-        }
-        JSONArray jsonArray = new JSONArray();
-        for (Overlayable overlayable : this) {
-            jsonArray.put(overlayable.toJson());
-        }
-        return jsonArray;
+        return BlockList.toJsonArray(this);
     }
     @Override
     public void fromJson(JSONArray json) {
-        if(json == null) {
+        if (json == null || json.length() == 0) {
             return;
         }
-        int length = json.length();
-        for (int i = 0; i < length; i++) {
-            createNext().fromJson(json.getJSONObject(i));
+        BlockList.fromJsonArray(this, json);
+    }
+
+    @Override
+    public void merge(ExtraChunkList<Overlayable> overlayableList) {
+        if (overlayableList == null || overlayableList == this) {
+            return;
+        }
+        int size = overlayableList.size();
+        if (this.size() == 0) {
+            setSize(size);
+            for (int i = 0; i < size; i++) {
+                get(i).merge(overlayableList.get(i));
+            }
+        } else {
+            ensureCapacity(size);
+            for (int i = 0; i < size; i++) {
+                Overlayable overlayable = overlayableList.get(i);
+                Overlayable exist = get(overlayable.getName(), overlayable.getActor());
+                if (exist == null) {
+                    exist = get(overlayable.getName());
+                }
+                if (exist == null) {
+                    exist = createNext();
+                }
+                exist.merge(overlayable);
+            }
         }
     }
-    public void merge(OverlayableList overlayableList) {
-        if(overlayableList == null || overlayableList == this) {
-            return;
-        }
-        for(Overlayable overlayable : overlayableList){
-            Overlayable exist = get(overlayable.getName(), overlayable.getActor());
-            if( exist == null) {
-                exist = get(overlayable.getName());
-            }
-            if( exist == null) {
-                exist = createNext();
-            }
-            exist.merge(overlayable);
-        }
+
+    @Override
+    public String fileNameJson() {
+        return Overlayable.FILE_NAME_JSON;
+    }
+    @Override
+    public String fileNameXml() {
+        return Overlayable.FILE_NAME_XML;
     }
 }

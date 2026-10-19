@@ -23,6 +23,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -475,6 +476,11 @@ public class FileUtil {
             def_prefix = "tmp_" + ARSCLib.getName() + "-" + ARSCLib.getVersion();
         }
         return def_prefix;
+    }
+
+    public static Comparator<File> getIgnoreCasePathComparator() {
+        return (f1, f2) -> CompareUtil.compare(f1.getAbsolutePath().toLowerCase(),
+                f2.getAbsolutePath().toLowerCase());
     }
 
     private static String def_prefix;

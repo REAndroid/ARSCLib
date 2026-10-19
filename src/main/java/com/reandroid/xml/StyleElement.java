@@ -70,7 +70,8 @@ public class StyleElement extends XMLElement implements Span {
         });
     }
 
-    public String getTagString() {
+    @Override
+    public String getTagWithAttributes() {
         String tag = getTagName();
         String attributes = getSpanAttributes();
         if(attributes == null) {
@@ -86,17 +87,22 @@ public class StyleElement extends XMLElement implements Span {
 
     @Override
     public int getFirstChar() {
-        XMLNode parent = getRootParentNode();
         int result = 0;
-        Iterator<XMLNode> itr = ((XMLNodeTree)parent).recursiveNodes();
-        while (itr.hasNext()) {
-            XMLNode child = itr.next();
-            if (child == this) {
+        Iterator<XMLNode> iterator = ((XMLNodeTree) getRootParentNode()).recursiveNodes();
+        while (iterator.hasNext()) {
+            XMLNode node = iterator.next();
+            if (node == this) {
                 break;
             }
-            result += child.getTextLength();
+            if (node instanceof XMLText) {
+                result += ((XMLText) node).getLength();
+            }
         }
         return result;
+    }
+
+    public int getLength() {
+        return StyleDocument.countTextLength(this);
     }
 
     @Override
@@ -132,30 +138,6 @@ public class StyleElement extends XMLElement implements Span {
     @Override
     public StyleElement toElement() {
         return this;
-    }
-
-    @Override
-    int getLength() {
-        int result = 0;
-        Iterator<XMLNode> itr = iterator();
-        while (itr.hasNext()) {
-            XMLNode child = itr.next();
-            result += child.getLength();
-        }
-        return result;
-    }
-    void writeStyledText(Appendable appendable) throws IOException {
-        Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext()) {
-            XMLNode xmlNode = iterator.next();
-            if (xmlNode instanceof StyleText) {
-                StyleText styleText = (StyleText) xmlNode;
-                styleText.writeStyledText(appendable);
-            } else if (xmlNode instanceof StyleElement) {
-                StyleElement element = (StyleElement) xmlNode;
-                element.writeStyledText(appendable);
-            }
-        }
     }
 
     @Override
@@ -246,6 +228,6 @@ public class StyleElement extends XMLElement implements Span {
     @Override
     public String toString() {
         return "[" + getFirstChar() + ", " + getLastChar() + "] "
-                + getTagString();
+                + getTagWithAttributes();
     }
 }

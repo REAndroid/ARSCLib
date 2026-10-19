@@ -23,6 +23,7 @@ import com.reandroid.arsc.list.ResXmlIDList;
 import com.reandroid.arsc.list.StringItemList;
 import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.SpanSet;
 import com.reandroid.xml.StyleDocument;
 
 
@@ -37,9 +38,9 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         return getOrCreate(0, str);
     }
     @Override
-    public ResXmlString getOrCreate(StyleDocument styleDocument) {
-        String xml = styleDocument.getXml();
-        if (!styleDocument.hasElements()) {
+    public ResXmlString getOrCreate(SpanSet<?> spanSet) {
+        String xml = spanSet.getXml();
+        if (!spanSet.hasSpans()) {
             return getOrCreate(0, xml);
         }
         ResXmlString xmlString = get(xml, resXmlString -> {
@@ -47,11 +48,11 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
                     resXmlString.hasResourceId()) {
                 return false;
             }
-            return resXmlString.hasStyle();
+            return resXmlString.equalsValue(spanSet);
         });
         if (xmlString == null) {
             xmlString = createNewString();
-            xmlString.set(styleDocument);
+            xmlString.set(spanSet);
         }
         return xmlString;
     }

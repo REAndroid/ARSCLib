@@ -15,54 +15,68 @@
  */
 package com.reandroid.arsc.value;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockCounter;
+import com.reandroid.apk.xmlencoder.EncodeException;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.coder.CoderHex;
+import com.reandroid.arsc.coder.CoderInteger;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.common.Mergeable;
+import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.model.ResourceLibrary;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.FixedLengthString;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.base.XmlReader;
+import com.reandroid.xml.base.XmlSerializable;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
-public class LibraryInfo extends Block implements JSONConvert<JSONObject>, ResourceLibrary {
+
+public class LibraryInfo extends FixedBlockContainer implements ResourceLibrary,
+        Mergeable<LibraryInfo>, JSONConvert<JSONObject>, XmlSerializable, XmlReader {
+    
     private final IntegerItem mPackageId;
     private final FixedLengthString mPackageName;
 
-    public LibraryInfo(){
-        super();
-        this.mPackageId=new IntegerItem();
+    public LibraryInfo() {
+        super(2);
+        
+        this.mPackageId = new IntegerItem();
         this.mPackageName = new FixedLengthString(256);
-        mPackageId.setIndex(0);
-        mPackageId.setParent(this);
-        mPackageName.setIndex(1);
-        mPackageName.setParent(this);
+
+        addChild(0, mPackageId);
+        addChild(1, mPackageName);
     }
 
     @Override
-    public int getId(){
+    public int getId() {
         return mPackageId.get();
     }
-    public void setId(int id){
+    public void setId(int id) {
         mPackageId.set(id);
     }
     @Override
-    public String getName(){
+    public String getName() {
         return mPackageName.get();
     }
-    public void setName(String packageName){
+    public void setName(String packageName) {
         mPackageName.set(packageName);
     }
     @Override
-    public String getPrefix(){
+    public String getPrefix() {
         return ResourceLibrary.toPrefix(getName());
     }
     @Override
-    public String getUri(){
-        if(getId() == 0x01 && ResourceLibrary.PREFIX_ANDROID.equals(getName())){
+    public String getUri() {
+        if (getId() == 0x01 && ResourceLibrary.PREFIX_ANDROID.equals(getName())) {
             return ResourceLibrary.URI_ANDROID;
         }
         return ResourceLibrary.URI_RES_AUTO;
@@ -73,47 +87,23 @@ public class LibraryInfo extends Block implements JSONConvert<JSONObject>, Resou
     }
 
     @Override
-    public byte[] getBytes() {
-        if(isNull()){
-            return null;
-        }
-        return addBytes(mPackageId.getBytes(), mPackageName.getBytes());
-    }
-    @Override
-    public int countBytes() {
-        if(isNull()){
-            return 0;
-        }
-        return mPackageId.countBytes()+mPackageName.countBytes();
-    }
-    @Override
-    public void onCountUpTo(BlockCounter counter) {
-        if(counter.FOUND){
+    public void merge(LibraryInfo info) {
+        if (info == null || info == this) {
             return;
         }
-        counter.setCurrent(this);
-        if(counter.END==this){
-            counter.FOUND=true;
-            return;
+        int id = this.getId();
+        int infoId = info.getId();
+        if (id != 0 && id != infoId) {
+            throw new IllegalArgumentException("Can not add different id libraries: "
+                    + id + "!=" + infoId);
         }
-        mPackageId.onCountUpTo(counter);
-        mPackageName.onCountUpTo(counter);
-    }
-    @Override
-    protected int onWriteBytes(OutputStream stream) throws IOException {
-        int result=mPackageId.writeBytes(stream);
-        result+=mPackageName.writeBytes(stream);
-        return result;
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        mPackageId.readBytes(reader);
-        mPackageName.readBytes(reader);
+        setId(infoId);
+        setName(info.getName());
     }
 
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", getId());
         jsonObject.put("name", getName());
         return jsonObject;
@@ -123,28 +113,71 @@ public class LibraryInfo extends Block implements JSONConvert<JSONObject>, Resou
         setId(json.getInt("id"));
         setName(json.getString("name"));
     }
-    public void merge(LibraryInfo info){
-        if(info==null||info==this){
-            return;
+
+    @Override
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        String id = parser.getAttributeValue(null, NAME_id);
+        if (StringsUtil.isEmpty(id)) {
+            throw new EncodeException(parser, "Missing attribute '" + NAME_id + "'");
         }
-        if(getId()!=info.getId()){
-            throw new IllegalArgumentException("Can not add different id libraries: "
-                    + getId()+"!="+info.getId());
+        String name = parser.getAttributeValue(null, NAME_name);
+        if (name == null) {
+            throw new EncodeException(parser, "Missing attribute '" + NAME_name + "'");
         }
-        setName(info.getName());
+        EncodeResult encodeResult = CoderHex.INS.encode(id);
+        if (encodeResult == null) {
+            encodeResult = CoderInteger.INS.encode(id);
+        }
+        if (encodeResult == null) {
+            throw new EncodeException(parser, "Invalid id: '" + id + "'");
+        }
+        setId(encodeResult.value);
+        setName(name);
+        XMLUtil.skipEndTag(parser);
     }
     @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
+    public void serialize(XmlSerializer serializer) throws IOException {
+        serializer.startTag(null, TAG_library);
+        serializer.attribute(null, NAME_id, HexUtil.toHex(getId(), 2));
+        serializer.attribute(null, NAME_name, getName());
+        serializer.endTag(null, TAG_library);
+    }
+
+    @Override
+    public int hashCode() {
+        return getId() * 31 + ObjectsUtil.hash(getName());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof LibraryInfo)) {
+            return false;
+        }
+        LibraryInfo info = (LibraryInfo) obj;
+        return ObjectsUtil.equals(getName(), info.getName());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
         builder.append("LIBRARY{");
-        builder.append(HexUtil.toHex2((byte) getId()));
+        builder.append(HexUtil.toHex(getId(), 2));
         builder.append(':');
-        String name= getName();
-        if(name==null){
-            name="NULL";
+        String name = getName();
+        if (name == null) {
+            name = "NULL";
         }
         builder.append(name);
         builder.append('}');
         return builder.toString();
     }
+
+    public static final Creator<LibraryInfo> CREATOR = LibraryInfo::new;
+
+    public static final String TAG_library = ObjectsUtil.of("library");
+    public static final String NAME_id = ObjectsUtil.of("id");
+    public static final String NAME_name = ObjectsUtil.of("name");
 }

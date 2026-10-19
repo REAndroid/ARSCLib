@@ -121,7 +121,7 @@ public class ResFile implements Iterable<Entry> {
     public String validateTypeDirectoryName() {
         String root = getRootNameFromPath();
         if (StringsUtil.isEmpty(root)) {
-            root = PackageBlock.RES_DIRECTORY_NAME;
+            root = PackageBlock.DIRECTORY_NAME_RES;
         }
         return validateTypeDirectoryName(root);
     }
@@ -196,7 +196,7 @@ public class ResFile implements Iterable<Entry> {
     public String buildPath() {
         String root = getRootNameFromPath();
         if (StringsUtil.isEmpty(root)) {
-            root = PackageBlock.RES_DIRECTORY_NAME;
+            root = PackageBlock.DIRECTORY_NAME_RES;
         }
         return buildPath(root);
     }

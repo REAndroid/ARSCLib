@@ -93,6 +93,7 @@ class ResConfigBase extends FixedBlockContainer
     byte[] getValueBytes(){
         return mValuesContainer.getBytes();
     }
+
     /////////////////////////////////////////
 
     public void setMcc(int  value){

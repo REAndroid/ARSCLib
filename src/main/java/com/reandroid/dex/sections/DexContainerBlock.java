@@ -307,7 +307,7 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         combineFrom(MergeOptions.DEFAULT, layoutBlock);
     }
     public void combineFrom(MergeOptions options, DexLayoutBlock layoutBlock) {
-        if (containsExact(layoutBlock) || layoutBlock.isEmpty()) {
+        if (containsIdentity(layoutBlock) || layoutBlock.isEmpty()) {
             return;
         }
         DexLayoutBlock destination = getLast();

@@ -18,6 +18,7 @@ package com.reandroid.arsc.header;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 
 public class StringPoolHeader extends HeaderBlock {
@@ -33,7 +34,7 @@ public class StringPoolHeader extends HeaderBlock {
     private EncodingChangedListener encodingChangedListener;
 
     public StringPoolHeader() {
-        super(ChunkType.STRING.ID);
+        super(7, ChunkType.STRING.ID);
 
         this.countStrings = new IntegerItem();
         this.countStyles = new IntegerItem();
@@ -43,39 +44,39 @@ public class StringPoolHeader extends HeaderBlock {
         this.startStrings = new IntegerItem();
         this.startStyles = new IntegerItem();
 
-        addChild(countStrings);
-        addChild(countStyles);
-        addChild(flagSorted);
-        addChild(flagUtf8);
-        addChild(flagExtra);
-        addChild(startStrings);
-        addChild(startStyles);
+        addChild(3, countStrings);
+        addChild(4, countStyles);
+        addChild(5, flagSorted);
+        addChild(6, flagUtf8);
+        addChild(7, flagExtra);
+        addChild(8, startStrings);
+        addChild(9, startStyles);
     }
 
-    public IntegerItem getCountStrings() {
+    public IntegerReference getCountStrings() {
         return countStrings;
     }
-    public IntegerItem getCountStyles() {
+    public IntegerReference getCountStyles() {
         return countStyles;
     }
-    public ByteItem getFlagUtf8() {
+    public IntegerReference getFlagUtf8() {
         return flagUtf8;
     }
-    public ByteItem getFlagSorted() {
+    public IntegerReference getFlagSorted() {
         return flagSorted;
     }
-    public ShortItem getFlagExtra(){
+    public IntegerReference getFlagExtra() {
         return flagExtra;
     }
-    public IntegerItem getStartStrings() {
+    public IntegerReference getStartStrings() {
         return startStrings;
     }
-    public IntegerItem getStartStyles() {
+    public IntegerReference getStartStyles() {
         return startStyles;
     }
 
     public boolean isUtf8() {
-        return (getFlagUtf8().getByte() & 0x01) != 0;
+        return getFlagUtf8().get() != 0;
     }
     public void setUtf8(boolean utf8) {
         boolean changed = isUtf8() != utf8;
@@ -88,13 +89,13 @@ public class StringPoolHeader extends HeaderBlock {
         }
     }
     public void setUtf8Flag(boolean utf8) {
-        getFlagUtf8().set((byte) (utf8 ? 0x01 : 0x00));
+        getFlagUtf8().set(utf8 ? 0x01 : 0x00);
     }
-    public boolean isSorted(){
-        return (getFlagSorted().getByte() & 0x01) !=0;
+    public boolean isSorted() {
+        return getFlagSorted().get() !=0;
     }
-    public void setSorted(boolean sorted){
-        getFlagSorted().set((byte) (sorted ? 0x01 : 0x00));
+    public void setSorted(boolean sorted) {
+        getFlagSorted().set(sorted ? 0x01 : 0x00);
     }
 
     public void setEncodingChangedListener(EncodingChangedListener listener) {
@@ -102,18 +103,18 @@ public class StringPoolHeader extends HeaderBlock {
     }
 
     @Override
-    public String toString(){
-        if(getChunkType()!=ChunkType.STRING){
+    public String toString() {
+        if (getChunkType() != ChunkType.STRING) {
             return super.toString();
         }
         return getClass().getSimpleName()
-                +" {strings="+getCountStrings()
-                +", styles="+getCountStyles()
-                +", utf8="+isUtf8()
-                +", sorted="+isSorted()
-                +", flagExtra="+getFlagExtra().toHex()
-                +", offset-strings="+getStartStrings().get()
-                +", offset-styles="+getStartStyles().get() + '}';
+                +" {strings=" + getCountStrings()
+                +", styles=" + getCountStyles()
+                +", utf8=" + isUtf8()
+                +", sorted=" + isSorted()
+                +", flagExtra="+ getFlagExtra()
+                +", offset-strings=" + getStartStrings().get()
+                +", offset-styles=" + getStartStyles().get() + '}';
     }
 
     public interface EncodingChangedListener {

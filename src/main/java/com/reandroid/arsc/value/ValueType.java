@@ -23,120 +23,122 @@ import java.util.Map;
 
 public enum ValueType {
 
-    NULL((byte) 0x00, ""),
-    REFERENCE((byte) 0x01, "reference"),
-    ATTRIBUTE((byte) 0x02, "reference"),
-    FLOAT((byte) 0x04, "float"),
-    DIMENSION((byte) 0x05, "dimension"),
-    FRACTION((byte) 0x06, "fraction"),
-    DEC((byte) 0x10, "integer"),
-    HEX((byte) 0x11, "integer"),
-    BOOLEAN((byte) 0x12, "bool"),
-    COLOR_ARGB8((byte) 0x1c, "color"),
-    COLOR_RGB8((byte) 0x1d, "color"),
-    COLOR_ARGB4((byte) 0x1e, "color"),
-    COLOR_RGB4((byte) 0x1f, "color"),
-    STRING((byte) 0x03, "string"),
-    DYNAMIC_REFERENCE((byte) 0x07, "reference"),
-    DYNAMIC_ATTRIBUTE((byte) 0x08, "reference");
+    NULL(0x00, ""),
+    REFERENCE(0x01, "reference"),
+    ATTRIBUTE(0x02, "reference"),
+    FLOAT(0x04, "float"),
+    DIMENSION(0x05, "dimension"),
+    FRACTION(0x06, "fraction"),
+    DEC(0x10, "integer"),
+    HEX(0x11, "integer"),
+    BOOLEAN(0x12, "bool"),
+    COLOR_ARGB8(0x1c, "color"),
+    COLOR_RGB8(0x1d, "color"),
+    COLOR_ARGB4(0x1e, "color"),
+    COLOR_RGB4(0x1f, "color"),
+    STRING(0x03, "string"),
+    DYNAMIC_REFERENCE(0x07, "reference"),
+    DYNAMIC_ATTRIBUTE(0x08, "reference");
 
-    private final byte mByte;
+    private final int flag;
     private final String typeName;
-    ValueType(byte b, String typeName) {
-        this.mByte = b;
+    
+    ValueType(int flag, String typeName) {
+        this.flag = flag;
         this.typeName = typeName;
     }
-    public byte getByte(){
-        return mByte;
+
+    public int flag() {
+        return flag;
     }
     public String getTypeName() {
         return typeName;
     }
-    public boolean isColor(){
+    public boolean isColor() {
         return this == COLOR_ARGB8
                 || this == COLOR_RGB8
                 || this == COLOR_ARGB4
                 || this == COLOR_RGB4;
     }
-    public boolean isInteger(){
+    public boolean isInteger() {
         return this == DEC
                 || this == HEX;
     }
-    public boolean isReference(){
+    public boolean isReference() {
         return this == REFERENCE
                 || this == ATTRIBUTE
                 || this == DYNAMIC_REFERENCE
                 || this == DYNAMIC_ATTRIBUTE;
     }
 
-    public static ValueType valueOf(byte b){
+    public static ValueType valueOf(byte b) {
         return valueOf((b & 0x00ff));
     }
-    public static ValueType valueOf(int i){
-        if(i < 0){
+    public static ValueType valueOf(int i) {
+        if (i < 0) {
             return null;
         }
         ValueType[] sorted = getSortedValues();
-        if(i < sorted.length){
+        if (i < sorted.length) {
             return sorted[i];
         }
         return null;
     }
-    public static ValueType fromName(String name){
+    public static ValueType fromName(String name) {
         return getValueTypeMap().get(StringsUtil.toUpperCase(name));
     }
-    public static AndroidColor.Type colorType(ValueType valueType){
-        if(valueType == ValueType.COLOR_RGB4){
+    public static AndroidColor.Type colorType(ValueType valueType) {
+        if (valueType == ValueType.COLOR_RGB4) {
             return AndroidColor.Type.RGB4;
         }
-        if(valueType == ValueType.COLOR_ARGB4){
+        if (valueType == ValueType.COLOR_ARGB4) {
             return AndroidColor.Type.ARGB4;
         }
-        if(valueType == ValueType.COLOR_RGB8){
+        if (valueType == ValueType.COLOR_RGB8) {
             return AndroidColor.Type.RGB8;
         }
-        if(valueType == ValueType.COLOR_ARGB8){
+        if (valueType == ValueType.COLOR_ARGB8) {
             return AndroidColor.Type.ARGB8;
         }
         return null;
     }
-    public static ValueType colorType(AndroidColor.Type type){
-        if(type == AndroidColor.Type.RGB4){
+    public static ValueType colorType(AndroidColor.Type type) {
+        if (type == AndroidColor.Type.RGB4) {
             return COLOR_RGB4;
         }
-        if(type == AndroidColor.Type.ARGB4){
+        if (type == AndroidColor.Type.ARGB4) {
             return COLOR_ARGB4;
         }
-        if(type == AndroidColor.Type.RGB8){
+        if (type == AndroidColor.Type.RGB8) {
             return COLOR_RGB8;
         }
-        if(type == AndroidColor.Type.ARGB8){
+        if (type == AndroidColor.Type.ARGB8) {
             return COLOR_ARGB8;
         }
         return null;
     }
-    private static ValueType[] getSortedValues(){
-        if(sortedValues != null){
+    private static ValueType[] getSortedValues() {
+        if (sortedValues != null) {
             return sortedValues;
         }
-        synchronized (ValueType.class){
+        synchronized (ValueType.class) {
             ValueType[] sorted = new ValueType[0x1f + 1];
             ValueType[] values = values();
-            for(ValueType valueType : values){
-                sorted[valueType.getByte() & 0xff] = valueType;
+            for (ValueType valueType : values) {
+                sorted[valueType.flag] = valueType;
             }
             sortedValues = sorted;
             return sorted;
         }
     }
-    private static Map<String, ValueType> getValueTypeMap(){
-        if(valueTypeMap != null){
+    private static Map<String, ValueType> getValueTypeMap() {
+        if (valueTypeMap != null) {
             return valueTypeMap;
         }
-        synchronized (ValueType.class){
+        synchronized (ValueType.class) {
             Map<String, ValueType> map = new HashMap<>();
             ValueType[] values = values();
-            for(ValueType valueType : values){
+            for (ValueType valueType : values) {
                 map.put(valueType.name(), valueType);
             }
             valueTypeMap = map;

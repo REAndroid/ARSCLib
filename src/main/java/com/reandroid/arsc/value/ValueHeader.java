@@ -29,75 +29,75 @@ import java.io.IOException;
 
 public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     private ReferenceItem mStringReference;
-    public ValueHeader(int size){
+    public ValueHeader(int size) {
         super(size);
         writeSize();
         putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, -1);
     }
 
-    void linkSpecStringsInternal(SpecStringPool specStringPool){
+    void linkSpecStringsInternal(SpecStringPool specStringPool) {
         int key = getKey();
         SpecString specString = specStringPool.get(key);
-        if(specString == null){
+        if(specString == null) {
             mStringReference = null;
             return;
         }
-        if(mStringReference != null){
+        if(mStringReference != null) {
             specString.removeReference(mStringReference);
         }
         ReferenceItem stringReference = new ValueHeaderReference(this);
         mStringReference = stringReference;
         specString.addReference(stringReference);
     }
-    public void onRemoved(){
+    public void onRemoved() {
         unLinkStringReference();
     }
-    public String getName(){
+    public String getName() {
         StringItem stringItem = getNameString();
-        if(stringItem!=null){
+        if(stringItem!=null) {
             return stringItem.get();
         }
         return null;
     }
-    public boolean isComplex(){
+    public boolean isComplex() {
         return getBit(getBytesInternal(), OFFSET_FLAGS,0);
     }
-    public void setComplex(boolean complex){
+    public void setComplex(boolean complex) {
         putBit(getBytesInternal(), OFFSET_FLAGS, 0, complex);
     }
-    public void setPublic(boolean b){
+    public void setPublic(boolean b) {
         putBit(getBytesInternal(), OFFSET_FLAGS,1, b);
     }
-    public boolean isPublic(){
+    public boolean isPublic() {
         return getBit(getBytesInternal(), OFFSET_FLAGS,1);
     }
-    public void setWeak(boolean b){
+    public void setWeak(boolean b) {
         putBit(getBytesInternal(), OFFSET_FLAGS, 2, b);
     }
-    public boolean isWeak(){
+    public boolean isWeak() {
         return getBit(getBytesInternal(), OFFSET_FLAGS,2);
     }
     // Intentionally made accessible internal, use ResValue#setCompact
-    void setCompact(boolean b){
-        if(b == isCompact()){
+    void setCompact(boolean b) {
+        if(b == isCompact()) {
             return;
         }
         int key = getKey();
         putBit(getBytesInternal(), OFFSET_FLAGS, 3, b);
         writeKey(key, b);
     }
-    public boolean isCompact(){
+    public boolean isCompact() {
         return getBit(getBytesInternal(), OFFSET_FLAGS,3);
     }
 
-    public int getKey(){
-        if(isCompact()){
+    public int getKey() {
+        if(isCompact()) {
             return getShortUnsigned(getBytesInternal(), 0);
         }
         return getData();
     }
-    public void setKey(int key){
-        if(key == getKey()){
+    public void setKey(int key) {
+        if(key == getKey()) {
             return;
         }
         unLinkStringReference();
@@ -107,115 +107,115 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     void writeKey(int key) {
         writeKey(key, isCompact());
     }
-    private void writeKey(int key, boolean compact){
-        if(compact){
+    private void writeKey(int key, boolean compact) {
+        if(compact) {
             putShort(getBytesInternal(), 0, key);
-        }else {
+        } else {
             setData(key);
         }
     }
-    int getData(){
+    int getData() {
         return getInteger(getBytesInternal(), 4);
     }
-    void setData(int data){
+    void setData(int data) {
         putInteger(getBytesInternal(), 4, data);
     }
-    byte getType(){
-        return getBytesInternal()[OFFSET_DATA_TYPE];
+    int getType() {
+        return getBytesInternal()[OFFSET_DATA_TYPE] & 0xff;
     }
-    void setType(byte type){
-        getBytesInternal()[OFFSET_DATA_TYPE] = type;
+    void setType(int type) {
+        getBytesInternal()[OFFSET_DATA_TYPE] = (byte) type;
     }
-    public void setKey(StringItem stringItem){
-        if(ignoreUpdateKey(stringItem)){
+    public void setKey(StringItem stringItem) {
+        if(ignoreUpdateKey(stringItem)) {
             return;
         }
         unLinkStringReference();
         int key = -1;
-        if(stringItem != null){
+        if(stringItem != null) {
             key = stringItem.getIndex();
         }
         writeKey(key);
         linkStringReference(stringItem);
     }
-    private boolean ignoreUpdateKey(StringItem stringItem){
+    private boolean ignoreUpdateKey(StringItem stringItem) {
         int key = getKey();
         ReferenceItem referenceItem = this.mStringReference;
-        if(stringItem == null){
+        if(stringItem == null) {
             return referenceItem == null && key == -1;
         }
-        if(referenceItem == null || key != stringItem.getIndex()){
+        if(referenceItem == null || key != stringItem.getIndex()) {
             return false;
         }
         return getSpecString(key) == stringItem;
     }
-    public void setSize(int size){
-        if(!isCompact()){
+    public void setSize(int size) {
+        if(!isCompact()) {
             super.setBytesLength(size, false);
             writeSize();
         }
     }
-    public int getSize(){
+    public int getSize() {
         return getBytesInternal().length;
     }
-    int readSize(){
-        if(getSize()<2){
+    int readSize() {
+        if(getSize()<2) {
             return 0;
         }
         return 0xffff & getShort(getBytesInternal(), OFFSET_SIZE);
     }
-    private void writeSize(){
+    private void writeSize() {
         int size = getSize();
-        if(size>1){
+        if(size>1) {
             putShort(getBytesInternal(), OFFSET_SIZE, (short) size);
         }
     }
 
-    private void linkStringReference(){
+    private void linkStringReference() {
         StringPool<?> specStringPool = getSpecStringPool();
-        if(specStringPool == null || specStringPool.isStringLinkLocked()){
+        if(specStringPool == null || specStringPool.isStringLinkLocked()) {
             return;
         }
         linkStringReference(specStringPool.get(getKey()));
     }
-    private void linkStringReference(StringItem stringItem){
+    private void linkStringReference(StringItem stringItem) {
         unLinkStringReference();
-        if(stringItem==null){
+        if(stringItem==null) {
             return;
         }
         ReferenceItem stringReference = new ValueHeaderReference(this);
         mStringReference = stringReference;
         stringItem.addReference(stringReference);
     }
-    private void unLinkStringReference(){
+    private void unLinkStringReference() {
         ReferenceItem stringReference = mStringReference;
-        if(stringReference==null){
+        if(stringReference==null) {
             return;
         }
         mStringReference = null;
         StringItem stringItem = getNameString();
-        if(stringItem == null){
+        if(stringItem == null) {
             return;
         }
         stringItem.removeReference(stringReference);
     }
-    public StringItem getNameString(){
+    public StringItem getNameString() {
         return getSpecString(getKey());
     }
-    private StringItem getSpecString(int key){
-        if(key < 0){
+    private StringItem getSpecString(int key) {
+        if(key < 0) {
             return null;
         }
         StringPool<?> specStringPool = getSpecStringPool();
-        if(specStringPool==null){
+        if(specStringPool==null) {
             return null;
         }
         return specStringPool.get(key);
     }
-    private StringPool<?> getSpecStringPool(){
+    private StringPool<?> getSpecStringPool() {
         Block parent = getParent();
-        while (parent!=null){
-            if(parent instanceof ParentChunk){
+        while (parent!=null) {
+            if(parent instanceof ParentChunk) {
                 return ((ParentChunk) parent).getSpecStringPool();
             }
             parent = parent.getParent();
@@ -226,26 +226,26 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     public void onReadBytes(BlockReader reader) throws IOException {
         int position = reader.getPosition();
         reader.readFully(getBytesInternal());
-        if(!isCompact()){
+        if(!isCompact()) {
             reader.seek(position);
             int size = reader.readUnsignedShort();
             setBytesLength(size, false);
             reader.readFully(getBytesInternal());
         }
     }
-    private void setName(String name){
-        if(name==null){
+    private void setName(String name) {
+        if(name==null) {
             name = "";
         }
         StringPool<?> stringPool = getSpecStringPool();
-        if(stringPool==null){
+        if(stringPool==null) {
             return;
         }
         StringItem stringItem = stringPool.getOrCreate(name);
         setKey(stringItem);
     }
-    public void merge(ValueHeader valueHeader){
-        if(valueHeader == null || valueHeader ==this){
+    public void merge(ValueHeader valueHeader) {
+        if(valueHeader == null || valueHeader ==this) {
             return;
         }
         setComplex(valueHeader.isComplex());
@@ -253,15 +253,15 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         setPublic(valueHeader.isPublic());
         setName(valueHeader.getName());
     }
-    public void mergeWithName(ResourceMergeOption mergeOption, ValueHeader valueHeader){
+    public void mergeWithName(ResourceMergeOption mergeOption, ValueHeader valueHeader) {
         this.merge(valueHeader);
     }
     public void toJson(JSONObject jsonObject) {
         jsonObject.put(NAME_entry_name, getName());
-        if(isWeak()){
+        if(isWeak()) {
             jsonObject.put(NAME_is_weak, true);
         }
-        if(isPublic()){
+        if(isPublic()) {
             jsonObject.put(NAME_is_public, true);
         }
     }
@@ -278,35 +278,35 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         setName(json.optString(NAME_entry_name));
     }
     @Override
-    public String toString(){
-        if(isNull()){
+    public String toString() {
+        if(isNull()) {
             return "null";
         }
         StringBuilder builder=new StringBuilder();
         int byte_size = getSize();
         int read_size = readSize();
-        if(byte_size!=8){
+        if(byte_size!=8) {
             builder.append("size=").append(byte_size);
         }
-        if(byte_size!=read_size){
+        if(byte_size!=read_size) {
             builder.append(", readSize=").append(read_size);
         }
-        if(isComplex()){
+        if(isComplex()) {
             builder.append(", complex");
         }
-        if(isPublic()){
+        if(isPublic()) {
             builder.append(", public");
         }
-        if(isWeak()){
+        if(isWeak()) {
             builder.append(", weak");
         }
-        if(isCompact()){
+        if(isCompact()) {
             builder.append(", compact");
         }
         String name = getName();
-        if(name!=null){
+        if(name!=null) {
             builder.append(", name=").append(name);
-        }else {
+        } else {
             builder.append(", key=").append(getKey());
         }
         return builder.toString();
@@ -317,7 +317,7 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
 
         private final ValueHeader valueHeader;
 
-        ValueHeaderReference(ValueHeader valueHeader){
+        ValueHeaderReference(ValueHeader valueHeader) {
             this.valueHeader = valueHeader;
         }
         @Override
@@ -332,7 +332,7 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         @Override
         public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
             ValueHeader block = this.valueHeader;
-            if(parentClass.isInstance(block)){
+            if(parentClass.isInstance(block)) {
                 return (T1) block;
             }
             return block.getParentInstance(parentClass);

@@ -138,7 +138,7 @@ public abstract class XMLNodeTree extends XMLNode implements
         return mNodeList.indexOf(node);
     }
     public int indexOfExact(XMLNode node) {
-        return mNodeList.indexOfExact(node);
+        return mNodeList.indexOfIdentity(node);
     }
     public boolean remove(XMLNode xmlNode) {
         synchronized (this) {
@@ -303,10 +303,19 @@ public abstract class XMLNodeTree extends XMLNode implements
     }
 
     public boolean hasChildElements() {
-        return !CollectionUtil.isEmpty(getElements());
+        return containsInstance(XMLElement.class);
     }
     public boolean hasTextNode() {
-        return !CollectionUtil.isEmpty(getTexts());
+        return containsInstance(XMLText.class);
+    }
+    public boolean containsInstance(Class<?> instance) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            if (instance.isInstance(get(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

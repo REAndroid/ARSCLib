@@ -42,7 +42,7 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
         this.resValue.setParent(this);
         this.resValue.setIndex(1);
     }
-    public abstract Iterator<ValueItem> allValues();
+    public abstract Iterator<ValueItem> visitValues();
     public Entry getParentEntry(){
         return getParent(Entry.class);
     }

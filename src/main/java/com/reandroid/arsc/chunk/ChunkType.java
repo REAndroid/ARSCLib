@@ -18,72 +18,76 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.utils.HexUtil;
 
 public enum ChunkType {
-    NULL((short)0x0000),
+    NULL(0x0000),
 
-    STRING((short)0x0001),
-    TABLE((short)0x0002),
-    XML((short)0x0003),
+    STRING(0x0001),
+    TABLE(0x0002),
+    XML(0x0003),
 
-    XML_START_NAMESPACE((short)0x0100),
-    XML_END_NAMESPACE((short)0x0101),
-    XML_START_ELEMENT((short)0x0102),
-    XML_END_ELEMENT((short)0x0103),
-    XML_CDATA((short)0x0104),
-    XML_LAST_CHUNK((short)0x017f),
-    XML_RESOURCE_MAP((short)0x0180),
+    XML_START_NAMESPACE(0x0100),
+    XML_END_NAMESPACE(0x0101),
+    XML_START_ELEMENT(0x0102),
+    XML_END_ELEMENT(0x0103),
+    XML_CDATA(0x0104),
+    XML_LAST_CHUNK(0x017f),
+    XML_RESOURCE_MAP(0x0180),
 
-    PACKAGE((short)0x0200),
-    TYPE((short)0x0201),
-    SPEC((short)0x0202),
-    LIBRARY((short)0x0203),
-    OVERLAYABLE((short)0x0204),
-    OVERLAYABLE_POLICY((short)0x0205),
-    STAGED_ALIAS((short)0x0206);
+    PACKAGE(0x0200),
+    TYPE(0x0201),
+    SPEC(0x0202),
+    LIBRARY(0x0203),
+    OVERLAYABLE(0x0204),
+    OVERLAYABLE_POLICY(0x0205),
+    STAGED_ALIAS(0x0206);
 
-    public final short ID;
-    ChunkType(short id) {
+    public final int ID;
+
+    ChunkType(int id) {
         this.ID = id;
     }
 
     @Override
-    public String toString(){
-        return name() + "(" + HexUtil.toHex4(ID) + ")";
+    public String toString() {
+        return name() + "(" + HexUtil.toHex(ID, 4) + ")";
     }
 
-    public static ChunkType get(short id){
-        ChunkType[] all=values();
-        for(ChunkType t:all){
-            if(t.ID ==id){
+    public static ChunkType get(short id) {
+        return get(id & 0xffff);
+    }
+    public static ChunkType get(int id) {
+        for (ChunkType type : values()) {
+            if (type.ID == id) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    public static ChunkType getTable(short id) {
+        for (ChunkType type : table_chunk_types) {
+            if (type.ID == id) {
+                return type;
+            }
+        }
+        return null;
+    }
+    public static ChunkType getXml(short id) {
+        for (ChunkType t:xml_chunk_types) {
+            if (t.ID == id) {
                 return t;
             }
         }
         return null;
     }
 
-    public static ChunkType getTable(short id){
-        for(ChunkType t:table_chunk_types){
-            if(t.ID ==id){
-                return t;
-            }
-        }
-        return null;
-    }
-    public static ChunkType getXml(short id){
-        for(ChunkType t:xml_chunk_types){
-            if(t.ID ==id){
-                return t;
-            }
-        }
-        return null;
-    }
-
-    private static final ChunkType[] table_chunk_types=new ChunkType[]{
+    private static final ChunkType[] table_chunk_types = new ChunkType[]{
             PACKAGE,
             TYPE,
             SPEC,
             LIBRARY
     };
-    private static final ChunkType[] xml_chunk_types=new ChunkType[]{
+    
+    private static final ChunkType[] xml_chunk_types = new ChunkType[]{
             XML_START_NAMESPACE,
             XML_END_NAMESPACE,
             XML_START_ELEMENT,

@@ -84,7 +84,7 @@ public class ApkBundle implements Closeable {
         result.setApkSignatureBlock(signatureBlock);
 
         if (result.hasTableBlock()) {
-            TableBlock tableBlock=result.getTableBlock();
+            TableBlock tableBlock = result.getTableBlock();
             tableBlock.sortPackages();
             tableBlock.refresh();
         }

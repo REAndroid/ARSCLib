@@ -22,13 +22,13 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
-public class TypeHeader extends HeaderBlock {
-    
-    private final ByteItem id;
+public class TypeHeader extends SpecOrTypeHeader {
+
     private final ByteItem flags;
     private final IntegerItem count;
     private final IntegerItem entriesStart;
@@ -37,21 +37,19 @@ public class TypeHeader extends HeaderBlock {
     private OffsetTypeChangedListener offsetTypeChangedListener;
 
     public TypeHeader() {
-        super(ChunkType.TYPE.ID);
+        super(5, ChunkType.TYPE);
 
-        this.id = new ByteItem();
         this.flags = new ByteItem();
         ShortItem reserved = new ShortItem();
         this.count = new IntegerItem();
         this.entriesStart = new IntegerItem();
         this.config = new ResConfig();
 
-        addChild(id);
-        addChild(flags);
-        addChild(reserved);
-        addChild(count);
-        addChild(entriesStart);
-        addChild(config);
+        addChild(4, flags);
+        addChild(5, reserved);
+        addChild(6, count);
+        addChild(7, entriesStart);
+        addChild(8, config);
     }
 
     public TypeHeader(boolean sparse, boolean offset16) {
@@ -61,7 +59,7 @@ public class TypeHeader extends HeaderBlock {
     }
     
     public boolean isSparse() {
-        return (getFlags().get() & 0x3) == 0x1;
+        return (flags().get() & 0x3) == 0x1;
     }
     public void setSparse(boolean sparse) {
         if (sparse != isSparse()) {
@@ -69,7 +67,7 @@ public class TypeHeader extends HeaderBlock {
         }
     }
     public boolean isOffset16() {
-        return (getFlags().get() & 0x3)  == 0x2;
+        return (flags().get() & 0x3)  == 0x2;
     }
     public void setOffset16(boolean offset16) {
         if (offset16 != isOffset16()) {
@@ -77,14 +75,14 @@ public class TypeHeader extends HeaderBlock {
         }
     }
     public int getOffsetType() {
-        return getFlags().get() & 0x3;
+        return flags().get() & 0x3;
     }
     public void setOffsetType(int type) {
         if (type != getOffsetType()) {
             if (type != OFFSET_32 && type != OFFSET_16 && type != OFFSET_SPARSE) {
                 throw new IllegalArgumentException("Invalid offset type: " + type);
             }
-            getFlags().set((getFlags().get() & 0xfc) | type);
+            flags().set((flags().get() & 0xfc) | type);
             notifyOffsetTypeChanged();
         }
     }
@@ -105,16 +103,14 @@ public class TypeHeader extends HeaderBlock {
         //typeHeader.countBytes() - getConfig().countBytes() + ResConfig.SIZE_16
         return 36;
     }
-    public ByteItem getId() {
-        return id;
-    }
-    public ByteItem getFlags() {
+
+    public IntegerReference flags() {
         return flags;
     }
-    public IntegerReference getCountItem() {
+    public IntegerReference count() {
         return count;
     }
-    public IntegerReference getEntriesStart() {
+    public IntegerReference entriesStart() {
         return entriesStart;
     }
     public ResConfig getConfig() {
@@ -143,10 +139,10 @@ public class TypeHeader extends HeaderBlock {
             return super.toString();
         }
         return getClass().getSimpleName()
-                +" {id="+getId().toHex()
-                +", flags=" + getFlags().toHex()
-                +", count=" + getCountItem()
-                +", entriesStart=" + getEntriesStart()
+                +" {id=" + HexUtil.toHex2(getId())
+                +", flags=" + flags()
+                +", count=" + count()
+                +", entriesStart=" + entriesStart()
                 +", config=" + getConfig() + '}';
     }
     public static TypeHeader read(BlockReader reader) throws IOException {

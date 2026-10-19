@@ -91,7 +91,7 @@ public class SmaliSet<T extends Smali> extends Smali implements Swappable {
         if (smali == get(index)) {
             return index;
         }
-        return body.indexOfExact(smali);
+        return body.indexOfIdentity(smali);
     }
     public T get(int i) {
         if (i < 0 || i >= size()) {

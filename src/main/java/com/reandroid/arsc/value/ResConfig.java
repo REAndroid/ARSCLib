@@ -15,54 +15,57 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.common.Mergeable;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
+public class ResConfig extends ResConfigBase implements Mergeable<ResConfig>, JSONConvert<JSONObject>,
         Comparable<ResConfig> {
     private String mQualifiers;
     private int mQualifiersStamp;
 
-    public ResConfig(){
+    public ResConfig() {
         this(SIZE_64);
     }
-    private ResConfig(int size){
+    private ResConfig(int size) {
         super(size);
         this.mQualifiersStamp = 0;
     }
-    public boolean isEqualOrMoreSpecificThan(ResConfig resConfig){
-        if(resConfig == null){
+    public boolean isEqualOrMoreSpecificThan(ResConfig resConfig) {
+        if (resConfig == null) {
             return false;
         }
-        if(resConfig == this || resConfig.isDefault()){
+        if (resConfig == this || resConfig.isDefault()) {
             return true;
         }
         byte[] bytes = ByteArray.trimTrailZeros(this.getValueBytes());
         byte[] otherBytes = ByteArray.trimTrailZeros(resConfig.getValueBytes());
         int max = otherBytes.length;
-        if(max > bytes.length){
+        if (max > bytes.length) {
             return false;
         }
-        for(int i = 0; i<max; i++){
+        for(int i = 0; i<max; i++) {
             byte other = otherBytes[i];
-            if(other == 0){
+            if (other == 0) {
                 continue;
             }
-            if(bytes[i] != other){
+            if (bytes[i] != other) {
                 return false;
             }
         }
         return true;
     }
-    public void copyFrom(ResConfig resConfig){
-        if(resConfig == this || resConfig == null){
+    public void copyFrom(ResConfig resConfig) {
+        if (resConfig == this || resConfig == null || equals(resConfig)) {
             return;
         }
         setValueBytes(resConfig.getValueBytes());
@@ -70,264 +73,264 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     /**
      * returns null if parsing is ok, else returns unknown qualifiers
      * */
-    public String[] parseQualifiers(String qualifiers){
+    public String[] parseQualifiers(String qualifiers) {
         QualifierParser parser = new QualifierParser(this, qualifiers);
         parser.parse();
         return parser.getErrors();
     }
-    public String getLocale(){
+    public String getLocale() {
         StringBuilder builder = new StringBuilder();
         String str = getLanguage();
-        if(str != null){
+        if (str != null) {
             builder.append(str);
         }
         str = getRegion();
-        if(str != null){
-            if(builder.length() != 0){
+        if (str != null) {
+            if (builder.length() != 0) {
                 builder.append('-');
             }
             builder.append(str);
         }
         str = getLocaleScriptInternal();
-        if(str != null){
-            if(builder.length() != 0){
+        if (str != null) {
+            if (builder.length() != 0) {
                 builder.append('-');
             }
             builder.append(str);
         }
         return builder.toString();
     }
-    public String[] parseLocale(String locale){
+    public String[] parseLocale(String locale) {
         QualifierParser parser = new QualifierParser(this, locale);
         parser.parseLocale();
         return parser.getErrors();
     }
 
-    public char[] getLanguageChars(){
+    public char[] getLanguageChars() {
         byte[] bytes = getLanguageBytes();
         return unPackLanguage(bytes[0], bytes[1]);
     }
-    public void setLanguage(char[] chars){
+    public void setLanguage(char[] chars) {
         setLanguageBytes(packLanguage(chars));
     }
-    public void setLanguage(String language){
+    public void setLanguage(String language) {
         char[] chs = null;
-        if(language!= null){
+        if (language!= null) {
             chs = language.toCharArray();
         }
         setLanguage(chs);
     }
-    public String getLanguage(){
+    public String getLanguage() {
         char[] chars = getLanguageChars();
-        if(isNullChars(chars)){
+        if (isNullChars(chars)) {
             return null;
         }
         return new String(chars);
     }
-    public char[] getRegionChars(){
+    public char[] getRegionChars() {
         byte[] bytes = getRegionBytes();
         return unPackRegion(bytes[0], bytes[1]);
     }
-    public void setRegion(char[] chars){
+    public void setRegion(char[] chars) {
         setRegionBytes(packRegion(chars));
     }
-    public void setRegion(String region){
+    public void setRegion(String region) {
         char[] chars = null;
-        if(region!= null){
-            if(region.length() ==3 && region.charAt(0) == 'r'){
+        if (region!= null) {
+            if (region.length() ==3 && region.charAt(0) == 'r') {
                 region = region.substring(1);
             }
             chars = region.toCharArray();
         }
         setRegion(chars);
     }
-    public String getRegion(){
+    public String getRegion() {
         char[] chars = getRegionChars();
-        if(isNullChars(chars)){
+        if (isNullChars(chars)) {
             return null;
         }
         return new String(chars);
     }
-    public Orientation getOrientation(){
+    public Orientation getOrientation() {
         return Orientation.valueOf(getOrientationValue());
     }
-    public void setOrientation(Orientation orientation){
+    public void setOrientation(Orientation orientation) {
         setOrientation(Orientation.update(orientation, getOrientationValue()));
     }
-    public Touchscreen getTouchscreen(){
+    public Touchscreen getTouchscreen() {
         return Touchscreen.valueOf(getTouchscreenValue());
     }
-    public void setTouchscreen(Touchscreen touchscreen){
+    public void setTouchscreen(Touchscreen touchscreen) {
         setTouchscreen(Touchscreen.update(touchscreen, getTouchscreenValue()));
     }
-    public Density getDensity(){
+    public Density getDensity() {
         return Density.valueOf(getDensityValue());
     }
-    public void setDensity(Density density){
+    public void setDensity(Density density) {
         setDensity(Density.update(density, getDensityValue()));
     }
-    public Keyboard getKeyboard(){
+    public Keyboard getKeyboard() {
         return Keyboard.valueOf(getKeyboardValue());
     }
-    public void setKeyboard(Keyboard keyboard){
+    public void setKeyboard(Keyboard keyboard) {
         setKeyboard(Keyboard.update(keyboard, getKeyboardValue()));
     }
-    public Navigation getNavigation(){
+    public Navigation getNavigation() {
         return Navigation.valueOf(getNavigationValue());
     }
-    public void setNavigation(Navigation navigation){
+    public void setNavigation(Navigation navigation) {
         setNavigation(Navigation.update(navigation, getNavigationValue()));
     }
-    public InputFlagsKeysHidden getInputFlagsKeysHidden(){
+    public InputFlagsKeysHidden getInputFlagsKeysHidden() {
         return InputFlagsKeysHidden.valueOf(getInputFlagsValue());
     }
-    public void setInputFlagsKeysHidden(InputFlagsKeysHidden keysHidden){
+    public void setInputFlagsKeysHidden(InputFlagsKeysHidden keysHidden) {
         setInputFlags(InputFlagsKeysHidden.update(keysHidden, getInputFlagsValue()));
     }
-    public InputFlagsNavHidden getInputFlagsNavHidden(){
+    public InputFlagsNavHidden getInputFlagsNavHidden() {
         return InputFlagsNavHidden.valueOf(getInputFlagsValue());
     }
-    public void setInputFlagsNavHidden(InputFlagsNavHidden navHidden){
+    public void setInputFlagsNavHidden(InputFlagsNavHidden navHidden) {
         setInputFlags(InputFlagsNavHidden.update(navHidden, getInputFlagsValue()));
     }
-    public Gender getGender(){
+    public Gender getGender() {
         return Gender.valueOf(getGenderValue());
     }
-    public void setGender(Gender gender){
+    public void setGender(Gender gender) {
         setGenderValue(Gender.update(gender, getGenderValue()));
     }
-    public void setScreenSize(int width, int height){
+    public void setScreenSize(int width, int height) {
         this.setScreenWidth(width);
         this.setScreenHeight(height);
     }
-    public ScreenLayoutSize getScreenLayoutSize(){
+    public ScreenLayoutSize getScreenLayoutSize() {
         return ScreenLayoutSize.valueOf(getScreenLayout());
     }
-    public void setScreenLayoutSize(ScreenLayoutSize layoutSize){
+    public void setScreenLayoutSize(ScreenLayoutSize layoutSize) {
         setScreenLayout(ScreenLayoutSize.update(layoutSize, getScreenLayout()));
     }
-    public ScreenLayoutLong getScreenLayoutLong(){
+    public ScreenLayoutLong getScreenLayoutLong() {
         return ScreenLayoutLong.valueOf(getScreenLayout());
     }
-    public void setScreenLayoutLong(ScreenLayoutLong layoutLong){
+    public void setScreenLayoutLong(ScreenLayoutLong layoutLong) {
         setScreenLayout(ScreenLayoutLong.update(layoutLong, getScreenLayout()));
     }
-    public ScreenLayoutDir getScreenLayoutDir(){
+    public ScreenLayoutDir getScreenLayoutDir() {
         return ScreenLayoutDir.valueOf(getScreenLayout());
     }
-    public void setScreenLayoutDir(ScreenLayoutDir layoutDir){
+    public void setScreenLayoutDir(ScreenLayoutDir layoutDir) {
         setScreenLayout(ScreenLayoutDir.update(layoutDir, getScreenLayout()));
     }
-    public UiModeType getUiModeType(){
+    public UiModeType getUiModeType() {
         return UiModeType.valueOf(getUiMode());
     }
-    public void setUiModeType(UiModeType uiModeType){
+    public void setUiModeType(UiModeType uiModeType) {
         setUiMode(UiModeType.update(uiModeType, getUiMode()));
     }
-    public UiModeNight getUiModeNight(){
+    public UiModeNight getUiModeNight() {
         return UiModeNight.valueOf(getUiMode());
     }
-    public void setUiModeNight(UiModeNight uiModeNight){
+    public void setUiModeNight(UiModeNight uiModeNight) {
         setUiMode(UiModeNight.update(uiModeNight, getUiMode()));
     }
 
-    public void setLocaleScript(char[] chs){
+    public void setLocaleScript(char[] chs) {
         byte[] bts = toByteArray(chs, LEN_localeScript);
         setLocaleScript(bts);
     }
-    public void setLocaleScript(String script){
+    public void setLocaleScript(String script) {
         char[] chs = null;
         script = trimPostfix(script, POSTFIX_locale);
-        if(script!= null){
+        if (script!= null) {
             chs = script.toCharArray();
         }
         setLocaleScript(chs);
     }
-    public char[] getLocaleScriptChars(){
+    public char[] getLocaleScriptChars() {
         return trimEndingZero(toCharArray(getLocaleScriptBytes()));
     }
-    private String getLocaleScriptInternal(){
+    private String getLocaleScriptInternal() {
         char[] chs = getLocaleScriptChars();
-        if(chs == null){
+        if (chs == null) {
             return null;
         }
         return new String(chs);
     }
-    public String getLocaleScript(){
+    public String getLocaleScript() {
         String script = getLocaleScriptInternal();
-        if(script == null){
+        if (script == null) {
             return null;
         }
         script = ensureLength(script, 3, POSTFIX_locale);
         return script;
     }
-    public void setLocaleVariant(char[] chs){
+    public void setLocaleVariant(char[] chs) {
         byte[] bts =toByteArray(chs, LEN_localeVariant);
         setLocaleVariant(bts);
     }
-    public void setLocaleVariant(String variant){
-        if(variant!= null){
+    public void setLocaleVariant(String variant) {
+        if (variant!= null) {
             variant = variant.toLowerCase();
         }
         setLocaleVariantInternal(variant);
     }
-    private void setLocaleVariantInternal(String variant){
+    private void setLocaleVariantInternal(String variant) {
         char[] chs = null;
         variant = trimPostfix(variant, POSTFIX_locale);
-        if(variant!= null){
+        if (variant!= null) {
             chs = variant.toCharArray();
         }
         setLocaleVariant(chs);
     }
-    public char[] getLocaleVariantChars(){
+    public char[] getLocaleVariantChars() {
         return trimEndingZero(toCharArray(getLocaleVariantBytes()));
     }
-    private String getLocaleVariantInternal(){
+    private String getLocaleVariantInternal() {
         char[] chs = getLocaleVariantChars();
-        if(chs == null){
+        if (chs == null) {
             return null;
         }
         return new String(chs);
     }
-    public String getLocaleVariant(){
+    public String getLocaleVariant() {
         String variant = getLocaleVariantInternal();
-        if(variant == null){
+        if (variant == null) {
             return null;
         }
         variant = ensureLength(variant, 5, POSTFIX_locale);
         return variant.toUpperCase();
     }
-    public ScreenLayoutRound getScreenLayoutRound(){
+    public ScreenLayoutRound getScreenLayoutRound() {
         return ScreenLayoutRound.valueOf(getScreenLayout2());
     }
-    public void setScreenLayoutRound(ScreenLayoutRound layoutRound){
+    public void setScreenLayoutRound(ScreenLayoutRound layoutRound) {
         setScreenLayout2(ScreenLayoutRound.update(layoutRound, getScreenLayout2()));
     }
-    public ColorModeWide getColorModeWide(){
+    public ColorModeWide getColorModeWide() {
         return ColorModeWide.valueOf(getColorMode());
     }
-    public void setColorModeWide(ColorModeWide colorModeWide){
+    public void setColorModeWide(ColorModeWide colorModeWide) {
         setColorMode(ColorModeWide.update(colorModeWide, getColorMode()));
     }
-    public ColorModeHdr getColorModeHdr(){
+    public ColorModeHdr getColorModeHdr() {
         return ColorModeHdr.valueOf(getColorMode());
     }
-    public void setColorModeHdr(ColorModeHdr colorModeHdr){
+    public void setColorModeHdr(ColorModeHdr colorModeHdr) {
         setColorMode(ColorModeHdr.update(colorModeHdr, getColorMode()));
     }
-    public String getUnknownHexBytes(){
+    public String getUnknownHexBytes() {
         return getUnknownHexBytes(8);
     }
-    public String getUnknownHexBytes(int limit){
+    public String getUnknownHexBytes(int limit) {
         byte[] bytes = trimEndingZero(getUnknownBytes());
-        if(isNullBytes(bytes)){
+        if (isNullBytes(bytes)) {
             return null;
         }
         String result = null;
-        if(limit < 0){
+        if (limit < 0) {
             limit = bytes.length;
         }
-        if(bytes.length < limit){
+        if (bytes.length < limit) {
             limit = bytes.length;
         }
         for (int i = 0; i < limit; i++) {
@@ -335,63 +338,72 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
         return result;
     }
-    public void setUnknownBytes(String hexBytes){
-        if(hexBytes == null || hexBytes.length() == 0){
+    public void setUnknownBytes(String hexBytes) {
+        if (hexBytes == null || hexBytes.length() == 0) {
             return;
         }
         int length = hexBytes.length();
-        if(length % 2 != 0){
+        if (length % 2 != 0) {
             return;
         }
         char[] chars = hexBytes.toCharArray();
         length = chars.length;
         byte[] bytes = new byte[length/2];
         try{
-            for(int i = 0; i < length; i += 2){
+            for(int i = 0; i < length; i += 2) {
                 bytes[i / 2] = (byte) HexUtil.parseHex(new String(chars, i, 2));
             }
-        }catch (NumberFormatException ignored){
+        }catch (NumberFormatException ignored) {
             return;
         }
         setUnknownBytes(bytes);
     }
     /*** END OF SET/GET VALUES ***/
 
-    public String getQualifiers(){
+    public String getQualifiers() {
         int hash = this.hashCode();
-        if(mQualifiers == null || mQualifiersStamp!=hash){
+        if (mQualifiers == null || mQualifiersStamp!=hash) {
             mQualifiers = new QualifierBuilder(this).build();
             mQualifiersStamp = hash;
         }
         return mQualifiers;
     }
 
-    public boolean isEqualQualifiers(String qualifiers){
+    public boolean isEqualQualifiers(String qualifiers) {
+        if (ObjectsUtil.equals(getQualifiers(), qualifiers)) {
+            return true;
+        }
         return this.equals(parse(qualifiers));
     }
-    public boolean isDefault(){
+    public boolean isDefault() {
         return isNullBytes(getValueBytes());
+    }
+    public void merge(ResConfig resConfig) {
+        if (resConfig == null || resConfig == this) {
+            return;
+        }
+        copyFrom(resConfig);
     }
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
-        if(isDefault()){
+        if (isDefault()) {
             return jsonObject;
         }
         int val= getMcc();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_mcc, val);
         }
         val= getMnc();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_mnc, val);
         }
         String str = getLanguage();
-        if(str!= null){
+        if (str!= null) {
             jsonObject.put(NAME_language, str);
         }
         str = getRegion();
-        if(str!= null){
+        if (str!= null) {
             jsonObject.put(NAME_region, str);
         }
         jsonObject.put(NAME_orientation, Flag.toString(getOrientation()));
@@ -403,19 +415,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         jsonObject.put(NAME_input_flags_nav_hidden, Flag.toString(getInputFlagsNavHidden()));
         jsonObject.put(NAME_gender, Flag.toString(getGender()));
         val = getScreenWidth();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_screenWidth, val);
         }
         val = getScreenHeight();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_screenHeight, val);
         }
         val = getSdkVersion();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_sdkVersion, val);
         }
         val = getMinorVersion();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_minorVersion, val);
         }
         jsonObject.put(NAME_screen_layout_size, Flag.toString(getScreenLayoutSize()));
@@ -424,30 +436,30 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         jsonObject.put(NAME_ui_mode_type, Flag.toString(getUiModeType()));
         jsonObject.put(NAME_ui_mode_night, Flag.toString(getUiModeNight()));
         val = getSmallestScreenWidthDp();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_smallestScreenWidthDp, val);
         }
         val = getScreenWidthDp();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_screenWidthDp, val);
         }
         val = getScreenHeightDp();
-        if(val!= 0){
+        if (val!= 0) {
             jsonObject.put(NAME_screenHeightDp, val);
         }
         str = getLocaleScriptInternal();
-        if(str!= null){
+        if (str!= null) {
             jsonObject.put(NAME_localeScript, str);
         }
         str = getLocaleVariantInternal();
-        if(str!= null){
+        if (str!= null) {
             jsonObject.put(NAME_localeVariant, str);
         }
         jsonObject.put(NAME_screen_layout_round, Flag.toString(getScreenLayoutRound()));
         jsonObject.put(NAME_color_mode_wide, Flag.toString(getColorModeWide()));
         jsonObject.put(NAME_color_mode_hdr, Flag.toString(getColorModeHdr()));
         str = getUnknownHexBytes(-1);
-        if(str != null){
+        if (str != null) {
             jsonObject.put(NAME_unknownBytes, str);
             jsonObject.put(NAME_config_size, getConfigSize());
         }
@@ -455,12 +467,12 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     }
     @Override
     public void fromJson(JSONObject json) {
-        if(json.isEmpty()){
+        if (json.isEmpty()) {
             resetValueBytes();
             return;
         }
         int configSize = json.optInt(NAME_config_size, 0);
-        if(configSize == 0){
+        if (configSize == 0) {
             configSize = SIZE_64;
         }
         trimToSize(configSize);
@@ -497,30 +509,27 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         setUnknownBytes(json.optString(NAME_unknownBytes));
     }
     @Override
-    public int hashCode(){
-        byte[] bts = ByteArray.trimTrailZeros(getValueBytes());
-        return Arrays.hashCode(bts);
+    public int hashCode() {
+        return Block.hashIgnoreTrailZeros(getValueBytes());
     }
     @Override
-    public boolean equals(Object obj){
-        if(obj==this){
+    public boolean equals(Object obj) {
+        if (obj == this) {
             return true;
         }
-        if(obj== null){
+        if (obj == null) {
             return false;
         }
-        if(obj instanceof ResConfig){
-            ResConfig other = (ResConfig)obj;
-            byte[] bts1 = getValueBytes();
-            byte[] bts2 = other.getValueBytes();
-            return ByteArray.equalsIgnoreTrailZero(bts1, bts2);
+        if (obj instanceof ResConfig) {
+            ResConfig other = (ResConfig) obj;
+            return Block.equalsIgnoreTrailZero(this.getValueBytes(), other.getValueBytes());
         }
         return false;
     }
     @Override
-    public String toString(){
+    public String toString() {
         String q = getQualifiers();
-        if(q.length() == 0) {
+        if (q.length() == 0) {
             return "[DEFAULT]";
         }
         return "[" + q + "]";
@@ -528,96 +537,96 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     @Override
     public int compareTo(ResConfig config) {
         int i = CompareUtil.compare(getMnc(), config.getMnc());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getMcc(), config.getMcc());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = compareLocale(config);
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getGenderValue(), config.getGenderValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getDensityValue(), config.getDensityValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getTouchscreenValue(), config.getTouchscreenValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getOrientationValue(), config.getOrientationValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getNavigationValue(), config.getNavigationValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getKeyboardValue(), config.getKeyboardValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getInputFlagsValue(), config.getInputFlagsValue());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getScreenWidth(), config.getScreenWidth());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getScreenHeight(), config.getScreenHeight());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getSdkVersion(), config.getSdkVersion());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getScreenLayout(), config.getScreenLayout());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getScreenLayout2(), config.getScreenLayout2());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getColorMode(), config.getColorMode());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getUiMode(), config.getUiMode());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getSmallestScreenWidthDp(), config.getSmallestScreenWidthDp());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getScreenHeightDp(), config.getScreenHeightDp());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(getScreenWidthDp(), config.getScreenWidthDp());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         return 0;
     }
 
-    public static ResConfig parse(String qualifiers){
+    public static ResConfig parse(String qualifiers) {
         ResConfig resConfig = new ResConfig();
         resConfig.parseQualifiers(qualifiers);
         return resConfig;
     }
-    public static ResConfig getDefault(){
+    public static ResConfig getDefault() {
         ResConfig resConfig = DEFAULT_INSTANCE;
-        if(resConfig.isDefault()){
+        if (resConfig.isDefault()) {
             return resConfig;
         }
         resConfig.resetValueBytes();
@@ -660,7 +669,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     }
     private static byte[] packLanguageOrRegion(char[] in, char base) {
         byte[] out = new byte[2];
-        if(in == null || in.length<2){
+        if (in == null || in.length<2) {
             return out;
         }
         if (in.length == 2 || in[2] == 0 || in[2] == '-') {
@@ -692,19 +701,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private Orientation(String name, int flag) {
             super(name, flag);
         }
-        public static Orientation valueOf(int flag){
+        public static Orientation valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static Orientation valueOf(String name){
+        public static Orientation valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static Orientation fromQualifiers(String qualifiers){
+        public static Orientation fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static Orientation fromQualifiers(String[] qualifiers){
+        public static Orientation fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(Orientation flag, int value){
+        public static int update(Orientation flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -723,19 +732,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private Touchscreen(String name, int flag) {
             super(name, flag);
         }
-        public static Touchscreen valueOf(int flag){
+        public static Touchscreen valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static Touchscreen valueOf(String name){
+        public static Touchscreen valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static Touchscreen fromQualifiers(String qualifiers){
+        public static Touchscreen fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static Touchscreen fromQualifiers(String[] qualifiers){
+        public static Touchscreen fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(Touchscreen flag, int value){
+        public static int update(Touchscreen flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -765,46 +774,46 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private Density(String name, int flag) {
             super(name, flag);
         }
-        public static Density valueOf(int flag){
-            if(flag== 0){
+        public static Density valueOf(int flag) {
+            if (flag== 0) {
                 return null;
             }
             Density density = Flag.valueOf(VALUES, MASK, flag);
-            if(density == null){
+            if (density == null) {
                 flag = flag & MASK;
                 density = new Density(flag+"dpi", flag);
             }
             return density;
         }
-        public static Density valueOf(String name){
-            if(name == null || name.length() < 4){
+        public static Density valueOf(String name) {
+            if (name == null || name.length() < 4) {
                 return null;
             }
             name = name.toLowerCase();
-            if(name.charAt(0) == '-'){
+            if (name.charAt(0) == '-') {
                 name = name.substring(1);
             }
             Density density = Flag.valueOf(VALUES, name);
-            if(density == null && name.endsWith("dpi")){
+            if (density == null && name.endsWith("dpi")) {
                 name = name.substring(0, name.length()-3);
                 try{
                     int flag = Integer.parseInt(name);
                     density = new Density(flag+"dpi", flag);
-                }catch (NumberFormatException ignored){
+                }catch (NumberFormatException ignored) {
                 }
             }
             return density;
         }
-        public static Density fromQualifiers(String qualifiers){
+        public static Density fromQualifiers(String qualifiers) {
             return fromQualifiers(qualifiers.split("\\s*-\\s*"));
         }
-        public static Density fromQualifiers(String[] qualifiers){
-            if(qualifiers == null){
+        public static Density fromQualifiers(String[] qualifiers) {
+            if (qualifiers == null) {
                 return null;
             }
-            for(int i = 0; i < qualifiers.length; i++){
+            for(int i = 0; i < qualifiers.length; i++) {
                 Density density = valueOf(qualifiers[i]);
-                if(density== null){
+                if (density== null) {
                     continue;
                 }
                 qualifiers[i] = null;
@@ -812,7 +821,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             }
             return null;
         }
-        public static int update(Density flag, int value){
+        public static int update(Density flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -831,19 +840,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private Keyboard(String name, int flag) {
             super(name, flag);
         }
-        public static Keyboard valueOf(int flag){
+        public static Keyboard valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static Keyboard valueOf(String name){
+        public static Keyboard valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static Keyboard fromQualifiers(String qualifiers){
+        public static Keyboard fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static Keyboard fromQualifiers(String[] qualifiers){
+        public static Keyboard fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(Keyboard flag, int value){
+        public static int update(Keyboard flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -863,19 +872,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private Navigation(String name, int flag) {
             super(name, flag);
         }
-        public static Navigation valueOf(int flag){
+        public static Navigation valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static Navigation valueOf(String name){
+        public static Navigation valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static Navigation fromQualifiers(String qualifiers){
+        public static Navigation fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static Navigation fromQualifiers(String[] qualifiers){
+        public static Navigation fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(Navigation flag, int value){
+        public static int update(Navigation flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -893,19 +902,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private InputFlagsKeysHidden(String name, int flag) {
             super(name, flag);
         }
-        public static InputFlagsKeysHidden valueOf(int flag){
+        public static InputFlagsKeysHidden valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static InputFlagsKeysHidden valueOf(String name){
+        public static InputFlagsKeysHidden valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static InputFlagsKeysHidden fromQualifiers(String qualifiers){
+        public static InputFlagsKeysHidden fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static InputFlagsKeysHidden fromQualifiers(String[] qualifiers){
+        public static InputFlagsKeysHidden fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(InputFlagsKeysHidden flag, int value){
+        public static int update(InputFlagsKeysHidden flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -921,19 +930,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private InputFlagsNavHidden(String name, int flag) {
             super(name, flag);
         }
-        public static InputFlagsNavHidden valueOf(int flag){
+        public static InputFlagsNavHidden valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static InputFlagsNavHidden valueOf(String name){
+        public static InputFlagsNavHidden valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static InputFlagsNavHidden fromQualifiers(String qualifiers){
+        public static InputFlagsNavHidden fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static InputFlagsNavHidden fromQualifiers(String[] qualifiers){
+        public static InputFlagsNavHidden fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(InputFlagsNavHidden flag, int value){
+        public static int update(InputFlagsNavHidden flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -951,19 +960,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private Gender(String name, int flag) {
             super(name, flag);
         }
-        public static Gender valueOf(int flag){
+        public static Gender valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static Gender valueOf(String name){
+        public static Gender valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static Gender fromQualifiers(String qualifiers){
+        public static Gender fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static Gender fromQualifiers(String[] qualifiers){
+        public static Gender fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(Gender flag, int value){
+        public static int update(Gender flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1001,19 +1010,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private UiModeType(String name, int flag) {
             super(name, flag);
         }
-        public static UiModeType valueOf(int flag){
+        public static UiModeType valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static UiModeType valueOf(String name){
+        public static UiModeType valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static UiModeType fromQualifiers(String qualifiers){
+        public static UiModeType fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static UiModeType fromQualifiers(String[] qualifiers){
+        public static UiModeType fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(UiModeType flag, int value){
+        public static int update(UiModeType flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1028,19 +1037,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private UiModeNight(String name, int flag) {
             super(name, flag);
         }
-        public static UiModeNight valueOf(int flag){
+        public static UiModeNight valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static UiModeNight valueOf(String name){
+        public static UiModeNight valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static UiModeNight fromQualifiers(String qualifiers){
+        public static UiModeNight fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static UiModeNight fromQualifiers(String[] qualifiers){
+        public static UiModeNight fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(UiModeNight flag, int value){
+        public static int update(UiModeNight flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1060,19 +1069,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private ScreenLayoutSize(String name, int flag) {
             super(name, flag);
         }
-        public static ScreenLayoutSize valueOf(int flag){
+        public static ScreenLayoutSize valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static ScreenLayoutSize valueOf(String name){
+        public static ScreenLayoutSize valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static ScreenLayoutSize fromQualifiers(String qualifiers){
+        public static ScreenLayoutSize fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static ScreenLayoutSize fromQualifiers(String[] qualifiers){
+        public static ScreenLayoutSize fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(ScreenLayoutSize flag, int value){
+        public static int update(ScreenLayoutSize flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1087,19 +1096,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private ScreenLayoutLong(String name, int flag) {
             super(name, flag);
         }
-        public static ScreenLayoutLong valueOf(int flag){
+        public static ScreenLayoutLong valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static ScreenLayoutLong valueOf(String name){
+        public static ScreenLayoutLong valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static ScreenLayoutLong fromQualifiers(String qualifiers){
+        public static ScreenLayoutLong fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static ScreenLayoutLong fromQualifiers(String[] qualifiers){
+        public static ScreenLayoutLong fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(ScreenLayoutLong flag, int value){
+        public static int update(ScreenLayoutLong flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1114,19 +1123,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private ScreenLayoutDir(String name, int flag) {
             super(name, flag);
         }
-        public static ScreenLayoutDir valueOf(int flag){
+        public static ScreenLayoutDir valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static ScreenLayoutDir valueOf(String name){
+        public static ScreenLayoutDir valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static ScreenLayoutDir fromQualifiers(String qualifiers){
+        public static ScreenLayoutDir fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static ScreenLayoutDir fromQualifiers(String[] qualifiers){
+        public static ScreenLayoutDir fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(ScreenLayoutDir flag, int value){
+        public static int update(ScreenLayoutDir flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1141,19 +1150,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private ScreenLayoutRound(String name, int flag) {
             super(name, flag);
         }
-        public static ScreenLayoutRound valueOf(int flag){
+        public static ScreenLayoutRound valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static ScreenLayoutRound valueOf(String name){
+        public static ScreenLayoutRound valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static ScreenLayoutRound fromQualifiers(String qualifiers){
+        public static ScreenLayoutRound fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static ScreenLayoutRound fromQualifiers(String[] qualifiers){
+        public static ScreenLayoutRound fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(ScreenLayoutRound flag, int value){
+        public static int update(ScreenLayoutRound flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1168,19 +1177,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private ColorModeWide(String name, int flag) {
             super(name, flag);
         }
-        public static ColorModeWide valueOf(int flag){
+        public static ColorModeWide valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static ColorModeWide valueOf(String name){
+        public static ColorModeWide valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static ColorModeWide fromQualifiers(String qualifiers){
+        public static ColorModeWide fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static ColorModeWide fromQualifiers(String[] qualifiers){
+        public static ColorModeWide fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(ColorModeWide flag, int value){
+        public static int update(ColorModeWide flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1195,19 +1204,19 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private ColorModeHdr(String name, int flag) {
             super(name, flag);
         }
-        public static ColorModeHdr valueOf(int flag){
+        public static ColorModeHdr valueOf(int flag) {
             return Flag.valueOf(VALUES, MASK, flag);
         }
-        public static ColorModeHdr valueOf(String name){
+        public static ColorModeHdr valueOf(String name) {
             return Flag.valueOf(VALUES, name);
         }
-        public static ColorModeHdr fromQualifiers(String qualifiers){
+        public static ColorModeHdr fromQualifiers(String qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static ColorModeHdr fromQualifiers(String[] qualifiers){
+        public static ColorModeHdr fromQualifiers(String[] qualifiers) {
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
-        public static int update(ColorModeHdr flag, int value){
+        public static int update(ColorModeHdr flag, int value) {
             return Flag.update(MASK, flag, value);
         }
     }
@@ -1215,7 +1224,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     public static class Flag implements Comparable<Flag> {
         private final String name;
         private final int flag;
-        Flag(String name, int flag){
+        Flag(String name, int flag) {
             this.name = name;
             this.flag = flag;
         }
@@ -1224,7 +1233,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
         @Override
         public int compareTo(Flag flag) {
-            if(flag == null) {
+            if (flag == null) {
                 return 1;
             }
             return CompareUtil.compare(getFlag(), flag.getFlag());
@@ -1241,59 +1250,59 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         public String toString() {
             return name;
         }
-        public static String toString(Flag flag){
-            if(flag!= null){
+        public static String toString(Flag flag) {
+            if (flag!= null) {
                 return flag.toString();
             }
             return null;
         }
-        static<T extends Flag> T fromQualifiers(T[] values, String qualifiers){
-            if(qualifiers == null){
+        static<T extends Flag> T fromQualifiers(T[] values, String qualifiers) {
+            if (qualifiers == null) {
                 return null;
             }
             return fromQualifiers(values, qualifiers.split("\\s*-\\s*"));
         }
-        static<T extends Flag> T fromQualifiers(T[] values, String[] qualifiers){
-            if(qualifiers == null){
+        static<T extends Flag> T fromQualifiers(T[] values, String[] qualifiers) {
+            if (qualifiers == null) {
                 return null;
             }
-            for(int i = 0; i < qualifiers.length; i++){
+            for(int i = 0; i < qualifiers.length; i++) {
                 T flag = Flag.valueOf(values, qualifiers[i]);
-                if(flag != null){
+                if (flag != null) {
                     qualifiers[i] = null;
                     return flag;
                 }
             }
             return null;
         }
-        static<T extends Flag> T valueOf(T[] values, int mask, int flagValue){
+        static<T extends Flag> T valueOf(T[] values, int mask, int flagValue) {
             flagValue = flagValue & mask;
-            for(T flag:values){
-                if(flagValue == flag.getFlag()){
+            for(T flag:values) {
+                if (flagValue == flag.getFlag()) {
                     return flag;
                 }
             }
             return null;
         }
-        static<T extends Flag> T valueOf(T[] values, String name){
-            if(name == null || name.length() == 0){
+        static<T extends Flag> T valueOf(T[] values, String name) {
+            if (name == null || name.length() == 0) {
                 return null;
             }
-            if(name.charAt(0) == '-'){
+            if (name.charAt(0) == '-') {
                 name = name.substring(1);
             }
             name = name.toLowerCase();
-            for(T flag:values){
-                if(name.equals(flag.toString())){
+            for(T flag:values) {
+                if (name.equals(flag.toString())) {
                     return flag;
                 }
             }
             return null;
         }
-        public static int update(int mask, Flag flag, int value){
+        public static int update(int mask, Flag flag, int value) {
             int flip = (~mask) & 0xff;
             value = value & flip;
-            if(flag != null){
+            if (flag != null) {
                 value = value | flag.getFlag();
             }
             return value;
@@ -1304,12 +1313,12 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private final ResConfig mConfig;
         private StringBuilder mBuilder;
         private String mNumberingSystem;
-        public QualifierBuilder(ResConfig resConfig){
+        public QualifierBuilder(ResConfig resConfig) {
             this.mConfig = resConfig;
         }
-        public String build(){
+        public String build() {
             ResConfig resConfig = this.mConfig;
-            if(resConfig.isDefault()){
+            if (resConfig.isDefault()) {
                 return "";
             }
             this.mBuilder = new StringBuilder();
@@ -1354,65 +1363,65 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
 
             return mBuilder.toString();
         }
-        private void appendScreenWidthHeight(){
+        private void appendScreenWidthHeight() {
             ResConfig resConfig = this.mConfig;
             int width = resConfig.getScreenWidth();
             int height = resConfig.getScreenHeight();
-            if(width == 0 && height == 0){
+            if (width == 0 && height == 0) {
                 return;
             }
             mBuilder.append('-').append(width).append('x').append(height);
         }
-        private void appendLanguageAndRegion(){
+        private void appendLanguageAndRegion() {
             ResConfig resConfig = this.mConfig;
             String language = resConfig.getLanguage();
             String region = resConfig.getRegion();
             String script = resConfig.getLocaleScript();
             String variant = resConfig.getLocaleVariant();
-            if(language == null && region == null){
+            if (language == null && region == null) {
                 return;
             }
             StringBuilder builder = this.mBuilder;
             char separator;
-            if(script != null || variant != null || (region != null && region.length() == 3)){
+            if (script != null || variant != null || (region != null && region.length() == 3)) {
                 builder.append('-');
                 builder.append('b');
                 separator = '+';
             }else {
                 separator = '-';
             }
-            if(language!= null){
+            if (language!= null) {
                 builder.append(separator);
                 builder.append(language);
             }
-            if(region!= null){
+            if (region!= null) {
                 builder.append(separator);
-                if(region.length() == 2){
+                if (region.length() == 2) {
                     builder.append('r');
                 }
                 builder.append(region);
             }
-            if(script!= null){
+            if (script!= null) {
                 builder.append(separator);
                 builder.append(script);
             }
-            if(variant!= null){
+            if (variant!= null) {
                 builder.append(separator);
                 builder.append(variant);
             }
         }
-        private void appendLocaleNumberingSystem(){
+        private void appendLocaleNumberingSystem() {
             String numberingSystem = mNumberingSystem;
-            if(numberingSystem== null){
+            if (numberingSystem== null) {
                 return;
             }
             StringBuilder builder = mBuilder;
             builder.append("-u+nu+");
             builder.append(numberingSystem);
         }
-        private void appendUnknownBytes(){
+        private void appendUnknownBytes() {
             String unknownHexBytes = mConfig.getUnknownHexBytes();
-            if(unknownHexBytes == null){
+            if (unknownHexBytes == null) {
                 return;
             }
             StringBuilder builder = mBuilder;
@@ -1420,26 +1429,26 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             builder.append(ResConfig.UNKNOWN_BYTES);
             builder.append(unknownHexBytes);
         }
-        private void appendFlag(ResConfig.Flag flag){
-            if(flag== null){
+        private void appendFlag(ResConfig.Flag flag) {
+            if (flag== null) {
                 return;
             }
             mBuilder.append('-').append(flag.toString());
         }
-        private void appendDp(String prefix, int number){
-            if(number == 0){
+        private void appendDp(String prefix, int number) {
+            if (number == 0) {
                 return;
             }
             StringBuilder builder = this.mBuilder;
             builder.append('-');
-            if(prefix!= null){
+            if (prefix!= null) {
                 builder.append(prefix);
             }
             builder.append(number);
             builder.append("dp");
         }
-        private void appendPrefixedNumber(String prefix, int number){
-            if(number == 0){
+        private void appendPrefixedNumber(String prefix, int number) {
+            if (number == 0) {
                 return;
             }
             StringBuilder builder = this.mBuilder;
@@ -1456,20 +1465,20 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private boolean mLanguageRegionParsed;
         private boolean mParseComplete;
 
-        public QualifierParser(ResConfig resConfig, String[] qualifiers){
+        public QualifierParser(ResConfig resConfig, String[] qualifiers) {
             this.mConfig = resConfig;
             this.mQualifiers = qualifiers;
             this.mPreferredSize = resConfig.getConfigSize();
         }
-        public QualifierParser(ResConfig resConfig, String qualifiers){
+        public QualifierParser(ResConfig resConfig, String qualifiers) {
             this(resConfig, splitQualifiers(qualifiers));
         }
 
-        public void parse(){
-            if(this.mParseComplete){
+        public void parse() {
+            if (this.mParseComplete) {
                 return;
             }
-            if(isEmpty()){
+            if (isEmpty()) {
                 onParseComplete();
                 return;
             }
@@ -1480,7 +1489,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             parseWidthHeight();
             parseLocaleNumberingSystem();
             parseUnknownBytes();
-            if(isEmpty()){
+            if (isEmpty()) {
                 onParseComplete();
                 return;
             }
@@ -1490,7 +1499,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             resConfig.setDensity(ResConfig.Density.fromQualifiers(qualifiers));
             resConfig.setKeyboard(ResConfig.Keyboard.fromQualifiers(qualifiers));
             resConfig.setNavigation(ResConfig.Navigation.fromQualifiers(qualifiers));
-            if(isEmpty()){
+            if (isEmpty()) {
                 onParseComplete();
                 return;
             }
@@ -1500,7 +1509,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             resConfig.setScreenLayoutSize(ResConfig.ScreenLayoutSize.fromQualifiers(qualifiers));
             resConfig.setScreenLayoutLong(ResConfig.ScreenLayoutLong.fromQualifiers(qualifiers));
             resConfig.setScreenLayoutDir(ResConfig.ScreenLayoutDir.fromQualifiers(qualifiers));
-            if(isEmpty()){
+            if (isEmpty()) {
                 onParseComplete();
                 return;
             }
@@ -1511,7 +1520,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
 
             resConfig.setColorModeWide(ResConfig.ColorModeWide.fromQualifiers(qualifiers));
             resConfig.setColorModeHdr(ResConfig.ColorModeHdr.fromQualifiers(qualifiers));
-            if(isEmpty()){
+            if (isEmpty()) {
                 onParseComplete();
                 return;
             }
@@ -1520,11 +1529,11 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             parseRegion();
             onParseComplete();
         }
-        public void parseLocale(){
-            if(mParseComplete){
+        public void parseLocale() {
+            if (mParseComplete) {
                 return;
             }
-            if(isEmpty()){
+            if (isEmpty()) {
                 ResConfig resConfig = mConfig;
                 resConfig.setLanguage((String) null);
                 resConfig.setRegion((String) null);
@@ -1536,10 +1545,10 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             parseLocaleRegion();
             String[] qualifiers = this.mQualifiers;
             String script = null;
-            if(qualifiers != null){
-                for(int i = 0; i < qualifiers.length; i++){
+            if (qualifiers != null) {
+                for(int i = 0; i < qualifiers.length; i++) {
                     String qualifier = qualifiers[i];
-                    if(qualifier == null || qualifier.length() < 2){
+                    if (qualifier == null || qualifier.length() < 2) {
                         continue;
                     }
                     script = qualifier;
@@ -1550,124 +1559,124 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             mConfig.setLocaleScript(script);
             mParseComplete = true;
         }
-        public String[] getErrors(){
-            if(!this.mParseComplete){
+        public String[] getErrors() {
+            if (!this.mParseComplete) {
                 return null;
             }
             String[] qualifiers = this.mQualifiers;
-            if(isEmpty(qualifiers)){
+            if (isEmpty(qualifiers)) {
                 return null;
             }
             int length = qualifiers.length;
             String[] tmp = new String[length];
             int count = 0;
-            for(int i = 0; i < length; i++){
+            for(int i = 0; i < length; i++) {
                 String qualifier = qualifiers[i];
-                if(qualifier == null || qualifier.length() == 0){
+                if (qualifier == null || qualifier.length() == 0) {
                     continue;
                 }
                 tmp[count] = qualifier;
                 count++;
             }
-            if(count == 0){
+            if (count == 0) {
                 return null;
             }
-            if(count == length){
+            if (count == length) {
                 return tmp;
             }
             String[] errors = new String[count];
             System.arraycopy(tmp, 0, errors, 0, count);
             return errors;
         }
-        private void onParseComplete(){
+        private void onParseComplete() {
             this.mConfig.trimToSize(this.mPreferredSize);
             this.mParseComplete = true;
         }
 
-        private void parsePrefixedNumber(){
-            if(isEmpty()){
+        private void parsePrefixedNumber() {
+            if (isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parsePrefixedNumber(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parsePrefixedNumber(qualifiers[i])) {
                     qualifiers[i] = null;
                 }
             }
         }
-        private boolean parsePrefixedNumber(String qualifier){
-            if(qualifier == null){
+        private boolean parsePrefixedNumber(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
             Matcher matcher = PATTERN_PREFIX_NUMBER.matcher(qualifier);
-            if(!matcher.find()){
+            if (!matcher.find()) {
                 return false;
             }
             String prefix = matcher.group(1);
             int value = Integer.parseInt(matcher.group(2));
             ResConfig resConfig = mConfig;
-            if("mcc".equals(prefix)){
+            if ("mcc".equals(prefix)) {
                 resConfig.setMcc(value);
-            }else if("mnc".equals(prefix)) {
+            }else if ("mnc".equals(prefix)) {
                 resConfig.setMnc(value);
-            }else if("v".equals(prefix)){
+            }else if ("v".equals(prefix)) {
                 resConfig.setSdkVersion(value);
             }else {
                 return false;
             }
             return true;
         }
-        private void parseDp(){
-            if(isEmpty()){
+        private void parseDp() {
+            if (isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseDp(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseDp(qualifiers[i])) {
                     qualifiers[i] = null;
                 }
             }
         }
-        private boolean parseDp(String qualifier){
-            if(qualifier == null){
+        private boolean parseDp(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
             Matcher matcher = PATTERN_DP.matcher(qualifier);
-            if(!matcher.find()){
+            if (!matcher.find()) {
                 return false;
             }
             String prefix = matcher.group(1);
             int value = Integer.parseInt(matcher.group(2));
             ResConfig resConfig = this.mConfig;
-            if("sw".equals(prefix)){
+            if ("sw".equals(prefix)) {
                 resConfig.setSmallestScreenWidthDp(value);
-            }else if("w".equals(prefix)) {
+            }else if ("w".equals(prefix)) {
                 resConfig.setScreenWidthDp(value);
-            }else if("h".equals(prefix)){
+            }else if ("h".equals(prefix)) {
                 resConfig.setScreenHeightDp(value);
             }else {
                 return false;
             }
             return true;
         }
-        private void parseWidthHeight(){
-            if(isEmpty()){
+        private void parseWidthHeight() {
+            if (isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseWidthHeight(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseWidthHeight(qualifiers[i])) {
                     qualifiers[i] = null;
                     return;
                 }
             }
         }
-        private boolean parseWidthHeight(String qualifier){
-            if(qualifier == null){
+        private boolean parseWidthHeight(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
             Matcher matcher = PATTERN_WIDTH_HEIGHT.matcher(qualifier);
-            if(!matcher.find()){
+            if (!matcher.find()) {
                 return false;
             }
             int width = Integer.parseInt(matcher.group(1));
@@ -1677,64 +1686,64 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             resConfig.setScreenHeight(height);
             return true;
         }
-        private void parseLocaleNumberingSystem(){
-            if(isEmpty()){
+        private void parseLocaleNumberingSystem() {
+            if (isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseLocaleNumberingSystem(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseLocaleNumberingSystem(qualifiers[i])) {
                     qualifiers[i] = null;
                     return;
                 }
             }
         }
-        private void parseUnknownBytes(){
-            if(isEmpty()){
+        private void parseUnknownBytes() {
+            if (isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseUnknownBytes(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseUnknownBytes(qualifiers[i])) {
                     qualifiers[i] = null;
                     return;
                 }
             }
         }
-        private boolean parseLocaleNumberingSystem(String qualifier){
-            if(qualifier == null){
+        private boolean parseLocaleNumberingSystem(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
             Matcher matcher = PATTERN_LOCALE_NUMBERING_SYSTEM.matcher(qualifier);
-            if(!matcher.find()){
+            if (!matcher.find()) {
                 return false;
             }
             //TODO: where to set ?
             return true;
         }
-        private void parseLocaleScriptVariant(){
-            if(this.mLanguageRegionParsed || isEmpty()){
+        private void parseLocaleScriptVariant() {
+            if (this.mLanguageRegionParsed || isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseLocaleScriptVariant(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseLocaleScriptVariant(qualifiers[i])) {
                     qualifiers[i] = null;
                     this.mLanguageRegionParsed = true;
                     return;
                 }
             }
         }
-        private boolean parseLocaleScriptVariant(String qualifier){
-            if(qualifier == null || qualifier.length() < 4 ){
+        private boolean parseLocaleScriptVariant(String qualifier) {
+            if (qualifier == null || qualifier.length() < 4 ) {
                 return false;
             }
             char[] chars = qualifier.toCharArray();
-            if(chars[0] != 'b' || chars[1] != '+'){
+            if (chars[0] != 'b' || chars[1] != '+') {
                 return false;
             }
             Matcher matcher = PATTERN_LOCALE_SCRIPT_VARIANT.matcher(qualifier);
-            if(matcher.find()) {
+            if (matcher.find()) {
                 ResConfig resConfig = this.mConfig;
                 resConfig.setLanguage(trimPlus(matcher.group(1)));
                 resConfig.setRegion(trimPlus(matcher.group(2)));
@@ -1745,68 +1754,68 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             return false;
         }
 
-        private void parseLanguage(){
-            if(mLanguageRegionParsed || isEmpty()){
+        private void parseLanguage() {
+            if (mLanguageRegionParsed || isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseLanguage(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseLanguage(qualifiers[i])) {
                     qualifiers[i] = null;
                     return;
                 }
             }
         }
-        private boolean parseLanguage(String qualifier){
-            if(!isLanguage(qualifier)){
+        private boolean parseLanguage(String qualifier) {
+            if (!isLanguage(qualifier)) {
                 return false;
             }
             this.mConfig.setLanguage(qualifier);
             return true;
         }
-        private void parseLocaleRegion(){
-            if(mLanguageRegionParsed || isEmpty()){
+        private void parseLocaleRegion() {
+            if (mLanguageRegionParsed || isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseLocaleRegion(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseLocaleRegion(qualifiers[i])) {
                     qualifiers[i] = null;
                     return;
                 }
             }
         }
-        private void parseRegion(){
-            if(mLanguageRegionParsed || isEmpty()){
+        private void parseRegion() {
+            if (mLanguageRegionParsed || isEmpty()) {
                 return;
             }
             String[] qualifiers = this.mQualifiers;
-            for(int i = 0; i < qualifiers.length; i++){
-                if(parseRegion(qualifiers[i])){
+            for(int i = 0; i < qualifiers.length; i++) {
+                if (parseRegion(qualifiers[i])) {
                     qualifiers[i] = null;
                     return;
                 }
             }
         }
-        private boolean parseLocaleRegion(String qualifier){
-            if(!isLocaleRegion(qualifier)){
+        private boolean parseLocaleRegion(String qualifier) {
+            if (!isLocaleRegion(qualifier)) {
                 return false;
             }
             this.mConfig.setRegion(qualifier);
             return true;
         }
-        private boolean parseRegion(String qualifier){
-            if(!isRegion(qualifier)){
+        private boolean parseRegion(String qualifier) {
+            if (!isRegion(qualifier)) {
                 return false;
             }
             this.mConfig.setRegion(qualifier);
             return true;
         }
-        private boolean parseUnknownBytes(String qualifier){
-            if(qualifier == null){
+        private boolean parseUnknownBytes(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
-            if(!qualifier.startsWith(ResConfig.UNKNOWN_BYTES)){
+            if (!qualifier.startsWith(ResConfig.UNKNOWN_BYTES)) {
                 return false;
             }
             qualifier = qualifier.substring(ResConfig.UNKNOWN_BYTES.length());
@@ -1815,23 +1824,23 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
 
 
-        private boolean isEmpty(){
-            if(!mEmpty){
+        private boolean isEmpty() {
+            if (!mEmpty) {
                 mEmpty = isEmpty(mQualifiers);
             }
             return mEmpty;
         }
 
-        private static boolean isEmpty(String[] qualifiers){
-            if(qualifiers == null){
+        private static boolean isEmpty(String[] qualifiers) {
+            if (qualifiers == null) {
                 return true;
             }
-            for(int i = 0; i < qualifiers.length; i++){
+            for(int i = 0; i < qualifiers.length; i++) {
                 String qualifier = qualifiers[i];
-                if(qualifier == null){
+                if (qualifier == null) {
                     continue;
                 }
-                if(qualifier.length() == 0){
+                if (qualifier.length() == 0) {
                     qualifiers[i] = null;
                     continue;
                 }
@@ -1839,96 +1848,96 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             }
             return true;
         }
-        private static String trimPlus(String text){
-            if(text == null||text.length() == 0){
+        private static String trimPlus(String text) {
+            if (text == null||text.length() == 0) {
                 return null;
             }
-            if(text.charAt(0) == '+'){
+            if (text.charAt(0) == '+') {
                 text = text.substring(1);
             }
             return text;
         }
-        private static boolean isLanguage(String qualifier){
-            if(qualifier == null){
+        private static boolean isLanguage(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
             char[] chars = qualifier.toCharArray();
             int length = chars.length;
-            if(length != 2  && length !=3 ){
+            if (length != 2  && length !=3 ) {
                 return false;
             }
-            for(int i = 0; i < length; i++){
-                if(!isAtoZLower(chars[i])) {
+            for(int i = 0; i < length; i++) {
+                if (!isAtoZLower(chars[i])) {
                     return false;
                 }
             }
             return true;
         }
-        private static boolean isLocaleRegion(String qualifier){
-            if(qualifier == null){
+        private static boolean isLocaleRegion(String qualifier) {
+            if (qualifier == null) {
                 return false;
             }
             int length = qualifier.length();
-            if(length != 2 && length != 3){
+            if (length != 2 && length != 3) {
                 return false;
             }
             char[] chars = qualifier.toCharArray();
-            if(length == 2){
-                for(char ch : chars){
-                    if(!isAtoZUpper(ch)){
+            if (length == 2) {
+                for(char ch : chars) {
+                    if (!isAtoZUpper(ch)) {
                         return false;
                     }
                 }
                 return true;
             }
-            for(char ch : chars){
-                if(!isDigit(ch)){
+            for(char ch : chars) {
+                if (!isDigit(ch)) {
                     return false;
                 }
             }
             return true;
         }
-        private static boolean isRegion(String qualifier){
-            if(qualifier == null || qualifier.length() != 3){
+        private static boolean isRegion(String qualifier) {
+            if (qualifier == null || qualifier.length() != 3) {
                 return false;
             }
             char[] chars = qualifier.toCharArray();
             boolean checkDigit = false;
-            for(int i = 0; i < chars.length; i++){
+            for(int i = 0; i < chars.length; i++) {
                 char ch = chars[i];
-                if(i == 0){
-                    if(ch == 'r'){
+                if (i == 0) {
+                    if (ch == 'r') {
                         continue;
                     }
                     checkDigit = isDigit(ch);
-                    if(checkDigit){
+                    if (checkDigit) {
                         continue;
                     }
                     return false;
                 }
-                if(checkDigit){
-                    if(!isDigit(ch)){
+                if (checkDigit) {
+                    if (!isDigit(ch)) {
                         return false;
                     }
-                }else if(!isAtoZUpper(ch)) {
+                }else if (!isAtoZUpper(ch)) {
                     return false;
                 }
             }
             return true;
         }
-        private static String[] splitQualifiers(String qualifier){
-            if(qualifier == null || qualifier.length() == 0){
+        private static String[] splitQualifiers(String qualifier) {
+            if (qualifier == null || qualifier.length() == 0) {
                 return null;
             }
             return qualifier.split("-");
         }
-        private static boolean isDigit(char ch){
+        private static boolean isDigit(char ch) {
             return ch <= '9' && ch >= '0';
         }
-        private static boolean isAtoZLower(char ch){
+        private static boolean isAtoZLower(char ch) {
             return ch <= 'z' && ch >= 'a';
         }
-        private static boolean isAtoZUpper(char ch){
+        private static boolean isAtoZUpper(char ch) {
             return ch <= 'Z' && ch >= 'A';
         }
 

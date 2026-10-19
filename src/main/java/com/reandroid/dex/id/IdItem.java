@@ -16,6 +16,7 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.dex.base.FixedSizeBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.EditableItem;

@@ -15,32 +15,14 @@
  */
 package com.reandroid.xml;
 
-import java.io.IOException;
-
 public class StyleText extends XMLText {
 
-    public StyleText(){
+    public StyleText() {
         super("");
     }
 
-    void writeStyledText(Appendable appendable) throws IOException {
-        appendable.append(getText(false));
-    }
     @Override
-    public int getLength(){
-        return getTextLength();
-    }
-    @Override
-    public int getTextLength(){
-        String text = getText();
-        if(text != null){
-            return text.length();
-        }
-        return 0;
-    }
-
-    @Override
-    public boolean isIndent(){
+    public boolean isIndent() {
         return false;
     }
 }

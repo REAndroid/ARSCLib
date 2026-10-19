@@ -428,7 +428,7 @@ public class SectionList extends FixedBlockContainer
     }
 
     public int indexOf(Section<?> section) {
-        return sectionArray.indexOf(section);
+        return sectionArray.indexOfIdentity(section);
     }
     @Override
     public Section<?> get(int i) {

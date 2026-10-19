@@ -66,20 +66,6 @@ public class BlockReader extends InputStream {
         seek(pos);
         return toInt(bytes);
     }
-    /**
-     * Use SpecHeader#read(BlockReader)
-     * */
-    @Deprecated
-    public SpecHeader readSpecHeader() throws IOException {
-        return SpecHeader.read(this);
-    }
-    /**
-     * Use TypeHeader#read(BlockReader)
-     * */
-    @Deprecated
-    public TypeHeader readTypeHeader() throws IOException {
-        return TypeHeader.read(this);
-    }
     public InfoHeader readHeaderBlock() throws IOException {
         return InfoHeader.read(this);
     }

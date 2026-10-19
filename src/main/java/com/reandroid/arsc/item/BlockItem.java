@@ -27,87 +27,108 @@ public abstract class BlockItem extends Block {
 
     private byte[] mBytes;
 
-    public BlockItem(int bytesLength){
+    public BlockItem(int bytesLength) {
         super();
-        if(bytesLength == 0){
+        if (bytesLength == 0) {
             mBytes = EMPTY;
-        }else {
+        } else {
             mBytes = new byte[bytesLength];
         }
     }
-    protected void onBytesChanged(){
+
+    protected void onBytesChanged() {
+    }
+
+    private void notifyLengthChanged(byte[] previousBytes) {
+        byte[] bytes = this.mBytes;
+        if (bytes == previousBytes) {
+            return;
+        }
+        int lengthPrevious = previousBytes == null ? 0 : previousBytes.length;
+        int length = bytes.length;
+        if (lengthPrevious != length) {
+            onLengthChanged(length);
+        }
+    }
+    protected void onLengthChanged(int length) {
     }
     protected byte[] getBytesInternal() {
         return mBytes;
     }
-    void setBytesInternal(byte[] bytes){
+    void setBytesInternal(byte[] bytes) {
         setBytesInternal(bytes, true);
     }
-    void setBytesInternal(byte[] bytes, boolean notify){
-        if(bytes == null || bytes.length == 0){
+    void setBytesInternal(byte[] bytes, boolean notify) {
+        if (bytes == null || bytes.length == 0) {
             bytes = EMPTY;
         }
-        if(bytes == mBytes){
+        if (bytes == mBytes) {
             return;
         }
+        byte[] previous = this.mBytes;
         mBytes = bytes;
-        if(notify){
+        notifyLengthChanged(previous);
+        if (notify) {
             onBytesChanged();
         }
     }
-    final void setBytesLength(int length){
+    final void setBytesLength(int length) {
         setBytesLength(length, true);
     }
-    protected final void setBytesLength(int length, boolean notify){
-        if(length < 0){
+    protected final void setBytesLength(int length, boolean notify) {
+        if (length < 0) {
             length = 0;
         }
-        if(length == 0){
+        if (length == 0) {
+            byte[] previous = this.mBytes;
             mBytes = EMPTY;
-            if(notify){
+            notifyLengthChanged(previous);
+            if (notify) {
                 onBytesChanged();
             }
             return;
         }
-        int old = mBytes.length;
-        if(length == old){
+        int current = mBytes.length;
+        if (length == current) {
             return;
         }
         byte[] bytes = new byte[length];
-        if(length < old){
-            old = length;
+        if (length < current) {
+            current = length;
         }
-        System.arraycopy(mBytes, 0, bytes, 0, old);
+        System.arraycopy(mBytes, 0, bytes, 0, current);
+        byte[] previous = this.mBytes;
         mBytes = bytes;
-        if(notify){
+        notifyLengthChanged(previous);
+        if (notify) {
             onBytesChanged();
         }
     }
-    int getBytesLength(){
+    int getBytesLength() {
         return mBytes.length;
     }
 
     @Override
     public int countBytes() {
-        if(isNull()){
+        if (isNull()) {
             return 0;
         }
         return getBytesInternal().length;
     }
     @Override
     public byte[] getBytes() {
-        if(isNull()){
+        if (isNull()) {
             return null;
         }
         return getBytesInternal();
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
-        if(counter.FOUND){
+        if (counter.FOUND) {
             return;
         }
-        if(counter.END==this){
-            counter.FOUND=true;
+        if (counter.END == this) {
+            counter.FOUND = true;
             return;
         }
         counter.setCurrent(this);
@@ -117,7 +138,7 @@ public abstract class BlockItem extends Block {
     public void onReadBytes(BlockReader reader) throws IOException{
         byte[] bytes = getBytesInternal();
         int length = bytes.length;
-        if(length == 0){
+        if (length == 0) {
             return;
         }
         reader.readFully(bytes);
@@ -130,7 +151,7 @@ public abstract class BlockItem extends Block {
         }
         byte[] bytes = getBytesInternal();
         int length = bytes.length;
-        if(length == 0){
+        if (length == 0) {
             return 0;
         }
         stream.write(bytes, 0, length);
@@ -138,14 +159,14 @@ public abstract class BlockItem extends Block {
     }
 
     public int readBytes(InputStream inputStream) throws IOException {
-        byte[] bytes=getBytesInternal();
-        if(bytes == null || bytes.length==0){
+        byte[] bytes = getBytesInternal();
+        if (bytes == null || bytes.length == 0) {
             return 0;
         }
         int length = bytes.length;
         int offset = 0;
         int read = length;
-        while (length > 0 && read > 0){
+        while (length > 0 && read >= 0) {
             read = inputStream.read(bytes, offset, length);
             length -= read;
             offset += read;
@@ -154,10 +175,27 @@ public abstract class BlockItem extends Block {
         super.notifyBlockLoad();
         return offset;
     }
-    public void setBytes(BlockItem blockItem){
-        if(blockItem != this) {
+    public void setBytes(BlockItem blockItem) {
+        setBytes(blockItem, true);
+    }
+    public void setBytes(BlockItem blockItem, boolean notify) {
+        if (blockItem != this) {
             byte[] coming = blockItem.getBytesInternal();
-            setBytesInternal(coming.clone());
+            setBytesInternal(coming.clone(), notify);
+        }
+    }
+    public void write(byte[] bytes) {
+        write(true, bytes, 0, bytes.length);
+    }
+    public void write(byte[] bytes, int offset, int length) {
+        write(true, bytes, offset, length);
+    }
+    public void write(boolean notify, byte[] bytes, int offset, int length) {
+        if (length != 0) {
+            System.arraycopy(bytes, 0, getBytesInternal(), offset, length);
+            if (notify) {
+                onBytesChanged();
+            }
         }
     }
 

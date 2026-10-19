@@ -15,8 +15,10 @@
  */
 package com.reandroid.arsc.chunk;
 
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.header.HeaderBlock;
-import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.arsc.item.CountedBlockItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.common.BytesOutputStream;
 
 import java.io.*;
@@ -25,36 +27,37 @@ import java.io.*;
  * This class can load any valid chunk, aimed to
  * handle any future android changes
  * */
-public class UnknownChunk extends Chunk<HeaderBlock> implements HeaderBlock.HeaderLoaded {
-    private final ByteArray body;
-    public UnknownChunk() {
-        super(new HeaderBlock(INITIAL_CHUNK_TYPE), 1);
-        this.body = new ByteArray();
+public class UnknownChunk extends Chunk<HeaderBlock> {
+
+    private final CountedBlockItem body;
+
+    UnknownChunk(HeaderBlock header) {
+        super(header, 1);
+
+        this.body = new CountedBlockItem(new IntegerReference() {
+            @Override
+            public int get() {
+                return header.chunkSize().get() - header.headerSize().get();
+            }
+            @Override
+            public void set(int value) {
+            }
+        });
+
         addChild(body);
-        setHeaderLoaded(this);
     }
-    public ByteArray getBody(){
+    public UnknownChunk() {
+        this(new HeaderBlock(0, INITIAL_CHUNK_TYPE));
+    }
+    public CountedBlockItem getBody() {
         return body;
-    }
-    @Override
-    public void onChunkTypeLoaded(short type) {
-    }
-    @Override
-    public void onHeaderSizeLoaded(int headerSize) {
-    }
-    @Override
-    public void onChunkSizeLoaded(int headerSize, int chunkSize) {
-        getBody().setSize(chunkSize - headerSize);
     }
 
     @Override
     void checkInvalidChunk(HeaderBlock headerBlock) {
     }
     @Override
-    protected void onChunkRefreshed() {
-    }
-    @Override
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         BytesOutputStream outputStream = new BytesOutputStream(
                 getHeaderBlock().getChunkSize());
         try {
@@ -65,22 +68,22 @@ public class UnknownChunk extends Chunk<HeaderBlock> implements HeaderBlock.Head
         return outputStream.toByteArray();
     }
     public int readBytes(File file) throws IOException{
-        FileInputStream inputStream=new FileInputStream(file);
-        int result=readBytes(inputStream);
+        FileInputStream inputStream = new FileInputStream(file);
+        int result = readBytes(inputStream);
         inputStream.close();
         return result;
     }
     public int readBytes(InputStream inputStream) throws IOException{
         int result;
-        result=getHeaderBlock().readBytes(inputStream);
-        result+=getBody().readBytes(inputStream);
+        result = getHeaderBlock().readBytes(inputStream);
+        result += getBody().readBytes(inputStream);
         super.notifyBlockLoad();
         return result;
     }
     public final int writeBytes(File file) throws IOException{
-        File dir=file.getParentFile();
-        if(dir!=null && !dir.exists()){
-            if(dir.mkdirs()){
+        File dir = file.getParentFile();
+        if (dir != null && !dir.exists()) {
+            if (dir.mkdirs()) {
                 throw new IOException("Can not create directory: "+dir);
             }
         }
@@ -90,11 +93,12 @@ public class UnknownChunk extends Chunk<HeaderBlock> implements HeaderBlock.Head
         return length;
     }
     @Override
-    public String toString(){
+    public String toString() {
         return getHeaderBlock()
-                +" {Body="+getBody().size()+"}";
+                +" {Body=" + getBody().size()+"}";
     }
 
-    private static final short INITIAL_CHUNK_TYPE = 0x0000;
+    private static final int INITIAL_CHUNK_TYPE = 0x0000;
 
+    public static final Creator<UnknownChunk> CREATOR = UnknownChunk::new;
 }

@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.item.SpecFlag;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -167,9 +168,10 @@ public class ResourceEntry implements Iterable<Entry> {
     }
     public Entry getOrCreate(ResConfig resConfig) {
         int resourceId = this.getResourceId();
-        byte typeId = (byte)((resourceId >> 16) & 0xff);
-        short entryId = (short)(resourceId & 0xffff);
-        Entry entry = getPackageBlock().getOrCreateEntry(typeId, entryId, resConfig);
+        Entry entry = getPackageBlock().getOrCreateEntry(
+                (resourceId >> 16) & 0xff,
+                resourceId & 0xffff,
+                resConfig);
         String name = getName();
         if (name != null && entry.getName() ==  null) {
             entry.setName(name, true);
@@ -350,7 +352,30 @@ public class ResourceEntry implements Iterable<Entry> {
         }
         return null;
     }
-
+    private Entry getNamedEntry() {
+        Iterator<Entry> iterator = iterator(false);
+        while (iterator.hasNext()) {
+            Entry entry = iterator.next();
+            if (entry.getName() != null) {
+                return entry;
+            }
+        }
+        return null;
+    }
+    public SpecFlag getSpecFlag() {
+        Entry entry = getNamedEntry();
+        if (entry != null) {
+            return entry.getSpecFlag();
+        }
+        return null;
+    }
+    public SpecFlag getOrCreateSpecFlag() {
+        Entry entry = getNamedEntry();
+        if (entry != null) {
+            return entry.getOrCreateSpecFlag();
+        }
+        return null;
+    }
     @Override
     public Iterator<Entry> iterator() {
         return iterator(true);
@@ -423,15 +448,22 @@ public class ResourceEntry implements Iterable<Entry> {
     }
 
     public boolean serializePublicXml(XmlSerializer serializer) throws IOException {
+        if (isStageAliasId()) {
+            return false;
+        }
         String name = getName();
         if (name == null) {
             return false;
         }
         serializer.text("\n  ");
         serializer.startTag(null, PackageBlock.TAG_public);
-        serializer.attribute(null, "id", getHexId());
-        serializer.attribute(null, "type", getType());
-        serializer.attribute(null, "name", name);
+        serializer.attribute(null, PackageBlock.ATTR_id, getHexId());
+        serializer.attribute(null, PackageBlock.ATTR_type, getType());
+        serializer.attribute(null, PackageBlock.ATTR_name, name);
+        SpecFlag specFlag = getSpecFlag();
+        if (specFlag != null && specFlag.hasFlags()) {
+            serializer.attribute(null, PackageBlock.ATTR_spec, specFlag.toHexString());
+        }
         serializer.endTag(null, PackageBlock.TAG_public);
         return true;
     }

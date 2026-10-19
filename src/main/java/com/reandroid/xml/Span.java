@@ -15,16 +15,29 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 
 public interface Span {
 
     String getTagName();
+    String getTagWithAttributes();
     int getFirstChar();
     int getLastChar();
     int getSpanOrder();
     String getSpanAttributes();
 
+    default boolean equalsValue(Span span) {
+        if (span == null) {
+            return false;
+        }
+        if (span == this) {
+            return true;
+        }
+        return getFirstChar() == span.getFirstChar()
+                && getLastChar() == span.getLastChar()
+                && ObjectsUtil.equals(getTagWithAttributes(), span.getTagWithAttributes());
+    }
     default StyleElement toElement() {
         StyleElement element = new StyleElement();
         element.setName(getTagName());
@@ -71,5 +84,101 @@ public interface Span {
         }
         return result;
     }
+
+    class Builder implements Span {
+
+        private String tag;
+        private int first;
+        private int last;
+        private int order;
+
+        public Builder(String tag, int first, int last) {
+            this.tag = tag;
+            this.first = first;
+            this.last = last;
+        }
+        public Builder(JSONObject json) {
+            this(json.optString(NAME_tag), json.optInt(NAME_first), json.optInt(NAME_last));
+        }
+        public Builder(Span span) {
+            this(span.getTagWithAttributes(), span.getFirstChar(), span.getLastChar());
+            this.order = span.getSpanOrder();
+        }
+        public Builder() {
+            this(null, 0, 0);
+        }
+
+        @Override
+        public String getTagName() {
+            return Span.splitTagName(getTagWithAttributes());
+        }
+        @Override
+        public String getTagWithAttributes() {
+            return tag;
+        }
+        public Builder setTagWithAttributes(String tagWithAttributes) {
+            this.tag = tagWithAttributes;
+            return this;
+        }
+        @Override
+        public int getFirstChar() {
+            return first;
+        }
+        public Builder setFirstChar(int firstChar) {
+            this.first = firstChar;
+            return this;
+        }
+        @Override
+        public int getLastChar() {
+            return last;
+        }
+        public Builder setLastChar(int lastChar) {
+            this.last = lastChar;
+            return this;
+        }
+        @Override
+        public int getSpanOrder() {
+            return order;
+        }
+        public Builder setSpanOrder(int order) {
+            this.order = order;
+            return this;
+        }
+        @Override
+        public String getSpanAttributes() {
+            return Span.splitAttribute(getTagWithAttributes());
+        }
+
+        public void fromJson(JSONObject jsonObject) {
+            if (jsonObject == null) {
+                return;
+            }
+            setTagWithAttributes(jsonObject.optString(NAME_tag, getTagWithAttributes()));
+            setFirstChar(jsonObject.optInt(NAME_first, getFirstChar()));
+            setLastChar(jsonObject.optInt(NAME_last, getLastChar()));
+        }
+        public JSONObject toJson() {
+            JSONObject json = new JSONObject();
+            json.put(NAME_tag, getTagWithAttributes());
+            json.put(NAME_first, getFirstChar());
+            json.put(NAME_last, getFirstChar());
+            return json;
+        }
+
+        @Override
+        public String toString() {
+            return "SpanBuilder{" +
+                    "tag='" + tag + '\'' +
+                    ", first=" + first +
+                    ", last=" + last +
+                    '}';
+        }
+    }
+
     String RAW_STYLE_TAG_ATTRIBUTE = ObjectsUtil.of("raw_style_tag_attribute");
+
+    String NAME_tag = ObjectsUtil.of("tag");
+    String NAME_first = ObjectsUtil.of("first");
+    String NAME_last = ObjectsUtil.of("last");
+
 }

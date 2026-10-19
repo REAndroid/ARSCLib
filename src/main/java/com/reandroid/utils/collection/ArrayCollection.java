@@ -34,38 +34,38 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
 
     private Monitor<T> mMonitor;
 
-    public ArrayCollection(int initialCapacity){
+    public ArrayCollection(int initialCapacity) {
         Object[] elements;
-        if(initialCapacity == 0){
+        if (initialCapacity == 0) {
             elements = EMPTY_OBJECTS;
-        }else {
+        } else {
             elements = new Object[initialCapacity];
         }
         this.mElements = elements;
         this.size = 0;
     }
-    public ArrayCollection(Object[] elements){
-        if(elements == null || elements.length == 0){
+    public ArrayCollection(Object[] elements) {
+        if (elements == null || elements.length == 0) {
             elements = EMPTY_OBJECTS;
         }
         this.mElements = elements;
         this.size = elements.length;
     }
-    public ArrayCollection(Collection<? extends T> collection){
+    public ArrayCollection(Collection<? extends T> collection) {
         Object[] elements;
         int size = collection.size();
-        if(size == 0){
+        if (size == 0) {
             elements = EMPTY_OBJECTS;
-        }else {
+        } else {
             elements = collection.toArray();
-            if(collection.getClass() != ArrayCollection.class){
+            if (collection.getClass() != ArrayCollection.class) {
                 elements = elements.clone();
             }
         }
         this.mElements = elements;
         this.size = size;
     }
-    public ArrayCollection(){
+    public ArrayCollection() {
         this(0);
     }
 
@@ -83,62 +83,62 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mInitializer = initializer;
     }
 
-    public ArrayCollection<T> copy(){
+    public ArrayCollection<T> copy() {
         return new ArrayCollection<>(toArray().clone());
     }
-    public ArrayCollection<T> filter(Predicate<? super T> filter){
+    public ArrayCollection<T> filter(Predicate<? super T> filter) {
         int count = count(filter);
-        if(count == size()){
+        if (count == size()) {
             return this;
         }
         ArrayCollection<T> collection = new ArrayCollection<>(count);
         collection.addAll(this.iterator(filter));
         return collection;
     }
-    public<T1 extends T> ArrayCollection<T1> filter(Class<T1> instance){
+    public<T1 extends T> ArrayCollection<T1> filter(Class<T1> instance) {
         int count = count(instance);
-        if(count == size()){
+        if (count == size()) {
             return (ArrayCollection<T1>) this;
         }
         ArrayCollection<T1> collection = new ArrayCollection<>(count);
         collection.addAll(this.iterator(instance));
         return collection;
     }
-    public int count(Predicate<? super T> filter){
+    public int count(Predicate<? super T> filter) {
         return count(filter, size());
     }
-    public int count(Predicate<? super T> filter, int limit){
+    public int count(Predicate<? super T> filter, int limit) {
         int result = 0;
         int size = size();
-        for(int i = 0; i < size; i++){
-            if(result >= limit){
+        for (int i = 0; i < size; i++) {
+            if (result >= limit) {
                 break;
             }
-            if(filter.test(get(i))){
+            if (filter.test(get(i))) {
                 result ++;
             }
         }
         return result;
     }
-    public int count(Class<?> instance){
+    public int count(Class<?> instance) {
         return count(instance, size());
     }
-    public int count(Class<?> instance, int limit){
+    public int count(Class<?> instance, int limit) {
         int result = 0;
         int size = size();
         Object[] elements = this.mElements;
-        for(int i = 0; i < size; i++){
-            if(result >= limit){
+        for (int i = 0; i < size; i++) {
+            if (result >= limit) {
                 break;
             }
             Object obj = elements[i];
-            if(instance.isInstance(obj)){
+            if (instance.isInstance(obj)) {
                 result ++;
             }
         }
         return result;
     }
-    public int countFromLast(Predicate<? super T> predicate){
+    public int countFromLast(Predicate<? super T> predicate) {
         return countFromLast(0, predicate);
     }
     public int countFromLast(int end, Predicate<? super T> predicate) {
@@ -154,63 +154,63 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return result;
     }
     @Override
-    public void sort(Comparator<? super T> comparator){
-        if(mLocked){
+    public void sort(Comparator<? super T> comparator) {
+        if (mLocked) {
             return;
         }
         int size = size();
-        if(size < 2){
+        if (size < 2) {
             return;
         }
         ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator);
-        if(sort.sort()){
+        if (sort.sort()) {
             onChanged();
         }
     }
-    public boolean sortItems(Comparator<? super T> comparator){
-        if(mLocked){
+    public boolean sortItems(Comparator<? super T> comparator) {
+        if (mLocked) {
             return false;
         }
         int size = size();
-        if(size < 2){
+        if (size < 2) {
             return false;
         }
         ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator);
-        if(sort.sort()){
+        if (sort.sort()) {
             onChanged();
             return true;
         }
         return false;
     }
 
-    public boolean sort(Comparator<? super T> comparator, Swappable swappable){
-        if(swappable == null) {
+    public boolean sort(Comparator<? super T> comparator, Swappable swappable) {
+        if (swappable == null) {
             throw new NullPointerException("swappable == null");
         }
-        if(swappable == this) {
+        if (swappable == this) {
             throw new IllegalArgumentException("swappable == this");
         }
         return sort(comparator, SwapListener.redirectTo(swappable));
     }
-    public boolean sort(Comparator<? super T> comparator, SwapListener swapListener){
-        if(mLocked){
+    public boolean sort(Comparator<? super T> comparator, SwapListener swapListener) {
+        if (mLocked) {
             return false;
         }
         int size = size();
-        if(size < 2){
+        if (size < 2) {
             return false;
         }
-        if(swapListener == null) {
+        if (swapListener == null) {
             throw new NullPointerException("swapListener == null");
         }
-        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator){
+        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator) {
             @Override
             public void onSwap(int i, int j) {
                 super.onSwap(i, j);
                 swapListener.onSwap(i, j);
             }
         };
-        if(sort.sort()){
+        if (sort.sort()) {
             onChanged();
             return true;
         }
@@ -219,7 +219,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
 
     @Override
     public boolean contains(Object obj) {
-        if(obj == null){
+        if (obj == null) {
             return false;
         }
         return containsExact(obj) || containsEquals(obj);
@@ -228,16 +228,16 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return containsIf(0, predicate);
     }
     public boolean containsIf(int start, Predicate<? super T> predicate) {
-        if(start < 0) {
+        if (start < 0) {
             start = 0;
         }
         int size = this.size;
-        if(size == 0) {
+        if (size == 0) {
             return false;
         }
         Object[] elements = this.mElements;
-        for(int i = start; i < size; i++){
-            if(predicate.test((T)elements[i])){
+        for (int i = start; i < size; i++) {
+            if (predicate.test((T)elements[i])) {
                 return true;
             }
         }
@@ -247,16 +247,16 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return containsInstance(0, instance);
     }
     public boolean containsInstance(int start, Class<?> instance) {
-        if(start < 0) {
+        if (start < 0) {
             start = 0;
         }
         int size = this.size;
-        if(size == 0) {
+        if (size == 0) {
             return false;
         }
         Object[] elements = this.mElements;
         for (int i = start; i < size; i++) {
-            if(instance.isInstance(elements[i])){
+            if (instance.isInstance(elements[i])) {
                 return true;
             }
         }
@@ -266,54 +266,54 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return indexOf(obj) >= 0;
     }
     @Deprecated
-    public boolean containsFast(Object item){
+    public boolean containsFast(Object item) {
         return containsExact(item);
     }
     public boolean containsExact(Object item) {
-        return indexOfExact(item) >= 0;
+        return indexOfIdentity(item) >= 0;
     }
     @Override
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return size() == 0;
     }
-    public boolean isImmutableEmpty(){
+    public boolean isImmutableEmpty() {
         return false;
     }
 
-    public T getFirst(){
-        if(size() == 0){
+    public T getFirst() {
+        if (size() == 0) {
             return null;
         }
         return get(0);
     }
-    public T getLast(){
+    public T getLast() {
         int size = size();
-        if(size == 0){
+        if (size == 0) {
             return null;
         }
         return get(size - 1);
     }
-    public T getElement(Object obj){
+    public T getElement(Object obj) {
         int i = indexOf(obj);
-        if(i >= 0){
+        if (i >= 0) {
             return get(i);
         }
         return null;
     }
     @Override
-    public T get(int i){
+    public T get(int i) {
         return (T)mElements[i];
     }
     @Override
-    public int size(){
+    public int size() {
         return size;
     }
-    public void ensureSize(int size){
-        if(size > size()){
+    public void ensureSize(int size) {
+        if (size > size()) {
             setSize(size);
         }
     }
-    public void setSize(int size){
+    public void setSize(int size) {
         setSize(size, false);
     }
     public void setSize(int size, boolean notify) {
@@ -355,13 +355,13 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mLocked = locked;
         onChanged();
     }
-    private void fillElements(Object[] elements, int start, int length){
+    private void fillElements(Object[] elements, int start, int length) {
         Initializer<T> initializer = getInitializer();
-        if(initializer == null){
+        if (initializer == null) {
             return;
         }
         length = start + length;
-        for(int i = start; i < length; i++){
+        for (int i = start; i < length; i++) {
             T item = initializer.createNewItem(i);
             elements[i] = item;
             notifyAdd(i, item);
@@ -372,10 +372,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return size();
     }
 
-    public<T1> Iterator<T1> iterator(Class<T1> instance){
+    public<T1> Iterator<T1> iterator(Class<T1> instance) {
         return InstanceIterator.of(iterator(), instance);
     }
-    public Iterator<T> iterator(Predicate<? super T> filter){
+    public Iterator<T> iterator(Predicate<? super T> filter) {
         return FilterIterator.of(iterator(), filter);
     }
     @Override
@@ -395,7 +395,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return clonedIterator(0, size());
     }
     public Iterator<T> clonedIterator(int start, int length) {
-        if(isEmpty()){
+        if (isEmpty()) {
             return EmptyIterator.of();
         }
         return ArrayIterator.of(this.mElements.clone(), start, length);
@@ -444,7 +444,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     @Override
     public <T1> T1[] toArray(T1[] out) {
         int size = this.size();
-        if(size == 0){
+        if (size == 0) {
             return out;
         }
         Object[] elements = this.mElements;
@@ -462,9 +462,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return out;
     }
 
-    public T removeItem(Object item){
+    public T removeItem(Object item) {
         int i = indexOf(item);
-        if (i < 0){
+        if (i < 0) {
             return null;
         }
         T result = get(i);
@@ -482,22 +482,22 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public ArrayCollection<T> subList(int start, int length) {
         int end = start + length;
         int size = size();
-        if(end > size){
+        if (end > size) {
             end = size;
         }
-        if(start == 0 && end == size){
+        if (start == 0 && end == size) {
             return this;
         }
         Object[] result = getNewArray(length);
         Object[] elements = this.mElements;
-        for(int i = start; i < end; i ++){
+        for (int i = start; i < end; i ++) {
             result[i] = elements[i];
         }
         return new ArrayCollection<>(result);
     }
     public ArrayCollection<T> reversedCopy() {
         Object[] elements = toArray();
-        if(elements == this.mElements && elements.length != 0) {
+        if (elements == this.mElements && elements.length != 0) {
             elements = elements.clone();
         }
         ArrayUtil.reverse(elements);
@@ -505,29 +505,21 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
 
     @Override
-    public int indexOf(Object item){
+    public int indexOf(Object item) {
         return indexOf(item, 0, false);
     }
 
 
-    @Deprecated
-    public int indexOfFast(Object item){
-        return indexOfExact(item);
-    }
-    public int indexOfExact(Object item){
+    public int indexOfIdentity(Object item) {
         return indexOf(item, 0, true);
     }
-    public int indexOf(Object item, int start){
+    public int indexOf(Object item, int start) {
         return indexOf(item, start, false);
     }
-    @Deprecated
-    public int indexOfFast(Object item, int start){
+    public int indexOfIdentity(Object item, int start) {
         return indexOf(item, start, true);
     }
-    public int indexOfExact(Object item, int start){
-        return indexOf(item, start, true);
-    }
-    public int lastIndexOf(Object item){
+    public int lastIndexOf(Object item) {
         return lastIndexOf(item, false);
     }
 
@@ -545,69 +537,66 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
 
     @Deprecated
-    public int lastIndexOfFast(Object item){
+    public int lastIndexOfFast(Object item) {
         return lastIndexOfExact(item);
     }
-    public int lastIndexOfExact(Object item){
+    public int lastIndexOfExact(Object item) {
         return lastIndexOf(item, true);
     }
 
-    private int indexOf(Object item, int start, boolean fast){
-        if(item == null){
+    private int indexOf(Object item, int start, boolean identity) {
+        if (item == null) {
             return -1;
         }
-        if(start < 0){
+        if (start < 0) {
             start = 0;
         }
         int size = this.size;
-        if(size == 0){
+        if (size == 0) {
             return -1;
         }
         Object[] elements = this.mElements;
-        for(int i = start; i < size; i++){
-            if(matches(item, elements[i], true)){
+        for (int i = start; i < size; i++) {
+            if (item == elements[i]) {
                 return i;
             }
         }
-        if(fast){
+        if (identity) {
             return -1;
         }
-        for(int i = start; i < size; i++){
-            if(matches(item, elements[i], false)){
+        for (int i = start; i < size; i++) {
+            if (areEqual(item, elements[i])) {
                 return i;
             }
         }
         return -1;
     }
-    private boolean matches(Object item, Object obj, boolean fast){
-        if(obj == null){
+    private static boolean areEqual(Object item, Object obj) {
+        if (obj == null) {
             return false;
         }
-        if(item == obj){
+        if (item == obj) {
             return true;
-        }
-        if(fast){
-            return false;
         }
         return item.equals(obj);
     }
-    private int lastIndexOf(Object item, boolean exact){
-        if(item == null){
+    private int lastIndexOf(Object item, boolean identity) {
+        if (item == null) {
             return -1;
         }
         int result = -1;
         Object[] elements = this.mElements;
         int length = this.size;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             Object obj = elements[i];
-            if(obj == null){
+            if (obj == null) {
                 continue;
             }
-            if(exact){
-                if(item == obj){
+            if (identity) {
+                if (item == obj) {
                     result = i;
                 }
-            }else if(item.equals(obj)){
+            } else if (item.equals(obj)) {
                 result = i;
             }
         }
@@ -618,16 +607,16 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return indexOfIf(0, predicate);
     }
     public int indexOfIf(int start, Predicate<? super T> predicate) {
-        if(start < 0) {
+        if (start < 0) {
             start = 0;
         }
         int size = this.size;
-        if(size == 0) {
+        if (size == 0) {
             return -1;
         }
         Object[] elements = this.mElements;
-        for(int i = start; i < size; i++){
-            if(predicate.test((T)elements[i])){
+        for (int i = start; i < size; i++) {
+            if (predicate.test((T)elements[i])) {
                 return i;
             }
         }
@@ -635,51 +624,51 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
     @Override
     public boolean containsAll(Collection<?> collection) {
-        for(Object obj : collection){
-            if(!contains(obj)){
+        for (Object obj : collection) {
+            if (!contains(obj)) {
                 return false;
             }
         }
         return !collection.isEmpty();
     }
 
-    public void addAll(int index, T[] items){
-        if(items == null){
+    public void addAll(int index, T[] items) {
+        if (items == null) {
             return;
         }
-        if(size() == 0){
+        if (size() == 0) {
             setElements(items);
             return;
         }
         int size = items.length;
         ensureCapacity(size);
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             add(index + i, items[i]);
         }
     }
-    public void addAll(T[] items){
-        if(items == null){
+    public void addAll(T[] items) {
+        if (items == null) {
             return;
         }
         addAll(size(), items);
     }
-    public void addAll(Iterator<? extends T> iterator){
-        if(iterator == null){
+    public void addAll(Iterator<? extends T> iterator) {
+        if (iterator == null) {
             return;
         }
-        if(iterator instanceof SizedIterator){
+        if (iterator instanceof SizedIterator) {
             int size = ((SizedIterator) iterator).getRemainingSize();
             ensureCapacity(size);
         }
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             add(iterator.next());
         }
     }
-    public void addIterable(Iterable<? extends T> iterable){
-        if(iterable == null){
+    public void addIterable(Iterable<? extends T> iterable) {
+        if (iterable == null) {
             return;
         }
-        if(iterable instanceof Collection){
+        if (iterable instanceof Collection) {
             addAll((Collection<? extends T>) iterable);
             return;
         }
@@ -687,11 +676,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
     @Override
     public boolean addAll(Collection<? extends T> collection) {
-        if(collection == null){
+        if (collection == null) {
             return false;
         }
         int size = this.size();
-        if(size == 0){
+        if (size == 0) {
             Object[] elements = getNewArray(collection.toArray(), collection.size());
             setElements(elements);
             return true;
@@ -715,18 +704,18 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     @Override
     public boolean removeAll(Collection<?> collection) {
         Object[] elements = this.mElements;
-        if(elements == null){
+        if (elements == null) {
             return false;
         }
         int length = this.size;
-        if(length == 0){
+        if (length == 0) {
             return false;
         }
         int result = 0;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             Object item = elements[i];
-            for(Object obj : collection) {
-                if(item == obj){
+            for (Object obj : collection) {
+                if (item == obj) {
                     elements[i] = null;
                     notifyRemoved(i, (T)item);
                     result ++;
@@ -734,22 +723,22 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
                 }
             }
         }
-        if(result == 0){
+        if (result == 0) {
             return false;
         }
-        if(mElements != elements) {
+        if (mElements != elements) {
             throw new ConcurrentModificationException();
         }
         this.size -= result;
-        if(this.size == 0){
+        if (this.size == 0) {
             this.mElements = EMPTY_OBJECTS;
             return true;
         }
         Object[] update = getNewArray(this.size);
         int count = 0;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             Object obj = elements[i];
-            if(obj == null){
+            if (obj == null) {
                 continue;
             }
             update[count] = obj;
@@ -760,40 +749,40 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return true;
     }
     @Override
-    public boolean removeIf(Predicate<? super T> filter){
+    public boolean removeIf(Predicate<? super T> filter) {
         Object[] elements = this.mElements;
-        if(elements == null){
+        if (elements == null) {
             return false;
         }
         int length = this.size;
-        if(length == 0){
+        if (length == 0) {
             return false;
         }
         int result = 0;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             T item = (T)elements[i];
-            if(filter.test(item)) {
+            if (filter.test(item)) {
                 elements[i] = null;
                 notifyRemoved(i, item);
                 result ++;
             }
         }
-        if(result == 0){
+        if (result == 0) {
             return false;
         }
-        if(mElements != elements) {
+        if (mElements != elements) {
             throw new ConcurrentModificationException();
         }
         this.size -= result;
-        if(this.size == 0){
+        if (this.size == 0) {
             this.mElements = EMPTY_OBJECTS;
             return true;
         }
         Object[] update = getNewArray(this.size);
         int count = 0;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             Object obj = elements[i];
-            if(obj == null){
+            if (obj == null) {
                 continue;
             }
             update[count] = obj;
@@ -805,18 +794,18 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
     public boolean removeAllIndexes(int[] indexes) {
         Object[] elements = this.mElements;
-        if(elements == null || indexes.length == 0){
+        if (elements == null || indexes.length == 0) {
             return false;
         }
         int length = this.size;
-        if(length == 0){
+        if (length == 0) {
             return false;
         }
         int result = 0;
         int indexesLength = indexes.length;
-        for(int i = 0; i < indexesLength; i++){
+        for (int i = 0; i < indexesLength; i++) {
             int j = indexes[i];
-            if(j < 0 || j >= length) {
+            if (j < 0 || j >= length) {
                 continue;
             }
             Object item = elements[j];
@@ -824,19 +813,19 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             notifyRemoved(i, (T)item);
             result ++;
         }
-        if(result == 0){
+        if (result == 0) {
             return false;
         }
         this.size -= result;
-        if(this.size == 0){
+        if (this.size == 0) {
             this.mElements = EMPTY_OBJECTS;
             return true;
         }
         Object[] update = getNewArray(this.size);
         int count = 0;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             Object obj = elements[i];
-            if(obj == null){
+            if (obj == null) {
                 continue;
             }
             update[count] = obj;
@@ -859,7 +848,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.size = 0;
         Object[] elements = this.mElements;
         this.mLocked = false;
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             elements[i] = null;
         }
         onChanged();
@@ -872,7 +861,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mElements = EMPTY_OBJECTS;
         this.mLastGrow = 0;
         this.mLocked = false;
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             elements[i] = null;
         }
         onChanged();
@@ -883,8 +872,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return removeItem(obj) != null;
     }
     @Override
-    public boolean add(T item){
-        if (item == null ){
+    public boolean add(T item) {
+        if (item == null ) {
             return false;
         }
         boolean locked = mLocked;
@@ -899,8 +888,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return true;
     }
     @Override
-    public void add(int i, T item){
-        if(item == null){
+    public void add(int i, T item) {
+        if (item == null) {
             return;
         }
         boolean locked = mLocked;
@@ -915,8 +904,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         onChanged();
     }
     @Override
-    public boolean swap(int i1, int i2){
-        if(i1 == i2){
+    public boolean swap(int i1, int i2) {
+        if (i1 == i2) {
             return false;
         }
         Object[] elements = this.mElements;
@@ -928,12 +917,12 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
     public void move(Object obj, int to) {
         int i = indexOf(obj);
-        if(i >= 0) {
+        if (i >= 0) {
             move(i, to);
         }
     }
-    public void move(int from, int to){
-        if(from == to || to < 0){
+    public void move(int from, int to) {
+        if (from == to || to < 0) {
             return;
         }
         ensureSize(to + 1);
@@ -941,12 +930,12 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mLocked = true;
         Object[] elements = this.mElements;
         Object item = elements[from];
-        if(from > to){
-            for(int i = from; i > to; i --){
+        if (from > to) {
+            for (int i = from; i > to; i --) {
                 elements[i] = elements[i - 1];
             }
-        }else {
-            for(int i = from; i < to; i ++){
+        } else {
+            for (int i = from; i < to; i ++) {
                 elements[i] = elements[i + 1];
             }
         }
@@ -956,25 +945,25 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         onChanged();
     }
     @Override
-    public T set(int i, T item){
-        if(item == null || i < 0){
+    public T set(int i, T item) {
+        if (item == null || i < 0) {
             return null;
         }
         ensureSize(i + 1);
         T existing = (T)this.mElements[i];
         this.mElements[i] = item;
-        if(item != existing){
+        if (item != existing) {
             onChanged();
         }
         return existing;
     }
     @Override
-    public boolean addAll(int index, Collection<? extends T> collection){
-        if(collection == null){
+    public boolean addAll(int index, Collection<? extends T> collection) {
+        if (collection == null) {
             return false;
         }
         int length = collection.size();
-        if(length == 0){
+        if (length == 0) {
             return false;
         }
         boolean locked = mLocked;
@@ -983,8 +972,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         slideRight(index, length);
         Object[] elements = this.mElements;
         int i = index;
-        for(T item : collection){
-            if(item == null || containsExact(item)){
+        for (T item : collection) {
+            if (item == null || containsExact(item)) {
                 continue;
             }
             elements[i] = item;
@@ -997,19 +986,19 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return duplicates < length;
     }
     @Override
-    public T remove(int index){
+    public T remove(int index) {
         T result = get(index);
         slideLeft(index, 1);
         notifyRemoved(index, result);
         return result;
     }
-    public T removeSilent(int index){
+    public T removeSilent(int index) {
         T result = get(index);
         slideLeft(index, 1);
         return result;
     }
-    private void slideLeft(int position, int amount){
-        if(amount == 0 || position < 0){
+    private void slideLeft(int position, int amount) {
+        if (amount == 0 || position < 0) {
             return;
         }
         boolean locked = mLocked;
@@ -1017,38 +1006,38 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         Object[] elements = this.mElements;
         int size = this.size;
         int length = size - amount;
-        for(int i = position; i < length; i++){
+        for (int i = position; i < length; i++) {
             elements[i] = elements[i + amount];
         }
-        for(int i = length; i < size; i++){
+        for (int i = length; i < size; i++) {
             elements[i] = null;
         }
         this.size = length;
         this.mLocked = locked;
         onChanged();
     }
-    private void slideRight(int position, int amount){
+    private void slideRight(int position, int amount) {
         boolean locked = mLocked;
         this.mLocked = true;
         ensureCapacity(amount);
         Object[] elements = this.mElements;
         int size = this.size;
         int i = size - 1;
-        while (i >= position){
+        while (i >= position) {
             elements[i + amount] = elements[i];
             i--;
         }
         this.size = size + amount;
         amount = position + amount;
-        for(i = position; i < amount; i++){
+        for (i = position; i < amount; i++) {
             elements[i] = null;
         }
         this.mLocked = locked;
         onChanged();
     }
-    public void trimToSize(){
-        if(mLocked || availableCapacity() == 0){
-            if(mLastGrow == 0){
+    public void trimToSize() {
+        if (mLocked || availableCapacity() == 0) {
+            if (mLastGrow == 0) {
                 mLastGrow = size() / 3;
             }
             return;
@@ -1057,28 +1046,28 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mLastGrow = this.size / 4;
     }
 
-    private Object[] trimToSize(Object[] elements, int size){
-        if(size >= elements.length){
+    private Object[] trimToSize(Object[] elements, int size) {
+        if (size >= elements.length) {
             return elements;
         }
-        if(size == 0){
+        if (size == 0) {
             return getNewArray(0);
         }
         Object[] update = getNewArray(size);
         arrayCopy(elements, update, size);
         return update;
     }
-    private void arrayCopy(Object[] source, Object[] destination, int length){
-        for(int i = 0; i < length; i++){
+    private void arrayCopy(Object[] source, Object[] destination, int length) {
+        for (int i = 0; i < length; i++) {
             destination[i] = source[i];
         }
     }
-    private Object[] getNewArray(Object[] source, int length){
+    private Object[] getNewArray(Object[] source, int length) {
         Object[] result = getNewArray(length);
         arrayCopy(source, result, length);
         return result;
     }
-    private Object[] getNewArray(int length){
+    private Object[] getNewArray(int length) {
         if (length == 0) {
             return EMPTY_OBJECTS;
         }
@@ -1089,31 +1078,31 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             ensureCapacity(calculateGrow(capacity));
         }
     }
-    private void ensureCapacity(){
-        if(availableCapacity() > 0){
+    private void ensureCapacity() {
+        if (availableCapacity() > 0) {
             return;
         }
         ensureCapacity(calculateGrow());
     }
     public void ensureCapacity(int capacity) {
-        if(capacity <= 0){
+        if (capacity <= 0) {
             return;
         }
-        if(capacity - availableCapacity() <= 0){
+        if (capacity - availableCapacity() <= 0) {
             return;
         }
         int size = this.size;
         int length = size + capacity;
         Object[] update = getNewArray(length);
         Object[] elements = this.mElements;
-        if(elements.length == 0 || size == 0){
+        if (elements.length == 0 || size == 0) {
             this.mElements = update;
             return;
         }
         arrayCopy(elements, update, size);
         this.mElements = update;
     }
-    public int availableCapacity(){
+    public int availableCapacity() {
         return this.mElements.length - size;
     }
     private int calculateGrow() {
@@ -1124,50 +1113,50 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             return NumbersUtil.max(min, 1);
         }
         int amount = this.mLastGrow;
-        if(amount >= GROW_LIMIT){
+        if (amount >= GROW_LIMIT) {
             return NumbersUtil.max(min, amount);
         }
-        if(amount == 0){
+        if (amount == 0) {
             amount = 1;
         }
         amount = amount << 1;
-        if(amount > 32){
+        if (amount > 32) {
             amount = amount << 1;
         }
-        if(amount > 32 && amount < 256){
+        if (amount > 32 && amount < 256) {
             amount = amount << 1;
         }
-        if(amount > GROW_LIMIT){
+        if (amount > GROW_LIMIT) {
             amount = GROW_LIMIT;
         }
         this.mLastGrow = amount;
         if (min > amount) {
             return min;
         }
-        if(this.size < 4){
+        if (this.size < 4) {
             amount = 1;
         }
         return amount;
     }
 
-    public void onChanged(){
+    public void onChanged() {
         mHashCode = 0;
     }
-    private void notifyAdd(int i, T item){
+    private void notifyAdd(int i, T item) {
         Monitor<T> monitor = getMonitor();
-        if(monitor != null){
+        if (monitor != null) {
             monitor.onAdd(i, item);
         }
     }
-    private void notifyRemoved(int i, T item){
+    private void notifyRemoved(int i, T item) {
         Monitor<T> monitor = getMonitor();
-        if(monitor != null){
+        if (monitor != null) {
             monitor.onRemoved(i, item);
         }
     }
     @Override
-    public int hashCode(){
-        if(mHashCode != 0){
+    public int hashCode() {
+        if (mHashCode != 0) {
             return mHashCode;
         }
         this.mHashCode = computeHashCode();
@@ -1184,25 +1173,25 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         ArrayCollection<?> collection = (ArrayCollection<?>) obj;
         int size = this.size();
-        if(size != collection.size() || hashCode() != collection.hashCode()){
+        if (size != collection.size() || hashCode() != collection.hashCode()) {
             return false;
         }
-        for(int i = 0; i < size; i++){
-            if(!Objects.equals(get(i), collection.get(i))){
+        for (int i = 0; i < size; i++) {
+            if (!Objects.equals(get(i), collection.get(i))) {
                 return false;
             }
         }
         return true;
     }
 
-    public int computeHashCode(){
+    public int computeHashCode() {
         int size = size();
-        if(size == 0){
+        if (size == 0) {
             return 0;
         }
         int hashSum = 1;
         Object[] elements = this.mElements;
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             Object obj = elements[i];
             int hash = obj == null ? 0 : obj.hashCode();
             hashSum = 31 * hashSum + hash;
@@ -1212,13 +1201,13 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
     @Override
     public String toString() {
-        if(size() == 0){
+        if (size() == 0) {
             return "EMPTY";
         }
         return size() + "{" + get(0) + "}";
     }
-    public static<T> ArrayCollection<T> of(Iterable<? extends T> iterable){
-        if(iterable == null){
+    public static<T> ArrayCollection<T> of(Iterable<? extends T> iterable) {
+        if (iterable == null) {
             return empty();
         }
         ArrayCollection<T> collection = new ArrayCollection<>();
@@ -1226,13 +1215,13 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         collection.trimToSize();
         return collection;
     }
-    public static<T> ArrayCollection<T> of(Iterator<? extends T> iterator){
+    public static<T> ArrayCollection<T> of(Iterator<? extends T> iterator) {
         ArrayCollection<T> collection = new ArrayCollection<>();
         collection.addAll(iterator);
         collection.trimToSize();
         return collection;
     }
-    public static<T> ArrayCollection<T> empty(){
+    public static<T> ArrayCollection<T> empty() {
         return (ArrayCollection<T>) EMPTY;
     }
 
@@ -1240,7 +1229,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
 
     private static final int GROW_LIMIT = 8192;
 
-    private static final ArrayCollection<?> EMPTY = new ArrayCollection<Object>(){
+    private static final ArrayCollection<?> EMPTY = new ArrayCollection<Object>() {
         @Override
         public Object[] toArray() {
             return EMPTY_OBJECTS;
@@ -1264,7 +1253,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             return false;
         }
         @Override
-        public void clearTemporarily(){
+        public void clearTemporarily() {
         }
         @Override
         public void clear() {
@@ -1293,7 +1282,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         public boolean isEmpty() {
             return true;
         }
-        public boolean isImmutableEmpty(){
+        public boolean isImmutableEmpty() {
             return true;
         }
 
@@ -1325,10 +1314,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         @Override
         public boolean equals(Object obj) {
-            if(obj == this){
+            if (obj == this) {
                 return true;
             }
-            if(obj instanceof Collection){
+            if (obj instanceof Collection) {
                 return ((Collection<?>) obj).size() == 0;
             }
             return false;

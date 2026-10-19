@@ -61,10 +61,10 @@ public class InsBlockList extends BlockList<Ins> {
     }
 
     public Ins getPrevious(Ins ins) {
-        return get(indexOf(ins) - 1);
+        return get(indexOfIdentity(ins) - 1);
     }
     public Ins getNext(Ins ins) {
-        int index = indexOf(ins);
+        int index = indexOfIdentity(ins);
         if (index >= 0) {
             return get(index + 1);
         }

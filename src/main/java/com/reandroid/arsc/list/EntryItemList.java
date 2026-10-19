@@ -31,26 +31,19 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 
 import java.util.Iterator;
-import java.util.function.Predicate;
 
 public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert<JSONArray> {
 
     private final TypeHeader header;
 
     public EntryItemList(TypeHeader header, EntryItemOffsetList offsetList) {
-        super(header.getEntriesStart(), offsetList, Entry.CREATOR);
+        super(header.entriesStart(), offsetList, Entry.CREATOR);
         this.header = header;
         header.setOffsetTypeChangedListener(EntryItemList.this::onOffsetTypeChanged);
     }
 
     public Entry getEntry(int entryId) {
-        int index;
-        if (isSparse()) {
-            index = getEntryIndex(entryId);
-        } else {
-            index = entryId;
-        }
-        return get(index);
+        return get(getEntryIndex(entryId));
     }
     public Entry getOrCreate(int entryId) {
         Entry entry = getEntry(entryId);
@@ -93,15 +86,21 @@ public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert
         return null;
     }
 
-    public boolean isEmptyEntries() {
-        return !iterator(true).hasNext();
+    public boolean isBlank() {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            if (!get(i).isNull()) {
+                return false;
+            }
+        }
+        return true;
     }
     public int countNonNull() {
         return countIf(NON_NULL_PREDICATE);
     }
 
     public void removeAllNull(int start) {
-        trimLastIf(start, Entry::isNull);
+        trimLastIf(start, NULL_PREDICATE);
     }
     public Boolean hasComplexEntry() {
         Iterator<Entry> iterator = iterator(true);
@@ -180,22 +179,26 @@ public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        IntegerReference flags = header.getFlags();
+        IntegerReference flags = header.flags();
         flags.set((flags.get() & 0xfffffffc) | getOffsetType());
     }
 
-    public void linkTableStringsInternal(TableStringPool tableStringPool) {
-        Iterator<Entry> iterator = iterator(true);
-        while (iterator.hasNext()) {
-            Entry entry = iterator.next();
-            entry.linkTableStringsInternal(tableStringPool);
+    public void linkTableStringsInternal(TableStringPool stringPool) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            Entry entry = get(i);
+            if (!entry.isNull()) {
+                get(i).linkTableStringsInternal(stringPool);
+            }
         }
     }
-    public void linkSpecStringsInternal(SpecStringPool specStringPool) {
-        Iterator<Entry> iterator = iterator(true);
-        while (iterator.hasNext()) {
-            Entry entry = iterator.next();
-            entry.linkSpecStringsInternal(specStringPool);
+    public void linkSpecStringsInternal(SpecStringPool stringPool) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            Entry entry = get(i);
+            if (!entry.isNull()) {
+                get(i).linkSpecStringsInternal(stringPool);
+            }
         }
     }
 
@@ -247,7 +250,4 @@ public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert
         }
         buildOffsetList();
     }
-
-
-    private static final Predicate<Entry> NON_NULL_PREDICATE = entry -> !entry.isNull();
 }

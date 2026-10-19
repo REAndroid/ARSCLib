@@ -15,9 +15,43 @@
  */
 package com.reandroid.arsc.base;
 
+import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.container.SingleBlockContainer;
+import com.reandroid.arsc.item.BlockItem;
+
 import java.io.IOException;
 import java.io.InputStream;
 
 public interface DirectStreamReader {
     int readBytes(InputStream inputStream) throws IOException;
+
+    class Util {
+        public static int readBlock(Block block, InputStream inputStream) throws IOException {
+            if (block == null) {
+                return 0;
+            }
+            int result = 0;
+            if (block instanceof DirectStreamReader) {
+                result = ((DirectStreamReader)block).readBytes(inputStream);
+            } else if (block instanceof BlockItem) {
+                result = ((BlockItem)block).readBytes(inputStream);
+            } else if (block instanceof BlockList) {
+                BlockList<?> list = (BlockList<?>) block;
+                int size = list.size();
+                for (int i = 0; i < size; i++) {
+                    result += readBlock(list.get(i), inputStream);
+                }
+            } else if (block instanceof SingleBlockContainer) {
+                return readBlock(((SingleBlockContainer<?>) block).getItem(), inputStream);
+            } else if (block instanceof BlockContainer) {
+                Block[] blocks = ((BlockContainer<? extends Block>) block).getChildes();
+                for (Block element : blocks) {
+                    result += readBlock(element, inputStream);
+                }
+            } else {
+                throw new IOException("Can not read block type: " + block.getClass());
+            }
+            return result;
+        }
+    }
 }

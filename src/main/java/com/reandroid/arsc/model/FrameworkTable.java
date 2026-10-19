@@ -143,11 +143,14 @@ public class FrameworkTable extends TableBlock {
     }
     private void optimizeEntries(){
         removeExtraConfigEntries();
-        for(PackageBlock pkg:listPackages()){
-            removeEmptyBlocks(pkg);
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            removeEmptyBlocks(get(i));
         }
-        for(PackageBlock pkg:listPackages()){
-            pkg.removeEmpty();
+        size = size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock pkg = get(i);
+            pkg.removeBlank();
             pkg.refresh();
         }
     }
@@ -165,7 +168,7 @@ public class FrameworkTable extends TableBlock {
         if(typeBlockArray.size()<2){
             return;
         }
-        typeBlockArray.removeEmptyBlocks();
+        typeBlockArray.removeBlank();
     }
     private void optimizeTableString(){
         removeUnusedTableString();

@@ -15,72 +15,121 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.array.StagedAliasEntryArray;
-import com.reandroid.arsc.header.StagedAliasHeader;
+import com.reandroid.apk.xmlencoder.EncodeException;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.coder.CoderHex;
+import com.reandroid.arsc.coder.CoderInteger;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.arsc.value.StagedAliasInfo;
+import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONItem;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.base.XmlReader;
+import com.reandroid.xml.base.XmlSerializable;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-public class StagedAlias extends Chunk<StagedAliasHeader> {
-    private final StagedAliasEntryArray stagedAliasEntryArray;
+public class StagedAlias extends EntriesChunk<StagedAliasEntry> implements XmlSerializable, XmlReader {
+
+    private Map<Integer, StagedAliasEntry> stagedResIdMap;
+
     public StagedAlias() {
-        super(new StagedAliasHeader(), 1);
-        StagedAliasHeader header = getHeaderBlock();
+        super(ChunkType.STAGED_ALIAS, StagedAliasEntry.CREATOR);
+        itemList().setHasSameByteSizeEntries(true);
+    }
 
-        stagedAliasEntryArray = new StagedAliasEntryArray(header.getCountItem());
-        addChild(stagedAliasEntryArray);
-    }
-    public StagedAliasEntry searchByStagedResId(int stagedResId){
-        return getStagedAliasEntryArray().searchByStagedResId(stagedResId);
-    }
-    public void merge(StagedAlias stagedAlias){
-        if(stagedAlias==null||stagedAlias==this){
-            return;
-        }
-        StagedAliasEntryArray exist = getStagedAliasEntryArray();
-        for(StagedAliasEntry entry:stagedAlias.listStagedAliasEntry()){
-            if(!exist.contains(entry)){
-                exist.add(entry);
+    public StagedAliasEntry getByStaged(int staged) {
+        Map<Integer, StagedAliasEntry> map = getStagedResIdMap();
+        StagedAliasEntry entry = map.get(staged);
+        if (entry != null) {
+            if (entry.getParent() != null && staged == entry.getStaged()) {
+                return entry;
             }
+            map.remove(staged);
         }
-    }
-    public StagedAliasEntryArray getStagedAliasEntryArray() {
-        return stagedAliasEntryArray;
-    }
-    public Iterable<StagedAliasEntry> listStagedAliasEntry(){
-        return getStagedAliasEntryArray().listItems();
-    }
-    public int getStagedAliasEntryCount(){
-        return getStagedAliasEntryArray().size();
-    }
-    @Override
-    public boolean isNull(){
-        return getStagedAliasEntryCount()==0;
-    }
-    @Override
-    protected void onChunkRefreshed() {
-        getHeaderBlock().getCountItem().set(getStagedAliasEntryCount());
-    }
-    @Override
-    public String toString(){
-        return getClass().getSimpleName()+
-                ": count="+getStagedAliasEntryCount();
-    }
-    public static StagedAlias mergeAll(Collection<StagedAlias> stagedAliasList){
-        if(stagedAliasList.size()==0){
-            return null;
-        }
-        StagedAlias result=new StagedAlias();
-        for(StagedAlias stagedAlias:stagedAliasList){
-            if(stagedAlias.isNull()){
-                continue;
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            entry = get(i);
+            if (staged == entry.getStaged()) {
+                map.put(staged, entry);
+                return entry;
             }
-            result.merge(stagedAlias);
-        }
-        if(!result.isNull()){
-            result.refresh();
-            return result;
         }
         return null;
     }
+    private Map<Integer, StagedAliasEntry> getStagedResIdMap() {
+        Map<Integer, StagedAliasEntry> map = this.stagedResIdMap;
+        if (map == null) {
+            int size = size();
+            map = new HashMap<>(size);
+            this.stagedResIdMap = map;
+            for (int i = 0; i < size; i++) {
+                StagedAliasEntry entry = get(i);
+                map.putIfAbsent(entry.getStaged(), entry);
+            }
+        }
+        return map;
+    }
+
+    @Override
+    public void fromJson(JSONItem json) {
+        if (json == null) {
+            return;
+        }
+        if (this.isEmpty()) {
+            super.fromJson(json);
+            return;
+        }
+        JSONArray jsonArray = (JSONArray) json;
+        int length = jsonArray.length();
+        BlockList<StagedAliasEntry> itemList = itemList();
+        for (int i = 0; i < length; i++) {
+            StagedAliasInfo info = StagedAliasEntry.of(jsonArray.optJSONObject(i));
+            if (info != null && !itemList.contains(info)) {
+                itemList.createNext().merge(info);
+            }
+        }
+    }
+
+    @Override
+    public JSONArray toJson() {
+        return (JSONArray) super.toJson();
+    }
+
+    @Override
+    public boolean canMerge(StagedAliasEntry item) {
+        return !itemList().contains(item);
+    }
+
+    @Override
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        XMLUtil.ensureStartTag(parser);
+        while (parser.getEventType() != XmlPullParser.END_TAG
+                && parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+            createNext().parse(parser);
+            XMLUtil.ensureTag(parser);
+        }
+        XMLUtil.skipEndTag(parser);
+    }
+    @Override
+    public void serialize(XmlSerializer serializer) throws IOException {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).serialize(serializer);
+        }
+    }
+
+    public static final String FILE_NAME_XML = ObjectsUtil.of("staged-alias.xml");
+    public static final String FILE_NAME_JSON = ObjectsUtil.of("staged-alias.json");
+
+    public static final Creator<StagedAlias> CREATOR = StagedAlias::new;
 }

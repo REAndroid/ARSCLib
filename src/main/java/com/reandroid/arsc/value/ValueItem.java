@@ -24,7 +24,6 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.CoderUnknownStringRef;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
-import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.ReferenceItem;
@@ -36,7 +35,9 @@ import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.xml.SpanSet;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -98,17 +99,17 @@ public abstract class ValueItem extends BlockItem implements Value,
     void setRes0(byte b) {
         getBytesInternal()[this.sizeOffset + OFFSET_RES0] = b;
     }
-    public byte getType() {
-        return getBytesInternal()[this.sizeOffset + OFFSET_TYPE];
+    public int getType() {
+        return getBytesInternal()[this.sizeOffset + OFFSET_TYPE] & 0xff;
     }
-    public void setType(byte type) {
+    public void setType(int type) {
         if (type == getType()) {
             return;
         }
-        byte[] bts = getBytesInternal();
+        byte[] bytes = getBytesInternal();
         int offset = this.sizeOffset + OFFSET_TYPE;
-        byte old = bts[offset];
-        bts[offset] = type;
+        int old = bytes[offset] & 0xff;
+        bytes[offset] = (byte) type;
         onTypeChanged(old, type);
         onDataChanged();
     }
@@ -131,7 +132,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     protected void onDataLoaded() {
         if (getValueType() == ValueType.STRING) {
             linkStringReference();
-        }else {
+        } else {
             unLinkStringReference();
         }
     }
@@ -141,11 +142,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     @Override
     public void setValueType(ValueType valueType) {
-        byte type = 0;
-        if (valueType!=null) {
-            type = valueType.getByte();
-        }
-        setType(type);
+        setType(valueType != null ? valueType.flag() : 0);
     }
     @Override
     public int getData() {
@@ -178,11 +175,11 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         return stringPool.get(getData());
     }
-    private void onTypeChanged(byte old, byte type) {
-        byte typeString = ValueType.STRING.getByte();
+    private void onTypeChanged(int old, int type) {
+        int typeString = ValueType.STRING.flag();
         if (old == typeString) {
             unLinkStringReference();
-        }else if (type == typeString) {
+        } else if (type == typeString) {
             linkStringReference();
         }
     }
@@ -200,7 +197,7 @@ public abstract class ValueItem extends BlockItem implements Value,
             return;
         }
         ReferenceItem stringReference = mStringReference;
-        if (stringReference!=null) {
+        if (stringReference != null) {
             unLinkStringReference();
         }
         stringReference = new ValueStringReference(this);
@@ -209,7 +206,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     private void unLinkStringReference() {
         ReferenceItem stringReference = mStringReference;
-        if (stringReference==null) {
+        if (stringReference == null) {
             return;
         }
         mStringReference = null;
@@ -224,7 +221,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     public StringPool<?> getStringPool() {
         Block parent = getParent();
-        while (parent!=null) {
+        while (parent != null) {
             if (parent instanceof MainChunk) {
                 return ((MainChunk) parent).getStringPool();
             }
@@ -236,7 +233,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     public void onReadBytes(BlockReader reader) throws IOException {
         int readSize = initializeBytes(reader);
         super.onReadBytes(reader);
-        if (readSize<8) {
+        if (readSize < 8) {
             setBytesLength(this.sizeOffset + 8, false);
             writeSize();
         }
@@ -247,8 +244,8 @@ public abstract class ValueItem extends BlockItem implements Value,
         reader.offset(offset);
         int readSize = reader.readUnsignedShort();
         int size = readSize;
-        if (size<8) {
-            if (reader.available()>=8) {
+        if (size < 8) {
+            if (reader.available() >= 8) {
                 size = 8;
             }
         }
@@ -259,7 +256,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     @Override
     public String getValueAsString() {
         StringItem stringItem = getDataAsPoolString();
-        if (stringItem!=null) {
+        if (stringItem != null) {
             String value = stringItem.getXml();
             if (value == null) {
                 value = "";
@@ -291,18 +288,21 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         return null;
     }
-    public void setValueAsString(StyleDocument styledString) {
-        if (styledString == null) {
+    public void setValueAsString(SpanSet<?> spanSet) {
+        if (spanSet == null) {
             setValueAsString("");
             return;
         }
-        StringPool<?> stringPool = getStringPool();
-        if (!styledString.hasElements()) {
-            setValueAsString(XmlSanitizer.unEscapeUnQuote(styledString.getXml(false)));
+        StringItem stringItem = getStringPool().getOrCreate(spanSet);
+        setData(stringItem.getIndex());
+        setValueType(ValueType.STRING);
+    }
+    public void setValueAsString(StringItem stringItem) {
+        if (stringItem == null) {
             return;
         }
-        StringItem stringItem = stringPool.getOrCreate(styledString);
-        setData(stringItem.getIndex());
+        StringItem item = getStringPool().getOrCreate(stringItem);
+        setData(item.getIndex());
         setValueType(ValueType.STRING);
     }
     @Override
@@ -313,6 +313,9 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         if (str == null) {
             str = "";
+        }
+        if (getStringPool() == null) {
+            throw new NullPointerException(str);
         }
         StringItem stringItem = getStringPool().getOrCreate(str);
         setData(stringItem.getIndex());
@@ -326,7 +329,7 @@ public abstract class ValueItem extends BlockItem implements Value,
             StringItem stringItem = getDataAsPoolString();
             if (stringItem != null) {
                 stringItem.serializeText(serializer, escapeValues);
-            }else {
+            } else {
                 serializer.text(CoderUnknownStringRef.INS.decode(getData()));
             }
             return;
@@ -346,7 +349,7 @@ public abstract class ValueItem extends BlockItem implements Value,
             StringItem stringItem = getDataAsPoolString();
             if (stringItem != null) {
                 stringItem.serializeAttribute(serializer, namespace, name);
-            }else {
+            } else {
                 // TODO: should throw ?
                 serializer.attribute(namespace, name, CoderUnknownStringRef.INS.decode(getData()));
             }
@@ -389,16 +392,8 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         ValueType coming = valueItem.getValueType();
         if (coming == ValueType.STRING) {
-            StringItem stringItem = valueItem.getDataAsPoolString();
-            if (stringItem != null) {
-                StyleDocument document = stringItem.getStyleDocument();
-                if (document != null) {
-                    setValueAsString(document);
-                }else {
-                    setValueAsString(stringItem.get());
-                }
-            }
-        }else {
+            setValueAsString(valueItem.getDataAsPoolString());
+        } else {
             setTypeAndData(coming, valueItem.getData());
         }
     }
@@ -415,7 +410,7 @@ public abstract class ValueItem extends BlockItem implements Value,
             StyleDocument styleDocument = valueItem.getValueAsStyleDocument();
             if (styleDocument != null) {
                 setValueAsString(styleDocument);
-            }else {
+            } else {
                 ApkFile apk1 = getPackageBlock().getTableBlock().getApkFile();
                 ApkFile apk2 = valueItem.getPackageBlock().getTableBlock().getApkFile();
                 String value = valueItem.getValueAsString();
@@ -424,26 +419,26 @@ public abstract class ValueItem extends BlockItem implements Value,
                     apk1.mergeWithName(mergeOption, apk2, value);
                 }
             }
-        }else if (coming.isReference()) {
+        } else if (coming.isReference()) {
             int id = 0;
             ResourceEntry comingResourceEntry = valueItem.getValueAsReference();
             if (comingResourceEntry == null) {
                 id = valueItem.getData();
-            }else if (comingResourceEntry.isContext(valueItem.getPackageBlock())) {
+            } else if (comingResourceEntry.isContext(valueItem.getPackageBlock())) {
                 ResourceEntry mergedReference;
                 if (comingResourceEntry.isDeclared()) {
                     mergedReference = getPackageBlock().mergeWithName(mergeOption, comingResourceEntry);
-                }else {
+                } else {
                     mergedReference = mergeOption.resolveUndeclared(getPackageBlock(), comingResourceEntry);
                 }
                 if (mergedReference != null) {
                     id = mergedReference.getResourceId();
                 }
-            }else {
+            } else {
                 id = valueItem.getData();
             }
             setTypeAndData(coming, id);
-        }else {
+        } else {
             setTypeAndData(coming, valueItem.getData());
         }
     }
@@ -483,41 +478,45 @@ public abstract class ValueItem extends BlockItem implements Value,
             return null;
         }
         JSONObject jsonObject = new JSONObject();
+        toJson(jsonObject);
+        return jsonObject;
+    }
+
+    public void toJson(JSONObject jsonObject) {
         ValueType valueType = getValueType();
-        jsonObject.put(NAME_value_type, valueType.name());
+        jsonObject.put(NAME_data_type, valueType.name());
         if (valueType == ValueType.STRING) {
             StringItem stringItem = getDataAsPoolString();
-            if (stringItem.hasStyle()) {
-                jsonObject.put(NAME_data, getDataAsPoolString().toJson());
-            }else {
-                jsonObject.put(NAME_data, stringItem.get());
+            if (stringItem != null) {
+                jsonObject.put(NAME_data, stringItem.toJson());
+            } else {
+                // unlikely, in case of wrong string index
+                jsonObject.put(NAME_data, getData());
             }
-        }else if (valueType == ValueType.BOOLEAN) {
+        } else if (valueType == ValueType.BOOLEAN) {
             jsonObject.put(NAME_data, getValueAsBoolean());
-        }else {
+        } else {
             jsonObject.put(NAME_data, getData());
         }
-        return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
         if (json != null) {
-            ValueType valueType = ValueType.fromName(json.getString(NAME_value_type));
-            if (valueType == ValueType.STRING) {
-                JSONObject jsonObject = json.optJSONObject(NAME_data);
-                StringPool<?> stringPool = getStringPool();
-                StringItem stringItem;
-                if (jsonObject != null) {
-                    stringItem = stringPool.getOrCreate(jsonObject);
-                }else {
-                    stringItem = stringPool.getOrCreate(json.getString(NAME_data));
+            ValueType dataType = ValueType.fromName(json.getString(NAME_data_type));
+            if (dataType == ValueType.STRING) {
+                Object obj = json.get(NAME_data);
+                if (obj instanceof Integer) {
+                    // unlikely, in case of wrong string index
+                    setTypeAndData(dataType, (Integer) obj);
+                } else {
+                    StringItem stringItem = getStringPool()
+                            .getOrCreateFromJson(obj);
+                    setTypeAndData(dataType, stringItem.getIndex());
                 }
-                setTypeAndData(valueType, stringItem.getIndex());
-            }else if (valueType == ValueType.BOOLEAN) {
+            } else if (dataType == ValueType.BOOLEAN) {
                 setValueAsBoolean(json.getBoolean(NAME_data));
-            }else {
-                setValueType(valueType);
-                setData(json.getInt(NAME_data));
+            } else {
+                setTypeAndData(dataType, json.getInt(NAME_data));
             }
         }
     }
@@ -535,21 +534,21 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         builder.append("type=");
         ValueType valueType=getValueType();
-        if (valueType!=null) {
+        if (valueType != null) {
             builder.append(valueType);
-        }else {
+        } else {
             builder.append(HexUtil.toHex2(getType()));
         }
         builder.append(", data=");
         int data = getData();
         if (valueType==ValueType.STRING) {
             StringItem tableString = getDataAsPoolString();
-            if (tableString!=null) {
+            if (tableString != null) {
                 builder.append(tableString.getHtml());
-            }else {
+            } else {
                 builder.append(HexUtil.toHex8(data));
             }
-        }else {
+        } else {
             builder.append(HexUtil.toHex8(data));
         }
         return builder.toString();
@@ -586,6 +585,6 @@ public abstract class ValueItem extends BlockItem implements Value,
     private static final int OFFSET_DATA = 4;
 
 
-    public static final String NAME_data = "data";
-    public static final String NAME_value_type = "value_type";
+    public static final String NAME_data = ObjectsUtil.of("data");
+    public static final String NAME_data_type = ObjectsUtil.of("data_type");
 }

@@ -18,7 +18,7 @@ package com.reandroid.arsc.item;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.xml.StyleDocument;
+import com.reandroid.xml.SpanSet;
 
 public class ResXmlString extends StringItem {
 
@@ -31,7 +31,7 @@ public class ResXmlString extends StringItem {
 
     public ResXmlID getOrCreateResXmlID() {
         ResXmlID resXmlID = getResXmlID();
-        if(resXmlID == null) {
+        if (resXmlID == null) {
             ResXmlIDMap resXmlIDMap = getParentInstance(ResXmlDocument.class).getResXmlIDMap();
             linkResourceIdInternal(resXmlIDMap.getResXmlIDArray().createNext());
             resXmlID = getResXmlID();
@@ -44,38 +44,38 @@ public class ResXmlString extends StringItem {
     public boolean hasResourceId() {
         return getResourceId() != 0;
     }
-    public int getResourceId(){
+    public int getResourceId() {
         ResXmlID xmlId = getResXmlID();
-        if(xmlId == null){
+        if (xmlId == null) {
             return 0;
         }
         return xmlId.get();
     }
-    public void setResourceId(int resourceId){
-        if(resourceId == 0) {
+    public void setResourceId(int resourceId) {
+        if (resourceId == 0) {
             unLinkResourceIdInternal();
         }else {
             getOrCreateResXmlID().set(resourceId);
         }
     }
     @Override
-    void ensureStringLinkUnlocked(){
+    void ensureStringLinkUnlocked() {
     }
     public void unLinkResourceIdInternal() {
         ResXmlID resXmlID = this.mResXmlID;
-        if(resXmlID != null) {
+        if (resXmlID != null) {
             this.mResXmlID = null;
             resXmlID.setResXmlStringInternal(null);
         }
     }
     public void linkResourceIdInternal(ResXmlID resXmlID) {
-        if(resXmlID == null) {
+        if (resXmlID == null) {
             throw new NullPointerException("Can not link null id item");
         }
-        if(this.mResXmlID == resXmlID) {
+        if (this.mResXmlID == resXmlID) {
             return;
         }
-        if(this.mResXmlID != null) {
+        if (this.mResXmlID != null) {
             throw new IllegalStateException("Resource id string item is already linked");
         }
         this.mResXmlID = resXmlID;
@@ -111,10 +111,10 @@ public class ResXmlString extends StringItem {
     }
 
     public void linkNamespacePrefixInternal(ResXmlString namespacePrefix) {
-        if(namespacePrefix == this) {
+        if (namespacePrefix == this) {
             throw new IllegalArgumentException("Cyclic link of namespace prefix");
         }
-        if(namespacePrefix == null) {
+        if (namespacePrefix == null) {
             throw new NullPointerException("Can not link null namespace prefix");
         }
         ResXmlString xmlString = getNamespacePrefix();
@@ -129,11 +129,11 @@ public class ResXmlString extends StringItem {
 
     @Override
     public boolean hasReference() {
-        if(super.hasReference()){
+        if (super.hasReference()) {
             return true;
         }
         ResXmlID resXmlID = getResXmlID();
-        if(resXmlID != null) {
+        if (resXmlID != null) {
             return resXmlID.hasReference();
         }
         return false;
@@ -142,7 +142,7 @@ public class ResXmlString extends StringItem {
     public int getReferencesSize() {
         int size = super.getReferencesSize();
         ResXmlID resXmlID = getResXmlID();
-        if(resXmlID != null && resXmlID.hasReference()) {
+        if (resXmlID != null && resXmlID.hasReference()) {
             size ++;
         }
         return size;
@@ -150,14 +150,16 @@ public class ResXmlString extends StringItem {
 
     @Override
     public boolean merge(StringItem other) {
-        if(!super.merge(other)) {
+        if (!super.merge(other)) {
             return false;
         }
-        ResXmlString xmlString = (ResXmlString) other;
-        int id = xmlString.getResourceId();
-        if(id != 0) {
-            ResXmlID xmlID = getOrCreateResXmlID();
-            xmlID.set(id);
+        if (other instanceof ResXmlString) {
+            ResXmlString xmlString = (ResXmlString) other;
+            int id = xmlString.getResourceId();
+            if (id != 0) {
+                ResXmlID xmlID = getOrCreateResXmlID();
+                xmlID.set(id);
+            }
         }
         return true;
     }
@@ -166,53 +168,64 @@ public class ResXmlString extends StringItem {
     public boolean equalsValue(String value) {
         return !hasResourceId() && super.equalsValue(value);
     }
+
     @Override
-    public boolean equalsValue(StyleDocument styled) {
-        return !hasResourceId() && super.equalsValue(styled);
+    public boolean equalsValue(StringItem stringItem) {
+        if (stringItem == this) {
+            return true;
+        }
+        boolean result = super.equalsValue(stringItem);
+        if (!result || !(stringItem instanceof ResXmlString)) {
+            return result;
+        }
+        ResXmlString xmlString = (ResXmlString) stringItem;
+        return getResourceId() == xmlString.getResourceId();
     }
-    public boolean equalsValue(int resourceId, StyleDocument styled) {
-        return resourceId == getResourceId() && super.equalsValue(styled);
+
+    @Override
+    public boolean equalsValue(SpanSet<?> spanSet) {
+        return !hasResourceId() && super.equalsValue(spanSet);
     }
     public boolean equalsValue(int resourceId, String value) {
         return resourceId == getResourceId() && super.equalsValue(value);
     }
     @Override
-    public int compareTo(StringItem stringItem){
-        if(!(stringItem instanceof ResXmlString)){
+    public int compareTo(StringItem stringItem) {
+        if (!(stringItem instanceof ResXmlString)) {
             return -1;
         }
-        if(stringItem == this) {
+        if (stringItem == this) {
             return 0;
         }
         ResXmlString xmlString = (ResXmlString) stringItem;
         int id1 = getResourceId();
         int id2 = xmlString.getResourceId();
         int i = CompareUtil.compare(id1 == 0, id2 == 0);
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compareUnsigned(id1, id2);
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(xmlString.hasStyle(), this.hasStyle());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(this.getXml(), stringItem.getXml());
-        if( i != 0) {
+        if ( i != 0) {
             return i;
         }
         i = CompareUtil.compare(xmlString.hasNamespacePrefix(), this.hasNamespacePrefix());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = compareReferences(xmlString);
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         i = CompareUtil.compare(this.getNamespacePrefixString(), xmlString.getNamespacePrefixString());
-        if(i != 0) {
+        if (i != 0) {
             return i;
         }
         return 0;

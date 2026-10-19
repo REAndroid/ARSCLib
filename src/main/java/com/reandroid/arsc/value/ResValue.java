@@ -26,62 +26,62 @@ public class ResValue extends ValueItem  {
         super(8, OFFSET_SIZE);
     }
 
-    public boolean isCompact(){
+    public boolean isCompact() {
         return getHeader().isCompact();
     }
-    public void setCompact(boolean compact){
+    public void setCompact(boolean compact) {
         EntryHeader header = getHeader();
-        if(compact == header.isCompact()){
+        if (compact == header.isCompact()) {
             return;
         }
-        byte type = getType();
+        int type = getType();
         int data = getData();
         updateBytesLength(compact);
         header.setCompact(compact);
         setType(type);
         setData(data);
-        if(compact){
+        if (compact) {
             setRes0((byte) 0);
         }
     }
 
     @Override
     public int getSize() {
-        if(isCompact()){
+        if (isCompact()) {
             return 0;
         }
         return super.getSize();
     }
     @Override
     public void setSize(int size) {
-        if(!isCompact()){
+        if (!isCompact()) {
             super.setSize(size);
         }
     }
     @Override
     void updateSize() {
-        if(!isCompact()){
+        if (!isCompact()) {
             super.updateSize();
         }
     }
-    private void updateBytesLength(boolean compact){
+    private void updateBytesLength(boolean compact) {
         int length;
-        if(compact){
+        if (compact) {
             length = 0;
-        }else {
+        } else {
             length = 8;
         }
         setBytesLength(length, false);
     }
-    private EntryHeader getHeader(){
+    private EntryHeader getHeader() {
         ResTableEntry resTableEntry = getParent(ResTableEntry.class);
-        if(resTableEntry != null){
+        if (resTableEntry != null) {
             return resTableEntry.getHeader();
         }
         throw new RuntimeException("Unreachable");
     }
 
-    public Entry getEntry(){
+    public Entry getEntry() {
         return getParent(Entry.class);
     }
 
@@ -89,47 +89,47 @@ public class ResValue extends ValueItem  {
     public void onReadBytes(BlockReader reader) throws IOException {
         boolean compact = isCompact();
         updateBytesLength(compact);
-        if(!compact){
+        if (!compact) {
             super.onReadBytes(reader);
         }
     }
     @Override
     public int getData() {
-        if(isCompact()){
+        if (isCompact()) {
             return getHeader().getData();
         }
         return super.getData();
     }
     @Override
     void writeData(int data) {
-        if(isCompact()){
+        if (isCompact()) {
             getHeader().setData(data);
-        }else {
+        } else {
             super.writeData(data);
         }
     }
 
     @Override
-    public byte getType() {
-        if(isCompact()){
+    public int getType() {
+        if (isCompact()) {
             return getHeader().getType();
         }
         return super.getType();
     }
 
     @Override
-    public void setType(byte type) {
-        if(isCompact()){
+    public void setType(int type) {
+        if (isCompact()) {
             getHeader().setType(type);
-        }else {
+        } else {
             super.setType(type);
         }
     }
 
     @Override
-    public PackageBlock getParentChunk(){
+    public PackageBlock getParentChunk() {
         Entry entry = getEntry();
-        if(entry != null){
+        if (entry != null) {
             return entry.getPackageBlock();
         }
         return null;

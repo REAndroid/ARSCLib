@@ -35,6 +35,10 @@ public class ShortItem extends BlockItem implements IntegerReference, DirectStre
         this(false);
         set(value);
     }
+    public ShortItem(int value){
+        this(false);
+        set(value);
+    }
 
     @Override
     public void set(int value){

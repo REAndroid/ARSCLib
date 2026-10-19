@@ -182,14 +182,11 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
     }
 
     @Override
-    public JSONObject toJson() {
-        JSONObject jsonObject = super.toJson();
-        if(jsonObject==null){
-            return null;
-        }
+    public void toJson(JSONObject jsonObject) {
         jsonObject.put(NAME_name, getNameId());
-        return jsonObject;
+        super.toJson(jsonObject);
     }
+
     @Override
     public void fromJson(JSONObject json) {
         super.fromJson(json);

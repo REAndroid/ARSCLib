@@ -22,39 +22,40 @@ import com.reandroid.utils.collection.SingleIterator;
 import java.util.Iterator;
 
 public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
+    
     public ResTableEntry() {
         super(new EntryHeader(), new ResValue());
     }
 
     @Override
-    public Iterator<ValueItem> allValues(){
+    public Iterator<ValueItem> visitValues() {
         return new SingleIterator<>(getValue());
     }
     @Override
-    void linkTableStringsInternal(TableStringPool tableStringPool){
+    void linkTableStringsInternal(TableStringPool tableStringPool) {
         getValue().linkTableStrings(tableStringPool);
     }
     @Override
-    void onRemoved(){
+    void onRemoved() {
         getHeader().onRemoved();
         getValue().onRemoved();
     }
     @Override
-    boolean canMerge(TableEntry<?, ?> tableEntry){
-        if(tableEntry == this || !(tableEntry instanceof ResTableEntry)){
+    boolean canMerge(TableEntry<?, ?> tableEntry) {
+        if (tableEntry == this || !(tableEntry instanceof ResTableEntry)) {
             return false;
         }
         ResValue coming = ((ResTableEntry) tableEntry).getValue();
         ValueType valueType = coming.getValueType();
-        if(valueType == null || valueType == ValueType.NULL){
+        if (valueType == null || valueType == ValueType.NULL) {
             return false;
         }
         valueType = getValue().getValueType();
         return valueType == null || valueType == ValueType.NULL;
     }
     @Override
-    public void merge(TableEntry<?, ?> tableEntry){
-        if(tableEntry == this || !(tableEntry instanceof ResTableEntry)){
+    public void merge(TableEntry<?, ?> tableEntry) {
+        if (tableEntry == this || !(tableEntry instanceof ResTableEntry)) {
             return;
         }
         getHeader().merge(tableEntry.getHeader());
@@ -62,7 +63,7 @@ public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
     }
     @Override
     public void mergeWithName(ResourceMergeOption mergeOption, TableEntry<?, ?> tableEntry) {
-        if(tableEntry == this || !(tableEntry instanceof ResTableEntry)){
+        if (tableEntry == this || !(tableEntry instanceof ResTableEntry)) {
             return;
         }
         getHeader().mergeWithName(mergeOption, tableEntry.getHeader());

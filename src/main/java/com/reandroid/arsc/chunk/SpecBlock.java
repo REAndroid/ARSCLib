@@ -16,142 +16,147 @@
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.arsc.array.TypeBlockArray;
+import com.reandroid.common.Mergeable;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.SpecHeader;
-import com.reandroid.arsc.item.*;
-import com.reandroid.utils.HexUtil;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.SpecFlag;
+import com.reandroid.arsc.item.SpecFlagsArray;
+import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
-import com.reandroid.json.JSONObject;
 
-import java.util.List;
 
-public class SpecBlock extends Chunk<SpecHeader> implements JSONConvert<JSONObject> {
+public class SpecBlock extends Chunk<SpecHeader> implements
+        Mergeable<SpecBlock>, JSONConvert<JSONArray> {
+
     private final SpecFlagsArray specFlagsArray;
-    public SpecBlock() {
-        super(new SpecHeader(), 1);
-        SpecHeader header = getHeaderBlock();
-        this.specFlagsArray = new SpecFlagsArray(header.getEntryCount());
+
+    SpecBlock(SpecHeader header) {
+        super(header, 1);
+
+        this.specFlagsArray = new SpecFlagsArray(header.count());
         addChild(specFlagsArray);
     }
-    public void destroy(){
+    public SpecBlock() {
+        this(new SpecHeader());
+    }
+
+    public void destroy() {
         setParent(null);
         getSpecFlagsArray().clear();
     }
-    public SpecFlag getSpecFlag(int id){
+    public SpecFlag getSpecFlag(int id) {
         return getSpecFlagsArray().getFlag(id);
     }
-    public SpecFlagsArray getSpecFlagsArray(){
+    public SpecFlag getOrCreateFlag(int id) {
+        return getSpecFlagsArray().getOrCreateFlag(id);
+    }
+    public SpecFlagsArray getSpecFlagsArray() {
         return specFlagsArray;
     }
-    public List<Integer> listSpecFlags(){
-        return specFlagsArray.toList();
+    public int getId() {
+        return getHeaderBlock().getId();
     }
-    public byte getTypeId(){
-        return getHeaderBlock().getId().getByte();
+    public void setId(int id) {
+        getHeaderBlock().setId(id);
+        getTypeBlockArray().setId(id);
     }
-    public int getId(){
-        return getHeaderBlock().getId().get();
+    public IntegerReference typesCount() {
+        return getHeaderBlock().typesCount();
     }
-    public void setId(int id){
-        setTypeId((byte) (0xff & id));
-    }
-    public void setTypeId(byte id){
-        getHeaderBlock().getId().set(id);
-        getTypeBlockArray().setTypeId(id);
-    }
-    public TypeBlockArray getTypeBlockArray(){
-        SpecTypePair specTypePair=getSpecTypePair();
-        if(specTypePair!=null){
+    public TypeBlockArray getTypeBlockArray() {
+        SpecTypePair specTypePair = getSpecTypePair();
+        if (specTypePair != null) {
             return specTypePair.getTypeBlockArray();
         }
         return null;
     }
-    SpecTypePair getSpecTypePair(){
+    SpecTypePair getSpecTypePair() {
         return getParent(SpecTypePair.class);
     }
     public int getEntryCount() {
         return specFlagsArray.size();
     }
-    public void setEntryCount(int count){
+    public void setEntryCount(int count) {
         specFlagsArray.setSize(count);
-        specFlagsArray.refresh();
     }
     @Override
     protected void onChunkRefreshed() {
         specFlagsArray.refresh();
+        refreshTypesCount();
+    }
+    private void refreshTypesCount() {
+        IntegerReference typesCount = typesCount();
+        TypeBlockArray typeBlockArray = getTypeBlockArray();
+        if (typeBlockArray != null) {
+            typesCount.set(typeBlockArray.size());
+        }
     }
 
-    public void merge(SpecBlock specBlock){
-        if(specBlock == null || specBlock==this){
+    @Override
+    public void merge(SpecBlock specBlock) {
+        if (specBlock == null || specBlock == this) {
             return;
+        }
+        IntegerReference typesCount = this.typesCount();
+        if (typesCount.get() == 0) {
+            typesCount.set(specBlock.typesCount().get());
         }
         this.getSpecFlagsArray().merge(specBlock.getSpecFlagsArray());
     }
+
     @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
+    public JSONArray toJson() {
+        return getSpecFlagsArray().toJson();
+    }
+
+    @Override
+    public void fromJson(JSONArray json) {
+        getSpecFlagsArray().fromJson(json);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
         builder.append(super.toString());
-        TypeBlockArray typeBlockArray=getTypeBlockArray();
-        if(typeBlockArray!=null){
+        TypeBlockArray typeBlockArray = getTypeBlockArray();
+        if (typeBlockArray != null) {
             builder.append(", typesCount=");
             builder.append(typeBlockArray.size());
         }
         return builder.toString();
     }
 
-    @Override
-    public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
-        jsonObject.put(TypeBlock.NAME_id, getId());
-        jsonObject.put(NAME_spec_flags, getSpecFlagsArray().toJson());
-        return jsonObject;
-    }
+    public enum Flag {
 
-    @Override
-    public void fromJson(JSONObject json) {
-        setId(json.getInt(TypeBlock.NAME_id));
-        getSpecFlagsArray().fromJson(json.optJSONArray(NAME_spec_flags));
-    }
+        SPEC_PUBLIC(0x40000000),
+        SPEC_STAGED_API(0x20000000);
 
-    public enum Flag{
-        SPEC_PUBLIC((byte) 0x40),
-        SPEC_STAGED_API((byte) 0x20);
+        private final int flag;
 
-        private final byte flag;
-        Flag(byte flag) {
+        Flag(int flag) {
             this.flag = flag;
         }
-        public byte getFlag() {
+
+        public int getFlag() {
             return flag;
         }
-        public static boolean isPublic(byte flag){
-            return (SPEC_PUBLIC.flag & flag) == SPEC_PUBLIC.flag;
+        public boolean isSet(int flag) {
+            return (this.flag & flag) == this.flag;
         }
-        public static boolean isStagedApi(byte flag){
-            return (SPEC_STAGED_API.flag & flag) == SPEC_STAGED_API.flag;
-        }
-        public static String toString(byte flagValue){
+
+        public static String toString(int flagValue) {
             StringBuilder builder = new StringBuilder();
-            boolean appendOnce = false;
-            int sum = 0;
-            int flagValueInt = flagValue & 0xff;
-            for(Flag flag:values()){
-                int flagInt = flag.flag & 0xff;
-                if((flagInt & flagValueInt) != flagInt){
-                    continue;
-                }
-                if(appendOnce){
-                    builder.append('|');
-                }
-                builder.append(flag);
-                appendOnce = true;
-                sum = sum | flagInt;
+            Flag flag = SPEC_PUBLIC;
+            if (flag.isSet(flagValue)) {
+                builder.append(flag.name());
             }
-            if(sum != flagValueInt){
-                if(appendOnce){
+            flag = SPEC_STAGED_API;
+            if (flag.isSet(flagValue)) {
+                if (builder.length() != 0) {
                     builder.append('|');
                 }
-                builder.append(HexUtil.toHex2((byte) flagValueInt));
+                builder.append(flag.name());
             }
             return builder.toString();
         }

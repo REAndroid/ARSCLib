@@ -15,162 +15,155 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.io.BlockLoad;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.container.CountedBlockList;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
-import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 
-import java.io.IOException;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+public class PackageArray extends CountedBlockList<PackageBlock> implements JSONConvert<JSONArray> {
 
-public class PackageArray extends BlockArray<PackageBlock>
-        implements BlockLoad, JSONConvert<JSONArray>, Comparator<PackageBlock> {
-    private final IntegerItem mPackageCount;
-    public PackageArray(IntegerItem packageCount){
-        this.mPackageCount=packageCount;
-        mPackageCount.setBlockLoad(this);
+    public PackageArray(IntegerReference packageCount) {
+        super(PackageBlock.CREATOR, packageCount);
     }
-    public void destroy(){
-        Iterator<PackageBlock> itr = iterator(true);
-        while (itr.hasNext()){
-            PackageBlock packageBlock=itr.next();
-            packageBlock.destroy();
+
+    @Override
+    public void destroy() {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).destroy();
         }
-        clear();
+        super.destroy();
     }
-    public PackageBlock pickOne(){
-        return pickOne(getChildes(), 0);
+    public PackageBlock pickOne() {
+        return pickOne(0);
     }
-    public PackageBlock pickOne(int packageId){
-        return pickOne(getChildes(), packageId);
-    }
-    private PackageBlock pickOne(List<PackageBlock> items, int packageId){
-        if(items==null || items.size()==0){
+    public PackageBlock pickOne(int packageId) {
+        int size = size();
+        if (size == 0) {
             return null;
         }
-        if(items.size() == 1 && packageId==0){
-            return items.get(0);
+        if (size == 1 && packageId == 0) {
+            return get(0);
         }
-        PackageBlock largest=null;
-        for(PackageBlock packageBlock:items){
-            if(packageBlock == null){
+        PackageBlock largest = null;
+        for (int i = 0; i < size; i++) {
+            PackageBlock packageBlock = get(i);
+            if (packageId != 0 && packageId != packageBlock.getId()) {
                 continue;
             }
-            if(packageId !=0 && packageId != packageBlock.getId()){
-                continue;
-            }
-            if(largest == null){
+            if (largest == null) {
                 largest = packageBlock;
-            }else if(packageBlock.getHeaderBlock().getChunkSize() >
-                    largest.getHeaderBlock().getChunkSize()){
+            } else if (packageBlock.getHeaderBlock().getChunkSize() >
+                    largest.getHeaderBlock().getChunkSize()) {
                 largest = packageBlock;
             }
         }
         return largest;
     }
-    public void sort(){
-        for(PackageBlock packageBlock:listItems()){
-            packageBlock.sortTypes();
+    public void sort() {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).sortTypes();
         }
-        sort(this);
+        sort(CompareUtil.getComparableComparator());
     }
-    public PackageBlock getOrCreate(byte pkgId){
-        return getOrCreate(0xff & pkgId);
-    }
-    public PackageBlock getOrCreate(int pkgId){
-        PackageBlock packageBlock = getPackageBlockById(pkgId);
-        if(packageBlock != null){
-            return packageBlock;
+    public PackageBlock getOrCreate(int packageId) {
+        PackageBlock packageBlock = getPackageBlockById(packageId);
+        if (packageBlock == null) {
+            packageBlock = createNext(packageId, PackageBlock.EMPTY_PACKAGE_NAME);
         }
-        packageBlock = createNext();
-        packageBlock.setId(pkgId);
-        packageBlock.setName("PACKAGE NAME");
         return packageBlock;
     }
-    public PackageBlock getPackageBlockById(int pkgId){
-        Iterator<PackageBlock> itr=iterator(true);
-        while (itr.hasNext()){
-            PackageBlock packageBlock=itr.next();
-            if(packageBlock.getId()==pkgId){
+    public PackageBlock getOrCreate(int packageId, String name) {
+        PackageBlock packageBlock = getPackageBlock(packageId, name);
+        if (packageBlock == null) {
+            packageBlock = createNext(packageId, name);
+        }
+        return packageBlock;
+    }
+    public PackageBlock getOrCreateCompatible(PackageBlock packageBlock) {
+        PackageBlock pkg = getCompatible(packageBlock);
+        if (pkg == null) {
+            pkg = createNext(packageBlock.getId(), packageBlock.getName());
+        }
+        return pkg;
+    }
+    public PackageBlock createNext(int packageId, String name) {
+        PackageBlock packageBlock = createNext();
+        packageBlock.setId(packageId);
+        packageBlock.setName(name);
+        return packageBlock;
+    }
+    public PackageBlock getPackageBlockById(int packageId) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock packageBlock = get(i);
+            if (packageBlock.getId() == packageId) {
                 return packageBlock;
             }
         }
         return null;
     }
-    public PackageBlock getPackageBlockByName(String name){
-        Iterator<PackageBlock> itr=iterator(true);
-        while (itr.hasNext()){
-            PackageBlock packageBlock = itr.next();
-            if(Objects.equals(name, packageBlock.getName())){
+    public PackageBlock getPackageBlock(int packageId, String name) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock packageBlock = get(i);
+            if (packageBlock.getId() == packageId
+                    && ObjectsUtil.equals(name, packageBlock.getName())) {
                 return packageBlock;
             }
         }
         return null;
     }
-    @Override
-    public PackageBlock newInstance() {
-        return new PackageBlock();
-    }
-
-    @Override
-    protected void onRefreshed() {
-        refreshPackageCount();
-    }
-    private void refreshPackageCount(){
-        mPackageCount.set(size());
-    }
-
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender != mPackageCount){
-            return;
+    public PackageBlock getCompatible(PackageBlock packageBlock) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock pkg = get(i);
+            if (pkg.isCompatibleTo(packageBlock)) {
+                return pkg;
+            }
         }
-        setSize(mPackageCount.get());
+        return null;
+    }
+    public PackageBlock getPackageBlockByName(String name) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock packageBlock = get(i);
+            if (ObjectsUtil.equals(name, packageBlock.getName())) {
+                return packageBlock;
+            }
+        }
+        return null;
+    }
+    public void clear() {
+        super.clearChildes();
     }
     @Override
     public JSONArray toJson() {
-        JSONArray jsonArray=new JSONArray();
-        int i=0;
-        for(PackageBlock packageBlock:listItems()){
-            JSONObject jsonObject= packageBlock.toJson();
-            if(jsonObject==null){
-                continue;
-            }
-            jsonArray.put(i, jsonObject);
-            i++;
-        }
-        return jsonArray;
+        return toJsonArray(this);
     }
     @Override
     public void fromJson(JSONArray json) {
-        int length= json.length();
-        clear();
-        ensureSize(length);
-        for (int i=0;i<length;i++){
-            JSONObject jsonObject=json.getJSONObject(i);
-            PackageBlock packageBlock=get(i);
-            packageBlock.fromJson(jsonObject);
-        }
+        fromJsonArray(this, json);
     }
-    public void merge(PackageArray packageArray){
-        if(packageArray==null||packageArray==this){
+    public void merge(PackageArray packageArray) {
+        if (packageArray == null || packageArray == this) {
             return;
         }
-        for(PackageBlock packageBlock:packageArray.listItems()){
-            PackageBlock exist=getOrCreate(packageBlock.getId());
+        boolean empty = this.size() == 0;
+        int size = packageArray.size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock packageBlock = packageArray.get(i);
+            PackageBlock exist;
+            if (empty) {
+                exist = createNext(packageBlock.getId(), packageBlock.getName());
+            } else {
+                exist = getOrCreateCompatible(packageBlock);
+            }
             exist.merge(packageBlock);
         }
-    }
-    @Override
-    public int compare(PackageBlock p1, PackageBlock p2) {
-        return p1.compareTo(p2);
     }
 }

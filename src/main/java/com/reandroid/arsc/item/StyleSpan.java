@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -34,17 +35,18 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
         this.lastChar = new IndirectInteger(this, 8);
     }
 
-    public String getString(){
+    @Override
+    public String getTagWithAttributes() {
         return stringReference.getString();
     }
-    public void setString(String value) {
-        stringReference.setString(value);
+    public void setTagWithAttributes(String tagWithAttributes) {
+        stringReference.setString(tagWithAttributes);
     }
     @Override
     public int getFirstChar() {
         return firstChar.get();
     }
-    public void setFirstChar(int value){
+    public void setFirstChar(int value) {
         this.firstChar.set(value);
     }
     @Override
@@ -56,37 +58,48 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
         return getIndex();
     }
 
-    public void setLastChar(int value){
+    public void setLastChar(int value) {
         this.lastChar.set(value);
     }
     @Override
-    public String getTagName(){
-        return Span.splitTagName(getString());
+    public String getTagName() {
+        return Span.splitTagName(getTagWithAttributes());
     }
-    void link(){
+    public void set(String str, int first, int last) {
+        setTagWithAttributes(str);
+        setFirstChar(first);
+        setLastChar(last);
+    }
+    void link() {
         stringReference.link();
     }
-    void onRemoved(){
+    void onRemoved() {
         stringReference.unlink();
         stringReference.set(-1);
     }
     @Override
-    public String getSpanAttributes(){
-        return Span.splitAttribute(getString());
+    public String getSpanAttributes() {
+        return Span.splitAttribute(getTagWithAttributes());
+    }
+
+    public void merge(Span span) {
+        if (span != null && span != this) {
+            set(span.getTagWithAttributes(), span.getFirstChar(), span.getLastChar());
+        }
     }
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(NAME_tag, getString());
+        jsonObject.put(NAME_tag, getTagWithAttributes());
         jsonObject.put(NAME_first, getFirstChar());
         jsonObject.put(NAME_last, getLastChar());
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        setString(json.getString(NAME_tag));
-        setFirstChar(json.getInt(NAME_first));
-        setLastChar(json.getInt(NAME_last));
+        set(json.getString(NAME_tag),
+                json.getInt(NAME_first),
+                json.getInt(NAME_last));
     }
     @Override
     public String toString() {
@@ -98,9 +111,9 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
             super(styleSpan, 0);
             set(-1);
         }
-        public String getString(){
+        public String getString() {
             StringItem stringItem = getStringItem();
-            if(stringItem != null){
+            if (stringItem != null) {
                 return stringItem.get();
             }
             return null;
@@ -112,33 +125,33 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
             set(stringItem.getIndex());
             stringItem.addReference(this);
         }
-        public void link(){
+        public void link() {
             StringItem stringItem = getStringItem();
-            if(stringItem != null){
+            if (stringItem != null) {
                 stringItem.addReference(this);
             }
         }
-        public void unlink(){
+        public void unlink() {
             StringItem stringItem = getStringItem();
-            if(stringItem != null){
+            if (stringItem != null) {
                 stringItem.removeReference(this);
             }
         }
         private StringItem getStringItem() {
             StringPool<?> stringPool = getStringPool();
-            if(stringPool != null){
+            if (stringPool != null) {
                 return stringPool.get(get());
             }
             return null;
         }
-        private StringPool<?> getStringPool(){
+        private StringPool<?> getStringPool() {
             return getBlock().getParentInstance(StringPool.class);
         }
 
         @Override
         public String toString() {
             String value = getString();
-            if(value != null){
+            if (value != null) {
                 return value;
             }
             return "NULL{" + get() + "}";
@@ -148,4 +161,6 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
     public static final String NAME_tag = ObjectsUtil.of("tag");
     public static final String NAME_first = ObjectsUtil.of("first");
     public static final String NAME_last = ObjectsUtil.of("last");
+
+    public static final Creator<StyleSpan> CREATOR = StyleSpan::new;
 }

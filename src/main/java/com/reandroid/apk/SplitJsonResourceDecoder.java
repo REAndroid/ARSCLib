@@ -15,25 +15,31 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.arsc.ARSCLib;
+import com.reandroid.arsc.array.SpecTypePairArray;
+import com.reandroid.arsc.chunk.LibraryBlock;
+import com.reandroid.arsc.chunk.Overlayable;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.StagedAlias;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SplitJsonResourceDecoder {
+
     private final TableBlock tableBlock;
+
     public SplitJsonResourceDecoder(TableBlock tableBlock) {
         this.tableBlock = tableBlock;
     }
+
     public void decodeSplitJsonFiles(File resourcesDir) throws IOException {
-        for (PackageBlock packageBlock: tableBlock.listPackages()) {
-            decodeSplitPackageJson(resourcesDir, packageBlock);
+        TableBlock tableBlock = this.tableBlock;
+        int size = tableBlock.size();
+        for (int i = 0; i < size; i++) {
+            decodeSplitPackageJson(resourcesDir, tableBlock.get(i));
         }
     }
     private void decodeSplitPackageJson(File resourcesDir, PackageBlock packageBlock) throws IOException {
@@ -41,33 +47,34 @@ public class SplitJsonResourceDecoder {
 
         writeSplitPackageInfoJson(packageDir, packageBlock);
 
-        for (SpecTypePair specTypePair: packageBlock.listSpecTypePairs()) {
-            for (TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()) {
-                writeSplitTypeJsonFiles(packageDir, typeBlock);
+        SpecTypePairArray specTypePairArray = packageBlock.getSpecTypePairArray();
+        int size = specTypePairArray.size();
+        for (int i = 0; i < size; i++) {
+            Iterator<TypeBlock> iterator = specTypePairArray.get(i).getTypeBlocks();
+            while (iterator.hasNext()) {
+                writeSplitTypeJsonFiles(packageDir, iterator.next());
             }
         }
     }
     private void writeSplitPackageInfoJson(File packageDirectory, PackageBlock packageBlock) throws IOException {
-        JSONObject jsonObject = new JSONObject();
-
-        jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
-
-        jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
-        jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
-        StagedAlias stagedAlias=StagedAlias
-                .mergeAll(packageBlock.getStagedAliasList().getChildes());
-        if (stagedAlias != null) {
-            jsonObject.put(PackageBlock.NAME_staged_aliases,
-                    stagedAlias.getStagedAliasEntryArray().toJson());
+        packageBlock.toJson(false, false).write(
+                new File(packageDirectory, PackageBlock.FILE_NAME_JSON));
+        if (!packageBlock.getOverlayableList().isEmpty()) {
+            packageBlock.getOverlayableList().toJson().write(
+                    new File(packageDirectory, Overlayable.FILE_NAME_JSON));
         }
-
-        File packageFile = new File(packageDirectory, PackageBlock.JSON_FILE_NAME);
-        jsonObject.write(packageFile);
+        if (!packageBlock.getStagedAliasList().isBlank()) {
+            packageBlock.getStagedAliasList().toJson().write(
+                    new File(packageDirectory, StagedAlias.FILE_NAME_JSON));
+        }
+        if (!packageBlock.getLibraryList().isBlank()) {
+            packageBlock.getLibraryList().toJson().write(
+                    new File(packageDirectory, LibraryBlock.FILE_NAME_JSON));
+        }
     }
     private void writeSplitTypeJsonFiles(File packageDirectory, TypeBlock typeBlock) throws IOException {
         File file = new File(packageDirectory,
                 typeBlock.buildUniqueDirectoryName() + ApkUtil.JSON_FILE_EXTENSION);
-        JSONObject jsonObject = typeBlock.toJson();
-        jsonObject.write(file);
+        typeBlock.toJson().write(file);
     }
 }

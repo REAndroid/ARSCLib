@@ -30,7 +30,6 @@ import com.reandroid.archive.writer.ApkStreamWriter;
 import com.reandroid.archive.writer.ApkWriter;
 import com.reandroid.archive.writer.DataDescriptorFactory;
 import com.reandroid.arsc.ApkFile;
-import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -56,12 +55,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 
@@ -123,6 +117,13 @@ public class ApkModule implements ApkFile, Closeable {
         framework.setAPKLogger(getApkLogger());
         addExternalFramework(framework);
     }
+    public void addExternalFrameworks(Collection<? extends TableBlock> frameworks) {
+        if (frameworks != null) {
+            for (TableBlock tableBlock : frameworks) {
+                addExternalFramework(tableBlock);
+            }
+        }
+    }
     public void addExternalFramework(ApkModule apkModule) {
         if (apkModule == null || apkModule == this || !apkModule.hasTableBlock()) {
             return;
@@ -157,8 +158,9 @@ public class ApkModule implements ApkFile, Closeable {
         }
         logMessage("Validating resource names ...");
         TableBlock tableBlock = getTableBlock();
-        for (PackageBlock packageBlock : tableBlock.listPackages()) {
-            validateResourceNames(packageBlock);
+        int size = tableBlock.size();
+        for (int i = 0; i < size; i++) {
+            validateResourceNames(tableBlock.get(i));
         }
     }
     public void validateResourceNames(PackageBlock packageBlock) {
@@ -745,8 +747,7 @@ public class ApkModule implements ApkFile, Closeable {
             return null;
         }
         TableBlock tableBlock = getTableBlock();
-        PackageArray pkgArray = tableBlock.getPackageArray();
-        PackageBlock pkg = pkgArray.get(0);
+        PackageBlock pkg = tableBlock.get(0);
         if (pkg == null) {
             return null;
         }
@@ -761,15 +762,16 @@ public class ApkModule implements ApkFile, Closeable {
             return;
         }
         TableBlock tableBlock = getTableBlock();
-        PackageArray pkgArray = tableBlock.getPackageArray();
-        for (PackageBlock pkg:pkgArray.listItems()) {
-            if (pkgArray.size()==1) {
+        int size = tableBlock.size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock pkg = tableBlock.get(i);
+            if (size == 1) {
                 pkg.setName(name);
                 continue;
             }
-            String pkgName=pkg.getName();
+            String pkgName = pkg.getName();
             if (pkgName.startsWith(old)) {
-                pkgName=pkgName.replace(old, name);
+                pkgName = pkgName.replace(old, name);
                 pkg.setName(pkgName);
             }
         }

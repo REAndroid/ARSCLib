@@ -15,12 +15,16 @@
  */
 package com.reandroid.arsc.container;
 
-import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.SpecTypePairArray;
+import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.chunk.LibraryBlock;
+import com.reandroid.arsc.chunk.OverlayablePolicy;
+import com.reandroid.arsc.chunk.UnknownChunk;
 import com.reandroid.arsc.header.HeaderBlock;
-import com.reandroid.arsc.header.SpecHeader;
-import com.reandroid.arsc.header.TypeHeader;
+import com.reandroid.arsc.header.SpecOrTypeHeader;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.list.ExtraChunkList;
+import com.reandroid.arsc.list.LibraryBlockList;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
 
@@ -29,43 +33,66 @@ import java.io.IOException;
 public class PackageBody extends FixedBlockContainer {
 
     private final SpecTypePairArray mSpecTypePairArray;
-    private final LibraryBlock mLibraryBlock;
+    private final LibraryBlockList mLibraryList;
     private final StagedAliasList mStagedAliasList;
     private final OverlayableList mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     private final BlockList<UnknownChunk> mUnknownChunkList;
 
-    public PackageBody(){
+    public PackageBody() {
         super(6);
+        
         this.mSpecTypePairArray = new SpecTypePairArray();
-        this.mLibraryBlock = new LibraryBlock();
+        this.mLibraryList = new LibraryBlockList();
         this.mStagedAliasList = new StagedAliasList();
         this.mOverlayableList = new OverlayableList();
-        this.mOverlayablePolicyList = new BlockList<>();
-        this.mUnknownChunkList = new BlockList<>();
+        this.mOverlayablePolicyList = new BlockList<>(OverlayablePolicy.CREATOR);
+        this.mUnknownChunkList = new BlockList<>(UnknownChunk.CREATOR);
 
         addChild(0, mSpecTypePairArray);
-        addChild(1, mLibraryBlock);
+        addChild(1, mLibraryList);
         addChild(2, mStagedAliasList);
         addChild(3, mOverlayableList);
         addChild(4, mOverlayablePolicyList);
         addChild(5, mUnknownChunkList);
     }
 
-    public boolean isEmpty(){
-        return  getSpecTypePairArray().isEmpty() &&
-                getLibraryBlock().isEmpty() &&
+    public boolean isEmpty() {
+        return  getSpecTypePairArray().isBlank() &&
+                getLibraryList().size() == 0 &&
                 getStagedAliasList().size() == 0 &&
                 getOverlayableList().size() == 0 &&
                 getUnknownChunkList().size() == 0;
     }
 
-    public void destroy(){
+    public void destroy() {
         getSpecTypePairArray().clear();
-        getLibraryBlock().getLibraryInfoArray().clear();
+        getLibraryList().clearChildes();
         getStagedAliasList().clearChildes();
         getOverlayableList().clearChildes();
         getUnknownChunkList().clearChildes();
+    }
+
+    public SpecTypePairArray getSpecTypePairArray() {
+        return mSpecTypePairArray;
+    }
+    public ExtraChunkList<?> extraChunkListForFile(String name) {
+        ExtraChunkList<?> chunkList = getLibraryList();
+        if (chunkList.matchesFileName(name)) {
+            return chunkList;
+        }
+        chunkList = getOverlayableList();
+        if (chunkList.matchesFileName(name)) {
+            return chunkList;
+        }
+        chunkList = getStagedAliasList();
+        if (chunkList.matchesFileName(name)) {
+            return chunkList;
+        }
+        return null;
+    }
+    public LibraryBlockList getLibraryList() {
+        return mLibraryList;
     }
     public OverlayableList getOverlayableList() {
         return mOverlayableList;
@@ -73,80 +100,57 @@ public class PackageBody extends FixedBlockContainer {
     public StagedAliasList getStagedAliasList() {
         return mStagedAliasList;
     }
-    public LibraryBlock getLibraryBlock(){
-        return mLibraryBlock;
-    }
-    public SpecTypePairArray getSpecTypePairArray() {
-        return mSpecTypePairArray;
-    }
-    public BlockList<UnknownChunk> getUnknownChunkList(){
+
+    public BlockList<UnknownChunk> getUnknownChunkList() {
         return mUnknownChunkList;
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        boolean readOk=true;
-        while (readOk){
-            readOk=readNextBlock(reader);
+    public void onReadBytes(BlockReader reader) throws IOException {
+        boolean readOk = true;
+        while (readOk) {
+            readOk = readNextBlock(reader);
         }
     }
     private boolean readNextBlock(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
-        if(headerBlock==null){
+        if (headerBlock == null) {
             return false;
         }
-        int pos=reader.getPosition();
-        ChunkType chunkType=headerBlock.getChunkType();
-        if(chunkType==ChunkType.SPEC){
-            readSpecBlock(reader);
-        }else if(chunkType==ChunkType.TYPE){
-            readTypeBlock(reader);
-        }else if(chunkType==ChunkType.LIBRARY){
+        int pos = reader.getPosition();
+        ChunkType chunkType = headerBlock.getChunkType();
+        if (chunkType == ChunkType.SPEC || chunkType == ChunkType.TYPE) {
+            readSpecOrType(reader);
+        } else if (chunkType == ChunkType.LIBRARY) {
             readLibraryBlock(reader);
-        }else if(chunkType==ChunkType.OVERLAYABLE){
+        } else if (chunkType == ChunkType.OVERLAYABLE) {
             readOverlayable(reader);
-        }else if(chunkType==ChunkType.OVERLAYABLE_POLICY){
+        } else if (chunkType == ChunkType.OVERLAYABLE_POLICY) {
             readOverlayablePolicy(reader);
-        }else if(chunkType==ChunkType.STAGED_ALIAS){
+        } else if (chunkType == ChunkType.STAGED_ALIAS) {
             readStagedAlias(reader);
-        }else {
+        } else {
             readUnknownChunk(reader);
         }
-        return pos!=reader.getPosition();
+        return pos != reader.getPosition();
     }
-    private void readSpecBlock(BlockReader reader) throws IOException{
-        SpecHeader specHeader = SpecHeader.read(reader);
-        SpecTypePair specTypePair = mSpecTypePairArray.getOrCreate(specHeader.getId().getByte());
-        specTypePair.getSpecBlock().readBytes(reader);
+    private void readSpecOrType(BlockReader reader) throws IOException {
+        SpecOrTypeHeader specHeader = SpecOrTypeHeader.read(reader);
+        mSpecTypePairArray.getOrCreate(specHeader.getId()).readBytes(reader);
     }
-    private void readTypeBlock(BlockReader reader) throws IOException {
-        TypeHeader typeHeader = TypeHeader.read(reader);
-        SpecTypePair specTypePair = mSpecTypePairArray.getOrCreate(typeHeader.getId().getByte());
-        TypeBlock typeBlock = specTypePair.getTypeBlockArray().createNext();
-        typeBlock.readBytes(reader);
+    private void readLibraryBlock(BlockReader reader) throws IOException {
+        mLibraryList.createNext().readBytes(reader);
     }
-    private void readLibraryBlock(BlockReader reader) throws IOException{
-        LibraryBlock libraryBlock=new LibraryBlock();
-        libraryBlock.readBytes(reader);
-        mLibraryBlock.addLibraryInfo(libraryBlock);
+    private void readStagedAlias(BlockReader reader) throws IOException {
+        mStagedAliasList.createNext().readBytes(reader);
     }
-    private void readStagedAlias(BlockReader reader) throws IOException{
-        StagedAlias stagedAlias = new StagedAlias();
-        stagedAlias.readBytes(reader);
-        mStagedAliasList.add(stagedAlias);
+    private void readOverlayable(BlockReader reader) throws IOException {
+        mOverlayableList.createNext().readBytes(reader);
     }
-    private void readOverlayable(BlockReader reader) throws IOException{
-        Overlayable overlayable = getOverlayableList().createNext();
-        overlayable.readBytes(reader);
+    private void readOverlayablePolicy(BlockReader reader) throws IOException {
+        mOverlayablePolicyList.createNext().readBytes(reader);
     }
-    private void readOverlayablePolicy(BlockReader reader) throws IOException{
-        OverlayablePolicy overlayablePolicy = new OverlayablePolicy();
-        mOverlayablePolicyList.add(overlayablePolicy);
-        overlayablePolicy.readBytes(reader);
-    }
-    private void readUnknownChunk(BlockReader reader) throws IOException{
-        UnknownChunk unknownChunk = new UnknownChunk();
-        unknownChunk.readBytes(reader);
-        mUnknownChunkList.add(unknownChunk);
+    private void readUnknownChunk(BlockReader reader) throws IOException {
+        mUnknownChunkList.createNext().readBytes(reader);
     }
 }

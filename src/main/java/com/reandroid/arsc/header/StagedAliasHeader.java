@@ -16,26 +16,10 @@
 package com.reandroid.arsc.header;
 
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.item.IntegerItem;
 
-public class StagedAliasHeader extends HeaderBlock{
-    private final IntegerItem count;
+public class StagedAliasHeader extends CountHeader {
+
     public StagedAliasHeader() {
-        super(ChunkType.STAGED_ALIAS.ID);
-        this.count = new IntegerItem();
-
-        addChild(count);
-    }
-
-    public IntegerItem getCountItem() {
-        return count;
-    }
-    @Override
-    public String toString(){
-        if(getChunkType()!=ChunkType.STAGED_ALIAS){
-            return super.toString();
-        }
-        return getClass().getSimpleName()
-                +" {count="+ getCountItem()+ '}';
+        super(ChunkType.STAGED_ALIAS);
     }
 }

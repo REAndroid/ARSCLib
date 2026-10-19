@@ -399,14 +399,14 @@ public class InstructionList extends FixedBlockContainer implements
         return result;
     }
     public boolean contains(Ins item) {
-        return getInsBlockList().containsExact(item);
+        return getInsBlockList().containsIdentity(item);
     }
     public boolean remove(Ins item) {
         return remove(item, false);
     }
     public boolean remove(Ins item, boolean force) {
         InsBlockList insBlockList = getInsBlockList();
-        if (!insBlockList.containsExact(item)) {
+        if (!insBlockList.containsIdentity(item)) {
             return false;
         }
         Object lock = insBlockList.linkLocked();
@@ -443,7 +443,7 @@ public class InstructionList extends FixedBlockContainer implements
             return;
         }
         InsBlockList insBlockList = getInsBlockList();
-        if (!insBlockList.containsExact(old)) {
+        if (!insBlockList.containsIdentity(old)) {
             throw new IllegalArgumentException("Not a member of this instruction list");
         }
         Object obj = insBlockList.linkLocked();

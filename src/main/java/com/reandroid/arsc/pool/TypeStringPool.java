@@ -16,7 +16,6 @@
 package com.reandroid.arsc.pool;
 
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.list.StringItemList;
@@ -26,7 +25,7 @@ public class TypeStringPool extends StringPool<TypeString> {
 
     private final IntegerReference typeIdOffsetReference;
 
-    public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffsetReference) {
+    public TypeStringPool(boolean is_utf8, IntegerReference typeIdOffsetReference) {
         super(is_utf8, false, TypeString::new);
         this.typeIdOffsetReference = typeIdOffsetReference;
     }

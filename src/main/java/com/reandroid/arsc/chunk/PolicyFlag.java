@@ -16,6 +16,8 @@
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.apk.xmlencoder.EncodeException;
+import com.reandroid.arsc.coder.CoderHex;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import org.xmlpull.v1.XmlPullParser;
@@ -147,8 +149,8 @@ public class PolicyFlag {
         if (policyFlag == null) {
             return false;
         }
-        for (PolicyFlag flags : flagsList) {
-            if (policyFlag.equals(flags)) {
+        for (PolicyFlag flag : flagsList) {
+            if (policyFlag.equals(flag)) {
                 return true;
             }
         }
@@ -160,13 +162,18 @@ public class PolicyFlag {
         if (StringsUtil.isEmpty(policyFlags)) {
             return 0;
         }
-
         int result = 0;
-
         String[] flagNames = StringsUtil.split(policyFlags, '|');
         for (String name : flagNames) {
             name = name.trim();
             if (name.length() != 0) {
+                if (name.startsWith("0x")) {
+                    EncodeResult encodeResult = CoderHex.INS.encode(name);
+                    if (encodeResult != null) {
+                        result |= encodeResult.value;
+                        continue;
+                    }
+                }
                 PolicyFlag flag = nameOf(name);
                 if (flag == null) {
                     throw new EncodeException(parser, "Unknown policy flag '" + name + "'");
@@ -188,14 +195,24 @@ public class PolicyFlag {
         }
         StringBuilder builder = new StringBuilder();
         boolean appendOnce = false;
-        for (PolicyFlag policyFlag : VALUES) {
-            if (policyFlag.isSet(policyFlags)) {
+        for (PolicyFlag flag : VALUES) {
+            if (flag.isSet(policyFlags)) {
                 if (appendOnce) {
                     builder.append('|');
                 }
-                builder.append(policyFlag.name());
+                builder.append(flag.name());
                 appendOnce = true;
+                policyFlags = policyFlags & ~flag.flag;
+                if (policyFlags == 0) {
+                    break;
+                }
             }
+        }
+        if (policyFlags != 0) {
+            if (appendOnce) {
+                builder.append('|');
+            }
+            builder.append(CoderHex.INS.decode(policyFlags));
         }
         return builder.toString();
     }

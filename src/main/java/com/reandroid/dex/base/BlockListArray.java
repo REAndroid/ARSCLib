@@ -15,10 +15,7 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.arsc.base.*;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.header.DexHeader;

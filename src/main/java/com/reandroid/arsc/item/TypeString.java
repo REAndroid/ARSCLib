@@ -15,92 +15,92 @@
  */
 package com.reandroid.arsc.item;
 
-
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.utils.HexUtil;
 
 public class TypeString extends StringItem {
+
     public TypeString(boolean utf8) {
         super(utf8);
     }
 
-    public boolean isTypeAttr(){
+    public boolean isTypeAttr() {
         return isTypeAttr(get());
     }
-    public boolean isTypeId(){
+    public boolean isTypeId() {
         return isTypeId(get());
     }
-    public int getId(){
+    public int getId() {
         TypeStringPool stringPool = getParent(TypeStringPool.class);
-        if(stringPool!=null){
+        if (stringPool != null) {
             return stringPool.idOf(this);
         }
         // Should not reach here , this means it not added to string pool
         return getIndex()+1;
     }
     @Override
-    public StyleItem getOrCreateStyle(){
+    public StyleItem getOrCreateStyle() {
         // Type don't have style unless to obfuscate/confuse other decompilers
         return null;
     }
     @Override
-    void ensureStringLinkUnlocked(){
+    void ensureStringLinkUnlocked() {
     }
     @Override
-    public int compareTo(StringItem stringItem){
-        if(stringItem == null){
+    public int compareTo(StringItem stringItem) {
+        if (stringItem == null) {
             return -1;
         }
         return Integer.compare(getIndex(), stringItem.getIndex());
     }
     @Override
-    public String toString(){
-        return HexUtil.toHex2((byte) getId())+':'+get();
+    public String toString() {
+        return HexUtil.toHex2(getId()) + ":" + get();
     }
 
 
-    public static boolean isTypeAttr(String type){
+    public static boolean isTypeAttr(String type) {
         // TODO: find better way
-        if(type == null){
+        if (type == null) {
             return false;
         }
         return type.contains("attr");
     }
-    public static boolean isTypeArray(String type){
+    public static boolean isTypeArray(String type) {
         // TODO: find better way
-        if(type == null){
+        if (type == null) {
             return false;
         }
         return type.contains("array");
     }
-    public static boolean isTypeStyle(String type){
+    public static boolean isTypeStyle(String type) {
         // TODO: find better way
-        if(type == null){
+        if (type == null) {
             return false;
         }
         return type.contains("style");
     }
-    public static boolean isTypePlurals(String type){
+    public static boolean isTypePlurals(String type) {
         // TODO: find better way
-        if(type == null){
+        if (type == null) {
             return false;
         }
         return type.contains("plurals");
     }
-    public static boolean isTypeId(String type){
+    public static boolean isTypeId(String type) {
         // TODO: find better way
         return "id".equals(type);
     }
-    public static boolean isTypeString(String type){
+    public static boolean isTypeString(String type) {
         // TODO: find better way
-        if(type == null){
+        if (type == null) {
             return false;
         }
         return type.equals("string");
     }
-    public static String toXmlTagName(String typeName){
+    public static String toXmlTagName(String typeName) {
         // e.g ^attr-private
-        if(typeName != null && typeName.length()>0 && typeName.charAt(0) == '^'){
+        if (typeName != null && typeName.length() > 0 && typeName.charAt(0) == '^') {
             typeName = typeName.substring(1);
         }
         return typeName;

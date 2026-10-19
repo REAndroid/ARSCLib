@@ -471,8 +471,12 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
         jsonObject.put(JSON_uri, getUri());
         jsonObject.put(JSON_prefix, getPrefix());
 
-        jsonObject.put(JSON_line, getStartLineNumber());
-        jsonObject.put(JSON_line_end, getEndLineNumber());
+        int line = getStartLineNumber();
+        jsonObject.put(JSON_line, line);
+        int line_end = getEndLineNumber();
+        if (line_end != line) {
+            jsonObject.put(JSON_line_end, line_end);
+        }
 
         jsonObject.put(JSON_comment, getComment());
 
@@ -486,8 +490,9 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     @Override
     public void fromJson(JSONObject json) {
         setName(json.getString(JSON_name));
-        setStartLineNumber(json.optInt(JSON_line));
-        setEndLineNumber(json.optInt(JSON_line));
+        int line = json.optInt(JSON_line);
+        setStartLineNumber(line);
+        setEndLineNumber(json.optInt(JSON_line, line));
 
         getNamespaceList().fromJson(json.optJSONArray(JSON_namespaces));
 

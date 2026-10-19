@@ -15,76 +15,67 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.array.LibraryInfoArray;
-import com.reandroid.arsc.header.LibraryHeader;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.value.LibraryInfo;
+import com.reandroid.json.JSONArray;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.base.XmlReader;
+import com.reandroid.xml.base.XmlSerializable;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
-import java.util.Iterator;
+import java.io.IOException;
 
-public class LibraryBlock extends Chunk<LibraryHeader> implements Iterable<LibraryInfo> {
-    private final LibraryInfoArray mLibraryInfoArray;
+public class LibraryBlock extends EntriesChunk<LibraryInfo> implements XmlSerializable, XmlReader {
+
     public LibraryBlock() {
-        super(new LibraryHeader(),1);
-        LibraryHeader header = getHeaderBlock();
-        this.mLibraryInfoArray = new LibraryInfoArray(header.getCountItem());
-
-        addChild(mLibraryInfoArray);
+        super(ChunkType.LIBRARY, LibraryInfo.CREATOR);
     }
 
-    public boolean containsLibraryInfo(String packageName){
-        if(isEmpty()){
-            return false;
+    public LibraryInfo get(String packageName) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            LibraryInfo info = get(i);
+            if (info.packageNameMatches(packageName)) {
+                return info;
+            }
         }
-        return getLibraryInfoArray().containsLibraryInfo(packageName);
+        return null;
     }
-    public LibraryInfoArray getLibraryInfoArray(){
-        return mLibraryInfoArray;
-    }
-    public void addLibraryInfo(LibraryBlock libraryBlock){
-        if(libraryBlock==null){
-            return;
-        }
-        for(LibraryInfo info:libraryBlock.getLibraryInfoArray().listItems()){
-            addLibraryInfo(info);
-        }
-    }
-    public void addLibraryInfo(LibraryInfo info){
-        if(info == null){
-            return;
-        }
-        getLibraryInfoArray().add(info);
-        getHeaderBlock().getCountItem().set(mLibraryInfoArray.size());
-    }
-    public LibraryInfo newLibraryInfo() {
-        return mLibraryInfoArray.createNext();
-    }
-    public int size() {
-        return mLibraryInfoArray.size();
-    }
-    @Override
-    public Iterator<LibraryInfo> iterator() {
-        return getLibraryInfoArray().iterator(true);
-    }
-    @Override
-    public boolean isNull(){
-        return isEmpty();
-    }
-    public boolean isEmpty(){
-        return !iterator().hasNext();
-    }
-    public void setLibraryCount(int count){
-        getHeaderBlock().getCountItem().set(count);
-        mLibraryInfoArray.setSize(count);
-    }
-    @Override
-    protected void onChunkRefreshed() {
-        getHeaderBlock().getCountItem().set(mLibraryInfoArray.size());
+    public boolean contains(String packageName) {
+        return get(packageName) != null;
     }
 
-    public void merge(LibraryBlock libraryBlock){
-        if(libraryBlock == null || libraryBlock == this){
-            return;
-        }
-        getLibraryInfoArray().merge(libraryBlock.getLibraryInfoArray());
+    @Override
+    public JSONArray toJson() {
+        return (JSONArray) super.toJson();
     }
+    @Override
+    public boolean canMerge(LibraryInfo item) {
+        return !itemList().contains(item);
+    }
+
+    @Override
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        XMLUtil.ensureStartTag(parser);
+        while (parser.getEventType() != XmlPullParser.END_TAG
+                && parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+            createNext().parse(parser);
+            XMLUtil.ensureTag(parser);
+        }
+    }
+    @Override
+    public void serialize(XmlSerializer serializer) throws IOException {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).serialize(serializer);
+        }
+    }
+
+    public static final Creator<LibraryBlock> CREATOR = LibraryBlock::new;
+
+    public static final String FILE_NAME_XML = ObjectsUtil.of("library.xml");
+    public static final String FILE_NAME_JSON = ObjectsUtil.of("library.json");
 }

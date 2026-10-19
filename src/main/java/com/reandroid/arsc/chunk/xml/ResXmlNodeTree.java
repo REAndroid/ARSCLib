@@ -103,7 +103,7 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
     }
 
     public int indexOf(ResXmlNode resXmlNode) {
-        return getNodeList().indexOf(resXmlNode);
+        return getNodeList().indexOfIdentity(resXmlNode);
     }
     public void moveTo(ResXmlNode resXmlNode, int index) {
         getNodeList().moveTo(resXmlNode, index);

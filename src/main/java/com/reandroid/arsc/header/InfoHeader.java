@@ -23,12 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class InfoHeader extends HeaderBlock{
-    public InfoHeader(short type) {
-        super(type);
+public class InfoHeader extends HeaderBlock {
+
+    public InfoHeader(int type) {
+        super(0, type);
     }
     public InfoHeader() {
-        this((short) 0);
+        this(0);
     }
 
     @Override
@@ -37,8 +38,10 @@ public class InfoHeader extends HeaderBlock{
     }
 
     @Override
-    void initExtraBytes(ByteArray extraBytes, int difference){
+    boolean readExtraBytes() {
+        return false;
     }
+
     @Override
     public int countBytes() {
         return 8;

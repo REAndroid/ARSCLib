@@ -18,52 +18,82 @@ package com.reandroid.arsc.item;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.utils.HexUtil;
 
-public class SpecFlag extends IndirectItem<SpecFlagsArray> {
-    public SpecFlag(SpecFlagsArray specFlagsArray, int offset) {
-        super(specFlagsArray, offset);
+public class SpecFlag implements IntegerReference {
+
+    private final SpecFlagsArray array;
+    private final int entryId;
+
+    public SpecFlag(SpecFlagsArray array, int entryId) {
+        this.array = array;
+        this.entryId = entryId;
     }
-    public byte getFlagByte(){
-        return getBlockItem().getBytesInternal()[getOffset() + OFFSET_FLAG];
+
+    public void add(SpecBlock.Flag flag) {
+        set(get() | flag.getFlag());
     }
-    public void setFlagByte(byte flag){
-        getBlockItem().getBytesInternal()[getOffset() + OFFSET_FLAG] = flag;
+    public void remove(SpecBlock.Flag flag) {
+        set(get() & ~flag.getFlag());
     }
-    public void addFlagByte(byte flag){
-        flag = (byte) ((getFlagByte() & 0xff) | (flag & 0xff));
-        setFlagByte(flag);
+
+    public boolean hasFlags() {
+        return get() != 0;
     }
-    public void addFlag(SpecBlock.Flag flag){
-        addFlagByte(flag.getFlag());
-    }
-    public void setPublic(){
-        addFlag(SpecBlock.Flag.SPEC_PUBLIC);
-    }
-    public boolean isPublic(){
-        return SpecBlock.Flag.isPublic(getFlagByte());
-    }
-    public int getInteger(){
-        return BlockItem.getInteger(this.getBlockItem().getBytesInternal(), this.getOffset());
-    }
-    public void setInteger(int value){
-        if(value == getInteger()){
-            return;
-        }
-        BlockItem.putInteger(this.getBlockItem().getBytesInternal(), this.getOffset(), value);
-        this.getBlockItem().onBytesChanged();
+
+    public int getEntryId() {
+        return entryId;
     }
     @Override
-    public String toString(){
-        byte flag = getFlagByte();
-        if(flag != 0){
-            return SpecBlock.Flag.toString(getFlagByte());
+    public int get() {
+        if (isRemoved()) {
+            return 0;
         }
-        int val = getInteger();
-        if(val != 0){
-            return HexUtil.toHex8(val);
+        return array.get(entryId);
+    }
+    @Override
+    public void set(int value) {
+        if (!isRemoved()) {
+            array.set(entryId, value);
         }
-        return "";
+    }
+    public boolean isRemoved() {
+        return entryId >= array.size();
     }
 
-    private static final int OFFSET_FLAG = 3;
+    @Override
+    public int hashCode() {
+        return entryId;
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof SpecFlag)) {
+            return false;
+        }
+        SpecFlag specFlag = (SpecFlag) obj;
+        return entryId == specFlag.entryId
+                && array == specFlag.array;
+    }
+
+    public String toHexString() {
+        return HexUtil.toHex8(get());
+    }
+    @Override
+    public String toString() {
+        if (isRemoved()) {
+            return HexUtil.toHex("REMOVED-SPEC ", getEntryId(), 4);
+        }
+        int value = get();
+        if (value == 0) {
+            return "";
+        }
+        int flag = SpecBlock.Flag.SPEC_PUBLIC.getFlag()
+                | SpecBlock.Flag.SPEC_STAGED_API.getFlag();
+        if ((flag & value) == value) {
+            return SpecBlock.Flag.toString(value);
+        }
+        return HexUtil.toHex8(value);
+    }
 }

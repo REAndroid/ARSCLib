@@ -27,6 +27,7 @@ import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ValueItem;
+import com.reandroid.common.Mergeable;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
@@ -41,28 +42,35 @@ import java.util.Iterator;
 import java.util.List;
 
 public class TypeBlock extends Chunk<TypeHeader>
-        implements Iterable<Entry>, JSONConvert<JSONObject>, Comparable<TypeBlock> {
+        implements Mergeable<TypeBlock>, Iterable<Entry>, JSONConvert<JSONObject>, Comparable<TypeBlock> {
 
     private final EntryItemList mEntryArray;
     private TypeString mTypeString;
 
 
-    public TypeBlock() {
-        super(new TypeHeader(), 2);
-        TypeHeader header = getHeaderBlock();
+    TypeBlock(TypeHeader header, int id) {
+        super(header, 2);
 
-        EntryItemOffsetList entryOffsets = new EntryItemOffsetList(header.getCountItem());
+        header.setId(id);
+
+        EntryItemOffsetList entryOffsets = new EntryItemOffsetList(header.count());
         this.mEntryArray = new EntryItemList(header, entryOffsets);
 
         addChild(entryOffsets);
         addChild(mEntryArray);
     }
+    public TypeBlock(int id) {
+        this(new TypeHeader(), id);
+    }
+    public TypeBlock() {
+        this(0);
+    }
 
-    public Iterator<ValueItem> allValues() {
+    public Iterator<ValueItem> visitValues() {
         return new IterableIterator<Entry, ValueItem>(iterator()) {
             @Override
             public Iterator<ValueItem> iterator(Entry element) {
-                return element.allValues();
+                return element.visitValues();
             }
         };
     }
@@ -85,7 +93,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         if (packageBlock != null && packageBlock.hasValidTypeNames()) {
             return getTypeName() + getResConfig().getQualifiers();
         }
-        return "type_" + HexUtil.toHex2(getTypeId())
+        return "type_" + HexUtil.toHex(getId(), 2)
                 + getResConfig().getQualifiers();
     }
     public boolean isSparse() {
@@ -121,12 +129,12 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     public TypeString getTypeString() {
         if (mTypeString != null) {
-            if (mTypeString.getId() == getTypeId()) {
+            if (mTypeString.getId() == getId()) {
                 return mTypeString;
             }
             mTypeString=null;
         }
-        PackageBlock packageBlock=getPackageBlock();
+        PackageBlock packageBlock = getPackageBlock();
         if (packageBlock == null) {
             return null;
         }
@@ -134,24 +142,18 @@ public class TypeBlock extends Chunk<TypeHeader>
         mTypeString = typeStringPool.getById(getId());
         return mTypeString;
     }
-    public byte getTypeId() {
-        return getHeaderBlock().getId().getByte();
-    }
     public int getId() {
-        return getHeaderBlock().getId().get();
+        return getHeaderBlock().getId();
     }
     public void setId(int id) {
-        setTypeId((byte) (0xff & id));
-    }
-    public void setTypeId(byte id) {
-        getHeaderBlock().getId().set(id);
+        getHeaderBlock().setId(id);
     }
     public void setTypeName(String name) {
         TypeStringPool typeStringPool = getTypeStringPool();
         int id = getId();
-        TypeString typeString=typeStringPool.getById(id);
+        TypeString typeString = typeStringPool.getById(id);
         if (typeString == null) {
-            typeString=typeStringPool.getOrCreate(id, name);
+            typeString = typeStringPool.getOrCreate(id, name);
         }
         typeString.set(name);
     }
@@ -163,15 +165,15 @@ public class TypeBlock extends Chunk<TypeHeader>
         return ObjectsUtil.cast(null);
     }
     public void setEntryCount(int count) {
-        IntegerReference entryCount = getHeaderBlock().getCountItem();
+        IntegerReference entryCount = getHeaderBlock().count();
         if (count == entryCount.get()) {
             return;
         }
         entryCount.set(count);
         onSetEntryCount(count);
     }
-    public boolean isEmpty() {
-        return getEntryArray().isEmptyEntries();
+    public boolean isBlank() {
+        return getEntryArray().isBlank();
     }
     public boolean isDefault() {
         return getResConfig().isDefault();
@@ -232,9 +234,6 @@ public class TypeBlock extends Chunk<TypeHeader>
     public Entry getOrCreateEntry(int entryId) {
         return getEntryArray().getOrCreate(entryId);
     }
-    public Entry getEntry(short entryId) {
-        return getEntryArray().getEntry(entryId);
-    }
     public int realSize() {
         return getEntryArray().countNonNull();
     }
@@ -282,17 +281,14 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     protected void onChunkRefreshed() {
-        //getEntryArray().refreshCountAndStart();
     }
     @Override
     protected void onPreRefresh() {
-        getHeaderBlock().getConfig().refresh();
+        getResConfig().refresh();
         super.onPreRefresh();
     }
-    /*
-     * method Block.addBytes is inefficient for large size byte array
-     * so let's override here because this block is the largest
-     */
+     // method Block.addBytes is inefficient for large size byte array
+     // so let's override here because this block is the largest
     @Override
     public byte[] getBytes() {
         ByteArrayOutputStream os=new ByteArrayOutputStream();
@@ -325,7 +321,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         if (name != null) {
             setTypeName(name);
         }
-        if (isEmpty()) {
+        if (isBlank()) {
             getHeaderBlock().setOffsetType(
                     json.optBoolean(NAME_is_sparse, false),
                     json.optBoolean(NAME_is_offset16, false));
@@ -333,16 +329,18 @@ public class TypeBlock extends Chunk<TypeHeader>
         getResConfig().fromJson(json.getJSONObject(NAME_config));
         getEntryArray().fromJson(json.getJSONArray(NAME_entries));
     }
+    @Override
     public void merge(TypeBlock typeBlock) {
         if (typeBlock == null || typeBlock == this) {
             return;
         }
-        if (getTypeId() != typeBlock.getTypeId()) {
+        if (getId() != typeBlock.getId()) {
             throw new IllegalArgumentException("Can not merge different id types: "
-                    + getTypeId() + "!=" + typeBlock.getTypeId());
+                    + getId() + "!=" + typeBlock.getId());
         }
         setTypeName(typeBlock.getTypeName());
-        if (this.isEmpty()) {
+        getResConfig().merge(typeBlock.getResConfig());
+        if (this.isBlank()) {
             this.getHeaderBlock().setOffsetType(
                     typeBlock.getHeaderBlock().getOffsetType());
         }
@@ -350,16 +348,17 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {
-        int id1 = getId();
-        int id2 = typeBlock.getId();
-        if (id1 != id2) {
-            return CompareUtil.compare(id1, id2);
+        if (typeBlock == this) {
+            return 0;
         }
-        String q1 = (isSparse() ? "1" : "0")
-                + getResConfig().getQualifiers();
-        String q2 = (typeBlock.isSparse() ? "1" : "0")
-                + typeBlock.getResConfig().getQualifiers();
-        return q1.compareTo(q2);
+        int i = CompareUtil.compare(this.getId(), typeBlock.getId());
+        if (i == 0) {
+            i = CompareUtil.compare(this.getQualifiers(), typeBlock.getQualifiers());
+            if (i == 0) {
+                i = CompareUtil.compare(this.isSparse(), typeBlock.isSparse());
+            }
+        }
+        return i;
     }
     public boolean isEqualTypeName(String typeName) {
         return isEqualTypeName(getTypeName(), typeName);

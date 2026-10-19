@@ -48,7 +48,7 @@ public class OffsetReferenceList<T extends OffsetItem> extends BlockList<T> impl
     }
 
     @Override
-    protected boolean hasSimilarEntries() {
+    protected boolean hasSameByteSizeEntries() {
         return true;
     }
 

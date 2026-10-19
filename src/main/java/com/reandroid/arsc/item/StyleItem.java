@@ -22,9 +22,8 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
-import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.xml.Span;
 import com.reandroid.xml.SpanSet;
 import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.StyleElement;
@@ -34,7 +33,8 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class StyleItem extends FixedBlockContainer implements
-        Comparable<StyleItem>, Iterable<StyleSpan>, SpanSet<StyleSpan>, JSONConvert<JSONObject> {
+        Comparable<StyleItem>, Iterable<StyleSpan>,
+        SpanSet<StyleSpan>, JSONConvert<JSONArray> {
 
     private final BlockList<StyleSpan> spanList;
     private final IntegerItem endBlock;
@@ -44,29 +44,30 @@ public class StyleItem extends FixedBlockContainer implements
 
     public StyleItem() {
         super(2);
-        this.spanList = new BlockList<>();
+        this.spanList = new BlockList<>(StyleSpan.CREATOR);
         this.endBlock = new IntegerItem();
         addChild(0, spanList);
         addChild(1, endBlock);
         endBlock.set(-1);
     }
-    public void add(String tag, int start, int end){
-        StyleSpan styleSpan = createNext();
-        styleSpan.setString(tag);
-        styleSpan.setFirstChar(start);
-        styleSpan.setLastChar(end);
+
+    public void add(String tag, int first, int last) {
+        createNext().set(tag, first, last);
     }
-    public StyleSpan createNext(){
-        StyleSpan styleSpan = new StyleSpan();
-        this.spanList.add(styleSpan);
-        return styleSpan;
+    public void add(Span span) {
+        add(span.getTagWithAttributes(), span.getFirstChar(), span.getLastChar());
     }
-    public StyleSpan get(int i){
+    public StyleSpan createNext() {
+        return spanList.createNext();
+    }
+    public StyleSpan get(int i) {
         return spanList.get(i);
     }
-    public int size(){
+    @Override
+    public int getSpansCount() {
         return spanList.size();
     }
+    @Override
     public boolean hasSpans() {
         return spanList.size() != 0;
     }
@@ -76,13 +77,34 @@ public class StyleItem extends FixedBlockContainer implements
     }
     @Override
     public Iterator<StyleSpan> getSpans() {
-        return iterator();
+        return spanList.iterator();
+    }
+
+    @Override
+    public String getRawText() {
+        StringItem stringItem = getStringItemInternal();
+        if (stringItem != null) {
+            return stringItem.get();
+        }
+        return null;
+    }
+
+    @Override
+    public String getXml() {
+        String raw = getRawText();
+        if (raw != null && hasSpans()) {
+            StyleDocument document = StyleSpanEventSet.serialize(raw, this);
+            if (document != null) {
+                return document.getXml();
+            }
+        }
+        return raw;
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         BlockList<StyleSpan> spanList = this.spanList;
-        while (reader.readInteger() != -1){
+        while (reader.readInteger() != -1) {
             StyleSpan styleSpan = new StyleSpan();
             spanList.add(styleSpan);
             styleSpan.onReadBytes(reader);
@@ -90,44 +112,44 @@ public class StyleItem extends FixedBlockContainer implements
         this.endBlock.onReadBytes(reader);
     }
 
-    public StyleDocument build(String text){
+    public StyleDocument build(String text) {
         return StyleSpanEventSet.serialize(text, this);
     }
-    public void parse(StyleDocument document){
+    public void parse(StyleDocument document) {
         clearSpans();
         Iterator<StyleElement> iterator = document.getElements();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             parse(iterator.next());
         }
     }
-    public void parse(StyleElement element){
-        add(element.getTagString(), element.getFirstChar(), element.getLastChar());
+    public void parse(StyleElement element) {
+        add(element.getTagWithAttributes(), element.getFirstChar(), element.getLastChar());
         Iterator<StyleElement> iterator = element.getElements();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             parse(iterator.next());
         }
     }
-    protected void clearStyle(){
+    protected void clearStyle() {
         StringItem stringItem = getStringItemInternal();
         if (stringItem != null) {
             stringItem.unlinkStyleItemInternal(this);
         }
         clearSpans();
     }
-    protected void clearSpans(){
-        if (getParent() == null){
+    protected void clearSpans() {
+        if (getParent() == null) {
             return;
         }
-        for(StyleSpan styleSpan : this){
+        for (StyleSpan styleSpan : this) {
             styleSpan.onRemoved();
         }
         spanList.clearChildes();
     }
-    public void onRemoved(){
+    public void onRemoved() {
         clearStyle();
     }
-    public void linkStringsInternal(){
-        for(StyleSpan styleSpan : this){
+    public void linkStringsInternal() {
+        for (StyleSpan styleSpan : this) {
             styleSpan.link();
         }
     }
@@ -160,78 +182,70 @@ public class StyleItem extends FixedBlockContainer implements
         return !hasSpans();
     }
 
-    private void unLinkIndexReference(StringItem stringItem){
+    private void unLinkIndexReference(StringItem stringItem) {
         StyleIndexReference reference = this.indexReference;
-        if (reference == null){
+        if (reference == null) {
             return;
         }
         this.indexReference = null;
-        if (stringItem == null){
+        if (stringItem == null) {
             return;
         }
         stringItem.removeReference(reference);
     }
 
-    public String applyStyle(String text, boolean xml, boolean escapeXmlText){
-        if (text == null){
+    public String applyStyle(String text, boolean xml, boolean escapeXmlText) {
+        if (text == null) {
             return null;
         }
         StyleDocument styleDocument = build(text);
-        if (styleDocument == null){
+        if (styleDocument == null) {
             return text;
         }
         return styleDocument.getText(xml, escapeXmlText);
     }
     @Override
-    public void setNull(boolean is_null){
-        if (!is_null){
+    public void setNull(boolean is_null) {
+        if (!is_null) {
             return;
         }
         clearStyle();
     }
     @Override
-    public JSONObject toJson() {
-        if (isNull()){
+    public JSONArray toJson() {
+        int size = getSpansCount();
+        if (isNull() || size == 0) {
             return null;
         }
-        JSONObject jsonObject=new JSONObject();
-        JSONArray jsonArray=new JSONArray();
-        int i=0;
-        for(StyleSpan spanInfo:this){
-            if (spanInfo==null){
-                continue;
-            }
-            JSONObject jsonObjectSpan=spanInfo.toJson();
-            jsonArray.put(i, jsonObjectSpan);
-            i++;
+        JSONArray jsonArray = new JSONArray(size);
+        for (int i = 0; i < size; i++) {
+            jsonArray.put(get(i).toJson());
         }
-        if (i==0){
-            return null;
-        }
-        jsonObject.put(NAME_spans, jsonArray);
-        return jsonObject;
+        return jsonArray;
     }
     @Override
-    public void fromJson(JSONObject json) {
+    public void fromJson(JSONArray json) {
         clearSpans();
-        if (json == null){
+        if (json == null || json.length() == 0) {
             clearStyle();
             return;
         }
-        JSONArray jsonArray = json.getJSONArray(NAME_spans);
-        int length = jsonArray.length();
-        for(int i = 0; i < length; i++){
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-            StyleSpan styleSpan = createNext();
-            styleSpan.fromJson(jsonObject);
+        int length = json.length();
+        for (int i = 0; i < length; i++) {
+            createNext().fromJson(json.getJSONObject(i));
         }
     }
-    public void merge(StyleItem styleItem){
-        if (styleItem == null || styleItem == this){
+    public void merge(SpanSet<?> spanSet) {
+        if (spanSet == null || spanSet == this) {
             return;
         }
-        for(StyleSpan styleSpan : styleItem){
-            add(styleSpan.getString(), styleSpan.getFirstChar(), styleSpan.getLastChar());
+        BlockList<StyleSpan> spanList = this.spanList;
+        spanList.setSize(spanSet.getSpansCount());
+        Iterator<? extends Span> iterator = spanSet.getSpans();
+        int i = 0;
+        while (iterator.hasNext()) {
+            spanList.get(i).merge(iterator.next());
+            i ++;
         }
     }
 
@@ -253,14 +267,16 @@ public class StyleItem extends FixedBlockContainer implements
     }
 
     @Override
-    public String toString(){
-        return "Spans count = " + size();
+    public String toString() {
+        return "Spans count = " + getSpansCount();
     }
 
-    static final class StyleIndexReference implements WeakStringReference{
+    static final class StyleIndexReference implements WeakStringReference {
+
         private final StyleItem styleItem;
         private int index;
-        StyleIndexReference(StyleItem styleItem){
+
+        StyleIndexReference(StyleItem styleItem) {
             this.styleItem = styleItem;
             this.index = styleItem.getIndex();
         }
@@ -275,7 +291,7 @@ public class StyleItem extends FixedBlockContainer implements
         @SuppressWarnings("unchecked")
         @Override
         public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
-            if (parentClass.isInstance(styleItem)){
+            if (parentClass.isInstance(styleItem)) {
                 return (T1) styleItem;
             }
             return null;
@@ -283,5 +299,5 @@ public class StyleItem extends FixedBlockContainer implements
     }
 
     public static final Creator<StyleItem> CREATOR = StyleItem::new;
-    public static final String NAME_spans = ObjectsUtil.of("spans");
+
 }

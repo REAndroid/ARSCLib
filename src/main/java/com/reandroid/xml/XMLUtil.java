@@ -100,6 +100,23 @@ public class XMLUtil {
         }
         return event;
     }
+    public static int skipEndTag(XmlPullParser parser)
+            throws IOException, XmlPullParserException {
+        int event = parser.getEventType();
+        if (event == XmlPullParser.START_TAG) {
+            event = parser.next();
+        }
+        while (event != XmlPullParser.START_TAG
+                && event != XmlPullParser.END_TAG
+                && event != XmlPullParser.START_DOCUMENT
+                && event != XmlPullParser.END_DOCUMENT) {
+            event = parser.next();
+        }
+        if (event == XmlPullParser.END_TAG) {
+            event = parser.next();
+        }
+        return event;
+    }
     public static int ensureTag(XmlPullParser parser)
             throws IOException, XmlPullParserException {
         int event = parser.getEventType();

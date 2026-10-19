@@ -20,7 +20,7 @@ public class StyleDocumentTest {
         styleDocument = StyleDocument.parseStyledString(STYLED_XML_STRING_1);
         String xml = styleDocument.getXml(true);
         Assert.assertEquals(STYLED_XML_STRING_1, xml);
-        String styled = styleDocument.getStyledString();
+        String styled = styleDocument.getRawText();
         Assert.assertEquals(STYLED_STRING_1, styled);
         String html = styleDocument.getHtml();
         Assert.assertEquals(STYLED_HTML_STRING_1, html);

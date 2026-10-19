@@ -17,20 +17,61 @@ package com.reandroid.apk;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ApkUtil {
-    public static String replaceRootDir(String path, String dirName) {
-        int i=path.indexOf('/')+1;
-        path=path.substring(i);
-        if (dirName != null && dirName.length()>0) {
-            if (!dirName.endsWith("/")) {
-                dirName=dirName+"/";
+
+    public static Comparator<File> getValuesXmlComparator() {
+        return (file1, file2) -> {
+            String name1 = sanitizeValuesXmlName(file1);
+            String name2 = sanitizeValuesXmlName(file2);
+            int i = CompareUtil.compare(getValuesXmlOrder(name1),
+                    getValuesXmlOrder(name2));
+            if (i == 0) {
+                i = CompareUtil.compare(name1, name2);
             }
-            path=dirName+path;
+            return i;
+        };
+    }
+    static String sanitizeValuesXmlName(File file) {
+        String name = file.getName().toLowerCase();
+        if (name.startsWith("ids")) {
+            return "ids.xml";
+        }
+        if (name.contains("attr")) {
+            return "attrs.xml";
+        }
+        return name;
+    }
+    static int getValuesXmlOrder(String name) {
+        if (name.equals("public.xml")) {
+            return 0;
+        }
+        if (name.equals("ids.xml")) {
+            return 1;
+        }
+        if (name.equals("attrs.xml")) {
+            return 2;
+        }
+        return 3;
+    }
+
+    public static String replaceRootDir(String path, String dirName) {
+        int i = path.indexOf('/');
+        if (i >= 0) {
+            i = i + 1;
+            path = path.substring(i);
+        }
+        if (dirName != null && dirName.length() > 0) {
+            if (!dirName.endsWith("/")) {
+                dirName = dirName + "/";
+            }
+            path = dirName + path;
         }
         return path;
     }
@@ -51,37 +92,40 @@ public class ApkUtil {
     }
     public static List<File> recursiveFiles(File dir, String ext) {
         List<File> results = new ArrayList<>();
+        recursiveFiles(results, dir, ext);
+        results.sort(FileUtil.getIgnoreCasePathComparator());
+        return results;
+    }
+    private static void recursiveFiles(List<File> results, File dir, String ext) {
         if (dir.isFile()) {
             if (hasExtension(dir, ext)) {
                 results.add(dir);
             }
-            return results;
+            return;
         }
         if (!dir.isDirectory()) {
-            return results;
+            return;
         }
-        File[] files=dir.listFiles();
+        File[] files = dir.listFiles();
         if (files == null) {
-            return results;
+            return;
         }
         for (File file:files) {
             if (file.isFile()) {
-                if (!hasExtension(file, ext)) {
-                    continue;
+                if (hasExtension(file, ext)) {
+                    results.add(file);
                 }
-                results.add(file);
                 continue;
             }
-            results.addAll(recursiveFiles(file, ext));
+            recursiveFiles(results, file, ext);
         }
-        return results;
     }
     public static List<File> recursiveFiles(File dir) {
         return recursiveFiles(dir, null);
     }
     public static List<File> listDirectories(File dir) {
         List<File> results = new ArrayList<>();
-        File[] files=dir.listFiles();
+        File[] files = dir.listFiles();
         if (files == null) {
             return results;
         }
@@ -128,11 +172,11 @@ public class ApkUtil {
         if (!resDir.isDirectory()) {
             return null;
         }
-        File valuesDir = new File(resDir, PackageBlock.VALUES_DIRECTORY_NAME);
+        File valuesDir = new File(resDir, PackageBlock.DIRECTORY_NAME_VALUES);
         if (!valuesDir.isDirectory()) {
             return null;
         }
-        File file = new File(valuesDir, PackageBlock.PUBLIC_XML);
+        File file = new File(valuesDir, PackageBlock.FILE_NAME_PUBLIC_XML);
         if (!file.isFile()) {
             return null;
         }
@@ -162,23 +206,27 @@ public class ApkUtil {
         return results;
     }
     public static boolean isValuesDirectoryName(String name, boolean checkVariant) {
-        if (PackageBlock.VALUES_DIRECTORY_NAME.equals(name)) {
+        if (PackageBlock.DIRECTORY_NAME_VALUES.equals(name)) {
             return true;
         }
         if (!checkVariant) {
             return false;
         }
-        return name.startsWith(PackageBlock.VALUES_DIRECTORY_NAME + "-");
+        return name.startsWith(PackageBlock.DIRECTORY_NAME_VALUES + "-");
     }
     private static boolean isPackageDirectory(File dir) {
         if (!dir.isDirectory()) {
             return false;
         }
-        return new File(dir, PackageBlock.JSON_FILE_NAME).isFile();
+        if (new File(dir, PackageBlock.FILE_NAME_JSON).isFile()) {
+            return true;
+        }
+        dir = new File(dir, PackageBlock.DIRECTORY_NAME_VALUES);
+        return new File(dir, PackageBlock.FILE_NAME_PUBLIC_XML).isFile();
     }
     public static List<File> listFiles(File dir, String ext) {
         List<File> results = new ArrayList<>();
-        File[] files=dir.listFiles();
+        File[] files = dir.listFiles();
         if (files == null) {
             return results;
         }
@@ -196,24 +244,17 @@ public class ApkUtil {
         if (ext == null) {
             return true;
         }
-        String name=file.getName().toLowerCase();
-        ext=ext.toLowerCase();
+        String name = file.getName().toLowerCase();
+        ext = ext.toLowerCase();
         return name.endsWith(ext);
     }
     public static String toModuleName(File file) {
-        String name=file.getName();
-        int i=name.lastIndexOf('.');
-        if (i>0) {
-            name=name.substring(0,i);
-        }
-        return name;
+        return FileUtil.getNameWoExtension(file);
     }
 
     public static final String JSON_FILE_EXTENSION = ".json";
     public static final String ROOT_NAME = "root";
     public static final String DEF_MODULE_NAME = "base";
-    public static final String NAME_value_type = "value_type";
-    public static final String NAME_data = "data";
 
     public static final String SIGNATURE_DIR_NAME = "signatures";
 }

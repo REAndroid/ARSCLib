@@ -22,66 +22,61 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.Iterator;
 
 public class StyleDocument extends XMLDocument implements
         SpanSet<StyleElement>, Comparable<StyleDocument> {
 
-    public StyleDocument(){
+    public StyleDocument() {
         super();
     }
 
-    public boolean hasElements(){
-        return getElements().hasNext();
-    }
-    public Iterator<StyleElement> getElements(){
+    @Override
+    public Iterator<StyleElement> getElements() {
         return iterator(StyleElement.class);
     }
-
     @Override
     public Iterator<StyleElement> getSpans() {
         return InstanceIterator.of(recursiveNodes(), StyleElement.class);
+    }
+    @Override
+    public int getSpansCount() {
+        return countSpans(this);
+    }
+    @Override
+    public boolean hasSpans() {
+        return hasChildElements();
+    }
+    @Override
+    public String getXml() {
+        if (hasSpans()) {
+            return toText(true, false);
+        }
+        return getRawText();
+    }
+    public String getXml(boolean escapeXmlText) {
+        return toText(true, escapeXmlText);
     }
     // keep
     public Iterator<StyleText> getStyleTexts() {
         return InstanceIterator.of(recursiveNodes(), StyleText.class);
     }
-
-    public String getXml(){
-        return toText(true, false);
-    }
-    public String getXml(boolean escapeXmlText){
-        return toText(true, escapeXmlText);
-    }
-    public String getHtml(){
+    public String getHtml() {
         return getText(false, false);
     }
-    public String getText(boolean xml, boolean escapeXmlText){
+    public String getText(boolean xml, boolean escapeXmlText) {
         return toText(xml, escapeXmlText);
     }
-    public String getStyledString(){
-        StringWriter writer = new StringWriter();
-        try {
-            writeStyledText(writer);
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {
-        }
-        return writer.toString();
+    @Override
+    public String getRawText() {
+        StringBuilder builder = new StringBuilder(countTextLength(this));
+        writeRawText(this, builder);
+        return builder.toString();
     }
-    void writeStyledText(Appendable appendable) throws IOException {
-        Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext()){
-            XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof StyleText){
-                StyleText styleText = (StyleText) xmlNode;
-                styleText.writeStyledText(appendable);
-            } else if(xmlNode instanceof StyleElement){
-                StyleElement element = (StyleElement) xmlNode;
-                element.writeStyledText(appendable);
-            }
-        }
+    // Use getRawText
+    @Deprecated
+    public String getStyledString() {
+        return getRawText();
     }
     public void parseString(String xmlString) throws XmlPullParserException, IOException {
         synchronized (PARSER) {
@@ -97,34 +92,34 @@ public class StyleDocument extends XMLDocument implements
     }
     @Override
     public int compareTo(StyleDocument document) {
-        if(document == null){
+        if(document == null) {
             return 0;
         }
-        return getStyledString().compareTo(document.getStyledString());
+        return getRawText().compareTo(document.getRawText());
     }
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return getXml().hashCode();
     }
     @Override
-    public boolean equals(Object obj){
-        if(obj == this){
+    public boolean equals(Object obj) {
+        if(obj == this) {
             return true;
         }
-        if(!(obj instanceof StyleDocument)){
+        if(!(obj instanceof StyleDocument)) {
             return false;
         }
         return getXml().equals(((StyleDocument)obj).getXml());
     }
 
     @Override
-    public StyleElement newElement(){
+    public StyleElement newElement() {
         StyleElement element = new StyleElement();
         add(element);
         return element;
     }
     @Override
-    public StyleText newText(){
+    public StyleText newText() {
         StyleText styleText = new StyleText();
         add(styleText);
         return styleText;
@@ -139,15 +134,54 @@ public class StyleDocument extends XMLDocument implements
                 + getClass());
     }
 
+    private static void writeRawText(XMLNodeTree nodeTree, StringBuilder builder) {
+        int size = nodeTree.size();
+        for (int i = 0; i < size; i++) {
+            XMLNode node = nodeTree.get(i);
+            if (node instanceof StyleText) {
+                builder.append(((StyleText) node).getText(false));
+            } else if (node instanceof XMLNodeTree) {
+                writeRawText((XMLNodeTree) node, builder);
+            }
+        }
+    }
+
+    public static int countTextLength(XMLNodeTree nodeTree) {
+        int length = 0;
+        int size = nodeTree.size();
+        for (int i = 0; i < size; i++) {
+            XMLNode node = nodeTree.get(i);
+            if (node instanceof XMLText) {
+                length += ((XMLText) node).getLength();
+            } else if (node instanceof XMLNodeTree) {
+                length += countTextLength((XMLNodeTree) node);
+            }
+        }
+        return length;
+    }
+    private static int countSpans(XMLNodeTree nodeTree) {
+        int count = 0;
+        int size = nodeTree.size();
+        for (int i = 0; i < size; i++) {
+            XMLNode node = nodeTree.get(i);
+            if (node instanceof StyleElement) {
+                count ++;
+            }
+            if (node instanceof XMLNodeTree) {
+                count += countSpans((XMLNodeTree) node);
+            }
+        }
+        return count;
+    }
     public static StyleDocument parseNext(XmlPullParser parser) throws IOException, XmlPullParserException {
         StyleDocument styleDocument = new StyleDocument();
         styleDocument.parseInner(parser);
         return styleDocument;
     }
-    public static StyleDocument copyInner(XMLElement xmlElement){
+    public static StyleDocument copyInner(XMLElement xmlElement) {
         StyleDocument styleDocument = new StyleDocument();
         Iterator<XMLNode> iterator = xmlElement.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             XMLNode xmlNode = iterator.next();
             if (xmlNode instanceof XMLElement) {
                 styleDocument.newElement().copyFrom((XMLElement) xmlNode);

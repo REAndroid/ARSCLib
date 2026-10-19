@@ -797,22 +797,15 @@ public class ResXmlAttribute extends AttributeValue implements
         return msg + ", at line = " + parent.getLineNumber() + ", <" + parent.getName(true) + " "
                 + getName(true) + "=\"" + value + "\"";
     }
-    @Override
-    public JSONObject toJson() {
-        JSONObject jsonObject = new JSONObject();
 
+    @Override
+    public void toJson(JSONObject jsonObject) {
         jsonObject.put(ResXmlElement.JSON_name, getName());
         jsonObject.put(ResXmlElement.JSON_id, getNameId());
 
         jsonObject.put(ResXmlElement.JSON_uri, getUri());
         jsonObject.put(ResXmlElement.JSON_prefix, getPrefix());
-
-        JSONObject values = super.toJson();
-        for (String key : values.keySet()) {
-            jsonObject.put(key, values.get(key));
-        }
-
-        return jsonObject;
+        super.toJson(jsonObject);
     }
     @Override
     public void fromJson(JSONObject json) {

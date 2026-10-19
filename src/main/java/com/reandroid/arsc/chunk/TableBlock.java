@@ -55,42 +55,52 @@ public class TableBlock extends Chunk<TableHeader>
     private PackageBlock mCurrentPackage;
     private PackageBlock mEmptyTablePackage;
 
-    public TableBlock() {
-        super(new TableHeader(), 2);
-        TableHeader header = getHeaderBlock();
+    private TableBlock(TableHeader header) {
+        super(header, 2);
+
         this.mTableStringPool = new TableStringPool(true);
         this.mPackageArray = new PackageArray(header.getPackageCount());
         this.mFrameWorks = new ArrayCollection<>();
+
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
+    public TableBlock() {
+        this(new TableHeader());
+    }
+
     // Experimental
-    public void changePackageId(int packageIdOld, int packageIdNew){
+    public void changePackageId(int packageIdOld, int packageIdNew) {
         for (PackageBlock packageBlock : this) {
             packageBlock.changePackageId(packageIdOld, packageIdNew);
         }
     }
+
     // Experimental
-    public Iterator<ValueItem> allValues(){
-        return new MergingIterator<>(new ComputeIterator<>(getPackages(),
-                PackageBlock::allValues));
+    public Iterator<ValueItem> visitValues() {
+        return new IterableIterator<PackageBlock, ValueItem>(iterator()) {
+            @Override
+            public Iterator<? extends ValueItem> iterator(PackageBlock element) {
+                return element.visitValues();
+            }
+        };
     }
 
-    public PackageBlock getCurrentPackage(){
+    public PackageBlock getCurrentPackage() {
         return mCurrentPackage;
     }
-    public void setCurrentPackage(PackageBlock packageBlock){
+    public void setCurrentPackage(PackageBlock packageBlock) {
         mCurrentPackage = packageBlock;
     }
-    public PackageBlock getPackageBlockByTag(Object tag){
-        for(PackageBlock packageBlock : this){
-            if(Objects.equals(tag, packageBlock.getTag())){
+    public PackageBlock getPackageBlockByTag(Object tag) {
+        for (PackageBlock packageBlock : this) {
+            if (ObjectsUtil.equals(tag, packageBlock.getTag())) {
                 return packageBlock;
             }
         }
         return null;
     }
-    public Iterator<ResourceEntry> getResources(){
+    public Iterator<ResourceEntry> getResources() {
         return new IterableIterator<PackageBlock, ResourceEntry>(getPackages()) {
             @Override
             public Iterator<ResourceEntry> iterator(PackageBlock element) {
@@ -98,138 +108,138 @@ public class TableBlock extends Chunk<TableHeader>
             }
         };
     }
-    public ResourceEntry getResource(int resourceId){
-        if(resourceId == 0){
+    public ResourceEntry getResource(int resourceId) {
+        if (resourceId == 0) {
             return null;
         }
         Iterator<PackageBlock> iterator = getAllPackages();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(resourceId);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         int staged = resolveStagedAlias(resourceId, 0);
-        if(staged == 0 || staged == resourceId){
+        if (staged == 0 || staged == resourceId) {
             return null;
         }
         iterator = getAllPackages();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(staged);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry.setStageAliasId(resourceId);
             }
         }
         return null;
     }
-    public ResourceEntry getResource(PackageBlock context, int resourceId){
-        if(resourceId == 0){
+    public ResourceEntry getResource(PackageBlock context, int resourceId) {
+        if (resourceId == 0) {
             return null;
         }
         Iterator<PackageBlock> iterator = getAllPackages(context);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(resourceId);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         int staged = resolveStagedAlias(resourceId, 0);
-        if(staged == 0 || staged == resourceId){
+        if (staged == 0 || staged == resourceId) {
             return null;
         }
         iterator = getAllPackages(context);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(staged);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry.setStageAliasId(resourceId);
             }
         }
         return null;
     }
     public ResourceEntry getResource(ResourceName resourceName) {
-        if(resourceName != null) {
+        if (resourceName != null) {
             return getResource(resourceName.getPackageName(),
                     resourceName.getType(), resourceName.getName());
         }
         return null;
     }
-    public ResourceEntry getResource(String packageName, String type, String name){
+    public ResourceEntry getResource(String packageName, String type, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(packageName);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(type, name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         return null;
     }
-    public ResourceEntry getResource(PackageBlock context, String type, String name){
+    public ResourceEntry getResource(PackageBlock context, String type, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(context);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(type, name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         return null;
     }
-    public ResourceEntry getResource(PackageBlock context, String packageName, String type, String name){
+    public ResourceEntry getResource(PackageBlock context, String packageName, String type, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(context, packageName);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(type, name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         return null;
     }
-    public ResourceEntry getLocalResource(int resourceId){
+    public ResourceEntry getLocalResource(int resourceId) {
         return getLocalResource( null, resourceId);
     }
-    public ResourceEntry getLocalResource(PackageBlock context, int resourceId){
+    public ResourceEntry getLocalResource(PackageBlock context, int resourceId) {
         Iterator<PackageBlock> iterator = getPackages(context);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(resourceId);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         return null;
     }
-    public ResourceEntry getLocalResource(PackageBlock context, String type, String name){
+    public ResourceEntry getLocalResource(PackageBlock context, String type, String name) {
         Iterator<PackageBlock> iterator = getPackages(context);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(type, name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         return null;
     }
-    public ResourceEntry getLocalResource(String type, String name){
+    public ResourceEntry getLocalResource(String type, String name) {
         return getLocalResource((String) null, type, name);
     }
-    public ResourceEntry getLocalResource(String packageName, String type, String name){
+    public ResourceEntry getLocalResource(String packageName, String type, String name) {
         Iterator<PackageBlock> iterator = getPackages(packageName);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock.getResource(type, name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
         return null;
     }
-    public Iterator<ResourceEntry> getLocalResources(String type){
+    public Iterator<ResourceEntry> getLocalResources(String type) {
         return new IterableIterator<PackageBlock, ResourceEntry>(getPackages((String) null)) {
             @Override
             public Iterator<ResourceEntry> iterator(PackageBlock element) {
@@ -237,79 +247,79 @@ public class TableBlock extends Chunk<TableHeader>
             }
         };
     }
-    public ResourceEntry getAttrResource(String prefix, String name){
+    public ResourceEntry getAttrResource(String prefix, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(prefix);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock
                     .getAttrResource(name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
-        if(prefix != null){
+        if (prefix != null) {
             return getAttrResource(null, name);
         }
         return null;
     }
-    public ResourceEntry getAttrResource(PackageBlock context, String prefix, String name){
+    public ResourceEntry getAttrResource(PackageBlock context, String prefix, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(context, prefix);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock
                     .getAttrResource(name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
-        if(prefix != null){
+        if (prefix != null) {
             return getAttrResource(null, name);
         }
         return null;
     }
-    public ResourceEntry getIdResource(PackageBlock context, String prefix, String name){
+    public ResourceEntry getIdResource(PackageBlock context, String prefix, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(context, prefix);
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             ResourceEntry resourceEntry = packageBlock
                     .getIdResource(name);
-            if(resourceEntry != null){
+            if (resourceEntry != null) {
                 return resourceEntry;
             }
         }
-        if(prefix != null){
+        if (prefix != null) {
             return getAttrResource(null, name);
         }
         return null;
     }
-    public int resolveResourceId(String packageName, String type, String name){
+    public int resolveResourceId(String packageName, String type, String name) {
         Iterator<Entry> iterator = getEntries(packageName, type, name);
-        if(iterator.hasNext()){
+        if (iterator.hasNext()) {
             return iterator.next().getResourceId();
         }
         return 0;
     }
-    public Entry getEntry(String packageName, String type, String name){
+    public Entry getEntry(String packageName, String type, String name) {
         Iterator<PackageBlock> iterator = getAllPackages(packageName);
         Entry result = null;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Entry entry = iterator.next().getEntry(type, name);
-            if(entry == null){
+            if (entry == null) {
                 continue;
             }
-            if(!entry.isNull()){
+            if (!entry.isNull()) {
                 return entry;
             }
-            if(result == null){
+            if (result == null) {
                 result = entry;
             }
         }
         return result;
     }
-    public Iterator<Entry> getEntries(int resourceId){
+    public Iterator<Entry> getEntries(int resourceId) {
         return getEntries(resourceId, true);
     }
-    public Iterator<Entry> getEntries(int resourceId, boolean skipNull){
+    public Iterator<Entry> getEntries(int resourceId, boolean skipNull) {
 
         final int packageId = (resourceId >> 24) & 0xff;
         final int typeId = (resourceId >> 16) & 0xff;
@@ -317,7 +327,7 @@ public class TableBlock extends Chunk<TableHeader>
         return new IterableIterator<PackageBlock, Entry>(getAllPackages(packageId)) {
             @Override
             public Iterator<Entry> iterator(PackageBlock element) {
-                if(super.getCountValue() > 0){
+                if (super.getCountValue() > 0) {
                     super.stop();
                     return null;
                 }
@@ -325,11 +335,11 @@ public class TableBlock extends Chunk<TableHeader>
             }
         };
     }
-    public Iterator<Entry> getEntries(String packageName, String type, String name){
+    public Iterator<Entry> getEntries(String packageName, String type, String name) {
         return new IterableIterator<PackageBlock, Entry>(getAllPackages(packageName)) {
             @Override
             public Iterator<Entry> iterator(PackageBlock element) {
-                if(super.getCountValue() > 0){
+                if (super.getCountValue() > 0) {
                     super.stop();
                     return null;
                 }
@@ -337,40 +347,40 @@ public class TableBlock extends Chunk<TableHeader>
             }
         };
     }
-    public Iterator<PackageBlock> getPackages(String packageName){
+    public Iterator<PackageBlock> getPackages(String packageName) {
         return new  FilterIterator<PackageBlock>(getPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
-                if(packageName != null && packageName.length() > 0){
+            public boolean test(PackageBlock packageBlock) {
+                if (packageName != null && packageName.length() > 0) {
                     return packageBlock.packageNameMatches(packageName);
                 }
                 return TableBlock.this == packageBlock.getTableBlock();
             }
         };
     }
-    public Iterator<PackageBlock> getPackages(int packageId){
-        if(packageId == 0){
+    public Iterator<PackageBlock> getPackages(int packageId) {
+        if (packageId == 0) {
             return EmptyIterator.of();
         }
         return new FilterIterator<PackageBlock>(getPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean test(PackageBlock packageBlock) {
                 return packageId == packageBlock.getId();
             }
         };
     }
-    public Iterator<PackageBlock> getPackages(){
+    public Iterator<PackageBlock> getPackages() {
         return getPackages((PackageBlock) null);
     }
-    public Iterator<PackageBlock> getPackages(PackageBlock context){
+    public Iterator<PackageBlock> getPackages(PackageBlock context) {
         PackageBlock current;
-        if(context == null){
+        if (context == null) {
             current = getCurrentPackage();
         }else {
             current = context;
         }
         Iterator<PackageBlock> iterator = this.iterator();
-        if(current == null){
+        if (current == null) {
             return iterator;
         }
         return new CombiningIterator<>(
@@ -378,24 +388,24 @@ public class TableBlock extends Chunk<TableHeader>
                 new FilterIterator.Except<>(iterator, current)
         );
     }
-    public void removePackage(PackageBlock packageBlock){
+    public void removePackage(PackageBlock packageBlock) {
         getPackageArray().remove(packageBlock);
     }
-    public Iterator<PackageBlock> getAllPackages(){
+    public Iterator<PackageBlock> getAllPackages() {
         return getAllPackages((PackageBlock) null);
     }
-    public Iterator<PackageBlock> getAllPackages(PackageBlock context, String packageName){
+    public Iterator<PackageBlock> getAllPackages(PackageBlock context, String packageName) {
         return new  FilterIterator<PackageBlock>(getAllPackages(context)) {
             @Override
-            public boolean test(PackageBlock packageBlock){
-                if(packageName != null){
+            public boolean test(PackageBlock packageBlock) {
+                if (packageName != null) {
                     return packageBlock.packageNameMatches(packageName);
                 }
                 return TableBlock.this == packageBlock.getTableBlock();
             }
         };
     }
-    public Iterator<PackageBlock> getAllPackages(PackageBlock context){
+    public Iterator<PackageBlock> getAllPackages(PackageBlock context) {
         return new CombiningIterator<>(getPackages(context),
                 new IterableIterator<TableBlock, PackageBlock>(frameworks()) {
                     @Override
@@ -404,48 +414,48 @@ public class TableBlock extends Chunk<TableHeader>
                     }
                 });
     }
-    public Iterator<PackageBlock> getAllPackages(int packageId){
+    public Iterator<PackageBlock> getAllPackages(int packageId) {
         return new  FilterIterator<PackageBlock>(getAllPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
+            public boolean test(PackageBlock packageBlock) {
                 return packageId == packageBlock.getId();
             }
         };
     }
-    public Iterator<PackageBlock> getAllPackages(String packageName){
+    public Iterator<PackageBlock> getAllPackages(String packageName) {
         return new  FilterIterator<PackageBlock>(getAllPackages()) {
             @Override
-            public boolean test(PackageBlock packageBlock){
-                if(packageName != null){
+            public boolean test(PackageBlock packageBlock) {
+                if (packageName != null) {
                     return packageBlock.packageNameMatches(packageName);
                 }
                 return TableBlock.this == packageBlock.getTableBlock();
             }
         };
     }
-    public boolean removeUnusedSpecs(){
+    public boolean removeUnusedSpecs() {
         boolean result = false;
-        for(PackageBlock packageBlock : this){
+        for(PackageBlock packageBlock : this) {
             if (packageBlock.removeUnusedSpecs()) {
                 result = true;
             }
         }
         return result;
     }
-    public String refreshFull(){
+    public String refreshFull() {
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
-        if(getTableStringPool().removeUnusedStrings()){
+        if (getTableStringPool().removeUnusedStrings()) {
             message.append("Removed unused table strings");
             appendOnce = true;
         }
-        for(PackageBlock packageBlock : this){
+        for(PackageBlock packageBlock : this) {
             String packageMessage = packageBlock.refreshFull(false);
-            if(packageMessage == null){
+            if (packageMessage == null) {
                 continue;
             }
-            if(appendOnce){
+            if (appendOnce) {
                 message.append("\n");
             }
             message.append("Package: ");
@@ -457,8 +467,8 @@ public class TableBlock extends Chunk<TableHeader>
         }
         refresh();
         int sizeNew = getHeaderBlock().getChunkSize();
-        if(sizeOld != sizeNew){
-            if(appendOnce){
+        if (sizeOld != sizeNew) {
+            if (appendOnce) {
                 message.append("\n");
             }
             message.append("Table size changed = ");
@@ -467,71 +477,75 @@ public class TableBlock extends Chunk<TableHeader>
             message.append(sizeNew);
             appendOnce = true;
         }
-        if(appendOnce){
+        if (appendOnce) {
             return message.toString();
         }
         return null;
     }
     private void linkStringsInternal() {
         linkTableStringsInternal(getTableStringPool());
-        for(PackageBlock packageBlock : this) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            PackageBlock packageBlock = get(i);
             packageBlock.linkSpecStringsInternal(packageBlock.getSpecStringPool());
         }
     }
-    public void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(PackageBlock packageBlock : this){
-            packageBlock.linkTableStringsInternal(tableStringPool);
+    public void linkTableStringsInternal(TableStringPool tableStringPool) {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).linkTableStringsInternal(tableStringPool);
         }
     }
-    public List<Entry> resolveReference(int referenceId){
+    public List<Entry> resolveReference(int referenceId) {
         return resolveReference(referenceId, null);
     }
-    public List<Entry> resolveReferenceWithConfig(int referenceId, ResConfig resConfig){
+    public List<Entry> resolveReferenceWithConfig(int referenceId, ResConfig resConfig) {
         ReferenceResolver resolver = this.referenceResolver;
-        if(resolver == null){
+        if (resolver == null) {
             resolver = new ReferenceResolver(this);
             this.referenceResolver = resolver;
         }
         return resolver.resolveWithConfig(referenceId, resConfig);
     }
-    public List<Entry> resolveReference(int referenceId, Predicate<Entry> filter){
+    public List<Entry> resolveReference(int referenceId, Predicate<Entry> filter) {
         ReferenceResolver resolver = this.referenceResolver;
-        if(resolver == null){
+        if (resolver == null) {
             resolver = new ReferenceResolver(this);
             this.referenceResolver = resolver;
         }
         return resolver.resolveAll(referenceId, filter);
     }
-    public Iterator<PackageBlock> iterator(){
+    @Override
+    public Iterator<PackageBlock> iterator() {
         return getPackageArray().iterator();
     }
-    public PackageBlock get(int index){
+    public PackageBlock get(int index) {
         return getPackageArray().get(index);
     }
-    public void clear(){
+    public void clear() {
         getPackageArray().destroy();
         getStringPool().clear();
         clearFrameworks();
         refresh();
     }
-    public int size(){
+    public int size() {
         return getPackageArray().size();
     }
-    public boolean isEmpty(){
-        if(size() == 0){
+    public boolean isEmpty() {
+        if (size() == 0) {
             return true;
         }
         Iterator<PackageBlock> iterator = getPackages();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
-            if(!packageBlock.isEmpty()){
+            if (!packageBlock.isEmpty()) {
                 return false;
             }
         }
         return true;
     }
     public boolean initializeAsEmpty() {
-        if(isEmpty()) {
+        if (isEmpty()) {
             setNull(true);
             setCurrentPackage(pickOrEmptyPackage());
             return true;
@@ -542,34 +556,37 @@ public class TableBlock extends Chunk<TableHeader>
         return size() > 1;
     }
 
-    public PackageBlock pickOne(){
+    public PackageBlock pickOne() {
         PackageBlock current = getCurrentPackage();
-        if(current != null && current.getTableBlock() == this){
+        if (current != null && current.getTableBlock() == this) {
             return current;
         }
         return getPackageArray().pickOne();
     }
-    public PackageBlock pickOne(int packageId){
+    public PackageBlock pickOne(int packageId) {
         return getPackageArray().pickOne(packageId);
     }
-    public PackageBlock pickOrEmptyPackage(){
+    public PackageBlock pickOrEmptyPackage() {
         PackageBlock packageBlock = this.pickOne();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             packageBlock = this.mEmptyTablePackage;
-            if(packageBlock == null){
+            if (packageBlock == null) {
                 packageBlock = PackageBlock.createEmptyPackage(this);
                 this.mEmptyTablePackage = packageBlock;
             }
         }
         return packageBlock;
     }
-    public void sortPackages(){
+    public void sortPackages() {
         getPackageArray().sort();
     }
-    public Iterable<PackageBlock> listPackages(){
-        return getPackageArray().listItems();
+
+    // Use iterator()
+    @Deprecated
+    public Iterable<PackageBlock> listPackages() {
+        return this;
     }
-    public Iterator<ResConfig> getResConfigs(){
+    public Iterator<ResConfig> getResConfigs() {
         return new MergingIterator<>(new ComputeIterator<>(iterator(),
                 PackageBlock::getResConfigs));
     }
@@ -578,11 +595,11 @@ public class TableBlock extends Chunk<TableHeader>
         return mTableStringPool;
     }
     @Override
-    public ApkFile getApkFile(){
+    public ApkFile getApkFile() {
         return mApkFile;
     }
     @Override
-    public void setApkFile(ApkFile apkFile){
+    public void setApkFile(ApkFile apkFile) {
         this.mApkFile = apkFile;
     }
     @Override
@@ -590,46 +607,46 @@ public class TableBlock extends Chunk<TableHeader>
         return this;
     }
 
-    public TableStringPool getTableStringPool(){
+    public TableStringPool getTableStringPool() {
         return mTableStringPool;
     }
-    public PackageBlock getPackageBlockById(int pkgId){
+    public PackageBlock getPackageBlockById(int pkgId) {
         return getPackageArray().getPackageBlockById(pkgId);
     }
-    public PackageBlock newPackage(int id, String name){
+    public PackageBlock newPackage(int id, String name) {
         PackageBlock packageBlock = getPackageArray().createNext();
         packageBlock.setId(id);
-        if(name != null){
+        if (name != null) {
             packageBlock.setName(name);
         }
         return packageBlock;
     }
-    public PackageBlock getOrCreatePackage(int id, String name){
+    public PackageBlock getOrCreatePackage(int id, String name) {
         PackageBlock packageBlockId = getPackageArray()
                 .getPackageBlockById(id);
-        if(packageBlockId == null){
+        if (packageBlockId == null) {
             return newPackage(id, name);
         }
-        if(name == null){
+        if (name == null) {
             return packageBlockId;
         }
         PackageBlock packageBlockName = getPackageArray()
                 .getPackageBlockByName(name);
-        if(packageBlockId == packageBlockName){
+        if (packageBlockId == packageBlockName) {
             return packageBlockId;
         }
         return newPackage(id, name);
     }
-    public PackageArray getPackageArray(){
+    public PackageArray getPackageArray() {
         return mPackageArray;
     }
-    public void trimConfigSizes(int resConfigSize){
+    public void trimConfigSizes(int resConfigSize) {
         for(PackageBlock packageBlock : this) {
             packageBlock.trimConfigSizes(resConfigSize);
         }
     }
 
-    private void refreshPackageCount(){
+    private void refreshPackageCount() {
         int count = getPackageArray().size();
         getHeaderBlock().getPackageCount().set(count);
     }
@@ -645,31 +662,31 @@ public class TableBlock extends Chunk<TableHeader>
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        if(reader.available() == 0){
+        if (reader.available() == 0) {
             setNull(true);
             return;
         }
         TableHeader tableHeader = getHeaderBlock();
         tableHeader.readBytes(reader);
-        if(tableHeader.getChunkType() != ChunkType.TABLE){
+        if (tableHeader.getChunkType() != ChunkType.TABLE) {
             throw new IOException("Not resource table: " + tableHeader);
         }
         boolean stringPoolLoaded = false;
         InfoHeader infoHeader = InfoHeader.read(reader);
         PackageArray packageArray = mPackageArray;
         packageArray.clear();
-        while(infoHeader != null && reader.isAvailable()){
+        while(infoHeader != null && reader.isAvailable()) {
             ChunkType chunkType=infoHeader.getChunkType();
-            if(chunkType==ChunkType.STRING){
-                if(!stringPoolLoaded){
+            if (chunkType==ChunkType.STRING) {
+                if (!stringPoolLoaded) {
                     mTableStringPool.readBytes(reader);
                     stringPoolLoaded=true;
                 }
-            }else if(chunkType==ChunkType.PACKAGE){
+            }else if (chunkType==ChunkType.PACKAGE) {
                 PackageBlock packageBlock=packageArray.createNext();
                 packageBlock.readBytes(reader);
             }else {
-                UnknownChunk unknownChunk=new UnknownChunk();
+                UnknownChunk unknownChunk = new UnknownChunk();
                 unknownChunk.readBytes(reader);
                 addChild(unknownChunk);
             }
@@ -680,67 +697,67 @@ public class TableBlock extends Chunk<TableHeader>
     }
 
     public void readBytes(File file) throws IOException{
-        BlockReader reader=new BlockReader(file);
+        BlockReader reader = new BlockReader(file);
         super.readBytes(reader);
     }
     public void readBytes(InputStream inputStream) throws IOException{
-        BlockReader reader=new BlockReader(inputStream);
+        BlockReader reader = new BlockReader(inputStream);
         super.readBytes(reader);
     }
     public final int writeBytes(File file) throws IOException{
-        if(isNull()){
+        if (isNull()) {
             throw new IOException("Can NOT save null block");
         }
         File dir=file.getParentFile();
-        if(dir!=null && !dir.exists()){
+        if (dir!=null && !dir.exists()) {
             dir.mkdirs();
         }
-        OutputStream outputStream=new FileOutputStream(file);
+        OutputStream outputStream = new FileOutputStream(file);
         int length = super.writeBytes(outputStream);
         outputStream.close();
         return length;
     }
-    public int searchResourceIdAlias(int resourceId){
+    public int searchResourceIdAlias(int resourceId) {
         return resolveStagedAlias(resourceId, 0);
     }
-    public int resolveStagedAlias(int stagedResId, int def){
-        StagedAliasEntry stagedAliasEntry = getStagedAlias(stagedResId);
-        if(stagedAliasEntry != null){
-            return stagedAliasEntry.getFinalizedResId();
+    public int resolveStagedAlias(int stagedResId, int def) {
+        StagedAliasEntry stagedAliasEntry = getAliasByStaged(stagedResId);
+        if (stagedAliasEntry != null) {
+            return stagedAliasEntry.getFinalized();
         }
         return def;
     }
-    public StagedAliasEntry getStagedAlias(int stagedResId){
+    public StagedAliasEntry getAliasByStaged(int staged) {
         Iterator<PackageBlock> iterator = getAllPackages();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PackageBlock packageBlock = iterator.next();
             StagedAliasEntry stagedAliasEntry =
-                    packageBlock.searchByStagedResId(stagedResId);
-            if(stagedAliasEntry != null){
+                    packageBlock.getAliasByStaged(staged);
+            if (stagedAliasEntry != null) {
                 return stagedAliasEntry;
             }
         }
         return null;
     }
-    public List<TableBlock> getFrameWorks(){
+    public List<TableBlock> getFrameWorks() {
         return mFrameWorks;
     }
-    public Iterator<TableBlock> frameworks(){
+    public Iterator<TableBlock> frameworks() {
         List<TableBlock> frameworkList = getFrameWorks();
-        if(frameworkList.size() == 0){
+        if (frameworkList.size() == 0) {
             return EmptyIterator.of();
         }
         return frameworkList.iterator();
     }
-    public boolean isAndroid(){
+    public boolean isAndroid() {
         PackageBlock packageBlock = pickOne();
-        if(packageBlock == null){
+        if (packageBlock == null) {
             return false;
         }
         return "android".equals(packageBlock.getName())
                 && packageBlock.getId() == 0x01;
     }
-    public boolean hasFramework(){
+    public boolean hasFramework() {
         return getFrameWorks().size() != 0;
     }
     public void addFrameworks(Iterator<TableBlock> iterator) {
@@ -749,29 +766,29 @@ public class TableBlock extends Chunk<TableHeader>
             addFramework(framework);
         }
     }
-    public void addFramework(TableBlock frameworkTable){
-        if(frameworkTable != null && !containsFramework(frameworkTable)){
+    public void addFramework(TableBlock frameworkTable) {
+        if (frameworkTable != null && !containsFramework(frameworkTable)) {
             mFrameWorks.add(frameworkTable);
         }
     }
     public boolean containsFramework(TableBlock tableBlock) {
-        if(tableBlock == null){
+        if (tableBlock == null) {
             return false;
         }
-        if(this.isSimilarTo(tableBlock)) {
+        if (this.isSimilarTo(tableBlock)) {
             return true;
         }
         for(TableBlock framework : mFrameWorks) {
-            if(framework.containsFramework(tableBlock)) {
+            if (framework.containsFramework(tableBlock)) {
                 return true;
             }
         }
         return false;
     }
-    public void removeFramework(TableBlock tableBlock){
+    public void removeFramework(TableBlock tableBlock) {
         mFrameWorks.remove(tableBlock);
     }
-    public void clearFrameworks(){
+    public void clearFrameworks() {
         mFrameWorks.clear();
     }
     public PackageBlock parsePublicXml(XmlPullParser parser) throws IOException,
@@ -782,7 +799,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject = new JSONObject();
 
         jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
 
@@ -794,8 +811,8 @@ public class TableBlock extends Chunk<TableHeader>
         getPackageArray().fromJson(json.getJSONArray(NAME_packages));
         refresh();
     }
-    public void merge(TableBlock tableBlock){
-        if(tableBlock == null || tableBlock == this){
+    public void merge(TableBlock tableBlock) {
+        if (tableBlock == null || tableBlock == this) {
             return;
         }
         getStringPool().merge(tableBlock.getStringPool());
@@ -803,7 +820,7 @@ public class TableBlock extends Chunk<TableHeader>
         refresh();
     }
     @Override
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         BytesOutputStream outputStream = new BytesOutputStream(
                 getHeaderBlock().getChunkSize());
         try {
@@ -814,26 +831,26 @@ public class TableBlock extends Chunk<TableHeader>
         return outputStream.toByteArray();
     }
     public boolean isSimilarTo(TableBlock tableBlock) {
-        if(tableBlock == this) {
+        if (tableBlock == this) {
             return true;
         }
-        if(tableBlock == null) {
+        if (tableBlock == null) {
             return false;
         }
         int size = this.size();
-        if(size != tableBlock.size()) {
+        if (size != tableBlock.size()) {
             return false;
         }
         for(int i = 0; i < size; i++) {
-            if(!get(i).isSimilarTo(tableBlock.get(i))){
+            if (!get(i).isSimilarTo(tableBlock.get(i))) {
                 return false;
             }
         }
         return true;
     }
     @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": packages = ");
         builder.append(mPackageArray.size());
@@ -847,7 +864,7 @@ public class TableBlock extends Chunk<TableHeader>
         return load(new FileInputStream(file));
     }
     public static TableBlock load(InputStream inputStream) throws IOException{
-        TableBlock tableBlock=new TableBlock();
+        TableBlock tableBlock = new TableBlock();
         tableBlock.readBytes(inputStream);
         return tableBlock;
     }
@@ -857,7 +874,7 @@ public class TableBlock extends Chunk<TableHeader>
         return tableBlock;
     }
 
-    public static boolean isResTableBlock(InputStream inputStream){
+    public static boolean isResTableBlock(InputStream inputStream) {
         try {
             HeaderBlock headerBlock= BlockReader.readHeaderBlock(inputStream);
             return isResTableBlock(headerBlock);
@@ -865,8 +882,8 @@ public class TableBlock extends Chunk<TableHeader>
             return false;
         }
     }
-    public static boolean isResTableBlock(BlockReader blockReader){
-        if(blockReader==null){
+    public static boolean isResTableBlock(BlockReader blockReader) {
+        if (blockReader==null) {
             return false;
         }
         try {
@@ -876,8 +893,8 @@ public class TableBlock extends Chunk<TableHeader>
             return false;
         }
     }
-    public static boolean isResTableBlock(HeaderBlock headerBlock){
-        if(headerBlock==null){
+    public static boolean isResTableBlock(HeaderBlock headerBlock) {
+        if (headerBlock==null) {
             return false;
         }
         ChunkType chunkType=headerBlock.getChunkType();
