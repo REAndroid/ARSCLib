@@ -142,6 +142,83 @@ public class ResXmlDocumentTest {
         decoded = decoded.replaceAll("\\s+", "");
         Assert.assertEquals(org, decoded);
     }
+
+    @Test
+    public void testIssue202AlternateAndroidNamespace()
+            throws Exception {
+
+        String xml =
+                "<manifest " +
+                "xmlns:n0=\"http://schemas.android.com/apk/res/android\" " +
+                "n0:versionCode=\"733700004\" " +
+                "n0:versionName=\"137.0.7337.0\" " +
+                "package=\"com.kiwibrowser.browser\">" +
+                "<uses-sdk n0:minSdkVersion=\"24\" " +
+                "n0:targetSdkVersion=\"34\"/>" +
+                "</manifest>";
+
+        ResXmlDocument document = new ResXmlDocument();
+        document.setApkFile(createEmptyApkModule());
+        document.parse(XMLFactory.newPullParser(xml));
+
+        ResXmlElement root = document.getDocumentElement();
+        Assert.assertNotNull(root);
+
+        ResXmlAttribute version =
+                root.searchAttributeByName("versionCode");
+        Assert.assertNotNull(version);
+        Assert.assertEquals("http://schemas.android.com/apk/res/android", version.getUri());
+
+        ResXmlElement sdk = root.getElement("uses-sdk");
+        Assert.assertNotNull(sdk);
+        Assert.assertNotNull(
+                sdk.searchAttributeByName("targetSdkVersion"));
+
+        document.refreshFull();
+
+        StringWriter writer = new StringWriter();
+        XmlSerializer serializer = XMLFactory.newSerializer(writer);
+        document.serialize(serializer);
+
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("733700004"));
+        Assert.assertTrue(output.contains("137.0.7337.0"));
+    }
+
+
+    @Test
+    public void testIssue202JsonNamespaceRoundTrip()
+            throws Exception {
+
+        String xml =
+                "<manifest " +
+                "xmlns:n0=\"http://schemas.android.com/apk/res/android\" " +
+                "n0:versionCode=\"733700004\" " +
+                "package=\"com.kiwibrowser.browser\"/>";
+
+        ResXmlDocument original = new ResXmlDocument();
+        original.setApkFile(createEmptyApkModule());
+        original.parse(XMLFactory.newPullParser(xml));
+
+        com.reandroid.json.JSONObject json = original.toJson();
+
+        ResXmlDocument restored = new ResXmlDocument();
+        restored.setApkFile(createEmptyApkModule());
+        restored.fromJson(json);
+
+        ResXmlElement root = restored.getDocumentElement();
+        Assert.assertNotNull(root);
+
+        ResXmlAttribute version =
+                root.searchAttributeByName("versionCode");
+
+        Assert.assertNotNull(version);
+        Assert.assertEquals(
+                "http://schemas.android.com/apk/res/android",
+                version.getUri());
+        Assert.assertEquals(733700004, version.getData());
+    }
+
     private static ApkModule createEmptyApkModule() throws IOException {
         ApkModule apkModule = new ApkModule();
         apkModule.setTableBlock(createEmptyTable());

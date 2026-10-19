@@ -722,7 +722,11 @@ public class ResXmlAttribute extends AttributeValue implements
             setName(name, 0);
             return null;
         }
-        ResourceEntry resourceEntry = super.encodeAttrName(prefix, name);
+        String lookupPrefix = prefix;
+        if (Namespace.URI_ANDROID.equals(uri)) {
+            lookupPrefix = Namespace.PREFIX_ANDROID;
+        }
+        ResourceEntry resourceEntry = super.encodeAttrName(lookupPrefix, name);
         if (resourceEntry != null) {
             return resourceEntry;
         }
