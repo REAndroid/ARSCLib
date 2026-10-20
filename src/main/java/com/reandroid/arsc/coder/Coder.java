@@ -16,12 +16,12 @@
 package com.reandroid.arsc.coder;
 
 import com.reandroid.utils.HexUtil;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public abstract class Coder {
     public abstract EncodeResult encode(String text);
     public abstract String decode(int data);
-    public abstract ValueType getValueType();
+    public abstract DataType getValueType();
     abstract boolean canStartWith(char first);
 
     static Integer parseInteger(String text){

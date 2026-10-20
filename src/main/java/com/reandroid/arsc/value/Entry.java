@@ -100,14 +100,14 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         if (mapEntry == null) {
             return tag;
         }
-        ValueType allValueType = mapEntry.isAllSameValueType();
-        if (allValueType == null) {
+        DataType allDataType = mapEntry.isAllSameValueType();
+        if (allDataType == null) {
             return tag;
         }
-        if (allValueType == ValueType.STRING) {
+        if (allDataType == DataType.STRING) {
             return "string-" + tag;
         }
-        if (allValueType == ValueType.DEC) {
+        if (allDataType == DataType.DEC) {
             return "integer-" + tag;
         }
         return tag;
@@ -349,111 +349,111 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return null;
     }
-    public ValueType getValueType() {
+    public DataType getValueType() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueType();
+            return resValue.getDataType();
         }
         return null;
     }
-    public String getValueAsString() {
+    public String getDataAsString() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsString();
+            return resValue.getDataAsString();
         }
         return null;
     }
-    public StyleDocument getValueAsStyleDocument() {
+    public StyleDocument getDataAsStyleDocument() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsStyleDocument();
+            return resValue.getDataAsStyleDocument();
         }
         return null;
     }
-    public Boolean getValueAsBoolean() {
+    public Boolean getDataAsBoolean() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsBoolean();
+            return resValue.getDataAsBoolean();
         }
         return null;
     }
-    public AndroidColor getValueAsColor() {
+    public AndroidColor getDataAsColor() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsColor();
+            return resValue.getDataAsColor();
         }
         return null;
     }
-    public Float getValueAsFloat() {
+    public Float getDataAsFloat() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsFloat();
+            return resValue.getDataAsFloat();
         }
         return null;
     }
-    public Integer getValueAsInteger() {
+    public Integer getDataAsInteger() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsInteger();
+            return resValue.getDataAsInteger();
         }
         return null;
     }
-    public ResourceEntry getValueAsReference() {
+    public ResourceEntry getDataAsReference() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsReference();
+            return resValue.getDataAsReference();
         }
         return null;
     }
-    public Object getValueAsEncoded() {
+    public Object getDataAsEncoded() {
         ResValue resValue = getResValue();
         if (resValue != null) {
-            return resValue.getValueAsEncoded();
+            return resValue.getDataAsEncoded();
         }
         return null;
     }
-    public ResValue setValueAsRaw(ValueType valueType, int data) {
+    public ResValue setDataAsRaw(DataType dataType, int data) {
         ResValue resValue = ensureScalar();
-        resValue.setTypeAndData(valueType, data);
+        resValue.setTypeAndData(dataType, data);
         return resValue;
     }
-    public ResValue setValueAsBoolean(boolean value) {
+    public ResValue setDataAsBoolean(boolean value) {
         ResValue resValue = ensureScalar();
         resValue.setValueAsBoolean(value);
         return resValue;
     }
-    public ResValue setValueAsReference(int resourceId) {
-        return setValueAsRaw(ValueType.REFERENCE, resourceId);
+    public ResValue setDataAsReference(int resourceId) {
+        return setDataAsRaw(DataType.REFERENCE, resourceId);
     }
-    public ResValue setValueAsString(StyleDocument styledString) {
+    public ResValue setDataAsString(StyleDocument styledString) {
         TableEntry<?, ?> tableEntry = ensureTableEntry(false);
         ResValue resValue = (ResValue) tableEntry.getValue();
-        resValue.setValueAsString(styledString);
+        resValue.setDataAsString(styledString);
         return resValue;
     }
-    public ResValue setValueAsString(String str) {
+    public ResValue setDataAsString(String str) {
         ResValue resValue = ensureScalar();
-        resValue.setValueAsString(str);
+        resValue.setDataAsString(str);
         return resValue;
     }
-    public ResValue setValueAsColor(AndroidColor color) {
+    public ResValue setDataAsColor(AndroidColor color) {
         ResValue resValue = ensureScalar();
-        resValue.setValue(color);
+        resValue.setData(color);
         return resValue;
     }
-    public ResValue setValueAsDecimal(int value) {
+    public ResValue setDataAsDecimal(int value) {
         ResValue resValue = ensureScalar();
-        resValue.setValueAsDecimal(value);
+        resValue.setDataAsDecimal(value);
         return resValue;
     }
-    public ResValue setValueAsHex(int value) {
+    public ResValue setDataAsHex(int value) {
         ResValue resValue = ensureScalar();
-        resValue.setValueAsHex(value);
+        resValue.setDataAsHex(value);
         return resValue;
     }
-    public ResValue setValueAsFloat(float value) {
+    public ResValue setDataAsFloat(float value) {
         ResValue resValue = ensureScalar();
-        resValue.setValueAsFloat(value);
+        resValue.setDataAsFloat(value);
         return resValue;
     }
 

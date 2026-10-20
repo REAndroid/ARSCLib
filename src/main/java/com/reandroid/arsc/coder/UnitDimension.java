@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class UnitDimension extends ComplexUnit{
 
@@ -42,8 +42,8 @@ public class UnitDimension extends ComplexUnit{
     }
 
     @Override
-    public ValueType getValueType() {
-        return ValueType.DIMENSION;
+    public DataType getValueType() {
+        return DataType.DIMENSION;
     }
 
     public static UnitDimension[] values(){

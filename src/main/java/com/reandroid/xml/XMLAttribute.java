@@ -102,10 +102,11 @@ public class XMLAttribute extends XMLNode implements Attribute {
         }
         return null;
     }
-    public String getValueAsString() {
-        return getValueAsString(false);
+    @Override
+    public String getDataAsString() {
+        return getDataAsString(false);
     }
-    public String getValueAsString(boolean escapeXmlText) {
+    public String getDataAsString(boolean escapeXmlText) {
         String value = this.mValue;
         if (value == null) {
             value = "";
@@ -116,12 +117,12 @@ public class XMLAttribute extends XMLNode implements Attribute {
         }
         return value;
     }
-    public Object getValueAsEncoded() {
-        return decodeValue(getValueAsString(true));
+    public Object getDataAsEncoded() {
+        return decodeValue(getDataAsString(true));
     }
     void setFrom(XMLAttribute xmlAttribute) {
         set(xmlAttribute.getName(true),
-                xmlAttribute.getValueAsString(false));
+                xmlAttribute.getDataAsString(false));
         setNamespaceFrom(xmlAttribute.getNamespace());
     }
     XMLAttribute set(String name, String value) {
@@ -182,7 +183,7 @@ public class XMLAttribute extends XMLNode implements Attribute {
 
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
-        serializer.attribute(getUri(), getName(), getValueAsString(false));
+        serializer.attribute(getUri(), getName(), getDataAsString(false));
     }
     @Override
     void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
@@ -191,7 +192,7 @@ public class XMLAttribute extends XMLNode implements Attribute {
         if (xml) {
             appendable.append('"');
         }
-        appendable.append(getValueAsString(escapeXmlText));
+        appendable.append(getDataAsString(escapeXmlText));
         if (xml) {
             appendable.append('"');
         }
@@ -215,7 +216,7 @@ public class XMLAttribute extends XMLNode implements Attribute {
 
     @Override
     public String toString() {
-        return getName(true) + "=\"" + getValueAsString() + "\"";
+        return getName(true) + "=\"" + getDataAsString() + "\"";
     }
 
     static Object decodeValue(String str) {

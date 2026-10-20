@@ -43,7 +43,7 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.StagedAliasEntry;
 import com.reandroid.arsc.value.ValueItem;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
@@ -821,8 +821,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         value.setNameId(resourceId);
     }
     private static void changePackageIdValue(int packageIdOld, int packageIdNew, ValueItem valueItem) {
-        ValueType valueType = valueItem.getValueType();
-        if (valueType == null || !valueType.isReference()) {
+        DataType dataType = valueItem.getDataType();
+        if (dataType == null || !dataType.isReference()) {
             return;
         }
         int resourceId = valueItem.getData();

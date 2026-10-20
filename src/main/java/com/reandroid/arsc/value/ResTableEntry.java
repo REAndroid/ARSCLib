@@ -46,12 +46,12 @@ public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
             return false;
         }
         ResValue coming = ((ResTableEntry) tableEntry).getValue();
-        ValueType valueType = coming.getValueType();
-        if (valueType == null || valueType == ValueType.NULL) {
+        DataType dataType = coming.getDataType();
+        if (dataType == null || dataType == DataType.NULL) {
             return false;
         }
-        valueType = getValue().getValueType();
-        return valueType == null || valueType == ValueType.NULL;
+        dataType = getValue().getDataType();
+        return dataType == null || dataType == DataType.NULL;
     }
     @Override
     public void merge(TableEntry<?, ?> tableEntry) {

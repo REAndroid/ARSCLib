@@ -21,7 +21,7 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Value;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.AttributeDataFormat;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.StringsUtil;
 
 import java.util.HashMap;
@@ -36,7 +36,7 @@ public class ValueCoder {
             if (encodeResult.isError()) {
                 return encodeResult;
             }
-            output.setValue(encodeResult);
+            output.setData(encodeResult);
             return encodeResult;
         }
         if (name != null) {
@@ -45,9 +45,9 @@ public class ValueCoder {
             if (attributeBag != null) {
                 encodeResult = attributeBag.encode(value);
                 if (encodeResult != null) {
-                    if (encodeResult.valueType == ValueType.STRING) {
-                        output.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
-                        return new EncodeResult(ValueType.STRING, output.getData());
+                    if (encodeResult.dataType == DataType.STRING) {
+                        output.setDataAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+                        return new EncodeResult(DataType.STRING, output.getData());
                     }
                     if (encodeResult.isError()) {
                         if (validate) {
@@ -62,24 +62,24 @@ public class ValueCoder {
             encodeResult = ValueCoder.encode(value);
         }
         if (encodeResult != null) {
-            output.setValue(encodeResult);
+            output.setData(encodeResult);
             return encodeResult;
         }
-        output.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
-        return new EncodeResult(ValueType.STRING, output.getData());
+        output.setDataAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+        return new EncodeResult(DataType.STRING, output.getData());
     }
-    public static String decodeReference(PackageBlock packageBlock, ValueType referenceType, int resourceId) {
+    public static String decodeReference(PackageBlock packageBlock, DataType referenceType, int resourceId) {
         if (resourceId == 0) {
-            if (referenceType == ValueType.REFERENCE) {
+            if (referenceType == DataType.REFERENCE) {
                 return CoderNullReference.INS.decode(resourceId);
             }
-            if (referenceType == ValueType.ATTRIBUTE) {
+            if (referenceType == DataType.ATTRIBUTE) {
                 return CoderNullAttribute.INS.decode(resourceId);
             }
-            if (referenceType == ValueType.DYNAMIC_REFERENCE) {
+            if (referenceType == DataType.DYNAMIC_REFERENCE) {
                 return CoderNullDynamicReference.INS.decode(resourceId);
             }
-            if (referenceType == ValueType.DYNAMIC_ATTRIBUTE) {
+            if (referenceType == DataType.DYNAMIC_ATTRIBUTE) {
                 return CoderNullDynamicAttribute.INS.decode(resourceId);
             }
             return CoderNullAttribute.INS.decode(resourceId);
@@ -145,17 +145,17 @@ public class ValueCoder {
     public static String decodeUnknownNameId(int referenceId) {
         return CoderUnknownNameId.INS.decode(referenceId);
     }
-    public static String decodeUnknownResourceId(ValueType valueType, int referenceId) {
-        if (valueType == ValueType.REFERENCE) {
+    public static String decodeUnknownResourceId(DataType dataType, int referenceId) {
+        if (dataType == DataType.REFERENCE) {
             return CoderUnknownReferenceId.INS.decode(referenceId);
         }
-        if (valueType == ValueType.ATTRIBUTE) {
+        if (dataType == DataType.ATTRIBUTE) {
             return CoderUnknownAttributeId.INS.decode(referenceId);
         }
-        if (valueType == ValueType.DYNAMIC_REFERENCE) {
+        if (dataType == DataType.DYNAMIC_REFERENCE) {
             return CoderUnknownDynamicReferenceId.INS.decode(referenceId);
         }
-        if (valueType == ValueType.DYNAMIC_ATTRIBUTE) {
+        if (dataType == DataType.DYNAMIC_ATTRIBUTE) {
             return CoderUnknownDynamicAttributeId.INS.decode(referenceId);
         }
         return null;
@@ -197,7 +197,7 @@ public class ValueCoder {
         }
         return encodeWithin(text, expectedDataFormats);
     }
-    public static EncodeResult encode(String text, ValueType... expectedTypes) {
+    public static EncodeResult encode(String text, DataType... expectedTypes) {
         if (isEmpty(expectedTypes)) {
             return encodeAny(text);
         }
@@ -229,21 +229,21 @@ public class ValueCoder {
             return null;
         }
         for(AttributeDataFormat dataFormat : expectedDataFormats) {
-            EncodeResult encodeResult = encodeWithin(text, dataFormat.valueTypes());
+            EncodeResult encodeResult = encodeWithin(text, dataFormat.dataTypes());
             if (encodeResult != null) {
                 return encodeResult;
             }
         }
         return null;
     }
-    private static EncodeResult encodeWithin(String text, ValueType... expectedTypes) {
+    private static EncodeResult encodeWithin(String text, DataType... expectedTypes) {
         if (text == null || text.length() == 0) {
             return null;
         }
         EncodeResult encodeResult;
         char first = text.charAt(0);
-        for(ValueType valueType : expectedTypes) {
-            Coder coder = getCoder(valueType);
+        for(DataType dataType : expectedTypes) {
+            Coder coder = getCoder(dataType);
             if (coder == null) {
                 continue;
             }
@@ -314,12 +314,12 @@ public class ValueCoder {
         }
         return null;
     }
-    public static String decode(ValueType valueType, int data) {
-        String decoded = decodeNull(valueType, data);
+    public static String decode(DataType dataType, int data) {
+        String decoded = decodeNull(dataType, data);
         if (decoded != null) {
             return decoded;
         }
-        Coder coder = CODER_MAP.get(valueType);
+        Coder coder = CODER_MAP.get(dataType);
         if (coder == null) {
             return null;
         }
@@ -345,38 +345,38 @@ public class ValueCoder {
         }
         return null;
     }
-    private static String decodeNull(ValueType valueType, int data) {
+    private static String decodeNull(DataType dataType, int data) {
         if (data != 0 && data != 1) {
             return null;
         }
-        if (valueType == ValueType.NULL) {
+        if (dataType == DataType.NULL) {
             return CoderNull.INS.decode(data);
         }
         if (data != 0) {
             return null;
         }
-        if (valueType == ValueType.ATTRIBUTE) {
+        if (dataType == DataType.ATTRIBUTE) {
             return CoderNullAttribute.INS.decode(data);
         }
-        if (valueType == ValueType.DYNAMIC_ATTRIBUTE) {
+        if (dataType == DataType.DYNAMIC_ATTRIBUTE) {
             return CoderNullDynamicAttribute.INS.decode(data);
         }
-        if (valueType == ValueType.REFERENCE) {
+        if (dataType == DataType.REFERENCE) {
             return CoderNullReference.INS.decode(data);
         }
-        if (valueType == ValueType.DYNAMIC_REFERENCE) {
+        if (dataType == DataType.DYNAMIC_REFERENCE) {
             return CoderNullDynamicReference.INS.decode(data);
         }
         return null;
     }
-    public static Coder getCoder(ValueType valueType) {
-        return CODER_MAP.get(valueType);
+    public static Coder getCoder(DataType dataType) {
+        return CODER_MAP.get(dataType);
     }
 
 
 
     public static final Coder[] CODERS;
-    private static final Map<ValueType, Coder> CODER_MAP;
+    private static final Map<DataType, Coder> CODER_MAP;
     private static final Coder[] CODERS_NULL;
 
     static {
@@ -394,7 +394,7 @@ public class ValueCoder {
                 CoderHex.INS,
                 CoderInteger.INS
         };
-        Map<ValueType, Coder> map = new HashMap<>();
+        Map<DataType, Coder> map = new HashMap<>();
         map.put(CoderNull.INS.getValueType(), CoderNull.INS);
         map.put(CoderBoolean.INS.getValueType(), CoderBoolean.INS);
         map.put(CoderDimension.INS.getValueType(), CoderDimension.INS);

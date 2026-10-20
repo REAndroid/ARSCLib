@@ -20,7 +20,7 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.util.*;
@@ -84,7 +84,7 @@ public class ReferenceResolver{
                 continue;
             }
             ResValue resValue = entry.getResValue();
-            if(resValue.getValueType() != ValueType.REFERENCE){
+            if(resValue.getDataType() != DataType.REFERENCE){
                 addResult(filter, entry);
                 continue;
             }

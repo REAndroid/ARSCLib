@@ -26,7 +26,7 @@ import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.io.FileUtil;
@@ -163,7 +163,7 @@ public class ResourceMergeOption {
         Entry result = currentContext.getOrCreate(ResConfig.getDefault(), type, entryName);
         result.ensureComplex(false);
         ResValue resValue = result.getResValue();
-        resValue.setTypeAndData(ValueType.REFERENCE, 0);
+        resValue.setTypeAndData(DataType.REFERENCE, 0);
         return currentContext.getResource(result.getResourceId());
     }
 

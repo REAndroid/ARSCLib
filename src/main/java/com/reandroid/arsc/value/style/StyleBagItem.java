@@ -26,15 +26,15 @@ import com.reandroid.arsc.value.attribute.AttributeBagItem;
 import com.reandroid.arsc.value.bag.BagItem;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class StyleBagItem extends BagItem {
     private StyleBagItem(ResValueMap bagItem) {
         super(bagItem);
     }
 
-    private StyleBagItem(ValueType valueType, int data) {
-        super(valueType, data);
+    private StyleBagItem(DataType dataType, int data) {
+        super(dataType, data);
     }
 
     private StyleBagItem(StringItem str) {
@@ -62,17 +62,17 @@ public class StyleBagItem extends BagItem {
     }
 
     public boolean hasAttributeValue() {
-        return getValueType() == ValueType.ATTRIBUTE;
+        return getValueType() == DataType.ATTRIBUTE;
     }
     public boolean hasIntValue() {
-        ValueType valueType = getValueType();
-        return valueType == ValueType.DEC || valueType == ValueType.HEX;
+        DataType dataType = getValueType();
+        return dataType == DataType.DEC || dataType == DataType.HEX;
     }
 
     public String getValueAsReference() {
-        ValueType valueType = getValueType();
-        if (valueType != ValueType.REFERENCE && valueType != ValueType.ATTRIBUTE) {
-            throw new IllegalArgumentException("Not REF ValueType=" + valueType);
+        DataType dataType = getValueType();
+        if (dataType != DataType.REFERENCE && dataType != DataType.ATTRIBUTE) {
+            throw new IllegalArgumentException("Not REF ValueType=" + dataType);
         }
         return getBagItem().decodeValue();
     }
@@ -121,24 +121,24 @@ public class StyleBagItem extends BagItem {
         return new StyleBagItem(resValueMap);
     }
 
-    public static StyleBagItem create(ValueType valueType, int value) {
-        if (valueType == null || valueType == ValueType.STRING) {
+    public static StyleBagItem create(DataType dataType, int value) {
+        if (dataType == null || dataType == DataType.STRING) {
             return null;
         }
-        return new StyleBagItem(valueType, value);
+        return new StyleBagItem(dataType, value);
     }
 
     protected static StyleBagItem copyOf(ResValueMap resValueMap) {
-        ValueType valueType = resValueMap.getValueType();
-        if (valueType == ValueType.STRING) {
+        DataType dataType = resValueMap.getDataType();
+        if (dataType == DataType.STRING) {
             return new StyleBagItem(resValueMap.getDataAsPoolString());
         } else {
-            return new StyleBagItem(valueType, resValueMap.getData());
+            return new StyleBagItem(dataType, resValueMap.getData());
         }
     }
 
     public static StyleBagItem integer(int n) {
-        return new StyleBagItem(ValueType.DEC, n);
+        return new StyleBagItem(DataType.DEC, n);
     }
 
     public static StyleBagItem string(TableString str) {
@@ -149,30 +149,30 @@ public class StyleBagItem extends BagItem {
     }
 
     public static StyleBagItem reference(int resourceId) {
-        return new StyleBagItem(ValueType.REFERENCE, resourceId);
+        return new StyleBagItem(DataType.REFERENCE, resourceId);
     }
     public static StyleBagItem attribute(int resourceId) {
-        return new StyleBagItem(ValueType.ATTRIBUTE, resourceId);
+        return new StyleBagItem(DataType.ATTRIBUTE, resourceId);
     }
     public static StyleBagItem encoded(EncodeResult encodeResult) {
         if (encodeResult == null) {
             return null;
         }
-        return create(encodeResult.valueType, encodeResult.value);
+        return create(encodeResult.dataType, encodeResult.value);
     }
     public static StyleBagItem color(String color) {
-        EncodeResult encodeResult = ValueCoder.encode(color, CommonType.COLOR.valueTypes());
+        EncodeResult encodeResult = ValueCoder.encode(color, CommonType.COLOR.dataTypes());
         return encoded(encodeResult);
     }
     public static StyleBagItem dimensionOrFraction(String str) {
-        EncodeResult encodeResult = ValueCoder.encode(str, ValueType.DIMENSION);
+        EncodeResult encodeResult = ValueCoder.encode(str, DataType.DIMENSION);
         if(encodeResult == null){
-            encodeResult = ValueCoder.encode(str, ValueType.FRACTION);
+            encodeResult = ValueCoder.encode(str, DataType.FRACTION);
         }
         return encoded(encodeResult);
     }
     public static StyleBagItem createFloat(float n) {
-        return new StyleBagItem(ValueType.FLOAT, Float.floatToIntBits(n));
+        return new StyleBagItem(DataType.FLOAT, Float.floatToIntBits(n));
     }
     public static StyleBagItem enumOrFlag(AttributeBag attr, String valueString) {
         return encoded(attr.encodeEnumOrFlagValue(valueString));

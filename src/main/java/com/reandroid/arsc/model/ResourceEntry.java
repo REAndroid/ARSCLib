@@ -24,7 +24,7 @@ import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.*;
@@ -70,11 +70,11 @@ public class ResourceEntry implements Iterable<Entry> {
         if (resValue == null) {
             return EmptyIterator.of();
         }
-        ValueType valueType = resValue.getValueType();
-        if (valueType == ValueType.STRING) {
-            return SingleIterator.of(resValue.getValueAsString());
+        DataType dataType = resValue.getDataType();
+        if (dataType == DataType.STRING) {
+            return SingleIterator.of(resValue.getDataAsString());
         }
-        if (!valueType.isReference()) {
+        if (!dataType.isReference()) {
             return EmptyIterator.of();
         }
         TableBlock tableBlock = getPackageBlock().getTableBlock();
@@ -136,8 +136,8 @@ public class ResourceEntry implements Iterable<Entry> {
         if (resValue == null) {
             return this;
         }
-        ValueType valueType = resValue.getValueType();
-        if (valueType == null || !valueType.isReference()) {
+        DataType dataType = resValue.getDataType();
+        if (dataType == null || !dataType.isReference()) {
             return this;
         }
         int id = resValue.getData();
@@ -405,16 +405,16 @@ public class ResourceEntry implements Iterable<Entry> {
     public String buildReference(PackageBlock context) {
         return buildReference(context, null);
     }
-    public String buildReference(PackageBlock context, ValueType referenceType) {
+    public String buildReference(PackageBlock context, DataType referenceType) {
         StringBuilder builder = new StringBuilder();
         if (referenceType != null) {
-            if (referenceType == ValueType.REFERENCE) {
+            if (referenceType == DataType.REFERENCE) {
                 builder.append('@');
-            } else if (referenceType == ValueType.DYNAMIC_REFERENCE) {
+            } else if (referenceType == DataType.DYNAMIC_REFERENCE) {
                 builder.append("@@");
-            } else if (referenceType == ValueType.ATTRIBUTE) {
+            } else if (referenceType == DataType.ATTRIBUTE) {
                 builder.append('?');
-            } else if (referenceType == ValueType.DYNAMIC_ATTRIBUTE) {
+            } else if (referenceType == DataType.DYNAMIC_ATTRIBUTE) {
                 builder.append("??");
             }
         }

@@ -50,7 +50,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     public AttributeDataFormat[] getFormats(){
         ResValueMap formatsMap = getByType(AttributeType.FORMATS);
         if(formatsMap != null){
-            return AttributeDataFormat.decodeValueTypes(
+            return AttributeDataFormat.decodeDataTypes(
                     formatsMap.getData() & 0xff);
         }
         return null;

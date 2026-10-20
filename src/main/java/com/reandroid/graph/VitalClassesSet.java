@@ -115,7 +115,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
             ResourceEntry resourceEntry = iterator.next();
             Entry entry = resourceEntry.get(def);
             if(entry != null) {
-                String value = entry.getValueAsString();
+                String value = entry.getDataAsString();
                 if(maybeValidSourceType(value)) {
                     addType(TypeKey.parse(value));
                 }

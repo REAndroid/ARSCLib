@@ -340,23 +340,23 @@ public class XMLPathTest {
         ResXmlElement application = manifest.newElement("application");
 
         application.getOrCreateAndroidAttribute(AndroidManifest.NAME_name, AndroidManifest.ID_name)
-                .setValueAsString("com.TestApp");
+                .setDataAsString("com.TestApp");
         application.getOrCreateAndroidAttribute(AndroidManifest.NAME_label, AndroidManifest.ID_label)
-                .setValueAsString("My App");
+                .setDataAsString("My App");
 
         ResXmlElement activity = application.newElement("activity");
         activity.getOrCreateAndroidAttribute(AndroidManifest.NAME_name, AndroidManifest.ID_name)
-                .setValueAsString("com.TestActivity");
+                .setDataAsString("com.TestActivity");
         activity.getOrCreateAndroidAttribute(AndroidManifest.NAME_label, AndroidManifest.ID_label)
-                .setValueAsString("Test Activity");
+                .setDataAsString("Test Activity");
 
         ResXmlElement service = application.newElement("service");
         service.getOrCreateAndroidAttribute(AndroidManifest.NAME_name, AndroidManifest.ID_name)
-                .setValueAsString("com.TestService");
+                .setDataAsString("com.TestService");
 
         ResXmlElement metaData = application.newElement("meta-data");
         metaData.getOrCreateAndroidAttribute(AndroidManifest.NAME_name, AndroidManifest.ID_name)
-                .setValueAsString("com-meta-data");
+                .setDataAsString("com-meta-data");
 
         return document;
     }

@@ -16,25 +16,25 @@
 package com.reandroid.arsc.coder;
 
 import com.reandroid.utils.HexUtil;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 import java.util.Objects;
 
 public class EncodeResult {
-    public final ValueType valueType;
+    public final DataType dataType;
     public final int value;
     private final String error;
 
-    public EncodeResult(ValueType valueType, int value, String error) {
-        this.valueType = valueType;
+    public EncodeResult(DataType dataType, int value, String error) {
+        this.dataType = dataType;
         this.value = value;
         this.error = error;
     }
-    public EncodeResult(ValueType valueType, int value) {
-        this(valueType, value, null);
+    public EncodeResult(DataType dataType, int value) {
+        this(dataType, value, null);
     }
     public EncodeResult(String error) {
-        this(ValueType.NULL, -1, error);
+        this(DataType.NULL, -1, error);
     }
     public String getError() {
         return error;
@@ -58,11 +58,11 @@ public class EncodeResult {
         if(other.getError() != null){
             return false;
         }
-        return value == other.value && valueType == other.valueType;
+        return value == other.value && dataType == other.dataType;
     }
     @Override
     public int hashCode() {
-        return Objects.hash(valueType, value, getError());
+        return Objects.hash(dataType, value, getError());
     }
     @Override
     public String toString() {
@@ -70,7 +70,7 @@ public class EncodeResult {
         if(error != null){
             return error;
         }
-        return valueType + ": " + HexUtil.toHex8(value);
+        return dataType + ": " + HexUtil.toHex8(value);
     }
 
     public static final EncodeResult RESOURCE_NOT_FOUND = new EncodeResult("RESOURCE NOT FOUND");

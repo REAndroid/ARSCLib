@@ -150,11 +150,11 @@ public class RequiredEntriesScanner extends BaseApkModuleProcessor{
         if(value == null) {
             return;
         }
-        String path = value.getValueAsString();
+        String path = value.getDataAsString();
         if (path != null) {
             scanIdOnResXml(path);
         } else {
-            add(value.getValueAsReference());
+            add(value.getDataAsReference());
         }
     }
     ResourceEntry getLocalResource(int id) {

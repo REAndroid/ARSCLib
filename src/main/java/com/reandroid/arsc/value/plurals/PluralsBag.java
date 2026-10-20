@@ -19,7 +19,7 @@ import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.arsc.value.bag.MapBag;
 
 import java.util.Arrays;
@@ -102,7 +102,7 @@ public class PluralsBag extends MapBag<AttributeType, PluralsBagItem> {
         return builder.toString();
     }
 
-    private final static Set<ValueType> validTypes = new HashSet<>(Arrays.asList(ValueType.NULL, ValueType.STRING, ValueType.REFERENCE));
+    private final static Set<DataType> validTypes = new HashSet<>(Arrays.asList(DataType.NULL, DataType.STRING, DataType.REFERENCE));
 
     /**
      * The result of this is not always 100% accurate,
@@ -120,7 +120,7 @@ public class PluralsBag extends MapBag<AttributeType, PluralsBagItem> {
         Iterator<ResValueMap> iterator = array.iterator();
         while (iterator.hasNext()) {
             ResValueMap item = iterator.next();
-            if (item == null || !validTypes.contains(item.getValueType())) {
+            if (item == null || !validTypes.contains(item.getDataType())) {
                 return false;
             }
             AttributeType attributeType = item.getAttributeType();

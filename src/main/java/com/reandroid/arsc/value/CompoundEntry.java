@@ -23,7 +23,6 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Iterator;
 import java.util.List;
@@ -72,7 +71,7 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
         }
         return ValueCoder.decodeReference(
                 getPackageBlock(),
-                ValueType.REFERENCE,
+                DataType.REFERENCE,
                 parentId);
     }
     public int getParentId() {

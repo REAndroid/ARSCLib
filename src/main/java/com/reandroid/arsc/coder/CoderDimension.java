@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderDimension extends CoderComplexData {
 
@@ -29,8 +29,8 @@ public class CoderDimension extends CoderComplexData {
         return ComplexUtil.decodeComplex(false, data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.DIMENSION;
+    public DataType getValueType() {
+        return DataType.DIMENSION;
     }
 
     public static final CoderDimension INS = new CoderDimension();

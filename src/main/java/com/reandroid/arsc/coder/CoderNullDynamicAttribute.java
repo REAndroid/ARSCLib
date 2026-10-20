@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderNullDynamicAttribute extends Coder {
 
@@ -26,7 +26,7 @@ public class CoderNullDynamicAttribute extends Coder {
     @Override
     public EncodeResult encode(String text) {
         if (text.equals("??null")) {
-            return new EncodeResult(ValueType.ATTRIBUTE, 0);
+            return new EncodeResult(DataType.ATTRIBUTE, 0);
         }
         return null;
     }
@@ -37,8 +37,8 @@ public class CoderNullDynamicAttribute extends Coder {
     }
 
     @Override
-    public ValueType getValueType() {
-        return ValueType.DYNAMIC_ATTRIBUTE;
+    public DataType getValueType() {
+        return DataType.DYNAMIC_ATTRIBUTE;
     }
 
     @Override

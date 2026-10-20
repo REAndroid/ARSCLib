@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderFraction extends CoderComplexData {
 
@@ -46,8 +46,8 @@ public class CoderFraction extends CoderComplexData {
         return ComplexUtil.decodeComplex(true, data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.FRACTION;
+    public DataType getValueType() {
+        return DataType.FRACTION;
     }
 
     public static final CoderFraction INS = new CoderFraction();

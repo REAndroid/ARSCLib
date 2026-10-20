@@ -15,12 +15,13 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class CommonType {
+
     private static final Map<String, CommonType> TYPE_MAP;
 
     public static final CommonType ANIM;
@@ -49,114 +50,114 @@ public class CommonType {
     static {
         Map<String, CommonType> map = new HashMap<>();
         TYPE_MAP = map;
-        CommonType type  = new CommonType("anim", new ValueType[]{
-                ValueType.STRING,
+        CommonType type  = new CommonType("anim", new DataType[]{
+                DataType.STRING,
         });
         map.put(type.name, type);
         ANIM = type;
-        type  = new CommonType("animator", new ValueType[]{
-                ValueType.STRING,
+        type  = new CommonType("animator", new DataType[]{
+                DataType.STRING,
         });
         map.put(type.name, type);
         ANIMATOR = type;
-        type  = new CommonType("bool", new ValueType[]{
-                ValueType.BOOLEAN
+        type  = new CommonType("bool", new DataType[]{
+                DataType.BOOLEAN
         });
         map.put(type.name, type);
         BOOL = type;
-        type  = new CommonType("color", new ValueType[]{
-                ValueType.COLOR_ARGB8,
-                ValueType.COLOR_RGB8,
-                ValueType.COLOR_RGB4,
-                ValueType.COLOR_ARGB4
+        type  = new CommonType("color", new DataType[]{
+                DataType.COLOR_ARGB8,
+                DataType.COLOR_RGB8,
+                DataType.COLOR_RGB4,
+                DataType.COLOR_ARGB4
         });
         map.put(type.name, type);
         COLOR = type;
-        type  = new CommonType("dimen", new ValueType[]{
-                ValueType.DIMENSION,
-                ValueType.FRACTION,
-                ValueType.FLOAT,
-                ValueType.DEC
+        type  = new CommonType("dimen", new DataType[]{
+                DataType.DIMENSION,
+                DataType.FRACTION,
+                DataType.FLOAT,
+                DataType.DEC
         });
         map.put(type.name, type);
         DIMEN = type;
-        type  = new CommonType("drawable", new ValueType[]{
-                ValueType.COLOR_ARGB8,
-                ValueType.COLOR_RGB8,
-                ValueType.COLOR_RGB4,
-                ValueType.COLOR_ARGB4,
-                ValueType.STRING
+        type  = new CommonType("drawable", new DataType[]{
+                DataType.COLOR_ARGB8,
+                DataType.COLOR_RGB8,
+                DataType.COLOR_RGB4,
+                DataType.COLOR_ARGB4,
+                DataType.STRING
         });
         map.put(type.name, type);
         DRAWABLE = type;
-        type  = new CommonType("fraction", new ValueType[]{
-                ValueType.FRACTION
+        type  = new CommonType("fraction", new DataType[]{
+                DataType.FRACTION
         });
         map.put(type.name, type);
         FRACTION = type;
-        type  = new CommonType("font", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("font", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         FONT = type;
-        type  = new CommonType("id", new ValueType[]{
-                ValueType.BOOLEAN,
-                ValueType.STRING
+        type  = new CommonType("id", new DataType[]{
+                DataType.BOOLEAN,
+                DataType.STRING
         });
         map.put(type.name, type);
         ID = type;
-        type  = new CommonType("integer", new ValueType[]{
-                ValueType.DEC,
-                ValueType.HEX
+        type  = new CommonType("integer", new DataType[]{
+                DataType.DEC,
+                DataType.HEX
         });
         map.put(type.name, type);
         INTEGER = type;
-        type  = new CommonType("interpolator", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("interpolator", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         INTERPOLATOR = type;
-        type  = new CommonType("layout", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("layout", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         LAYOUT = type;
-        type  = new CommonType("menu", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("menu", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         MENU = type;
-        type  = new CommonType("mipmap", new ValueType[]{
-                ValueType.COLOR_ARGB8,
-                ValueType.COLOR_RGB8,
-                ValueType.COLOR_RGB4,
-                ValueType.COLOR_ARGB4,
-                ValueType.STRING
+        type  = new CommonType("mipmap", new DataType[]{
+                DataType.COLOR_ARGB8,
+                DataType.COLOR_RGB8,
+                DataType.COLOR_RGB4,
+                DataType.COLOR_ARGB4,
+                DataType.STRING
         });
         map.put(type.name, type);
         MIPMAP = type;
-        type  = new CommonType("navigation", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("navigation", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         NAVIGATION = type;
-        type  = new CommonType("raw", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("raw", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         RAW = type;
-        type  = new CommonType("string", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("string", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         STRING = type;
-        type  = new CommonType("transition", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("transition", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         TRANSITION = type;
-        type  = new CommonType("xml", new ValueType[]{
-                ValueType.STRING
+        type  = new CommonType("xml", new DataType[]{
+                DataType.STRING
         });
         map.put(type.name, type);
         XML = type;
@@ -192,35 +193,31 @@ public class CommonType {
     }
 
     private final String name;
-    private final ValueType[] valueTypes;
-    private final int hash;
+    private final DataType[] dataTypes;
 
-    private CommonType(String name, ValueType[] valueTypes){
+    private CommonType(String name, DataType[] dataTypes) {
         this.name = name;
-        this.valueTypes = valueTypes;
-        int h = name.hashCode();
-        h = h * 31 + h;
-        this.hash = h;
+        this.dataTypes = dataTypes;
     }
 
-    public String name(){
+    public String name() {
         return name;
     }
 
-    public ValueType[] valueTypes() {
-        return valueTypes;
+    public DataType[] dataTypes() {
+        return dataTypes;
     }
-    public boolean isDifferent(ValueType valueType){
-        if(valueType == null
-                || valueType == ValueType.NULL
-                || valueType.isReference()){
+    public boolean isDifferent(DataType dataType) {
+        if (dataType == null
+                || dataType == DataType.NULL
+                || dataType.isReference()) {
             return false;
         }
-        return !contains(valueType);
+        return !contains(dataType);
     }
-    public boolean contains(ValueType valueType){
-        for(ValueType vt : this.valueTypes){
-            if(vt == valueType){
+    public boolean contains(DataType dataType) {
+        for (DataType vt : this.dataTypes) {
+            if (vt == dataType) {
                 return true;
             }
         }
@@ -232,44 +229,44 @@ public class CommonType {
     }
     @Override
     public int hashCode() {
-        return this.hash;
+        return this.name.hashCode() * 31;
     }
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(name);
         builder.append(", types = [");
-        ValueType[] valueTypes = this.valueTypes;
-        for(int i = 0; i < valueTypes.length; i++){
-            if(i != 0){
+        DataType[] dataTypes = this.dataTypes;
+        for (int i = 0; i < dataTypes.length; i++) {
+            if (i != 0) {
                 builder.append(", ");
             }
-            builder.append(valueTypes[i]);
+            builder.append(dataTypes[i]);
         }
         builder.append(']');
         return builder.toString();
     }
 
-    public static CommonType[] getValues(){
+    public static CommonType[] getValues() {
         return VALUES.clone();
     }
-    public static CommonType valueOf(String typeName){
+    public static CommonType valueOf(String typeName) {
         return TYPE_MAP.get(typeName);
     }
-    public static ValueType[] getExpectedTypes(String typeName){
+    public static DataType[] getExpectedTypes(String typeName) {
         CommonType commonType = valueOf(typeName);
-        if(commonType != null){
-            return commonType.valueTypes();
+        if (commonType != null) {
+            return commonType.dataTypes();
         }
         return null;
     }
-    public static boolean isCommonTypeName(String typeName){
+    public static boolean isCommonTypeName(String typeName) {
         return TYPE_MAP.containsKey(typeName)
                 || isComplexTypeName(typeName);
     }
-    public static boolean isComplexTypeName(String typeName){
-        for(String complex : COMPLEX_TYPES){
-            if(complex.equals(typeName)){
+    public static boolean isComplexTypeName(String typeName) {
+        for (String complex : COMPLEX_TYPES) {
+            if (complex.equals(typeName)) {
                 return true;
             }
         }

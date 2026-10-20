@@ -24,7 +24,7 @@ import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -110,9 +110,9 @@ public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert
                 return true;
             }
             ResValue resValue = entry.getResValue();
-            ValueType valueType = resValue.getValueType();
-            if (valueType == null || valueType == ValueType.REFERENCE
-                    || valueType == ValueType.NULL) {
+            DataType dataType = resValue.getDataType();
+            if (dataType == null || dataType == DataType.REFERENCE
+                    || dataType == DataType.NULL) {
                 continue;
             }
             return false;

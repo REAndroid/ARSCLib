@@ -15,13 +15,13 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderNullAttribute extends Coder{
     @Override
     public EncodeResult encode(String text) {
         if(text.equals("?null")){
-            return new EncodeResult(ValueType.ATTRIBUTE, 0);
+            return new EncodeResult(DataType.ATTRIBUTE, 0);
         }
         return null;
     }
@@ -30,8 +30,8 @@ public class CoderNullAttribute extends Coder{
         return data == 0 ? "?null" : null;
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.ATTRIBUTE;
+    public DataType getValueType() {
+        return DataType.ATTRIBUTE;
     }
     @Override
     boolean canStartWith(char first) {

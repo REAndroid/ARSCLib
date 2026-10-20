@@ -32,7 +32,7 @@ public class StyleAttribute extends XMLAttribute {
 
     public void setFrom(XMLAttribute xmlAttribute) {
         set(xmlAttribute.getName(true),
-                xmlAttribute.getValueAsString(false));
+                xmlAttribute.getDataAsString(false));
     }
 
     @Override
@@ -43,6 +43,6 @@ public class StyleAttribute extends XMLAttribute {
 
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
-        serializer.attribute(null, getName(), getValueAsString());
+        serializer.attribute(null, getName(), getDataAsString());
     }
 }

@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderColorRGB8 extends CoderColor{
     public CoderColorRGB8() {
@@ -23,8 +23,8 @@ public class CoderColorRGB8 extends CoderColor{
     }
 
     @Override
-    public ValueType getValueType(){
-        return ValueType.COLOR_RGB8;
+    public DataType getValueType(){
+        return DataType.COLOR_RGB8;
     }
 
     public static final CoderColorRGB8 INS = new CoderColorRGB8();

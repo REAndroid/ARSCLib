@@ -257,7 +257,7 @@ public class XMLPath implements Predicate<NamedNode> {
             return true;
         }
         if (namedNode instanceof Attribute) {
-            return value.equals(((Attribute) namedNode).getValueAsEncoded());
+            return value.equals(((Attribute) namedNode).getDataAsEncoded());
         }
         return false;
     }

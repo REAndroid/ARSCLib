@@ -240,7 +240,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
     public String getAttributeValue(String name) {
         XMLAttribute attribute = getAttribute(name);
         if (attribute != null) {
-            return attribute.getValueAsString();
+            return attribute.getDataAsString();
         }
         return null;
     }

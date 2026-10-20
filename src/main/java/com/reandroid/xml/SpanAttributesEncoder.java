@@ -37,7 +37,7 @@ public class SpanAttributesEncoder {
                 builder.append(attribute.getName());
                 builder.append('=');
             }
-            builder.append(attribute.getValueAsString());
+            builder.append(attribute.getDataAsString());
         }
         return builder.toString();
     }

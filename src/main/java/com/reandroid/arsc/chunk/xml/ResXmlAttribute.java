@@ -31,7 +31,7 @@ import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.ValueItem;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONObject;
@@ -546,7 +546,7 @@ public class ResXmlAttribute extends AttributeValue implements
     }
     @Override
     protected void onDataChanged() {
-        if (getValueType() == ValueType.STRING) {
+        if (getDataType() == DataType.STRING) {
             setValueStringReference(getData());
         } else {
             setValueStringReference(-1);
@@ -689,8 +689,8 @@ public class ResXmlAttribute extends AttributeValue implements
     }
     public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
         String value;
-        if (getValueType() == ValueType.STRING) {
-            value = getValueAsString();
+        if (getDataType() == DataType.STRING) {
+            value = getDataAsString();
             if (value == null) {
                 // Bad string reference, ignore
                 return;
@@ -749,7 +749,7 @@ public class ResXmlAttribute extends AttributeValue implements
                 throw new IOException(buildErrorMessage(
                         encodeResult.getError(), value));
             }
-            setValue(encodeResult);
+            setData(encodeResult);
             return;
         }
         if (attrResource != null) {
@@ -758,17 +758,17 @@ public class ResXmlAttribute extends AttributeValue implements
         if (attrResource == null || attrResource.isEmpty()) {
             encodeResult = ValueCoder.encode(value);
             if (encodeResult != null) {
-                setValue(encodeResult);
+                setData(encodeResult);
             } else {
-                setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+                setDataAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
             }
             return;
         }
         AttributeBag attributeBag = AttributeBag.create(attrResource.get());
         encodeResult = attributeBag.encode(value);
         if (encodeResult != null) {
-            if (encodeResult.valueType == ValueType.STRING) {
-                setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+            if (encodeResult.dataType == DataType.STRING) {
+                setDataAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
                 return;
             }
             if (encodeResult.isError()) {
@@ -778,16 +778,16 @@ public class ResXmlAttribute extends AttributeValue implements
                 }
                 logEncodeError(encodeResult, value);
             } else {
-                setValue(encodeResult);
+                setData(encodeResult);
                 return;
             }
         }
         encodeResult = ValueCoder.encode(value);
         if (encodeResult != null) {
-            setValue(encodeResult);
+            setData(encodeResult);
             return;
         }
-        setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+        setDataAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
     }
     private void logEncodeError(EncodeResult error, String value) {
         System.out.println(buildErrorMessage(error.getError(), value));
@@ -838,20 +838,20 @@ public class ResXmlAttribute extends AttributeValue implements
                 fullName = fullName + "(@" + HexUtil.toHex8(id) + ")";
             }
             String valStr;
-            ValueType valueType = getValueType();
-            if (valueType == ValueType.STRING) {
-                valStr = getValueAsString();
-            } else if (valueType == ValueType.BOOLEAN) {
-                valStr = String.valueOf(getValueAsBoolean());
-            } else if (valueType == ValueType.DEC) {
+            DataType dataType = getDataType();
+            if (dataType == DataType.STRING) {
+                valStr = getDataAsString();
+            } else if (dataType == DataType.BOOLEAN) {
+                valStr = String.valueOf(getDataAsBoolean());
+            } else if (dataType == DataType.DEC) {
                 valStr = String.valueOf(getData());
             } else {
-                valStr = "[" + valueType + "] " + HexUtil.toHex8(getData());
+                valStr = "[" + dataType + "] " + HexUtil.toHex8(getData());
             }
             if (valStr != null) {
                 return fullName + "=\"" + valStr + "\"";
             }
-            return fullName + "[" + valueType + "]=\"" + getData() + "\"";
+            return fullName + "[" + dataType + "]=\"" + getData() + "\"";
         }
         StringBuilder builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
@@ -861,7 +861,7 @@ public class ResXmlAttribute extends AttributeValue implements
         builder.append(", NameReference=").append(getNameReference());
         builder.append(", ValueStringReference=").append(getValueStringReference());
         builder.append(", ValueSize=").append(getSize());
-        builder.append(", ValueTypeByte=").append(getType() & 0xff);
+        builder.append(", ValueTypeByte=").append(dataType() & 0xff);
         builder.append(", Data=").append(getData());
         builder.append("}");
         return builder.toString();

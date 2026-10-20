@@ -34,11 +34,11 @@ public class ResValue extends ValueItem  {
         if (compact == header.isCompact()) {
             return;
         }
-        int type = getType();
+        int type = dataType();
         int data = getData();
         updateBytesLength(compact);
         header.setCompact(compact);
-        setType(type);
+        setDataType(type);
         setData(data);
         if (compact) {
             setRes0((byte) 0);
@@ -110,19 +110,19 @@ public class ResValue extends ValueItem  {
     }
 
     @Override
-    public int getType() {
+    public int dataType() {
         if (isCompact()) {
             return getHeader().getType();
         }
-        return super.getType();
+        return super.dataType();
     }
 
     @Override
-    public void setType(int type) {
+    public void setDataType(int type) {
         if (isCompact()) {
             getHeader().setType(type);
         } else {
-            super.setType(type);
+            super.setDataType(type);
         }
     }
 

@@ -16,7 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import android.content.res.XmlResourceParser;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.StringsUtil;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -62,7 +62,7 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
     @Override
     public int getAttributeResourceValue(String namespace, String attribute, int defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute != null && xmlAttribute.getValueType() == ValueType.REFERENCE){
+        if(xmlAttribute != null && xmlAttribute.getDataType() == DataType.REFERENCE){
             return xmlAttribute.getData();
         }
         return defaultValue;
@@ -79,8 +79,8 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
     public float getAttributeFloatValue(String namespace, String attribute, float defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
         if(xmlAttribute != null){
-            ValueType valueType = xmlAttribute.getValueType();
-            if(valueType == ValueType.FLOAT) {
+            DataType dataType = xmlAttribute.getDataType();
+            if(dataType == DataType.FLOAT) {
                 return Float.intBitsToFloat(xmlAttribute.getData());
             }
         }
@@ -91,21 +91,21 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
     public int getAttributeListValue(int index, String[] options, int defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null ||
-                xmlAttribute.getValueType() != ValueType.STRING
+                xmlAttribute.getDataType() != DataType.STRING
                 || options == null || options.length == 0){
             return defaultValue;
         }
-        return convertValueToList(xmlAttribute.getValueAsString(), options, defaultValue);
+        return convertValueToList(xmlAttribute.getDataAsString(), options, defaultValue);
     }
     @Override
     public int getAttributeListValue(String namespace, String attribute, String[] options, int defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
         if(xmlAttribute == null ||
-                xmlAttribute.getValueType() != ValueType.STRING
+                xmlAttribute.getDataType() != DataType.STRING
                 || options == null || options.length == 0){
             return defaultValue;
         }
-        return convertValueToList(xmlAttribute.getValueAsString(), options, defaultValue);
+        return convertValueToList(xmlAttribute.getDataAsString(), options, defaultValue);
     }
     @Override
     public boolean getAttributeBooleanValue(int index, boolean defaultValue) {
@@ -119,7 +119,7 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
     @Override
     public int getAttributeResourceValue(int index, int defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute != null && xmlAttribute.getValueType() == ValueType.REFERENCE){
+        if(xmlAttribute != null && xmlAttribute.getDataType() == DataType.REFERENCE){
             return xmlAttribute.getData();
         }
         return defaultValue;
@@ -136,7 +136,7 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
     public float getAttributeFloatValue(int index, float defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute != null) {
-            if(xmlAttribute.getValueType() == ValueType.FLOAT){
+            if(xmlAttribute.getDataType() == DataType.FLOAT){
                 return Float.intBitsToFloat(xmlAttribute.getData());
             }
         }
@@ -209,7 +209,7 @@ public class ResXmlPullParser extends ResXmlEventParser implements XmlResourcePa
 
     private int getAttributeIntValue(ResXmlAttribute xmlAttribute, int defaultValue) {
         if(xmlAttribute != null) {
-            int type = xmlAttribute.getType() & 0xff;
+            int type = xmlAttribute.dataType() & 0xff;
             if(type > 0x10 && type <= 0x1f) {
                 return xmlAttribute.getData();
             }

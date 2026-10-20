@@ -21,7 +21,7 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -100,7 +100,7 @@ public interface ResourceIdComment extends SmaliComment {
                 return null;
             }
             String ref = resourceEntry
-                    .buildReference(packageBlock, ValueType.REFERENCE);
+                    .buildReference(packageBlock, DataType.REFERENCE);
 
             if (!resourceEntry.isContext(tableBlock)) {
                 return ref;

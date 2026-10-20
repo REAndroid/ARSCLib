@@ -24,82 +24,79 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.graphics.AndroidColor;
 
 public interface Value {
-    void setValue(EncodeResult encodeResult);
-    void setValueType(ValueType valueType);
-    ValueType getValueType();
+    void setData(EncodeResult encodeResult);
+    DataType getDataType();
+    void setDataType(DataType dataType);
     int getData();
     void setData(int data);
-    String getValueAsString();
-    void setValueAsString(String value);
+    String getDataAsString();
+    void setDataAsString(String value);
     PackageBlock getPackageBlock();
     ParentChunk getParentChunk();
-    default void setTypeAndData(ValueType valueType, int data) {
+    default void setTypeAndData(DataType dataType, int data) {
         setData(data);
-        setValueType(valueType);
+        setDataType(dataType);
     }
-    default AndroidColor getValueAsColor() {
-        ValueType valueType = getValueType();
-        if(valueType == null || !valueType.isColor()){
+    default AndroidColor getDataAsColor() {
+        DataType dataType = getDataType();
+        if (dataType == null || !dataType.isColor()) {
             return null;
         }
-        return AndroidColor.decode(ValueCoder.decode(valueType, getData()));
+        return AndroidColor.decode(ValueCoder.decode(dataType, getData()));
     }
-    default void setValue(AndroidColor color) {
-        setValue(ValueCoder.encode(color.toHexString()));
+    default void setData(AndroidColor color) {
+        setData(ValueCoder.encode(color.toHexString()));
     }
-    default ResourceEntry getValueAsReference() {
-        ValueType valueType = getValueType();
-        if(valueType == null || !valueType.isReference()){
+    default ResourceEntry getDataAsReference() {
+        DataType dataType = getDataType();
+        if (dataType == null || !dataType.isReference()) {
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null) {
+        if (packageBlock == null) {
             return null;
         }
         int data = getData();
         ResourceEntry resourceEntry = packageBlock.getResource(data);
-        if(resourceEntry == null) {
+        if (resourceEntry == null) {
             TableBlock tableBlock = packageBlock.getTableBlock();
-            if(tableBlock != null){
+            if (tableBlock != null) {
                 resourceEntry = tableBlock.getResource(packageBlock, data);
             }
         }
         return resourceEntry;
     }
-    default Float getValueAsFloat() {
-        ValueType valueType = getValueType();
-        if(valueType != ValueType.FLOAT){
+    default Float getDataAsFloat() {
+        DataType dataType = getDataType();
+        if (dataType != DataType.FLOAT) {
             return null;
         }
         return Float.intBitsToFloat(getData());
     }
-    default void setValueAsFloat(float f) {
-        setTypeAndData(ValueType.FLOAT, Float.floatToIntBits(f));
+    default void setDataAsFloat(float f) {
+        setTypeAndData(DataType.FLOAT, Float.floatToIntBits(f));
     }
-    default Integer getValueAsInteger() {
-        ValueType valueType = getValueType();
-        if(valueType == ValueType.DEC || valueType == ValueType.HEX){
+    default Integer getDataAsInteger() {
+        DataType dataType = getDataType();
+        if (dataType == DataType.DEC || dataType == DataType.HEX) {
             return getData();
         }
         return null;
     }
-    default void setValueAsDecimal(int i) {
-        setTypeAndData(ValueType.DEC, i);
+    default void setDataAsDecimal(int i) {
+        setTypeAndData(DataType.DEC, i);
     }
-    default void setValueAsHex(int i) {
-        setTypeAndData(ValueType.HEX, i);
+    default void setDataAsHex(int i) {
+        setTypeAndData(DataType.HEX, i);
     }
-    default int getValueAsResourceId() {
-        ValueType valueType = getValueType();
-        if(valueType != null && valueType.isReference()){
+    default int getDataAsResourceId() {
+        DataType dataType = getDataType();
+        if (dataType != null && dataType.isReference()) {
             return getData();
         }
         return 0;
     }
-    default void setValueAsResourceId(int id) {
-        setTypeAndData(ValueType.REFERENCE, id);
-    }
-    default void setValueAsResourceAttributeId(int id) {
-        setTypeAndData(ValueType.ATTRIBUTE, id);
+    default void setDataAsResourceId(int id) {
+        setTypeAndData(DataType.REFERENCE, id);
     }
 }

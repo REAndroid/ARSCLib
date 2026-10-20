@@ -62,7 +62,7 @@ public class ResXmlDocumentTest {
                         null,
                         null,
                         "package", 0);
-        attribute.setValueAsString("com.example.package");
+        attribute.setDataAsString("com.example.package");
         Assert.assertNotNull(root.searchAttributeByName("package"));
 
         attribute = root.getOrCreateAttribute(
@@ -81,7 +81,7 @@ public class ResXmlDocumentTest {
                 null,
                 null,
                 "package", 0);
-        attribute.setValueAsString("com.example.package");
+        attribute.setDataAsString("com.example.package");
         root.removeAttribute(attribute);
 
         Assert.assertNull(root.searchAttributeByName("package"));

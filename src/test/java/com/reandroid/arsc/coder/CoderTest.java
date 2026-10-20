@@ -9,7 +9,7 @@ public class CoderTest {
         for(String decoded : DECODED_VALUES){
             EncodeResult encodeResult = ValueCoder.encode(decoded);
             Assert.assertNotNull("Fail to encode: " + decoded, encodeResult);
-            String decoded2 = ValueCoder.decode(encodeResult.valueType, encodeResult.value);
+            String decoded2 = ValueCoder.decode(encodeResult.dataType, encodeResult.value);
             Assert.assertEquals(decoded, decoded2);
         }
     }

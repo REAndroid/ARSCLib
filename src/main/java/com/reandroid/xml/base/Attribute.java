@@ -17,10 +17,10 @@ package com.reandroid.xml.base;
 
 import com.reandroid.common.Namespace;
 
-public interface Attribute extends Node, NamedNode{
+public interface Attribute extends Node, NamedNode {
 
-    String getValueAsString();
-    Object getValueAsEncoded();
+    String getDataAsString();
+    Object getDataAsEncoded();
 
     Namespace getNamespace();
     void setNamespace(Namespace namespace);
@@ -28,7 +28,7 @@ public interface Attribute extends Node, NamedNode{
     Element<?> getParentNode();
 
     default Object getAttributeValue(){
-        return getValueAsString();
+        return getDataAsString();
     }
     default int getNameId() {
         return 0;

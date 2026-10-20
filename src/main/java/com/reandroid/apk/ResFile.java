@@ -148,7 +148,7 @@ public class ResFile implements Iterable<Entry> {
         for (Entry entry : this) {
             ResValue resValue = entry.getResValue();
             if (resValue != null) {
-                resValue.setValueAsString(filePath);
+                resValue.setDataAsString(filePath);
             }
         }
     }

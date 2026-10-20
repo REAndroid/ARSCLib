@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.HexUtil;
 
 public class CoderUnknownNameId extends Coder{
@@ -35,8 +35,8 @@ public class CoderUnknownNameId extends Coder{
         return HexUtil.toHex8(PREFIX, data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.REFERENCE;
+    public DataType getValueType() {
+        return DataType.REFERENCE;
     }
     @Override
     boolean canStartWith(char first) {

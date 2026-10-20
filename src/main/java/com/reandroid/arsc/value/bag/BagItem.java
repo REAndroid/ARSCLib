@@ -3,49 +3,49 @@ package com.reandroid.arsc.value.bag;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public abstract class BagItem {
     protected final ResValueMap mBagItem;
-    private final ValueType valueType;
+    private final DataType dataType;
     private final int data;
     private final StringItem string;
 
     protected BagItem(ResValueMap bagItem) {
         this.mBagItem = bagItem;
-        this.valueType = null;
+        this.dataType = null;
         this.string = null;
         this.data = 0;
     }
 
-    protected BagItem(ValueType valueType, int data) {
-        if (valueType == ValueType.STRING) {
+    protected BagItem(DataType dataType, int data) {
+        if (dataType == DataType.STRING) {
             throw new IllegalArgumentException("Use the string constructor instead");
         }
         this.mBagItem = null;
         this.string = null;
-        this.valueType = valueType;
+        this.dataType = dataType;
         this.data = data;
     }
 
     protected BagItem(StringItem str) {
         this.string = str;
         this.mBagItem = null;
-        this.valueType = ValueType.STRING;
+        this.dataType = DataType.STRING;
         this.data = 0;
     }
 
-    public ValueType getValueType() {
+    public DataType getValueType() {
         if (mBagItem != null) {
-            return mBagItem.getValueType();
+            return mBagItem.getDataType();
         }
-        return valueType;
+        return dataType;
     }
 
     public int getValue() {
         if (mBagItem != null) {
             return mBagItem.getData();
-        } else if (valueType == ValueType.STRING) {
+        } else if (dataType == DataType.STRING) {
             return string.getIndex();
         } else {
             return data;
@@ -54,16 +54,16 @@ public abstract class BagItem {
 
     public void copyTo(ResValueMap target) {
         if (mBagItem != null) {
-            target.setTypeAndData(mBagItem.getValueType(), mBagItem.getData());
-        } else if (valueType == ValueType.STRING) {
+            target.setTypeAndData(mBagItem.getDataType(), mBagItem.getData());
+        } else if (dataType == DataType.STRING) {
             TableStringPool targetStrPool = (TableStringPool) target.getStringPool();
             if (targetStrPool == string.getParent(TableStringPool.class)) {
-                target.setTypeAndData(ValueType.STRING, string.getIndex());
+                target.setTypeAndData(DataType.STRING, string.getIndex());
             } else {
-                target.setTypeAndData(ValueType.STRING, targetStrPool.getOrCreate(string.get()).getIndex());
+                target.setTypeAndData(DataType.STRING, targetStrPool.getOrCreate(string.get()).getIndex());
             }
         } else {
-            target.setTypeAndData(valueType, data);
+            target.setTypeAndData(dataType, data);
         }
     }
 
@@ -72,17 +72,17 @@ public abstract class BagItem {
     }
 
     public boolean hasStringValue() {
-        return getValueType() == ValueType.STRING;
+        return getValueType() == DataType.STRING;
     }
 
     public boolean hasReferenceValue() {
-        return getValueType() == ValueType.REFERENCE;
+        return getValueType() == DataType.REFERENCE;
     }
 
     public String getStringValue() {
         if (mBagItem != null) {
-            return mBagItem.getValueAsString();
-        } else if (valueType == ValueType.STRING) {
+            return mBagItem.getDataAsString();
+        } else if (dataType == DataType.STRING) {
             return string.getHtml();
         } else {
             throw new IllegalArgumentException("Not a string");

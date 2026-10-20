@@ -35,7 +35,7 @@ import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueHeader;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.XMLAttribute;
@@ -208,7 +208,7 @@ public class XmlCoder {
                 return;
             }
             ResValue resValue = entry.getResValue();
-            if (resValue.getValueType() == ValueType.STRING) {
+            if (resValue.getDataType() == DataType.STRING) {
                 getStringDecoder().serializeText(resValue.getDataAsPoolString(), serializer);
             } else {
                 resValue.serializeText(serializer, false);
@@ -239,12 +239,12 @@ public class XmlCoder {
                 return true;
             }
             ResValue resValue = entry.getResValue();
-            ValueType valueType = resValue.getValueType();
-            if (valueType == ValueType.BOOLEAN) {
+            DataType dataType = resValue.getDataType();
+            if (dataType == DataType.BOOLEAN) {
                 return true;
             }
-            if (valueType == ValueType.STRING) {
-                String value = resValue.getValueAsString();
+            if (dataType == DataType.STRING) {
+                String value = resValue.getDataAsString();
                 return value == null || value.length() == 0;
             }
             return false;
@@ -344,7 +344,7 @@ public class XmlCoder {
         }
         private void encodeScalarId(XMLElement element, Entry entry) throws IOException {
             if (!element.hasTextNode()) {
-                entry.setValueAsBoolean(false);
+                entry.setDataAsBoolean(false);
             } else {
                 encodeScalarAny(element, entry);
             }
@@ -355,23 +355,23 @@ public class XmlCoder {
         private void encodeScalarAny(XMLElement element, Entry entry) throws IOException {
             ResValue resValue = entry.getResValue();
             if (element.hasChildElements()) {
-                resValue.setValueAsString(StyleDocument.copyInner(element));
+                resValue.setDataAsString(StyleDocument.copyInner(element));
                 return;
             }
             String text = element.getTextContent();
             EncodeResult encodeResult = ValueCoder.encodeReference(entry.getPackageBlock(), text);
             if (encodeResult == null) {
-                AttributeDataFormat dataFormat = AttributeDataFormat.fromValueTypeName(
+                AttributeDataFormat dataFormat = AttributeDataFormat.fromDataTypeName(
                         element.getAttributeValue(ATTR_type));
                 if (dataFormat == null) {
-                    dataFormat = AttributeDataFormat.fromValueTypeName(element.getName());
+                    dataFormat = AttributeDataFormat.fromDataTypeName(element.getName());
                     if (dataFormat != AttributeDataFormat.STRING) {
                         dataFormat = null;
                     }
                 }
                 encodeResult = ValueCoder.encode(text, dataFormat);
                 if (encodeResult == null && dataFormat != null
-                        && !dataFormat.contains(ValueType.STRING)) {
+                        && !dataFormat.contains(DataType.STRING)) {
                     throw new XmlEncodeException("Invalid value: " + element);
                 }
             }
@@ -379,9 +379,9 @@ public class XmlCoder {
                 if (encodeResult.isError()) {
                     throw new XmlEncodeException(encodeResult.getError()+ ": " + element.getDebugText());
                 }
-                resValue.setValue(encodeResult);
+                resValue.setData(encodeResult);
             } else {
-                resValue.setValueAsString(XmlSanitizer.unEscapeUnQuote(text));
+                resValue.setDataAsString(XmlSanitizer.unEscapeUnQuote(text));
             }
         }
         private boolean isTypeId(XMLElement element) {
@@ -498,7 +498,7 @@ public class XmlCoder {
                 }
                 startTag(serializer, TAG_item);
                 serializer.attribute(null, ATTR_quantity, attributeType.getName());
-                if (valueMap.getValueType() == ValueType.STRING) {
+                if (valueMap.getDataType() == DataType.STRING) {
                     getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
                 } else {
                     valueMap.serializeText(serializer);
@@ -524,7 +524,7 @@ public class XmlCoder {
                 }
                 serializer.attribute(null, ATTR_name, name);
 
-                if (valueMap.getValueType() == ValueType.STRING) {
+                if (valueMap.getDataType() == DataType.STRING) {
                     getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
                 } else {
                     valueMap.serializeText(serializer, escapeValue);
@@ -544,7 +544,7 @@ public class XmlCoder {
             while (iterator.hasNext()) {
                 ResValueMap valueMap = iterator.next();
                 startTag(serializer, TAG_item);
-                if (valueMap.getValueType() == ValueType.STRING) {
+                if (valueMap.getDataType() == DataType.STRING) {
                     getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
                 } else {
                     valueMap.serializeText(serializer, escapeValues);
@@ -564,7 +564,7 @@ public class XmlCoder {
             XMLAttribute attribute = child.getAttribute(ATTR_name);
 
             ResourceEntry resourceEntry = valueMap.encodeIdName(attribute.getPrefix(),
-                    attribute.getValueAsString());
+                    attribute.getDataAsString());
             if (resourceEntry == null) {
                 throw new XmlEncodeException("Unknown " + dataFormat.getName()
                         + " name: " + child.getDebugText());
@@ -578,7 +578,7 @@ public class XmlCoder {
             if (encodeResult.isError()) {
                 throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
             }
-            valueMap.setValue(encodeResult);
+            valueMap.setData(encodeResult);
             entry.getHeader().setPublic(true);
         }
         public void encodeArray(XMLElement child, Entry entry) throws IOException {
@@ -599,12 +599,12 @@ public class XmlCoder {
                     if (encodeResult.isError()) {
                         throw new XmlEncodeException("Unexpected array value: " + child.getDebugText());
                     }
-                    valueMap.setValue(encodeResult);
+                    valueMap.setData(encodeResult);
                 } else {
-                    valueMap.setValueAsString(XmlSanitizer.unEscapeUnQuote(text));
+                    valueMap.setDataAsString(XmlSanitizer.unEscapeUnQuote(text));
                 }
             } else {
-                valueMap.setValueAsString(StyleDocument.copyInner(child));
+                valueMap.setDataAsString(StyleDocument.copyInner(child));
             }
         }
         private void startTag(XmlSerializer serializer, String name) throws IOException {
@@ -625,7 +625,7 @@ public class XmlCoder {
                 return null;
             }
             name = name.substring(0, i);
-            return AttributeDataFormat.fromValueTypeName(name);
+            return AttributeDataFormat.fromDataTypeName(name);
         }
         public void encodePlural(XMLElement child, Entry entry) throws IOException {
             AttributeType attributeType = AttributeType.fromName(
@@ -649,12 +649,12 @@ public class XmlCoder {
                     if (encodeResult.isError()) {
                         throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
                     }
-                    valueMap.setValue(encodeResult);
+                    valueMap.setData(encodeResult);
                 } else {
-                    valueMap.setValueAsString(XmlSanitizer.unEscapeUnQuote(text));
+                    valueMap.setDataAsString(XmlSanitizer.unEscapeUnQuote(text));
                 }
             } else {
-                valueMap.setValueAsString(StyleDocument.copyInner(child));
+                valueMap.setDataAsString(StyleDocument.copyInner(child));
             }
         }
         public void encodeStyle(XMLElement child, Entry entry) throws IOException {
@@ -728,7 +728,7 @@ public class XmlCoder {
                 throw new XmlEncodeException("Unknown root attribute: " + xmlAttribute.getDebugText());
             }
             encode(xmlAttribute.getName(false),
-                    xmlAttribute.getValueAsString(false), entry);
+                    xmlAttribute.getDataAsString(false), entry);
         }
         public void encode(String name, String value, Entry entry) throws IOException {
             if (name.equals(ATTR_name)) {
@@ -755,7 +755,7 @@ public class XmlCoder {
                 if (encodeResult.isError()) {
                     throw new XmlEncodeException(encodeResult.getError());
                 }
-                valueMap.setValue(encodeResult);
+                valueMap.setData(encodeResult);
                 return;
             }
             encodeResult = ValueCoder.encode(value);
@@ -763,12 +763,12 @@ public class XmlCoder {
                 if (encodeResult.isError()) {
                     throw new XmlEncodeException(encodeResult.getError());
                 }
-                valueMap.setValue(encodeResult);
+                valueMap.setData(encodeResult);
                 return;
             }
             // TODO: will never reach here, we are expecting min, max and l10n only
             value = XmlSanitizer.unEscapeUnQuote(value);
-            valueMap.setValueAsString(value);
+            valueMap.setDataAsString(value);
         }
         public void encodeFormats(String value, Entry entry) {
             entry.ensureComplex(true);

@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderBoolean extends Coder {
 
@@ -29,7 +29,7 @@ public class CoderBoolean extends Coder {
         }else {
             return null;
         }
-        return new EncodeResult(ValueType.BOOLEAN, value);
+        return new EncodeResult(DataType.BOOLEAN, value);
     }
     @Override
     public String decode(int data) {
@@ -37,8 +37,8 @@ public class CoderBoolean extends Coder {
     }
 
     @Override
-    public ValueType getValueType() {
-        return ValueType.BOOLEAN;
+    public DataType getValueType() {
+        return DataType.BOOLEAN;
     }
     @Override
     boolean canStartWith(char first) {

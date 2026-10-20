@@ -128,7 +128,7 @@ public class PublicXmlParser implements XmlReader {
             Entry entry = typeBlock.getOrCreateEntry(info.getEntryId());
             entry.setName(info.name, true);
             if (typeBlock.isTypeId()) {
-                entry.setValueAsBoolean(false);
+                entry.setDataAsBoolean(false);
                 ValueHeader header = entry.getHeader();
                 header.setPublic(true);
                 header.setWeak(true);

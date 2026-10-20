@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.HexUtil;
 
 public class CoderUnknownDynamicAttributeId extends Coder {
@@ -40,8 +40,8 @@ public class CoderUnknownDynamicAttributeId extends Coder {
         return HexUtil.toHex8(PREFIX, data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.DYNAMIC_ATTRIBUTE;
+    public DataType getValueType() {
+        return DataType.DYNAMIC_ATTRIBUTE;
     }
     @Override
     boolean canStartWith(char first) {

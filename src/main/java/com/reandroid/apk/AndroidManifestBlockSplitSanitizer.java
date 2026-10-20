@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.xml.XMLPath;
@@ -119,7 +119,7 @@ public class AndroidManifestBlockSplitSanitizer {
         if (attribute == null) {
             attribute = element.searchAttributeByResourceId(AndroidManifest.ID_value);
         }
-        if (attribute == null || attribute.getValueType() != ValueType.REFERENCE) {
+        if (attribute == null || attribute.getDataType() != DataType.REFERENCE) {
             return false;
         }
         TableBlock tableBlock = apkModule.getTableBlock();
@@ -132,7 +132,7 @@ public class AndroidManifestBlockSplitSanitizer {
         }
         element.removeSelf();
         String path = CollectionUtil.getFirst(ComputeIterator.of(
-                resourceEntry.iterator(true), Entry::getValueAsString));
+                resourceEntry.iterator(true), Entry::getDataAsString));
         if (path != null) {
             return apkModule.removeResFile(path, false);
         }

@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.HexUtil;
 
 /**
@@ -34,7 +34,7 @@ public class CoderUnknownStringRef extends Coder {
         }
         Integer value = parseHex(text.substring(prefix.length() + 1));
         if(value != null){
-            return new EncodeResult(ValueType.STRING, value);
+            return new EncodeResult(DataType.STRING, value);
         }
         return null;
     }
@@ -43,8 +43,8 @@ public class CoderUnknownStringRef extends Coder {
         return HexUtil.toHex8(PREFIX, data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.STRING;
+    public DataType getValueType() {
+        return DataType.STRING;
     }
     @Override
     boolean canStartWith(char first) {

@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderFloat extends Coder {
     @Override
@@ -28,15 +28,15 @@ public class CoderFloat extends Coder {
         if(value == null){
             return null;
         }
-        return new EncodeResult(ValueType.FLOAT, Float.floatToIntBits(value));
+        return new EncodeResult(DataType.FLOAT, Float.floatToIntBits(value));
     }
     @Override
     public String decode(int data) {
         return Float.toString(Float.intBitsToFloat(data));
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.FLOAT;
+    public DataType getValueType() {
+        return DataType.FLOAT;
     }
     @Override
     boolean canStartWith(char first) {

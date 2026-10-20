@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.HexUtil;
 
 public class CoderUnknownAttributeId extends Coder{
@@ -35,8 +35,8 @@ public class CoderUnknownAttributeId extends Coder{
         return HexUtil.toHex8(PREFIX, data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.ATTRIBUTE;
+    public DataType getValueType() {
+        return DataType.ATTRIBUTE;
     }
     @Override
     boolean canStartWith(char first) {

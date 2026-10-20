@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class UnitFraction extends ComplexUnit{
     public static final UnitFraction FRACTION = new UnitFraction(0, "%");
@@ -35,8 +35,8 @@ public class UnitFraction extends ComplexUnit{
         return true;
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.FRACTION;
+    public DataType getValueType() {
+        return DataType.FRACTION;
     }
 
     public static UnitFraction[] values(){

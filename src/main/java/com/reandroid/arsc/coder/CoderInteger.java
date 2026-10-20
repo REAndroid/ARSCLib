@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderInteger extends Coder {
 
@@ -32,15 +32,15 @@ public class CoderInteger extends Coder {
         if(integer == null){
             return null;
         }
-        return new EncodeResult(ValueType.DEC, integer);
+        return new EncodeResult(DataType.DEC, integer);
     }
     @Override
     public String decode(int data) {
         return Integer.toString(data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.DEC;
+    public DataType getValueType() {
+        return DataType.DEC;
     }
 
     @Override

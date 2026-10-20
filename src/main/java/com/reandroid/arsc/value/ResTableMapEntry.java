@@ -97,25 +97,25 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
             getValue().sort();
         }
     }
-    public ValueType isAllSameValueType(){
-        ValueType allValueType = null;
+    public DataType isAllSameValueType(){
+        DataType allDataType = null;
         Iterator<ResValueMap> iterator = getValue().iterator();
         while (iterator.hasNext()){
             ResValueMap valueMap = iterator.next();
-            ValueType valueType = valueMap.getValueType();
-            if(valueType == null){
+            DataType dataType = valueMap.getDataType();
+            if(dataType == null){
                 return null;
             }
-            if(valueType == ValueType.REFERENCE){
+            if(dataType == DataType.REFERENCE){
                 continue;
             }
-            if(allValueType == null){
-                allValueType = valueType;
-            }else if(valueType != allValueType){
+            if(allDataType == null){
+                allDataType = dataType;
+            }else if(dataType != allDataType){
                 return null;
             }
         }
-        return allValueType;
+        return allDataType;
     }
     @Override
     boolean canMerge(TableEntry<?, ?> tableEntry){

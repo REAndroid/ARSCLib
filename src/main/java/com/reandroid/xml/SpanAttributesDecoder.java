@@ -50,7 +50,7 @@ public class SpanAttributesDecoder {
             StyleAttribute last = getLastAttribute();
             if (last != null) {
                 StringBuilder builder = new StringBuilder();
-                builder.append(last.getValueAsString());
+                builder.append(last.getDataAsString());
                 builder.append(';');
                 if (name == null) {
                     builder.append(value);

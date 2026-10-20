@@ -109,7 +109,7 @@ public abstract class AttributeValue extends ValueItem{
     }
     @Override
     public String decodeValue(boolean validatePackage){
-        if(AttributeDataFormat.INTEGER.contains(getValueType())){
+        if(AttributeDataFormat.INTEGER.contains(getDataType())){
             String value = decodeDataAsAttrFormats();
             if(value == null){
                 value = decodeDataAsAttr();

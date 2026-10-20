@@ -23,7 +23,7 @@ import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.FilterIterator;
 
@@ -65,7 +65,7 @@ public class ApkSplitInfoCleaner {
         Iterator<ResXmlAttribute> iterator = metaElement.getAttributes();
         while (iterator.hasNext()) {
             ResXmlAttribute attribute = iterator.next();
-            if (attribute.getValueType() == ValueType.REFERENCE) {
+            if (attribute.getDataType() == DataType.REFERENCE) {
                 cleanElement(apkModule, attribute.getData());
             }
         }
@@ -81,7 +81,7 @@ public class ApkSplitInfoCleaner {
         for (Entry entry : resolvedList) {
             ResValue resValue = entry.getResValue();
             if (resValue != null) {
-                zipEntryMap.remove(resValue.getValueAsString());
+                zipEntryMap.remove(resValue.getDataAsString());
                 resValue.setValueAsBoolean(false);
             }
             entry.setNull(true);

@@ -16,7 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.coder.XmlSanitizer;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlPullParser;
@@ -151,7 +151,7 @@ public class ResXmlEventParser implements XmlPullParser {
     private String decodeAttributeValue(ResXmlAttribute attribute) {
         if(attribute != null) {
             String value = attribute.decodeValue();
-            if (attribute.getValueType() == ValueType.STRING) {
+            if (attribute.getDataType() == DataType.STRING) {
                 value = XmlSanitizer.escapeSpecialCharacter(value);
             }
             return value;

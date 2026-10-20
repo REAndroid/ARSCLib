@@ -159,7 +159,7 @@ import java.util.zip.ZipEntry;
         if (application != null) {
             ResXmlAttribute attribute = application
                     .searchAttributeByResourceId(AndroidManifestBlock.ID_icon);
-            if (attribute != null && attribute.getValueType()==ValueType.REFERENCE) {
+            if (attribute != null && attribute.getDataType()== DataType.REFERENCE) {
                 iconAttribute = attribute;
                 iconReference = attribute.getData();
             }
@@ -169,7 +169,7 @@ import java.util.zip.ZipEntry;
         backupAttributeValues(tableBlock, element);
 
         if (iconAttribute != null) {
-            iconAttribute.setTypeAndData(ValueType.REFERENCE, iconReference);
+            iconAttribute.setTypeAndData(DataType.REFERENCE, iconReference);
         }
     }
     private void backupAttributeValues(TableBlock tableBlock, ResXmlElement element) {
@@ -190,8 +190,8 @@ import java.util.zip.ZipEntry;
         if (attribute == null) {
             return;
         }
-        ValueType valueType = attribute.getValueType();
-        if (valueType!=ValueType.REFERENCE && valueType!=ValueType.ATTRIBUTE) {
+        DataType dataType = attribute.getDataType();
+        if (dataType != DataType.REFERENCE && dataType != DataType.ATTRIBUTE) {
             return;
         }
         int reference = attribute.getData();
@@ -201,13 +201,13 @@ import java.util.zip.ZipEntry;
         }
         ResTableEntry resTableEntry = (ResTableEntry) entry.getTableEntry();
         ResValue resValue = resTableEntry.getValue();
-        valueType = resValue.getValueType();
-        if (valueType==ValueType.STRING) {
-            String value = resValue.getValueAsString();
-            attribute.setValueAsString(value);
+        dataType = resValue.getDataType();
+        if (dataType == DataType.STRING) {
+            String value = resValue.getDataAsString();
+            attribute.setDataAsString(value);
         } else {
             int data = resValue.getData();
-            attribute.setTypeAndData(valueType, data);
+            attribute.setTypeAndData(dataType, data);
         }
     }
     private Entry getEntryWithValue(TableBlock tableBlock, int resourceId) {
@@ -258,10 +258,10 @@ import java.util.zip.ZipEntry;
         ResTableEntry resTableEntry = (ResTableEntry) tableEntry;
         ResValue resValue = resTableEntry.getValue();
 
-        ValueType valueType = resValue.getValueType();
+        DataType dataType = resValue.getDataType();
 
-        return valueType == ValueType.REFERENCE
-                || valueType == ValueType.ATTRIBUTE;
+        return dataType == DataType.REFERENCE
+                || dataType == DataType.ATTRIBUTE;
     }
 
     APKLogger getApkLogger() {

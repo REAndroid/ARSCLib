@@ -93,7 +93,7 @@ public class FilePathEncoder {
                     + ", for path: " + path);
         }
         Entry entry = resourceEntry.getOrCreate(qualifiers);
-        entry.setValueAsString(path);
+        entry.setDataAsString(path);
         InputSource inputSource = createInputSource(
                 resourceEntry.getPackageBlock(), path, resFile);
         addInputSource(inputSource);

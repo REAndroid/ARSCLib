@@ -16,7 +16,7 @@
 package com.reandroid.arsc.coder;
 
 import com.reandroid.utils.HexUtil;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.utils.StringsUtil;
 
 public class CoderHex extends Coder {
@@ -37,7 +37,7 @@ public class CoderHex extends Coder {
         if(value == null){
             return null;
         }
-        return new EncodeResult(ValueType.HEX, value);
+        return new EncodeResult(DataType.HEX, value);
     }
 
     @Override
@@ -45,8 +45,8 @@ public class CoderHex extends Coder {
         return HexUtil.toHex8(data);
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.HEX;
+    public DataType getValueType() {
+        return DataType.HEX;
     }
     @Override
     boolean canStartWith(char first) {

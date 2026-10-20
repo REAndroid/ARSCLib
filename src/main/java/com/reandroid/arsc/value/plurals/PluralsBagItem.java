@@ -33,8 +33,8 @@ public class PluralsBagItem extends BagItem {
         super(str);
     }
 
-    private PluralsBagItem(ValueType valueType, int data) {
-        super(valueType, data);
+    private PluralsBagItem(DataType dataType, int data) {
+        super(dataType, data);
     }
 
     public AttributeType getQuantity() {
@@ -42,49 +42,46 @@ public class PluralsBagItem extends BagItem {
             return null;
         }
         AttributeType attributeType = mBagItem.getAttributeType();
-        if(attributeType != null && attributeType.isPlural()){
+        if (attributeType != null && attributeType.isPlural()) {
             return attributeType;
         }
         return null;
     }
 
     public String getQualityString(ResConfig resConfig) {
-        switch (getValueType()) {
-            case STRING:
-                return getStringValue();
-            case REFERENCE:
-                Entry entry = null;
-                if (mBagItem != null) {
-                    entry = mBagItem.getEntry();
+        DataType valueType = getValueType();
+        if (valueType == DataType.STRING) {
+            return getStringValue();
+        } else if (valueType == DataType.REFERENCE) {
+            Entry entry = null;
+            if (mBagItem != null) {
+                entry = mBagItem.getEntry();
+            }
+            if (entry == null) {
+                return null;
+            }
+            if (resConfig == null) {
+                resConfig = entry.getResConfig();
+            }
+            Entry stringRes = null;
+            if (resConfig != null) {
+                TableBlock tableBlock = entry.getPackageBlock().getTableBlock();
+                List<Entry> resolvedList = tableBlock.resolveReferenceWithConfig(getValue(), resConfig);
+                if (resolvedList.size() != 0) {
+                    stringRes = resolvedList.get(0);
                 }
-                if (entry == null) {
-                    return null;
-                }
+            }
 
-                if (resConfig == null) {
-                    resConfig = entry.getResConfig();
-                }
-
-                Entry stringRes = null;
-                if (resConfig != null) {
-                    TableBlock tableBlock = entry.getPackageBlock().getTableBlock();
-                    List<Entry> resolvedList = tableBlock.resolveReferenceWithConfig(getValue(), resConfig);
-                    if (resolvedList.size() > 0) {
-                        stringRes = resolvedList.get(0);
-                    }
-                }
-
-                if (stringRes == null) {
-                    return null;
-                }
-                ResValue resValue = stringRes.getResValue();
-                if (resValue == null || resValue.getValueType() != ValueType.STRING) {
-                    throw new IllegalArgumentException("Not a STR reference: " + formattedRefValue());
-                }
-                return resValue.getValueAsString();
-            default:
-                throw new IllegalArgumentException("Not STR/REFERENCE ValueType=" + getValueType());
+            if (stringRes == null) {
+                return null;
+            }
+            ResValue resValue = stringRes.getResValue();
+            if (resValue == null || resValue.getDataType() != DataType.STRING) {
+                throw new IllegalArgumentException("Not a STRING reference: " + formattedRefValue());
+            }
+            return resValue.getDataAsString();
         }
+        throw new IllegalArgumentException("Not STRING/REFERENCE ValueType=" + getValueType());
     }
 
     private String formattedRefValue() {
@@ -114,11 +111,11 @@ public class PluralsBagItem extends BagItem {
     }
 
     protected static PluralsBagItem copyOf(ResValueMap resValueMap) {
-        ValueType valueType = resValueMap.getValueType();
-        if (valueType == ValueType.STRING) {
+        DataType dataType = resValueMap.getDataType();
+        if (dataType == DataType.STRING) {
             return new PluralsBagItem(resValueMap.getDataAsPoolString());
         } else {
-            return new PluralsBagItem(valueType, resValueMap.getData());
+            return new PluralsBagItem(dataType, resValueMap.getData());
         }
     }
 
@@ -130,6 +127,6 @@ public class PluralsBagItem extends BagItem {
     }
 
     public static PluralsBagItem reference(int resourceId) {
-        return new PluralsBagItem(ValueType.REFERENCE, resourceId);
+        return new PluralsBagItem(DataType.REFERENCE, resourceId);
     }
 }

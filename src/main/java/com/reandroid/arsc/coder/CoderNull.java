@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 public class CoderNull extends Coder {
 
@@ -26,13 +26,13 @@ public class CoderNull extends Coder {
     @Override
     public EncodeResult encode(String text) {
         if (text.equals("@null")) {
-            return new EncodeResult(ValueType.REFERENCE, 0);
+            return new EncodeResult(DataType.REFERENCE, 0);
         }
         if (text.equals("@@null")) {
-            return new EncodeResult(ValueType.DYNAMIC_REFERENCE, 0);
+            return new EncodeResult(DataType.DYNAMIC_REFERENCE, 0);
         }
         if (text.equals("@empty")) {
-            return new EncodeResult(ValueType.NULL, 1);
+            return new EncodeResult(DataType.NULL, 1);
         }
         return null;
     }
@@ -43,8 +43,8 @@ public class CoderNull extends Coder {
     }
 
     @Override
-    public ValueType getValueType() {
-        return ValueType.NULL;
+    public DataType getValueType() {
+        return DataType.NULL;
     }
 
     @Override

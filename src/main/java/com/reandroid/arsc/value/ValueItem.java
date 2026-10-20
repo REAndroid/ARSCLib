@@ -57,7 +57,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
 
     public boolean isUndefined() {
-        return getValueType() == ValueType.NULL && getData() == 0;
+        return getDataType() == DataType.NULL && getData() == 0;
     }
     public ResourceEntry resolve(int resourceId) {
         PackageBlock context = getPackageBlock();
@@ -79,7 +79,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
 
     void linkTableStrings(TableStringPool tableStringPool) {
-        if (getValueType() == ValueType.STRING) {
+        if (getDataType() == DataType.STRING) {
             linkStringReference(tableStringPool);
         }
     }
@@ -99,11 +99,11 @@ public abstract class ValueItem extends BlockItem implements Value,
     void setRes0(byte b) {
         getBytesInternal()[this.sizeOffset + OFFSET_RES0] = b;
     }
-    public int getType() {
+    public int dataType() {
         return getBytesInternal()[this.sizeOffset + OFFSET_TYPE] & 0xff;
     }
-    public void setType(int type) {
-        if (type == getType()) {
+    public void setDataType(int type) {
+        if (type == dataType()) {
             return;
         }
         byte[] bytes = getBytesInternal();
@@ -130,19 +130,19 @@ public abstract class ValueItem extends BlockItem implements Value,
         putShort(getBytesInternal(), offset + OFFSET_SIZE, (short) size);
     }
     protected void onDataLoaded() {
-        if (getValueType() == ValueType.STRING) {
+        if (getDataType() == DataType.STRING) {
             linkStringReference();
         } else {
             unLinkStringReference();
         }
     }
     @Override
-    public ValueType getValueType() {
-        return ValueType.valueOf(getType());
+    public DataType getDataType() {
+        return DataType.valueOf(dataType());
     }
     @Override
-    public void setValueType(ValueType valueType) {
-        setType(valueType != null ? valueType.flag() : 0);
+    public void setDataType(DataType dataType) {
+        setDataType(dataType != null ? dataType.flag() : 0);
     }
     @Override
     public int getData() {
@@ -156,7 +156,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         unLinkStringReference();
         writeData(data);
-        if (ValueType.STRING==getValueType()) {
+        if (DataType.STRING== getDataType()) {
             linkStringReference();
         }
         onDataChanged();
@@ -166,7 +166,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
 
     public StringItem getDataAsPoolString() {
-        if (getValueType() != ValueType.STRING) {
+        if (getDataType() != DataType.STRING) {
             return null;
         }
         StringPool<?> stringPool = getStringPool();
@@ -176,7 +176,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         return stringPool.get(getData());
     }
     private void onTypeChanged(int old, int type) {
-        int typeString = ValueType.STRING.flag();
+        int typeString = DataType.STRING.flag();
         if (old == typeString) {
             unLinkStringReference();
         } else if (type == typeString) {
@@ -254,7 +254,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         return readSize;
     }
     @Override
-    public String getValueAsString() {
+    public String getDataAsString() {
         StringItem stringItem = getDataAsPoolString();
         if (stringItem != null) {
             String value = stringItem.getXml();
@@ -265,50 +265,50 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         return null;
     }
-    public Object getValueAsEncoded() {
-        ValueType valueType = getValueType();
-        if (valueType == ValueType.STRING) {
-            return getValueAsString();
+    public Object getDataAsEncoded() {
+        DataType dataType = getDataType();
+        if (dataType == DataType.STRING) {
+            return getDataAsString();
         }
-        if (valueType == ValueType.BOOLEAN) {
-            return getValueAsBoolean();
+        if (dataType == DataType.BOOLEAN) {
+            return getDataAsBoolean();
         }
-        if (valueType == ValueType.DEC || valueType == ValueType.HEX) {
+        if (dataType == DataType.DEC || dataType == DataType.HEX) {
             return getData();
         }
-        if (valueType == ValueType.FLOAT) {
-            return getValueAsFloat();
+        if (dataType == DataType.FLOAT) {
+            return getDataAsFloat();
         }
         return null;
     }
-    public StyleDocument getValueAsStyleDocument() {
+    public StyleDocument getDataAsStyleDocument() {
         StringItem stringItem = getDataAsPoolString();
         if (stringItem != null) {
             return stringItem.getStyleDocument();
         }
         return null;
     }
-    public void setValueAsString(SpanSet<?> spanSet) {
+    public void setDataAsString(SpanSet<?> spanSet) {
         if (spanSet == null) {
-            setValueAsString("");
+            setDataAsString("");
             return;
         }
         StringItem stringItem = getStringPool().getOrCreate(spanSet);
         setData(stringItem.getIndex());
-        setValueType(ValueType.STRING);
+        setDataType(DataType.STRING);
     }
-    public void setValueAsString(StringItem stringItem) {
+    public void setDataAsString(StringItem stringItem) {
         if (stringItem == null) {
             return;
         }
         StringItem item = getStringPool().getOrCreate(stringItem);
         setData(item.getIndex());
-        setValueType(ValueType.STRING);
+        setDataType(DataType.STRING);
     }
     @Override
-    public void setValueAsString(String str) {
-        if (getValueType() == ValueType.STRING
-                && Objects.equals(str, getValueAsString())) {
+    public void setDataAsString(String str) {
+        if (getDataType() == DataType.STRING
+                && Objects.equals(str, getDataAsString())) {
             return;
         }
         if (str == null) {
@@ -319,13 +319,13 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         StringItem stringItem = getStringPool().getOrCreate(str);
         setData(stringItem.getIndex());
-        setValueType(ValueType.STRING);
+        setDataType(DataType.STRING);
     }
     public void serializeText(XmlSerializer serializer) throws IOException {
         serializeText(serializer, false);
     }
     public void serializeText(XmlSerializer serializer, boolean escapeValues) throws IOException {
-        if (getValueType() == ValueType.STRING) {
+        if (getDataType() == DataType.STRING) {
             StringItem stringItem = getDataAsPoolString();
             if (stringItem != null) {
                 stringItem.serializeText(serializer, escapeValues);
@@ -345,7 +345,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         serializeAttribute(serializer, null, name, ignore_empty);
     }
     public void serializeAttribute(XmlSerializer serializer, String namespace, String name, boolean ignore_empty) throws IOException {
-        if (getValueType() == ValueType.STRING) {
+        if (getDataType() == DataType.STRING) {
             StringItem stringItem = getDataAsPoolString();
             if (stringItem != null) {
                 stringItem.serializeAttribute(serializer, namespace, name);
@@ -364,15 +364,15 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         serializer.attribute(namespace, name, value);
     }
-    public boolean getValueAsBoolean() {
+    public boolean getDataAsBoolean() {
         return getData() != 0;
     }
     public void setValueAsBoolean(boolean value) {
-        setValueType(ValueType.BOOLEAN);
+        setDataType(DataType.BOOLEAN);
         setData(value ? 0xffffffff : 0);
     }
     @Override
-    public void setValue(EncodeResult encodeResult) {
+    public void setData(EncodeResult encodeResult) {
         if (encodeResult == null) {
             throw new NullPointerException();
         }
@@ -380,7 +380,7 @@ public abstract class ValueItem extends BlockItem implements Value,
             throw new IllegalArgumentException("Can not set error value: "
                     + encodeResult.getError());
         }
-        setTypeAndData(encodeResult.valueType, encodeResult.value);
+        setTypeAndData(encodeResult.dataType, encodeResult.value);
     }
     public void merge(ValueItem valueItem) {
         if (valueItem == null || valueItem == this) {
@@ -390,9 +390,9 @@ public abstract class ValueItem extends BlockItem implements Value,
         if (size != 0) {
             setSize(valueItem.getSize());
         }
-        ValueType coming = valueItem.getValueType();
-        if (coming == ValueType.STRING) {
-            setValueAsString(valueItem.getDataAsPoolString());
+        DataType coming = valueItem.getDataType();
+        if (coming == DataType.STRING) {
+            setDataAsString(valueItem.getDataAsPoolString());
         } else {
             setTypeAndData(coming, valueItem.getData());
         }
@@ -405,23 +405,23 @@ public abstract class ValueItem extends BlockItem implements Value,
         if (size != 0) {
             setSize(valueItem.getSize());
         }
-        ValueType coming = valueItem.getValueType();
-        if (coming == ValueType.STRING) {
-            StyleDocument styleDocument = valueItem.getValueAsStyleDocument();
+        DataType coming = valueItem.getDataType();
+        if (coming == DataType.STRING) {
+            StyleDocument styleDocument = valueItem.getDataAsStyleDocument();
             if (styleDocument != null) {
-                setValueAsString(styleDocument);
+                setDataAsString(styleDocument);
             } else {
                 ApkFile apk1 = getPackageBlock().getTableBlock().getApkFile();
                 ApkFile apk2 = valueItem.getPackageBlock().getTableBlock().getApkFile();
-                String value = valueItem.getValueAsString();
-                setValueAsString(value);
+                String value = valueItem.getDataAsString();
+                setDataAsString(value);
                 if (apk1 != null && apk2 != null) {
                     apk1.mergeWithName(mergeOption, apk2, value);
                 }
             }
         } else if (coming.isReference()) {
             int id = 0;
-            ResourceEntry comingResourceEntry = valueItem.getValueAsReference();
+            ResourceEntry comingResourceEntry = valueItem.getDataAsReference();
             if (comingResourceEntry == null) {
                 id = valueItem.getData();
             } else if (comingResourceEntry.isContext(valueItem.getPackageBlock())) {
@@ -446,31 +446,31 @@ public abstract class ValueItem extends BlockItem implements Value,
         return decodeValue(true);
     }
     public String decodeValue(boolean validatePackage) {
-        ValueType valueType = getValueType();
-        if (valueType == null) {
+        DataType dataType = getDataType();
+        if (dataType == null) {
             return null;
         }
-        if (valueType.isReference()) {
-            return decodeAsReferenceString(valueType, validatePackage);
+        if (dataType.isReference()) {
+            return decodeAsReferenceString(dataType, validatePackage);
         }
-        if (valueType == ValueType.STRING) {
-            return getValueAsString();
+        if (dataType == DataType.STRING) {
+            return getDataAsString();
         }
-        return ValueCoder.decode(valueType, getData());
+        return ValueCoder.decode(dataType, getData());
     }
-    private String decodeAsReferenceString(ValueType valueType, boolean validatePackage) {
+    private String decodeAsReferenceString(DataType dataType, boolean validatePackage) {
         int data = getData();
         if (data == 0) {
-            return ValueCoder.decodeReference(null, valueType, data);
+            return ValueCoder.decodeReference(null, dataType, data);
         }
-        ResourceEntry resourceEntry = getValueAsReference();
+        ResourceEntry resourceEntry = getDataAsReference();
         if (validatePackage && resourceEntry == null && getPackageBlock() == null) {
             throw new NullPointerException("Parent package block is null");
         }
         if (resourceEntry == null || !resourceEntry.isDeclared()) {
-            return ValueCoder.decodeUnknownResourceId(valueType, data);
+            return ValueCoder.decodeUnknownResourceId(dataType, data);
         }
-        return resourceEntry.buildReference(getPackageBlock(), valueType);
+        return resourceEntry.buildReference(getPackageBlock(), dataType);
     }
     @Override
     public JSONObject toJson() {
@@ -483,9 +483,9 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
 
     public void toJson(JSONObject jsonObject) {
-        ValueType valueType = getValueType();
-        jsonObject.put(NAME_data_type, valueType.name());
-        if (valueType == ValueType.STRING) {
+        DataType dataType = getDataType();
+        jsonObject.put(NAME_data_type, dataType.name());
+        if (dataType == DataType.STRING) {
             StringItem stringItem = getDataAsPoolString();
             if (stringItem != null) {
                 jsonObject.put(NAME_data, stringItem.toJson());
@@ -493,8 +493,8 @@ public abstract class ValueItem extends BlockItem implements Value,
                 // unlikely, in case of wrong string index
                 jsonObject.put(NAME_data, getData());
             }
-        } else if (valueType == ValueType.BOOLEAN) {
-            jsonObject.put(NAME_data, getValueAsBoolean());
+        } else if (dataType == DataType.BOOLEAN) {
+            jsonObject.put(NAME_data, getDataAsBoolean());
         } else {
             jsonObject.put(NAME_data, getData());
         }
@@ -502,8 +502,8 @@ public abstract class ValueItem extends BlockItem implements Value,
     @Override
     public void fromJson(JSONObject json) {
         if (json != null) {
-            ValueType dataType = ValueType.fromName(json.getString(NAME_data_type));
-            if (dataType == ValueType.STRING) {
+            DataType dataType = DataType.fromName(json.getString(NAME_data_type));
+            if (dataType == DataType.STRING) {
                 Object obj = json.get(NAME_data);
                 if (obj instanceof Integer) {
                     // unlikely, in case of wrong string index
@@ -513,7 +513,7 @@ public abstract class ValueItem extends BlockItem implements Value,
                             .getOrCreateFromJson(obj);
                     setTypeAndData(dataType, stringItem.getIndex());
                 }
-            } else if (dataType == ValueType.BOOLEAN) {
+            } else if (dataType == DataType.BOOLEAN) {
                 setValueAsBoolean(json.getBoolean(NAME_data));
             } else {
                 setTypeAndData(dataType, json.getInt(NAME_data));
@@ -524,7 +524,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     @Override
     public String toString() {
         if (getPackageBlock() != null) {
-            return getValueType() + ":" + HexUtil.toHex8(getData()) + " " + decodeValue();
+            return getDataType() + ":" + HexUtil.toHex8(getData()) + " " + decodeValue();
         }
         StringBuilder builder = new StringBuilder();
         int size = getSize();
@@ -533,15 +533,15 @@ public abstract class ValueItem extends BlockItem implements Value,
             builder.append(", ");
         }
         builder.append("type=");
-        ValueType valueType=getValueType();
-        if (valueType != null) {
-            builder.append(valueType);
+        DataType dataType = getDataType();
+        if (dataType != null) {
+            builder.append(dataType);
         } else {
-            builder.append(HexUtil.toHex2(getType()));
+            builder.append(HexUtil.toHex2(dataType()));
         }
         builder.append(", data=");
         int data = getData();
-        if (valueType==ValueType.STRING) {
+        if (dataType == DataType.STRING) {
             StringItem tableString = getDataAsPoolString();
             if (tableString != null) {
                 builder.append(tableString.getHtml());

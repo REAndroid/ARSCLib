@@ -78,7 +78,7 @@ public class AttributeBagItem {
         if(!isFormats()){
             return null;
         }
-        return AttributeDataFormat.decodeValueTypes(getBagItem().getData());
+        return AttributeDataFormat.decodeDataTypes(getBagItem().getData());
     }
     public boolean isEnum(){
         if(!isFormats()){

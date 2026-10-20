@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.model.FrameworkTable;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 import java.io.File;
 import java.io.IOException;
@@ -261,10 +261,10 @@ public class FrameworkApk extends ApkModule{
     public static boolean isFramework(AndroidManifestBlock manifestBlock) {
         ResXmlElement root = manifestBlock.getManifestElement();
         ResXmlAttribute attribute = root.searchAttributeByName(AndroidManifestBlock.NAME_coreApp);
-        if (attribute == null || attribute.getValueType()!= ValueType.BOOLEAN) {
+        if (attribute == null || attribute.getDataType()!= DataType.BOOLEAN) {
             return false;
         }
-        return attribute.getValueAsBoolean();
+        return attribute.getDataAsBoolean();
     }
     public static FrameworkApk loadApkBuffer(InputStream inputStream) throws IOException{
         return loadApkBuffer("framework", inputStream);

@@ -18,7 +18,7 @@ package com.reandroid.arsc.coder;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 
 import java.io.IOException;
 
@@ -56,18 +56,18 @@ public class ReferenceString {
         }
         return notFound;
     }
-    public ValueType getValueType() {
+    public DataType getValueType() {
         String prefix = this.prefix;
         if ("?".equals(prefix)) {
-            return ValueType.ATTRIBUTE;
+            return DataType.ATTRIBUTE;
         }
         if ("??".equals(prefix)) {
-            return ValueType.DYNAMIC_ATTRIBUTE;
+            return DataType.DYNAMIC_ATTRIBUTE;
         }
         if ("@@".equals(prefix)) {
-            return ValueType.DYNAMIC_REFERENCE;
+            return DataType.DYNAMIC_REFERENCE;
         }
-        return ValueType.REFERENCE;
+        return DataType.REFERENCE;
     }
 
     @Override

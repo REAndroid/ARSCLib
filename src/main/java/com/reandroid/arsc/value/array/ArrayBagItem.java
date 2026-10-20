@@ -19,7 +19,7 @@ import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.DataType;
 import com.reandroid.arsc.value.bag.BagItem;
 import com.reandroid.arsc.value.ResValueMap;
 
@@ -32,8 +32,8 @@ public class ArrayBagItem extends BagItem {
         super(str);
     }
 
-    private ArrayBagItem(ValueType valueType, int value) {
-        super(valueType, value);
+    private ArrayBagItem(DataType dataType, int value) {
+        super(dataType, value);
     }
 
     @Override
@@ -56,19 +56,19 @@ public class ArrayBagItem extends BagItem {
         return new ArrayBagItem(valueMap);
     }
 
-    public static ArrayBagItem create(ValueType valueType, int value) {
-        if (valueType == null || valueType == ValueType.STRING) {
+    public static ArrayBagItem create(DataType dataType, int value) {
+        if (dataType == null || dataType == DataType.STRING) {
             return null;
         }
-        return new ArrayBagItem(valueType, value);
+        return new ArrayBagItem(dataType, value);
     }
 
     protected static ArrayBagItem copyOf(ResValueMap resValueMap) {
-        ValueType valueType = resValueMap.getValueType();
-        if (valueType == ValueType.STRING) {
+        DataType dataType = resValueMap.getDataType();
+        if (dataType == DataType.STRING) {
             return new ArrayBagItem(resValueMap.getDataAsPoolString());
         } else {
-            return new ArrayBagItem(valueType, resValueMap.getData());
+            return new ArrayBagItem(dataType, resValueMap.getData());
         }
     }
 
@@ -76,11 +76,11 @@ public class ArrayBagItem extends BagItem {
         if (encodeResult == null) {
             return null;
         }
-        return create(encodeResult.valueType, encodeResult.value);
+        return create(encodeResult.dataType, encodeResult.value);
     }
 
     public static ArrayBagItem integer(int n) {
-        return create(ValueType.DEC, n);
+        return create(DataType.DEC, n);
     }
 
     public static ArrayBagItem string(TableString str) {
@@ -91,6 +91,6 @@ public class ArrayBagItem extends BagItem {
     }
 
     public static ArrayBagItem reference(int resourceId) {
-        return create(ValueType.REFERENCE, resourceId);
+        return create(DataType.REFERENCE, resourceId);
     }
 }
