@@ -97,16 +97,16 @@ public class ARSCLibExample {
         Entry appIcon = packageBlock.getOrCreate("", "drawable", "ic_launcher");
 
         EncodeResult color = ValueCoder.encode("#006400");
-        appIcon.setValueAsRaw(color.valueType, color.value);
+        appIcon.setDataAsRaw(color.dataType, color.value);
 
         Entry appNameDefault = packageBlock.getOrCreate("", "string", "app_name");
-        appNameDefault.setValueAsString("My Application");
+        appNameDefault.setDataAsString("My Application");
 
         Entry appNameDe = packageBlock.getOrCreate("-de", "string", "app_name");
-        appNameDe.setValueAsString("Meine Bewerbung");
+        appNameDe.setDataAsString("Meine Bewerbung");
 
         Entry appNameRu = packageBlock.getOrCreate("-ru-rRU", "string", "app_name");
-        appNameRu.setValueAsString("Мое заявление");
+        appNameRu.setDataAsString("Мое заявление");
 
         manifest.setPackageName("com.example");
         manifest.setVersionCode(100);
@@ -126,7 +126,7 @@ public class ARSCLibExample {
         ResXmlElement mainActivity = manifest.getOrCreateMainActivity("android.app.Activity");
         ResXmlAttribute labelAttribute = mainActivity
                 .getOrCreateAndroidAttribute(AndroidManifestBlock.NAME_label, AndroidManifestBlock.ID_label);
-        labelAttribute.setValueAsString("Hello World");
+        labelAttribute.setDataAsString("Hello World");
 
         //Android os requires at least one dex file on base apk
         ByteInputSource dummyDex = new ByteInputSource(new byte[0], "classes.dex");
