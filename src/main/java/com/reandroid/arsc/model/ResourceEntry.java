@@ -27,7 +27,12 @@ import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.DataType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;

@@ -235,10 +235,9 @@ public class PackageBlock extends Chunk<PackageHeader>
         while (iterator.hasNext()) {
             SpecTypePair specTypePair = iterator.next();
             String typeName = specTypePair.getTypeName();
-            if (!CommonType.isCommonTypeName(typeName) || unique.contains(typeName)) {
+            if (!unique.add(typeName) || !CommonType.isCommonTypeName(typeName)) {
                 return false;
             }
-            unique.add(typeName);
         }
         return true;
     }
@@ -648,15 +647,9 @@ public class PackageBlock extends Chunk<PackageHeader>
 
     @Override
     public JSONObject toJson() {
-        return toJson(true);
+        return toJson(true, true);
     }
-    public JSONObject toJson(boolean addTypes) {
-        return toJson(addTypes, addTypes);
-    }
-    public JSONObject toJson(boolean addTypes, boolean addOverlayables) {
-        return toJson(addTypes, addOverlayables, addOverlayables);
-    }
-    public JSONObject toJson(boolean addTypes, boolean addOverlayables, boolean addStagedAlias) {
+    public JSONObject toJson(boolean addTypes, boolean addExtras) {
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
@@ -664,19 +657,15 @@ public class PackageBlock extends Chunk<PackageHeader>
         jsonObject.put(NAME_package_id, getId());
         jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson(!addTypes));
-        if (addOverlayables) {
+        if (addExtras) {
             JSONArray libraries = getLibraryList().toJson();
             if (libraries != null) {
                 jsonObject.put(NAME_libraries, libraries);
             }
-        }
-        if (addOverlayables) {
             JSONArray stagedAlias = getStagedAliasList().toJson();
             if (stagedAlias != null) {
                 jsonObject.put(NAME_staged_aliases, stagedAlias);
             }
-        }
-        if (addOverlayables) {
             JSONArray overlaybles = getOverlayableList().toJson();
             if (overlaybles != null) {
                 jsonObject.put(NAME_overlaybles, overlaybles);

@@ -15,7 +15,10 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.arsc.chunk.*;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.list.ExtraChunkList;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -52,6 +55,7 @@ public class TableBlockJsonBuilder {
         return tableBlock;
     }
     private void scanPackageDirectory(TableBlock tableBlock, File packageDir) throws IOException {
+        parsedFiles.add(new File(packageDir, "package-test.json"));
         File packageJsonFile = new File(packageDir, PackageBlock.FILE_NAME_JSON);
         if (!parsedFiles.add(packageJsonFile)) {
             return;
@@ -90,29 +94,14 @@ public class TableBlockJsonBuilder {
         typeBlock.fromJson(jsonObject);
     }
     private void loadExtras(PackageBlock packageBlock, File packageDir) throws IOException {
-        loadLibrary(packageBlock, packageDir);
-        loadOverlayable(packageBlock, packageDir);
-        loadStagedAlias(packageBlock, packageDir);
+        loadExtra(packageBlock.getLibraryList(), packageDir);
+        loadExtra(packageBlock.getOverlayableList(), packageDir);
+        loadExtra(packageBlock.getStagedAliasList(), packageDir);
     }
-    private void loadLibrary(PackageBlock packageBlock, File packageDir) throws IOException {
-        File file = new File(packageDir, LibraryBlock.FILE_NAME_JSON);
-        if (!file.isFile() || !parsedFiles.add(file)) {
-            return;
+    private void loadExtra(ExtraChunkList<?> chunkList, File packageDir) throws IOException {
+        File file = new File(packageDir, chunkList.fileNameJson());
+        if (file.isFile() && parsedFiles.add(file)) {
+            chunkList.fromJson(new JSONArray(file));
         }
-        packageBlock.getLibraryList().fromJson(new JSONArray(file));
-    }
-    private void loadOverlayable(PackageBlock packageBlock, File packageDir) throws IOException {
-        File file = new File(packageDir, Overlayable.FILE_NAME_JSON);
-        if (!file.isFile() || !parsedFiles.add(file)) {
-            return;
-        }
-        packageBlock.getOverlayableList().fromJson(new JSONArray(file));
-    }
-    private void loadStagedAlias(PackageBlock packageBlock, File packageDir) throws IOException {
-        File file = new File(packageDir, StagedAlias.FILE_NAME_JSON);
-        if (!file.isFile() || !parsedFiles.add(file)) {
-            return;
-        }
-        packageBlock.getStagedAliasList().fromJson(new JSONArray(file));
     }
 }

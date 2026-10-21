@@ -16,12 +16,10 @@
 package com.reandroid.apk;
 
 import com.reandroid.arsc.array.SpecTypePairArray;
-import com.reandroid.arsc.chunk.LibraryBlock;
-import com.reandroid.arsc.chunk.Overlayable;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.StagedAlias;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.list.ExtraChunkList;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,25 +54,21 @@ public class SplitJsonResourceDecoder {
             }
         }
     }
-    private void writeSplitPackageInfoJson(File packageDirectory, PackageBlock packageBlock) throws IOException {
-        packageBlock.toJson(false, false).write(
-                new File(packageDirectory, PackageBlock.FILE_NAME_JSON));
-        if (!packageBlock.getOverlayableList().isEmpty()) {
-            packageBlock.getOverlayableList().toJson().write(
-                    new File(packageDirectory, Overlayable.FILE_NAME_JSON));
-        }
-        if (!packageBlock.getStagedAliasList().isBlank()) {
-            packageBlock.getStagedAliasList().toJson().write(
-                    new File(packageDirectory, StagedAlias.FILE_NAME_JSON));
-        }
-        if (!packageBlock.getLibraryList().isBlank()) {
-            packageBlock.getLibraryList().toJson().write(
-                    new File(packageDirectory, LibraryBlock.FILE_NAME_JSON));
-        }
-    }
     private void writeSplitTypeJsonFiles(File packageDirectory, TypeBlock typeBlock) throws IOException {
         File file = new File(packageDirectory,
                 typeBlock.buildUniqueDirectoryName() + ApkUtil.JSON_FILE_EXTENSION);
         typeBlock.toJson().write(file);
+    }
+    private void writeSplitPackageInfoJson(File packageDirectory, PackageBlock packageBlock) throws IOException {
+        packageBlock.toJson(false, false).write(
+                new File(packageDirectory, PackageBlock.FILE_NAME_JSON));
+        writeSplitExtra(packageDirectory, packageBlock.getLibraryList());
+        writeSplitExtra(packageDirectory, packageBlock.getOverlayableList());
+        writeSplitExtra(packageDirectory, packageBlock.getStagedAliasList());
+    }
+    private void writeSplitExtra(File packageDirectory, ExtraChunkList<?> chunkList) throws IOException {
+        if (!chunkList.isBlank()) {
+            chunkList.toJson().write(new File(packageDirectory, chunkList.fileNameJson()));
+        }
     }
 }

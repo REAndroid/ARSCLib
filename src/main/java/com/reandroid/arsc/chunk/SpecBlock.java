@@ -24,7 +24,7 @@ import com.reandroid.arsc.item.SpecFlag;
 import com.reandroid.arsc.item.SpecFlagsArray;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
-
+import com.reandroid.utils.ObjectsUtil;
 
 public class SpecBlock extends Chunk<SpecHeader> implements
         Mergeable<SpecBlock>, JSONConvert<JSONArray> {
@@ -162,7 +162,6 @@ public class SpecBlock extends Chunk<SpecHeader> implements
         }
     }
 
-    public static final String NAME_spec = "spec";
-    public static final String NAME_spec_flags = "spec_flags";
-    public static final String NAME_flag = "flag";
+    public static final String NAME_flags = ObjectsUtil.of("flags");
+    public static final String NAME_flag = ObjectsUtil.of("flag");
 }

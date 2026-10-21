@@ -43,6 +43,9 @@ public class HexUtil {
     public static String toHex2(String prefix, byte num) {
         return toHex(prefix, num & 0x00000000000000ffL, 2);
     }
+    public static String toHex2(String prefix, int num) {
+        return toHex(prefix, num & 0xffffffffL, 2);
+    }
     public static String toHex4(short num) {
         return toHex(num & 0x000000000000ffffL, 4);
     }

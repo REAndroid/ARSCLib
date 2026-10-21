@@ -29,9 +29,11 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ValueItem;
+import com.reandroid.common.Mergeable;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -46,7 +48,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class SpecTypePair extends FixedBlockContainer
-        implements Iterable<TypeBlock>, JSONConvert<JSONObject>, Comparable<SpecTypePair> {
+        implements Iterable<TypeBlock>, Mergeable<SpecTypePair>,
+        JSONConvert<JSONObject>, Comparable<SpecTypePair> {
 
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
@@ -348,7 +351,7 @@ public class SpecTypePair extends FixedBlockContainer
             return;
         }
         setId(json.optInt("id", getId()));
-        getSpecBlock().fromJson(json.optJSONArray(SpecBlock.NAME_spec_flags));
+        getSpecBlock().fromJson(json.optJSONArray(SpecBlock.NAME_flags));
         getTypeBlockArray().fromJson(json.optJSONArray(NAME_types));
     }
     public JSONObject toJson(boolean specOnly) {
@@ -356,7 +359,7 @@ public class SpecTypePair extends FixedBlockContainer
         jsonObject.put("id", getId());
         JSONArray spec = getSpecBlock().toJson();
         if (spec != null) {
-            jsonObject.put(SpecBlock.NAME_spec_flags, spec);
+            jsonObject.put(SpecBlock.NAME_flags, spec);
         }
         if (!specOnly) {
             JSONArray jsonArray = getTypeBlockArray().toJson();
@@ -369,6 +372,7 @@ public class SpecTypePair extends FixedBlockContainer
         }
         return jsonObject;
     }
+    @Override
     public void merge(SpecTypePair typePair) {
         if (typePair == null || typePair == this) {
             return;
@@ -382,7 +386,7 @@ public class SpecTypePair extends FixedBlockContainer
     }
     @Override
     public int compareTo(SpecTypePair specTypePair) {
-        return Integer.compare(getId(), specTypePair.getId());
+        return CompareUtil.compare(getId(), specTypePair.getId());
     }
     @Override
     public String toString() {
