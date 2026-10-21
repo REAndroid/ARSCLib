@@ -67,7 +67,7 @@ public class PathSanitizerCaseInsensitiveTest {
             Assert.assertEquals(
                 source.getName(),
                 new String(
-                    source.openStream().readAllBytes(),
+                    readBytes(source.openStream()),
                     java.nio.charset.StandardCharsets.UTF_8
                 )
             );
@@ -75,4 +75,19 @@ public class PathSanitizerCaseInsensitiveTest {
 
         System.out.println("Case-insensitive regression test passed");
     }
+
+    private static byte[] readBytes(java.io.InputStream input)
+            throws java.io.IOException {
+        try (java.io.InputStream in = input;
+             java.io.ByteArrayOutputStream out =
+                 new java.io.ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = in.read(buffer)) != -1) {
+                out.write(buffer, 0, count);
+            }
+            return out.toByteArray();
+        }
+    }
+
 }
