@@ -45,6 +45,9 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         }
     }
     public void apply(InputSource inputSource){
+        if(inputSource.isUncompressed()){
+            return;
+        }
         inputSource.setUncompressed(isUncompressed(inputSource.getAlias())
                 || isUncompressed(inputSource.getName()));
     }
