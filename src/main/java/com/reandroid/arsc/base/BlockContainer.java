@@ -20,135 +20,138 @@ import com.reandroid.arsc.io.BlockReader;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public abstract class BlockContainer<T extends Block> extends Block implements BlockRefresh{
-    public BlockContainer(){
+public abstract class BlockContainer extends Block implements BlockRefresh {
+
+    public BlockContainer() {
         super();
     }
 
-    protected void onPreRefresh(){
+    protected void onPreRefresh() {
 
     }
     protected abstract void onRefreshed();
 
     @Override
-    public final void refresh(){
-        if(isNull()){
+    public final void refresh() {
+        if (isNull()) {
             return;
         }
         onPreRefresh();
-        refreshChildes();
+        refreshBlocks();
         onRefreshed();
     }
-    protected void refreshChildes(){
-        T[] childes = getChildes();
-        if(childes == null){
-            return;
-        }
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item instanceof BlockRefresh){
-                ((BlockRefresh)item).refresh();
+
+    protected void refreshBlocks() {
+        Object[] blocks = blocks();
+        if (blocks != null) {
+            int length = blocks.length;
+            for (int i = 0; i < length; i++) {
+                Object item = blocks[i];
+                if (item instanceof BlockRefresh) {
+                    ((BlockRefresh) item).refresh();
+                }
             }
         }
     }
     @Override
-    public void onCountUpTo(BlockCounter counter){
-        if(counter.FOUND){
+    public void onCountUpTo(BlockCounter counter) {
+        if (counter.FOUND) {
             return;
         }
         counter.setCurrent(this);
-        if(counter.END==this){
-            counter.FOUND=true;
+        if (counter.END == this) {
+            counter.FOUND = true;
             return;
         }
-        T[] childes = getChildes();
-        if(childes == null){
-            return;
-        }
-        int max = childes.length;
-        for(int i = 0; i < max; i++){
-            if(counter.FOUND){
-                return;
-            }
-            T item = childes[i];
-            if(item != null){
-                item.onCountUpTo(counter);
+        Object[] blocks = blocks();
+        if (blocks != null) {
+            int length = blocks.length;
+            for (int i = 0; i < length; i++) {
+                if (counter.FOUND) {
+                    break;
+                }
+                Object item = blocks[i];
+                if (item != null) {
+                    ((Block) item).onCountUpTo(counter);
+                }
             }
         }
     }
     @Override
-    public int countBytes(){
-        if(isNull()){
-            return 0;
-        }
-        T[] childes = getChildes();
-        if(childes == null){
-            return 0;
-        }
+    public int countBytes() {
         int result = 0;
-        int max = childes.length;
-        for(int i = 0; i < max; i++){
-            T item = childes[i];
-            if(item != null){
-                result += item.countBytes();
+        if (!isNull()) {
+            Object[] blocks = blocks();
+            if (blocks != null) {
+                int max = blocks.length;
+                for (int i = 0; i < max; i++) {
+                    Object item = blocks[i];
+                    if (item != null) {
+                        result += ((Block) item).countBytes();
+                    }
+                }
             }
         }
         return result;
     }
     @Override
-    public byte[] getBytes(){
-        if(isNull()){
-            return null;
-        }
-        T[] childes = getChildes();
-        if(childes == null){
-            return null;
-        }
+    public byte[] getBytes() {
         byte[] results = null;
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
-                results = addBytes(results, item.getBytes());
+        if (!isNull()) {
+            Object[] blocks = blocks();
+            if (blocks != null) {
+                int length = blocks.length;
+                for (int i = 0; i < length; i++) {
+                    Object item = blocks[i];
+                    if (item != null) {
+                        results = addBytes(results, ((Block) item).getBytes());
+                    }
+                }
             }
         }
         return results;
     }
     @Override
     public int onWriteBytes(OutputStream stream) throws IOException {
-        if(isNull()){
-            return 0;
-        }
-        T[] childes = getChildes();
-        if(childes == null){
-            return 0;
-        }
         int result = 0;
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
-                result += item.writeBytes(stream);
+        if (!isNull()) {
+            Object[] blocks = blocks();
+            if (blocks != null) {
+                int length = blocks.length;
+                for (int i = 0; i < length; i++) {
+                    Object item = blocks[i];
+                    if (item != null) {
+                        result += ((Block) item).writeBytes(stream);
+                    }
+                }
             }
         }
         return result;
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        T[] childes = getChildes();
-        if(childes == null){
-            return;
-        }
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
-                item.readBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        Object[] blocks = blocks();
+        if (blocks != null) {
+            int length = blocks.length;
+            for (int i = 0; i < length; i++) {
+                Object item = blocks[i];
+                if (item != null) {
+                    ((Block) item).readBytes(reader);
+                }
             }
         }
     }
-    public abstract int getChildesCount();
-    public abstract T[] getChildes();
+
+    @SuppressWarnings("unchecked")
+    public<T> T block(int i) {
+        return (T) blocks()[i];
+    }
+    @SuppressWarnings("unchecked")
+    public<T> T blockLast() {
+        Object[] blocks = blocks();
+        return (T) blocks[blocks.length - 1];
+    }
+    public abstract Object[] blocks();
+
 }

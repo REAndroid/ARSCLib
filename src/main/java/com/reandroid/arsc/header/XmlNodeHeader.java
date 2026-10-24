@@ -17,28 +17,25 @@ package com.reandroid.arsc.header;
 
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 
 public class XmlNodeHeader extends HeaderBlock {
 
-    private final IntegerItem lineNumber;
-    private final IntegerItem commentReference;
     private final ChunkType chunkType;
 
     public XmlNodeHeader(ChunkType chunkType) {
         super(2, chunkType);
         this.chunkType = chunkType;
-        this.lineNumber = new IntegerItem();
-        this.commentReference = new IntegerItem(-1);
 
-        addChild(3, lineNumber);
-        addChild(4, commentReference);
+        setupBlock(3, new IntegerItem());         //lineNumber
+        setupBlock(4, new IntegerItem(-1)); //commentReference
     }
 
-    public IntegerItem getLineNumber() {
-        return lineNumber;
+    public IntegerReference lineNumber() {
+        return block(3);
     }
-    public IntegerItem getCommentReference() {
-        return commentReference;
+    public IntegerItem commentReference() {
+        return block(4);
     }
 
     @Override
@@ -47,7 +44,7 @@ public class XmlNodeHeader extends HeaderBlock {
             return super.toString();
         }
         return getClass().getSimpleName()
-                +" {lineNumber=" + getLineNumber()
-                +", commentReference=" + getCommentReference() + '}';
+                +" {lineNumber=" + lineNumber()
+                +", commentReference=" + commentReference() + '}';
     }
 }

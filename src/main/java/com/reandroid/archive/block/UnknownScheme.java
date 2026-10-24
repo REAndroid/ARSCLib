@@ -29,14 +29,14 @@ public class UnknownScheme extends SignatureScheme{
     public UnknownScheme(SignatureId signatureId) {
         super(1, signatureId);
         this.byteArray = new ByteArray();
-        addChild(byteArray);
+        setupBlock(byteArray);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         SignatureInfo signatureInfo = getSignatureInfo();
         int size = (int) signatureInfo.getDataSize() - 4;
         byteArray.setSize(size);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
     @Override
     public Iterator<CertificateBlock> getCertificates() {

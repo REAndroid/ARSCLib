@@ -56,7 +56,7 @@ public abstract class StringBlock extends BlockItem implements StringReference {
         setBytesInternal(bytes, false);
     }
     protected void onBytesChanged(){
-        mCache = decodeString(getBytesInternal());
+        mCache = decodeString(bytes());
     }
     protected void onStringChanged(String old, String text){
     }

@@ -29,10 +29,10 @@ public class ResXmlIDMap extends Chunk<XmlIDMapHeader> implements Iterable<ResXm
     private final ResXmlIDList mResXmlIDArray;
 
     public ResXmlIDMap() {
-        super(new XmlIDMapHeader(), 1);
-        this.mResXmlIDArray = new ResXmlIDList(getHeaderBlock().getIdsCount());
+        super(1, new XmlIDMapHeader());
+        this.mResXmlIDArray = new ResXmlIDList(getHeaderBlock().idsCount());
 
-        addChild(mResXmlIDArray);
+        setupBlock(mResXmlIDArray);
     }
 
     void removeSafely(ResXmlID resXmlID) {

@@ -21,7 +21,7 @@ import com.reandroid.arsc.item.ResXmlString;
 abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamespace {
 
     ResXmlNamespaceChunk(ChunkType chunkType) {
-        super(chunkType, 0);
+        super(0, chunkType);
     }
 
     @Override

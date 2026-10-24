@@ -174,11 +174,11 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
 
     @Override
     public int getNameId() {
-        return getInteger(getBytesInternal(), OFFSET_NAME);
+        return getInteger(bytes(), OFFSET_NAME);
     }
     @Override
     public void setNameId(int id){
-        putInteger(getBytesInternal(), OFFSET_NAME, id);
+        putInteger(bytes(), OFFSET_NAME, id);
     }
 
     @Override

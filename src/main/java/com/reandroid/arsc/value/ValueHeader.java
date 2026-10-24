@@ -32,7 +32,7 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     public ValueHeader(int size) {
         super(size);
         writeSize();
-        putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, -1);
+        putInteger(bytes(), OFFSET_SPEC_REFERENCE, -1);
     }
 
     void linkSpecStringsInternal(SpecStringPool specStringPool) {
@@ -60,22 +60,22 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         return null;
     }
     public boolean isComplex() {
-        return getBit(getBytesInternal(), OFFSET_FLAGS,0);
+        return getBit(bytes(), OFFSET_FLAGS,0);
     }
     public void setComplex(boolean complex) {
-        putBit(getBytesInternal(), OFFSET_FLAGS, 0, complex);
+        putBit(bytes(), OFFSET_FLAGS, 0, complex);
     }
     public void setPublic(boolean b) {
-        putBit(getBytesInternal(), OFFSET_FLAGS,1, b);
+        putBit(bytes(), OFFSET_FLAGS,1, b);
     }
     public boolean isPublic() {
-        return getBit(getBytesInternal(), OFFSET_FLAGS,1);
+        return getBit(bytes(), OFFSET_FLAGS,1);
     }
     public void setWeak(boolean b) {
-        putBit(getBytesInternal(), OFFSET_FLAGS, 2, b);
+        putBit(bytes(), OFFSET_FLAGS, 2, b);
     }
     public boolean isWeak() {
-        return getBit(getBytesInternal(), OFFSET_FLAGS,2);
+        return getBit(bytes(), OFFSET_FLAGS,2);
     }
     // Intentionally made accessible internal, use ResValue#setCompact
     void setCompact(boolean b) {
@@ -83,16 +83,16 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
             return;
         }
         int key = getKey();
-        putBit(getBytesInternal(), OFFSET_FLAGS, 3, b);
+        putBit(bytes(), OFFSET_FLAGS, 3, b);
         writeKey(key, b);
     }
     public boolean isCompact() {
-        return getBit(getBytesInternal(), OFFSET_FLAGS,3);
+        return getBit(bytes(), OFFSET_FLAGS,3);
     }
 
     public int getKey() {
         if(isCompact()) {
-            return getShortUnsigned(getBytesInternal(), 0);
+            return getShortUnsigned(bytes(), 0);
         }
         return getData();
     }
@@ -109,22 +109,22 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     }
     private void writeKey(int key, boolean compact) {
         if(compact) {
-            putShort(getBytesInternal(), 0, key);
+            putShort(bytes(), 0, key);
         } else {
             setData(key);
         }
     }
     int getData() {
-        return getInteger(getBytesInternal(), 4);
+        return getInteger(bytes(), 4);
     }
     void setData(int data) {
-        putInteger(getBytesInternal(), 4, data);
+        putInteger(bytes(), 4, data);
     }
     int getType() {
-        return getBytesInternal()[OFFSET_DATA_TYPE] & 0xff;
+        return bytes()[OFFSET_DATA_TYPE] & 0xff;
     }
     void setType(int type) {
-        getBytesInternal()[OFFSET_DATA_TYPE] = (byte) type;
+        bytes()[OFFSET_DATA_TYPE] = (byte) type;
     }
     public void setKey(StringItem stringItem) {
         if(ignoreUpdateKey(stringItem)) {
@@ -156,18 +156,18 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         }
     }
     public int getSize() {
-        return getBytesInternal().length;
+        return bytes().length;
     }
     int readSize() {
         if(getSize()<2) {
             return 0;
         }
-        return 0xffff & getShort(getBytesInternal(), OFFSET_SIZE);
+        return 0xffff & getShort(bytes(), OFFSET_SIZE);
     }
     private void writeSize() {
         int size = getSize();
         if(size>1) {
-            putShort(getBytesInternal(), OFFSET_SIZE, (short) size);
+            putShort(bytes(), OFFSET_SIZE, (short) size);
         }
     }
 
@@ -223,14 +223,14 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         return null;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int position = reader.getPosition();
-        reader.readFully(getBytesInternal());
+        reader.readFully(bytes());
         if(!isCompact()) {
             reader.seek(position);
             int size = reader.readUnsignedShort();
             setBytesLength(size, false);
-            reader.readFully(getBytesInternal());
+            reader.readFully(bytes());
         }
     }
     private void setName(String name) {

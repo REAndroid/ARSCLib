@@ -43,15 +43,15 @@ public class ProfileMagic extends BlockItem implements IntegerReference {
 
     @Override
     public int get() {
-        return Block.getInteger(getBytesInternal(), 0);
+        return Block.getInteger(bytes(), 0);
     }
     @Override
     public void set(int value) {
-        Block.putInteger(getBytesInternal(), 0, value);
+        Block.putInteger(bytes(), 0, value);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         int value = get();
         if ((value == MAGIC_PROF) == (getParentInstance(ProfileDataFile.class) == null)) {
             throw new IOException("Invalid magic: " + HexUtil.toHex8(value));
@@ -67,7 +67,7 @@ public class ProfileMagic extends BlockItem implements IntegerReference {
         if (value == MAGIC_PROFM) {
             return "prm\\0";
         }
-        return HexUtil.toHexString(getBytesInternal());
+        return HexUtil.toHexString(bytes());
     }
 
     public static final int MAGIC_PROF = ObjectsUtil.of(0x006f7270);

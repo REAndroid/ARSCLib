@@ -29,27 +29,16 @@ import java.io.IOException;
 
 public class TypeHeader extends SpecOrTypeHeader {
 
-    private final ByteItem flags;
-    private final IntegerItem count;
-    private final IntegerItem entriesStart;
-    private final ResConfig config;
-
     private OffsetTypeChangedListener offsetTypeChangedListener;
 
     public TypeHeader() {
         super(5, ChunkType.TYPE);
 
-        this.flags = new ByteItem();
-        ShortItem reserved = new ShortItem();
-        this.count = new IntegerItem();
-        this.entriesStart = new IntegerItem();
-        this.config = new ResConfig();
-
-        addChild(4, flags);
-        addChild(5, reserved);
-        addChild(6, count);
-        addChild(7, entriesStart);
-        addChild(8, config);
+        setupBlock(4, new ByteItem());    // flags
+        setupBlock(5, new ShortItem());   // reserved
+        setupBlock(6, new IntegerItem()); // count
+        setupBlock(7, new IntegerItem()); // entriesStart
+        setupBlock(8, new ResConfig());   // config
     }
 
     public TypeHeader(boolean sparse, boolean offset16) {
@@ -105,16 +94,16 @@ public class TypeHeader extends SpecOrTypeHeader {
     }
 
     public IntegerReference flags() {
-        return flags;
+        return block(4);
     }
     public IntegerReference count() {
-        return count;
+        return block(6);
     }
     public IntegerReference entriesStart() {
-        return entriesStart;
+        return block(7);
     }
     public ResConfig getConfig() {
-        return config;
+        return block(8);
     }
 
     private void notifyOffsetTypeChanged() {
@@ -128,8 +117,8 @@ public class TypeHeader extends SpecOrTypeHeader {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         notifyOffsetTypeChanged();
     }
 

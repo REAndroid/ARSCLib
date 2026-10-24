@@ -29,7 +29,7 @@ public class DexVersion extends HeaderPiece {
         if(mCache != 0){
             return mCache;
         }
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if(bytes == null || bytes.length != 4){
             return -1;
         }
@@ -40,7 +40,7 @@ public class DexVersion extends HeaderPiece {
     }
     public void setVersionAsInteger(int version){
         setSize(4);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if(version < 0 || version > 999){
             version = 0;
         }
@@ -62,7 +62,7 @@ public class DexVersion extends HeaderPiece {
     }
 
     public boolean isDefault(){
-        return ByteArray.equals(getBytesInternal(), DEFAULT_BYTES);
+        return ByteArray.equals(bytes(), DEFAULT_BYTES);
     }
     public boolean isClassDefinitionOrderEnforced() {
         return getVersionAsInteger() >= ClassDefinitionOrderEnforcedVersion;

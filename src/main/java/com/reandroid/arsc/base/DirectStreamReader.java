@@ -42,11 +42,11 @@ public interface DirectStreamReader {
                     result += readBlock(list.get(i), inputStream);
                 }
             } else if (block instanceof SingleBlockContainer) {
-                return readBlock(((SingleBlockContainer<?>) block).getItem(), inputStream);
+                return readBlock(((SingleBlockContainer<?>) block).block(), inputStream);
             } else if (block instanceof BlockContainer) {
-                Block[] blocks = ((BlockContainer<? extends Block>) block).getChildes();
-                for (Block element : blocks) {
-                    result += readBlock(element, inputStream);
+                Object[] blocks = ((BlockContainer) block).blocks();
+                for (Object element : blocks) {
+                    result += readBlock((Block) element, inputStream);
                 }
             } else {
                 throw new IOException("Can not read block type: " + block.getClass());

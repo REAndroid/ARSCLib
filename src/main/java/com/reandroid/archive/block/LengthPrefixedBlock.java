@@ -34,7 +34,7 @@ public class LengthPrefixedBlock extends ExpandableBlockContainer{
             numberBlock = new IntegerItem();
         }
         this.numberBlock = numberBlock;
-        addChild(this.numberBlock);
+        setupBlock(this.numberBlock);
     }
     public long getDataSize(){
         Block numberBlock = this.numberBlock;
@@ -52,7 +52,7 @@ public class LengthPrefixedBlock extends ExpandableBlockContainer{
         }
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if(!reader.isAvailable()){
             return;
         }
@@ -65,13 +65,13 @@ public class LengthPrefixedBlock extends ExpandableBlockContainer{
         }
         onSizeLoaded(dataSize);
         BlockReader chunkReader = reader.create(dataSize);
-        Block[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
-            Block child = childes[i];
-            if(child == numberBlock){
+        Object[] blocks = blocks();
+        for (int i = 0; i < blocks.length; i++) {
+            Object block = blocks[i];
+            if (block == numberBlock){
                 continue;
             }
-            child.readBytes(chunkReader);
+            ((Block) block).readBytes(chunkReader);
         }
         reader.offset(dataSize);
     }

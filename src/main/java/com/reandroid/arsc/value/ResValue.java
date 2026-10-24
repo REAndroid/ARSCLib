@@ -86,11 +86,11 @@ public class ResValue extends ValueItem  {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         boolean compact = isCompact();
         updateBytesLength(compact);
         if (!compact) {
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
     }
     @Override

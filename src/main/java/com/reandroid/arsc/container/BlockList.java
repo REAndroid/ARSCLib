@@ -179,7 +179,8 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     public ArrayCollection<T> subListIf(Predicate<? super T> predicate) {
         return mItems.subListIf(predicate);
     }
-    public void clearChildes() {
+
+    public void clearBlocks() {
         if (mItems.isEmpty()) {
             return;
         }
@@ -708,11 +709,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         this.mSameByteSizeEntries = value;
     }
 
-    public void readChildes(BlockReader reader) throws IOException{
+    public void readChildes(BlockReader reader) throws IOException {
         int size = this.size();
         for (int i = 0; i < size; i++) {
-            T item = get(i);
-            item.readBytes(reader);
+            get(i).readBytes(reader);
         }
         onChanged();
     }

@@ -118,7 +118,7 @@ class HiddenApiIndexList extends BlockList<HiddenApiIndex> implements
         }
     }
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         setSize(getClassIdSectionCount());
         super.readChildes(reader);
     }

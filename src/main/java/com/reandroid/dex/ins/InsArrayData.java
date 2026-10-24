@@ -36,19 +36,17 @@ import java.util.Iterator;
 
 public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRegion {
 
-    private final InsArrayDataList entryList;
-
     public InsArrayData() {
         super(4, Opcode.ARRAY_PAYLOAD);
 
         ShortItem widthReference = new ShortItem();
         IntegerItem countReference = new IntegerItem();
-        this.entryList = new InsArrayDataList(widthReference, countReference);
+        InsArrayDataList entryList = new InsArrayDataList(widthReference, countReference);
 
-        addChild(1, widthReference);
-        addChild(2, countReference);
-        addChild(3, this.entryList);
-        addChild(4, this.entryList.getAlignment());
+        setupBlock(1, widthReference);
+        setupBlock(2, countReference);
+        setupBlock(3, entryList);
+        setupBlock(4, entryList.getAlignment());
     }
 
     public Iterator<InsFillArrayData> getInsFillArrayData() {
@@ -61,7 +59,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
     }
     @Override
     public int size(){
-        return getEntryList().size();
+        return entryList().size();
     }
     @Override
     public void setSize(int size) {
@@ -69,7 +67,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
             size = 0;
         }
         Object lock = requestLock();
-        getEntryList().setSize(size);
+        entryList().setSize(size);
         releaseLock(lock);
     }
     public void ensureMinWidth(int width) {
@@ -84,24 +82,24 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
     }
     public void clear() {
         Object lock = requestLock();
-        getEntryList().clear();
+        entryList().clear();
         releaseLock(lock);
     }
     @Override
     public ArrayDataEntry get(int i) {
-        return getEntryList().get(i);
+        return entryList().get(i);
     }
     @Override
     public Iterator<ArrayDataEntry> iterator() {
-        return ObjectsUtil.cast(getEntryList().clonedIterator());
+        return ObjectsUtil.cast(entryList().clonedIterator());
     }
 
     public int getWidth() {
-        return getEntryList().getWidth();
+        return entryList().getWidth();
     }
     public void setWidth(int width) {
         Object lock = requestLock();
-        getEntryList().setWidth(width);
+        entryList().setWidth(width);
         releaseLock(lock);
     }
     public void put(int index, long value) {
@@ -176,33 +174,33 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
         }
     }
     public long[] getValuesAsLong() {
-        return getEntryList().getValues();
+        return entryList().getValues();
     }
     public int[] getValuesAsInt() {
-        return getEntryList().getValuesAsInt();
+        return entryList().getValuesAsInt();
     }
     public short[] getValuesAsShort() {
-        return getEntryList().getValuesAsShort();
+        return entryList().getValuesAsShort();
     }
     public byte[] getValuesAsByte() {
-        return getEntryList().getValuesAsByte();
+        return entryList().getValuesAsByte();
     }
     public char[] getValuesAsChar() {
-        return getEntryList().getValuesAsChar();
+        return entryList().getValuesAsChar();
     }
     public float[] getValuesAsFloat() {
-        return getEntryList().getValuesAsFloat();
+        return entryList().getValuesAsFloat();
     }
     public double[] getValuesAsDouble() {
-        return getEntryList().getValuesAsDouble();
+        return entryList().getValuesAsDouble();
     }
 
     @Override
     public Iterator<IntegerReference> getReferences() {
-        return ObjectsUtil.cast(getEntryList().iterator());
+        return ObjectsUtil.cast(entryList().iterator());
     }
-    InsArrayDataList getEntryList() {
-        return entryList;
+    InsArrayDataList entryList() {
+        return block(3);
     }
 
     private TypeKey findNewArrayType() {
@@ -227,7 +225,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
         getSmaliDirective().append(writer);
         writer.appendInteger(getWidth());
         writer.indentPlus();
-        getEntryList().append(findNewArrayType(), writer);
+        entryList().append(findNewArrayType(), writer);
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }
@@ -235,7 +233,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
     @Override
     public void merge(Ins ins) {
         InsArrayData coming = (InsArrayData) ins;
-        getEntryList().merge(coming.getEntryList());
+        entryList().merge(coming.entryList());
     }
 
     @Override
@@ -246,7 +244,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
-        getEntryList().fromSmali((SmaliPayloadArray) smaliInstruction);
+        entryList().fromSmali((SmaliPayloadArray) smaliInstruction);
     }
     @Override
     void toSmaliOperand(SmaliInstruction instruction) {
@@ -258,7 +256,7 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
     @Override
     void toSmaliEntries(SmaliInstruction instruction) {
         super.toSmaliEntries(instruction);
-        getEntryList().toSmali((SmaliPayloadArray) instruction);
+        entryList().toSmali((SmaliPayloadArray) instruction);
     }
 
     @Override
@@ -276,12 +274,12 @@ public class InsArrayData extends PayloadData<ArrayDataEntry> implements SmaliRe
         if (getWidth() != arrayData.getWidth()) {
             return false;
         }
-        return entryList.equals(arrayData.entryList);
+        return entryList().equals(arrayData.entryList());
     }
 
     @Override
     public int hashCode() {
         int hash = 31 + getIndex() * 31 + getWidth() * 31;
-        return hash + entryList.hashCode() * 31;
+        return hash + entryList().hashCode() * 31;
     }
 }

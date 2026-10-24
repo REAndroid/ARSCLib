@@ -112,8 +112,8 @@ public abstract class SectionValue<T extends SectionItem> extends DexValueBlock<
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        getValueTypeItem().onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        getValueTypeItem().readBytes(reader);
         NumberValue numberValue = getValueContainer();
         numberValue.setSize(getValueSize() + 1);
         numberValue.readBytes(reader);

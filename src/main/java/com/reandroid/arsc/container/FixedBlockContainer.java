@@ -18,38 +18,33 @@ package com.reandroid.arsc.container;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 
-public class FixedBlockContainer extends BlockContainer<Block> {
+public class FixedBlockContainer extends BlockContainer {
 
-    private final Block[] mChildes;
+    private final Object[] blocks;
     
-    public FixedBlockContainer(int childesCount){
+    public FixedBlockContainer(int blocksSize) {
         super();
-        Block[] childes;
-        if(childesCount == 0){
-            childes = EMPTY;
-        }else {
-            childes = new Block[childesCount];
-        }
-        this.mChildes = childes;
+
+        this.blocks = new Object[blocksSize];
     }
-    public void addChild(int index, Block block){
-        mChildes[index] = block;
-        if(block != null){
+
+    protected void setupBlock(int index, Block block) {
+        blocks[index] = block;
+        if (block != null) {
             block.setIndex(index);
             block.setParent(this);
         }
     }
-    @Override
-    protected void onRefreshed(){
-    }
-    @Override
-    public int getChildesCount() {
-        return mChildes.length;
-    }
-    @Override
-    public Block[] getChildes() {
-        return mChildes;
+    protected void setupLast(Block block) {
+        setupBlock(blocks.length - 1, block);
     }
 
-    private static final Block[] EMPTY = new Block[0];
+    @Override
+    protected void onRefreshed() {
+    }
+
+    @Override
+    public final Object[] blocks() {
+        return blocks;
+    }
 }

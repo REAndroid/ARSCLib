@@ -63,11 +63,11 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
 
         this.mKey = new DataKey<>(this);
 
-        addChildBlock(0, header);
+        block(0, header);
 
-        addChildBlock(1, fieldsAnnotationMap);
-        addChildBlock(2, methodsAnnotationMap);
-        addChildBlock(3, parametersAnnotationMap);
+        block(1, fieldsAnnotationMap);
+        block(2, methodsAnnotationMap);
+        block(3, parametersAnnotationMap);
     }
 
     @Override
@@ -397,8 +397,8 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
                     && parameterCount.get() == 0;
         }
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
-            super.onReadBytes(reader);
+        public void readBytes(BlockReader reader) throws IOException {
+            super.readBytes(reader);
             cacheItems();
         }
         private void cacheItems() {

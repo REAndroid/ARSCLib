@@ -49,7 +49,7 @@ public class BitItem extends BlockItem {
         return offset;
     }
     public long getValueUnsigned() {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int i = bytes.length - 1;
         long low = Block.getUnsignedNumber(bytes, 0, i);
         long high = NumbersUtil.getUInt(bytes[i] & 0xff, 0, bitIndex(bitsLength()));
@@ -57,10 +57,10 @@ public class BitItem extends BlockItem {
         return high | low;
     }
     public int readByte(int byteIndex) {
-        return getBytesInternal()[byteIndex] & 0xff;
+        return bytes()[byteIndex] & 0xff;
     }
     public void writeByte(int byteIndex, int byteValue) {
-        getBytesInternal()[byteIndex] = (byte) byteValue;
+        bytes()[byteIndex] = (byte) byteValue;
     }
     public void ensureSize(int size) {
         if (size > size()) {

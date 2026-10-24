@@ -49,7 +49,7 @@ public class CountedBlockList<T extends Block> extends BlockList<T> implements D
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         setSize(getCountReference().get());
         readChildes(reader);
     }

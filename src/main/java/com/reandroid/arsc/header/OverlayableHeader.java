@@ -21,26 +21,18 @@ import com.reandroid.arsc.item.StringReference;
 
 public class OverlayableHeader extends HeaderBlock {
 
-    private final StringReference name;
-    private final StringReference actor;
-
     public OverlayableHeader() {
         super(2, ChunkType.OVERLAYABLE);
 
-        FixedLengthString name = new FixedLengthString(512);
-        FixedLengthString actor = new FixedLengthString(512);
-        this.name = name;
-        this.actor = actor;
-
-        addChild(3, name);
-        addChild(4, actor);
+        setupBlock(3, new FixedLengthString(512));  // name
+        setupBlock(4, new FixedLengthString(512)); // actor
     }
 
     public StringReference name() {
-        return name;
+        return block(3);
     }
     public StringReference actor() {
-        return actor;
+        return block(4);
     }
 
     @Override

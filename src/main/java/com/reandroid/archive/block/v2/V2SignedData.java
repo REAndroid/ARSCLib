@@ -30,8 +30,8 @@ public class V2SignedData extends LengthPrefixedBlock {
         super(2, false);
         this.signer = new V2Signer();
         this.unknown = new BottomBlock();
-        addChild(this.signer);
-        addChild(this.unknown);
+        setupBlock(this.signer);
+        setupBlock(this.unknown);
     }
 
     public Iterator<CertificateBlock> getCertificates(){

@@ -34,8 +34,8 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
 
     private InsSwitch insSwitch;
 
-    public InsSwitchPayload(int childesCount, Opcode<?> opcode) {
-        super(childesCount, opcode);
+    public InsSwitchPayload(int blocksSize, Opcode<?> opcode) {
+        super(blocksSize, opcode);
     }
 
     @Override

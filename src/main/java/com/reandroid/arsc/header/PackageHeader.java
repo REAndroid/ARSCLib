@@ -27,72 +27,54 @@ import java.io.InputStream;
 
 public class PackageHeader extends HeaderBlock {
 
-    private final IntegerItem packageId;
-    private final FixedLengthString packageName;
-
-    private final IntegerItem typeStringPoolOffset;
-    private final IntegerItem typeStringPoolCount;
-    private final IntegerItem specStringPoolOffset;
-    private final IntegerItem specStringPoolCount;
-    private final IntegerItem typeIdOffset;
-
     public PackageHeader() {
         super(7, ChunkType.PACKAGE);
-        this.packageId = new IntegerItem();
-        this.packageName = new FixedLengthString(256);
 
-        this.typeStringPoolOffset = new IntegerItem();
-        this.typeStringPoolCount = new IntegerItem();
-        this.specStringPoolOffset = new IntegerItem();
-        this.specStringPoolCount = new IntegerItem();
-
-        this.typeIdOffset = new TypeIdOffset(this);
-
-        addChild(3, this.packageId);
-        addChild(4, this.packageName);
-        addChild(5, this.typeStringPoolOffset);
-        addChild(6, this.typeStringPoolCount);
-        addChild(7, this.specStringPoolOffset);
-        addChild(8, this.specStringPoolCount);
-        addChild(9, this.typeIdOffset);
+        setupBlock(3, new IntegerItem());                      // packageId
+        setupBlock(4, new FixedLengthString(256));  // packageName
+        setupBlock(5, new IntegerItem());                      // typeStringPoolOffset
+        setupBlock(6, new IntegerItem());                      // typeStringPoolCount
+        setupBlock(7, new IntegerItem());                      // specStringPoolOffset
+        setupBlock(8, new IntegerItem());                      // specStringPoolCount
+        setupBlock(9, new TypeIdOffset());                     // typeIdOffset
     }
 
-    public IntegerReference getPackageId() {
-        return packageId;
+    public IntegerReference packageId() {
+        return block(3);
     }
     public StringReference packageName() {
-        return packageName;
+        return block(4);
     }
     public IntegerReference typeStringPoolOffset() {
-        return typeStringPoolOffset;
+        return block(5);
     }
     public IntegerReference typeStringPoolCount() {
-        return typeStringPoolCount;
+        return block(6);
     }
     public IntegerReference specStringPoolOffset() {
-        return specStringPoolOffset;
+        return block(7);
     }
     public IntegerReference specStringPoolCount() {
-        return specStringPoolCount;
+        return block(8);
     }
     public IntegerReference typeIdOffset() {
-        return typeIdOffset;
+        return block(9);
     }
     public void setTypeIdOffset(int offset) {
-        typeIdOffset.set(offset);
+        typeIdOffset().set(offset);
     }
     public int getTypeIdOffset() {
-        return typeIdOffset.get();
+        return typeIdOffset().get();
     }
 
     static class TypeIdOffset extends IntegerItem {
 
-        private final PackageHeader header;
-
-        TypeIdOffset(PackageHeader header) {
-            this.header = header;
+        TypeIdOffset() {
         }
 
+        private PackageHeader header() {
+            return getParentInstance(PackageHeader.class);
+        }
         @Override
         public int get() {
             if (isNull()) {
@@ -100,10 +82,9 @@ public class PackageHeader extends HeaderBlock {
             }
             return super.get();
         }
-
         @Override
         public void set(int value) {
-            IntegerReference headerSize = header.headerSize();
+            IntegerReference headerSize = header().headerSize();
             if (value == 0) {
                 if (headerSize.get() >= 288) {
                     headerSize.set(284);
@@ -116,15 +97,15 @@ public class PackageHeader extends HeaderBlock {
 
         @Override
         public boolean isNull() {
-            return header.headerSize().get() < 288;
+            return header().headerSize().get() < 288;
         }
 
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
+        public void readBytes(BlockReader reader) throws IOException {
             if (isNull()) {
                 return;
             }
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
 
         @Override

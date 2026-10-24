@@ -139,7 +139,7 @@ public class PackageArray extends CountedBlockList<PackageBlock> implements JSON
         return null;
     }
     public void clear() {
-        super.clearChildes();
+        super.clearBlocks();
     }
     @Override
     public JSONArray toJson() {

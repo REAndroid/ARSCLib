@@ -23,14 +23,14 @@ public class IndirectInteger extends IndirectItem<BlockItem> implements IntegerR
     }
     @Override
     public int get(){
-        return Block.getInteger(getBytesInternal(), getOffset());
+        return Block.getInteger(bytes(), getOffset());
     }
     @Override
     public void set(int value){
-        Block.putInteger(getBytesInternal(), getOffset(), value);
+        Block.putInteger(bytes(), getOffset(), value);
     }
     public boolean isNull(){
-        return (getBytesInternal().length - getOffset()) < 4;
+        return (bytes().length - getOffset()) < 4;
     }
     @Override
     public String toString(){

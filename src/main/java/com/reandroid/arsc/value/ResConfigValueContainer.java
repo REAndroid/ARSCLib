@@ -15,78 +15,88 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
+
+import java.io.IOException;
 
 class ResConfigValueContainer extends ByteArray {
-    private final IntegerItem configSize;
+    
+    private final IntegerReference configSize;
 
-    ResConfigValueContainer(int bytesSize, IntegerItem configSize){
-        super(bytesSize);
+    ResConfigValueContainer(IntegerReference configSize) {
+        super(configSize.get() - 4);
         this.configSize = configSize;
     }
 
-    int getByteValue(int offset){
+    @Override
+    public void readBytes(BlockReader reader) throws IOException {
+        setSize(configSize.get() - 4);
+        super.readBytes(reader);
+    }
+
+    int getByteValue(int offset) {
         return getValue(offset, 1);
     }
-    void setByteValue(int offset, int value){
+    void setByteValue(int offset, int value) {
         setValue(offset, 1, value);
     }
-    int getShortValue(int offset){
+    int getShortValue(int offset) {
         return getValue(offset, 2);
     }
-    void setShortValue(int offset, int value){
+    void setShortValue(int offset, int value) {
         setValue(offset, 2, value);
     }
-    int getIntValue(int offset){
+    int getIntValue(int offset) {
         return getValue(offset, 4);
     }
-    long getLongValue(int offset){
-        return getLong(getBytesInternal(), offset);
+    long getLongValue(int offset) {
+        return getLong(bytes(), offset);
     }
-    void setIntValue(int offset, int value){
+    void setIntValue(int offset, int value) {
         setValue(offset, 4, value);
     }
-    void setByteArrayValue(int offset, byte[] bytes, int length){
-        if(bytes == null || bytes.length == 0){
-            if(size() - offset < length){
+    void setByteArrayValue(int offset, byte[] bytes, int length) {
+        if (bytes == null || bytes.length == 0) {
+            if (size() - offset < length) {
                 return;
             }
         }
         bytes = ensureArrayLength(bytes, length);
         setValue(offset, bytes);
     }
-    byte[] getByteArrayValue(int offset, int length){
+    byte[] getByteArrayValue(int offset, int length) {
         int size = size();
         int available = size - offset;
-        if(available < length || available <= 0){
+        if (available < length || available <= 0) {
             return null;
         }
         return getByteArray(offset, length);
     }
 
-    private int getValue(int offset, int dataSize){
+    private int getValue(int offset, int dataSize) {
         int size = size();
-        if(size < offset + dataSize){
+        if (size < offset + dataSize) {
             return 0;
         }
-        if(dataSize == 1){
+        if (dataSize == 1) {
             return getByteUnsigned(offset);
         }
-        if(dataSize == 2){
-            return getShortUnsigned(offset) & 0xffff;
+        if (dataSize == 2) {
+            return getShortUnsigned(offset);
         }
-        if(dataSize == 4){
+        if (dataSize == 4) {
             return getInteger(offset);
         }
         throw new IllegalArgumentException("Invalid data size " + dataSize);
     }
-    private void setValue(int offset, byte[] bytes){
+    private void setValue(int offset, byte[] bytes) {
         int size = size();
         int valueSize = offset + bytes.length;
         boolean sizeChanged = false;
-        if(size < valueSize){
-            if(isNullBytes(bytes)){
+        if (size < valueSize) {
+            if (isNullBytes(bytes)) {
                 return;
             }
             ensureArraySize(getNearestValueSize(valueSize));
@@ -94,16 +104,16 @@ class ResConfigValueContainer extends ByteArray {
             sizeChanged = true;
         }
         putByteArray(offset, bytes);
-        if(sizeChanged){
+        if (sizeChanged) {
             onSizeChanged();
         }
     }
-    private void setValue(int offset, int dataSize, int value){
+    private void setValue(int offset, int dataSize, int value) {
         int size = size();
         int valueSize = offset + dataSize;
         boolean sizeChanged = false;
-        if(size < valueSize){
-            if(value == 0){
+        if (size < valueSize) {
+            if (value == 0) {
                 return;
             }
             ensureArraySize(getNearestValueSize(valueSize));
@@ -111,73 +121,73 @@ class ResConfigValueContainer extends ByteArray {
             sizeChanged = true;
         }
         boolean valueChanged;
-        if(dataSize == 1){
+        if (dataSize == 1) {
             valueChanged = putByteValue(offset, (byte) value);
-        }else if(dataSize == 2){
+        } else if (dataSize == 2) {
             valueChanged = putShortValue(offset, value);
-        }else if(dataSize == 4){
+        } else if (dataSize == 4) {
             valueChanged = putIntegerValue(offset, value);
-        }else {
+        } else {
             throw new IllegalArgumentException("Invalid data size " + dataSize);
         }
-        if(sizeChanged){
+        if (sizeChanged) {
             onSizeChanged();
         }
-        if(valueChanged){
+        if (valueChanged) {
             onValueChanged();
         }
     }
-    private boolean putByteValue(int offset, byte value){
-        if(get(offset) == value){
+    private boolean putByteValue(int offset, byte value) {
+        if (get(offset) == value) {
             return false;
         }
         put(offset, value);
         return true;
     }
-    private boolean putShortValue(int offset, int value){
-        if(getShortUnsigned(offset) == value){
+    private boolean putShortValue(int offset, int value) {
+        if (getShortUnsigned(offset) == value) {
             return false;
         }
         putShort(offset, value);
         return true;
     }
-    private boolean putIntegerValue(int offset, int value){
-        if(getInteger(offset) == value){
+    private boolean putIntegerValue(int offset, int value) {
+        if (getInteger(offset) == value) {
             return false;
         }
         putInteger(offset, value);
         return true;
     }
-    void onSizeChanged(){
+    void onSizeChanged() {
 
     }
-    void onValueChanged(){
+    void onValueChanged() {
 
     }
-    private static int getNearestValueSize(int valueSize){
+    private static int getNearestValueSize(int valueSize) {
         return ResConfigBase.nearestSize(valueSize + 4) - 4;
     }
-    private static byte[] ensureArrayLength(byte[] bytes, int length){
-        if(bytes == null || length == 0){
+    private static byte[] ensureArrayLength(byte[] bytes, int length) {
+        if (bytes == null || length == 0) {
             return new byte[length];
         }
-        if(bytes.length == length){
+        if (bytes.length == length) {
             return bytes;
         }
         byte[] result = new byte[length];
         int max = result.length;
-        if(bytes.length < max){
+        if (bytes.length < max) {
             max = bytes.length;
         }
         System.arraycopy(bytes, 0, result, 0, max);
         return result;
     }
-    private static boolean isNullBytes(byte[] bytes){
-        if(bytes == null){
+    private static boolean isNullBytes(byte[] bytes) {
+        if (bytes == null) {
             return true;
         }
-        for(int i = 0; i < bytes.length; i++){
-            if(bytes[i] != 0){
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] != 0) {
                 return false;
             }
         }

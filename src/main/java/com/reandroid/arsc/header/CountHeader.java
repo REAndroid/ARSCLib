@@ -23,11 +23,11 @@ public class CountHeader extends HeaderBlock {
 
     private final IntegerReference count;
 
-    public CountHeader(int childesCount, ChunkType chunkType) {
-        super(childesCount + 1, chunkType);
+    public CountHeader(int blocksSize, ChunkType chunkType) {
+        super(blocksSize + 1, chunkType);
         IntegerItem count = new IntegerItem();
         this.count = count;
-        addChild(childesCount + 3, count);
+        setupBlock(blocksSize + 3, count);
     }
     public CountHeader(ChunkType chunkType) {
         this(0, chunkType);

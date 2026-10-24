@@ -47,8 +47,8 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         this.sectionType = sectionType;
         this.itemArray = itemArray;
         this.sectionAlign = fixedAligner(sectionType.sectionAlignment());
-        addChild(0, sectionAlign);
-        addChild(1, itemArray);
+        setupBlock(0, sectionAlign);
+        setupBlock(1, itemArray);
     }
     public Section(IntegerPair countAndOffset, SectionType<T> sectionType) {
         this(sectionType, new SectionArray<>(countAndOffset, sectionType.getCreator()));
@@ -114,9 +114,9 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         }
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         sectionAlign.setAlignment(0);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 
     public boolean contains(Key key) {

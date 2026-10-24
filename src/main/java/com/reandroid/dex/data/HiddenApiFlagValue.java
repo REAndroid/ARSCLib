@@ -170,7 +170,7 @@ public class HiddenApiFlagValue extends Ule128Item implements
             this.source = source;
         }
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
+        public void readBytes(BlockReader reader) throws IOException {
         }
         @Override
         public int countBytes() {

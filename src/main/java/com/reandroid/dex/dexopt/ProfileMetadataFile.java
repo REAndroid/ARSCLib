@@ -40,12 +40,12 @@ public class ProfileMetadataFile extends ProfileFile {
         IntegerItem compressedSize = version.newBodySize();
         this.body = new ProfileMetadataBody(version, count, unCompressedSize, compressedSize);
 
-        addChild(0, magic);
-        addChild(1, version);
-        addChild(2, count);
-        addChild(3, unCompressedSize);
-        addChild(4, compressedSize);
-        addChild(5, body);
+        setupBlock(0, magic);
+        setupBlock(1, version);
+        setupBlock(2, count);
+        setupBlock(3, unCompressedSize);
+        setupBlock(4, compressedSize);
+        setupBlock(5, body);
 
         magic.set(ProfileMagic.MAGIC_PROFM);
         version.set(ProfileVersion.METADATA_V001_N);

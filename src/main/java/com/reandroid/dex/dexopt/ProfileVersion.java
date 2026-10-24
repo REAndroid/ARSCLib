@@ -32,13 +32,13 @@ public class ProfileVersion extends BlockItem {
     }
 
     public int get() {
-        return Block.getInteger(getBytesInternal(), 0);
+        return Block.getInteger(bytes(), 0);
     }
     public void set(int value) {
-        Block.putInteger(getBytesInternal(), 0, value);
+        Block.putInteger(bytes(), 0, value);
     }
     public void set(byte[] value) {
-        System.arraycopy(value, 0, getBytesInternal(), 0, 4);
+        System.arraycopy(value, 0, bytes(), 0, 4);
     }
     public String name() {
         int value = get();
@@ -88,8 +88,8 @@ public class ProfileVersion extends BlockItem {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         if (!isSupported(get())) {
             throw new IOException("Unsupported version: " + get()
                     + " (" + this.toString() + ")");

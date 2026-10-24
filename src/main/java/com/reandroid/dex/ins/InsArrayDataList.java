@@ -170,6 +170,10 @@ class InsArrayDataList extends CountedBlockList<ArrayDataEntry> {
     }
 
     @Override
+    protected boolean hasSameByteSizeEntries() {
+        return true;
+    }
+    @Override
     public String toString() {
         return "width = " + getWidth() + ", size = " + size()
                 + "\n  " + StringsUtil.join(iterator(), "\n  ");

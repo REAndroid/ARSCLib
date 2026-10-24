@@ -47,8 +47,8 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
         this.valuesCountReference = new Ule128Item();
         this.valueList = new BlockList<>();
         this.valueList.setCreator(CREATOR);
-        addChildBlock(0, valuesCountReference);
-        addChildBlock(1, valueList);
+        block(0, valuesCountReference);
+        block(1, valueList);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
         getValueList().set(i, value);
     }
     public void clear(){
-        getValueList().clearChildes();
+        getValueList().clearBlocks();
     }
 
     public void ensureSize(int size){
@@ -179,15 +179,15 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        this.valuesCountReference.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException{
+        this.valuesCountReference.readBytes(reader);
         BlockList<DexValueBlock<?>> valueList = getValueList();
         int count = this.valuesCountReference.get();
         valueList.ensureCapacity(count);
         for(int i = 0; i < count; i++){
             DexValueBlock<?> dexValue = DexValueType.create(reader);
             valueList.add(dexValue);
-            dexValue.onReadBytes(reader);
+            dexValue.readBytes(reader);
         }
     }
 

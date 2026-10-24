@@ -33,22 +33,16 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class StyleItem extends FixedBlockContainer implements
-        Comparable<StyleItem>, Iterable<StyleSpan>,
-        SpanSet<StyleSpan>, JSONConvert<JSONArray> {
-
-    private final BlockList<StyleSpan> spanList;
-    private final IntegerItem endBlock;
+        SpanSet<StyleSpan>, Comparable<StyleItem>, Iterable<StyleSpan>, JSONConvert<JSONArray> {
 
     private StyleIndexReference indexReference;
     private StringItem mStringItem;
 
     public StyleItem() {
         super(2);
-        this.spanList = new BlockList<>(StyleSpan.CREATOR);
-        this.endBlock = new IntegerItem();
-        addChild(0, spanList);
-        addChild(1, endBlock);
-        endBlock.set(-1);
+
+        setupBlock(0, new BlockList<>(StyleSpan.CREATOR));
+        setupBlock(1, new IntegerItem(-1));
     }
 
     public void add(String tag, int first, int last) {
@@ -58,26 +52,26 @@ public class StyleItem extends FixedBlockContainer implements
         add(span.getTagWithAttributes(), span.getFirstChar(), span.getLastChar());
     }
     public StyleSpan createNext() {
-        return spanList.createNext();
+        return spanList().createNext();
     }
     public StyleSpan get(int i) {
-        return spanList.get(i);
+        return spanList().get(i);
     }
     @Override
     public int getSpansCount() {
-        return spanList.size();
+        return spanList().size();
     }
     @Override
     public boolean hasSpans() {
-        return spanList.size() != 0;
+        return spanList().size() != 0;
     }
     @Override
     public Iterator<StyleSpan> iterator() {
-        return spanList.clonedIterator();
+        return spanList().clonedIterator();
     }
     @Override
     public Iterator<StyleSpan> getSpans() {
-        return spanList.iterator();
+        return spanList().iterator();
     }
 
     @Override
@@ -101,15 +95,20 @@ public class StyleItem extends FixedBlockContainer implements
         return raw;
     }
 
+    private BlockList<StyleSpan> spanList() {
+        return block(0);
+    }
+    private IntegerItem endBlock() {
+        return block(1);
+    }
+
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        BlockList<StyleSpan> spanList = this.spanList;
+    public void readBytes(BlockReader reader) throws IOException {
+        BlockList<StyleSpan> spanList = this.spanList();
         while (reader.readInteger() != -1) {
-            StyleSpan styleSpan = new StyleSpan();
-            spanList.add(styleSpan);
-            styleSpan.onReadBytes(reader);
+            spanList.createNext().readBytes(reader);
         }
-        this.endBlock.onReadBytes(reader);
+        endBlock().readBytes(reader);
     }
 
     public StyleDocument build(String text) {
@@ -143,7 +142,7 @@ public class StyleItem extends FixedBlockContainer implements
         for (StyleSpan styleSpan : this) {
             styleSpan.onRemoved();
         }
-        spanList.clearChildes();
+        spanList().clearBlocks();
     }
     public void onRemoved() {
         clearStyle();
@@ -239,7 +238,7 @@ public class StyleItem extends FixedBlockContainer implements
         if (spanSet == null || spanSet == this) {
             return;
         }
-        BlockList<StyleSpan> spanList = this.spanList;
+        BlockList<StyleSpan> spanList = this.spanList();
         spanList.setSize(spanSet.getSpansCount());
         Iterator<? extends Span> iterator = spanSet.getSpans();
         int i = 0;

@@ -94,19 +94,19 @@ public abstract class ValueItem extends BlockItem implements Value,
 
     @SuppressWarnings("unused")
     byte getRes0() {
-        return getBytesInternal()[this.sizeOffset + OFFSET_RES0];
+        return bytes()[this.sizeOffset + OFFSET_RES0];
     }
     void setRes0(byte b) {
-        getBytesInternal()[this.sizeOffset + OFFSET_RES0] = b;
+        bytes()[this.sizeOffset + OFFSET_RES0] = b;
     }
     public int dataType() {
-        return getBytesInternal()[this.sizeOffset + OFFSET_TYPE] & 0xff;
+        return bytes()[this.sizeOffset + OFFSET_TYPE] & 0xff;
     }
     public void setDataType(int type) {
         if (type == dataType()) {
             return;
         }
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int offset = this.sizeOffset + OFFSET_TYPE;
         int old = bytes[offset] & 0xff;
         bytes[offset] = (byte) type;
@@ -114,7 +114,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         onDataChanged();
     }
     public int getSize() {
-        return 0xffff & getShort(getBytesInternal(), this.sizeOffset + OFFSET_SIZE);
+        return 0xffff & getShort(bytes(), this.sizeOffset + OFFSET_SIZE);
     }
     public void setSize(int size) {
         size = this.sizeOffset + size;
@@ -127,7 +127,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     private void writeSize() {
         int offset = this.sizeOffset;
         int size = countBytes() - offset;
-        putShort(getBytesInternal(), offset + OFFSET_SIZE, (short) size);
+        putShort(bytes(), offset + OFFSET_SIZE, (short) size);
     }
     protected void onDataLoaded() {
         if (getDataType() == DataType.STRING) {
@@ -146,7 +146,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     @Override
     public int getData() {
-        return getInteger(getBytesInternal(), this.sizeOffset + OFFSET_DATA);
+        return getInteger(bytes(), this.sizeOffset + OFFSET_DATA);
     }
     @Override
     public void setData(int data) {
@@ -162,7 +162,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         onDataChanged();
     }
     void writeData(int data) {
-        putInteger(getBytesInternal(), this.sizeOffset + OFFSET_DATA, data);
+        putInteger(bytes(), this.sizeOffset + OFFSET_DATA, data);
     }
 
     public StringItem getDataAsPoolString() {
@@ -230,9 +230,9 @@ public abstract class ValueItem extends BlockItem implements Value,
         return null;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int readSize = initializeBytes(reader);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
         if (readSize < 8) {
             setBytesLength(this.sizeOffset + 8, false);
             writeSize();

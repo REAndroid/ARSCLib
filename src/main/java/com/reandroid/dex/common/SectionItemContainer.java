@@ -32,24 +32,23 @@ import java.io.OutputStream;
 public class SectionItemContainer extends SectionItem implements BlockRefresh,
         PositionedItem, OffsetSupplier, OffsetReceiver {
 
-    private final Block[] mChildBlocks;
+    private final Object[] blocks;
 
     private IntegerReference mReference;
 
-    public SectionItemContainer(int childesCount) {
+    public SectionItemContainer(int blocksSize) {
         super(0);
-        Block[] childes;
-        if(childesCount == 0){
-            childes = EMPTY;
-        }else {
-            childes = new Block[childesCount];
+        Object[] blocks;
+        if (blocksSize == 0) {
+            blocks = EMPTY;
+        } else {
+            blocks = new Object[blocksSize];
         }
-        this.mChildBlocks = childes;
-
+        this.blocks = blocks;
     }
 
     @Override
-    public int getIdx(){
+    public int getIdx() {
         return getOffset();
     }
     @Override
@@ -63,7 +62,7 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
     @Override
     public void setPosition(int position) {
         IntegerReference reference = getOffsetReference();
-        if(reference == null){
+        if (reference == null) {
             reference = new NumberIntegerReference(position);
             setOffsetReference(reference);
         }else {
@@ -71,194 +70,173 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         }
     }
     @Override
-    public void removeLastAlign(){
+    public void removeLastAlign() {
 
     }
-    public int getOffset(){
+    public int getOffset() {
         IntegerReference reference = getOffsetReference();
-        if(reference != null){
+        if (reference != null) {
             return reference.get();
         }
         return 0;
     }
 
     @Override
-    public int countBytes(){
-        if(isNull()){
+    public int countBytes() {
+        if (isNull()) {
             return 0;
         }
-        Block[] childBlocks = getChildBlocks();
-        if (childBlocks == null) {
-            return 0;
-        }
+        Object[] blocks = blocks();
         int result = 0;
-        int max = childBlocks.length;
-        for(int i = 0; i < max; i++){
-            Block item = childBlocks[i];
-            if(item != null){
-                result += item.countBytes();
+        int max = blocks.length;
+        for (int i = 0; i < max; i++) {
+            Object item = blocks[i];
+            if (item != null) {
+                result += ((Block) item).countBytes();
             }
         }
         return result;
     }
     @Override
-    public byte[] getBytes(){
-        if(isNull()){
+    public byte[] getBytes() {
+        if (isNull()) {
             return null;
         }
-        Block[] childBlocks = getChildBlocks();
-        if(childBlocks == null){
-            return null;
-        }
+        Object[] blocks = blocks();
         byte[] results = null;
-        int length = childBlocks.length;
-        for(int i = 0; i < length; i++){
-            Block item = childBlocks[i];
-            if(item != null){
-                results = addBytes(results, item.getBytes());
+        int length = blocks.length;
+        for (int i = 0; i < length; i++) {
+            Object item = blocks[i];
+            if (item != null) {
+                results = addBytes(results, ((Block) item).getBytes());
             }
         }
         return results;
     }
     @Override
     public int onWriteBytes(OutputStream stream) throws IOException {
-        if(isNull()){
+        if (isNull()) {
             return 0;
         }
-        Block[] childBlocks = getChildBlocks();
-        if(childBlocks == null){
-            return 0;
-        }
+        Object[] blocks = blocks();
         int result = 0;
-        int length = childBlocks.length;
-        for(int i = 0; i < length; i++){
-            Block item = childBlocks[i];
-            if(item != null){
-                result += item.writeBytes(stream);
+        int length = blocks.length;
+        for (int i = 0; i < length; i++) {
+            Object item = blocks[i];
+            if (item != null) {
+                result += ((Block) item).writeBytes(stream);
             }
         }
         return result;
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        Block[] childBlocks = getChildBlocks();
-        if(childBlocks == null){
+    public void readBytes(BlockReader reader) throws IOException {
+        Object[] blocks = blocks();
+        int length = blocks.length;
+        if (skipReading(this, reader)) {
             return;
         }
-        int length = childBlocks.length;
-        if(skipReading(this, reader)){
-            return;
-        }
-        for(int i = 0; i < length; i++){
-            Block block = childBlocks[i];
+        for (int i = 0; i < length; i++) {
+            Block block = (Block) blocks[i];
             if (block == null) {
                 continue;
             }
-            if(skipReading(block, reader)){
+            if (skipReading(block, reader)) {
                 continue;
             }
             block.readBytes(reader);
         }
     }
     protected void nonCheckRead(BlockReader reader) throws IOException {
-        Block[] childBlocks = getChildBlocks();
-        if (childBlocks == null) {
-            return;
-        }
-        int length = childBlocks.length;
+        Object[] blocks = blocks();
+        int length = blocks.length;
         for (int i = 0; i < length; i++) {
-            Block block = childBlocks[i];
-            if(block != null) {
-                block.readBytes(reader);
+            Object block = blocks[i];
+            if (block != null) {
+                ((Block) block).readBytes(reader);
             }
         }
     }
-    private boolean skipReading(Block block, BlockReader reader){
-        if(!(block instanceof OffsetSupplier)){
+    private boolean skipReading(Block block, BlockReader reader) {
+        if (!(block instanceof OffsetSupplier)) {
             return false;
         }
         OffsetSupplier offsetSupplier = (OffsetSupplier) block;
         IntegerReference reference = offsetSupplier.getOffsetReference();
-        if(reference != null){
+        if (reference != null) {
             int offset = reference.get();
-            if(!isValidOffset(offset)){
+            if (!isValidOffset(offset)) {
                 return true;
             }
             reader.seek(offset);
         }
         return false;
     }
-    protected boolean isValidOffset(int offset){
+    protected boolean isValidOffset(int offset) {
         return offset > 0;
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
-        if(counter.FOUND){
+        if (counter.FOUND) {
             return;
         }
         counter.setCurrent(this);
-        if(counter.END==this){
+        if (counter.END==this) {
             counter.FOUND=true;
             return;
         }
-        Block[] childBlocks = getChildBlocks();
-        if(childBlocks == null){
-            return;
-        }
-        int max = childBlocks.length;
-        for(int i = 0; i < max; i++){
-            if(counter.FOUND){
+        Object[] blocks = blocks();
+        int max = blocks.length;
+        for (int i = 0; i < max; i++) {
+            if (counter.FOUND) {
                 return;
             }
-            Block item = childBlocks[i];
-            if(item != null){
-                item.onCountUpTo(counter);
+            Object item = blocks[i];
+            if (item != null) {
+                ((Block) item).onCountUpTo(counter);
             }
         }
     }
-    protected void addChildBlock(int index, Block block){
-        mChildBlocks[index] = block;
-        if(block != null){
+    protected void block(int index, Block block) {
+        blocks[index] = block;
+        if (block != null) {
             block.setIndex(index);
             block.setParent(this);
         }
     }
-    protected Block getChildBlockAt(int i) {
-        return mChildBlocks[i];
+    protected Block block(int i) {
+        return (Block) blocks[i];
     }
     @Override
     public void refresh() {
-        if(isNull()){
+        if (isNull()) {
             return;
         }
         onPreRefresh();
         refreshChildes();
         onRefreshed();
     }
-    protected void refreshChildes(){
-        Block[] childBlocks = getChildBlocks();
-        if (childBlocks == null) {
-            return;
-        }
-        int length = childBlocks.length;
+    protected void refreshChildes() {
+        Object[] blocks = blocks();
+        int length = blocks.length;
         for (int i = 0; i < length; i++) {
-            Block item = childBlocks[i];
-            if(item instanceof BlockRefresh){
-                ((BlockRefresh)item).refresh();
+            Object item = blocks[i];
+            if (item instanceof BlockRefresh) {
+                ((BlockRefresh) item).refresh();
             }
         }
     }
-    protected void onPreRefresh(){
+    protected void onPreRefresh() {
     }
-    protected void onRefreshed(){
+    protected void onRefreshed() {
     }
-    private Block[] getChildBlocks() {
-        return mChildBlocks;
+    private Object[] blocks() {
+        return blocks;
     }
 
     @Override
-    protected final byte[] getBytesInternal() {
+    public final byte[] bytes() {
         throw new RuntimeException("Not block item");
     }
     @Override
@@ -270,6 +248,6 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         throw new RuntimeException("Not block item");
     }
 
-    private static final Block[] EMPTY = new Block[0];
+    private static final Object[] EMPTY = new Object[0];
 
 }

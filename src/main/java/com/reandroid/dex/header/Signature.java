@@ -40,7 +40,7 @@ public class Signature extends HeaderPiece {
             // will not reach here
             throw new RuntimeException(exception);
         }
-        outputStream.digest(getBytesInternal(), 0);
+        outputStream.digest(bytes(), 0);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class Signature extends HeaderPiece {
         return super.onWriteBytes(stream);
     }
     public String getHex() {
-        return HexUtil.toHexString(getBytesInternal());
+        return HexUtil.toHexString(bytes());
     }
     @Override
     public String toString() {

@@ -15,17 +15,19 @@
   */
 package com.reandroid.arsc.item;
 
-import java.util.Objects;
 
 public class IndirectItem<T extends BlockItem> {
+
     private final T blockItem;
     private final int offset;
-    public IndirectItem(T blockItem, int offset){
+
+    public IndirectItem(T blockItem, int offset) {
         this.blockItem = blockItem;
         this.offset = offset;
     }
-    public byte[] getBytesInternal(){
-        return blockItem.getBytesInternal();
+
+    public byte[] bytes() {
+        return blockItem.bytes();
     }
     public T getBlockItem() {
         return blockItem;
@@ -45,7 +47,7 @@ public class IndirectItem<T extends BlockItem> {
         return this.getOffset() == other.getOffset() && this.getBlockItem() == other.getBlockItem();
     }
     @Override
-    public int hashCode(){
-        return Objects.hash(this.getOffset(), this.getBlockItem());
+    public int hashCode() {
+        return getOffset() * 31 * getBlockItem().hashCode();
     }
 }

@@ -36,9 +36,9 @@ public class ProfileMetadataHeaderV1 extends FixedBlockContainer {
 
         this.classSetSize = new ShortItem();
 
-        addChild(0, dexNameSize);
-        addChild(1, (Block) name);
-        addChild(2, (Block) classSetSize);
+        setupBlock(0, dexNameSize);
+        setupBlock(1, (Block) name);
+        setupBlock(2, (Block) classSetSize);
     }
 
     @Override

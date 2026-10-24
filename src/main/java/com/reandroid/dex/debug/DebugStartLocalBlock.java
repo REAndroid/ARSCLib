@@ -44,8 +44,8 @@ public class DebugStartLocalBlock extends DebugRegisterNumber {
         this.mName = new Base1Ule128IdItemReference<>(SectionType.STRING_ID);
         this.mType = new Base1Ule128IdItemReference<>(SectionType.TYPE_ID);
 
-        addChild(2, mName);
-        addChild(3, mType);
+        setupBlock(2, mName);
+        setupBlock(3, mType);
     }
     DebugStartLocalBlock(int childesCount, DebugElementType<?> elementType) {
         this(childesCount, elementType.getFlag());

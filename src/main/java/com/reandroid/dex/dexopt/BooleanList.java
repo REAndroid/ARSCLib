@@ -66,11 +66,11 @@ public class BooleanList extends CountedBlockList<BooleanBit> {
         return poolOffset;
     }
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int itemsCount = getCountReference().get();
         setSize(itemsCount);
         BitItem pool = new BitItem(itemsCount);
-        pool.onReadBytes(reader);
+        pool.readBytes(reader);
         for (int i = 0; i < itemsCount; i++) {
             get(i).set(pool.get(i));
         }

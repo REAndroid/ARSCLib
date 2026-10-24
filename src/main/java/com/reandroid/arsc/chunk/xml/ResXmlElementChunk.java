@@ -41,11 +41,11 @@ public class ResXmlElementChunk extends FixedBlockContainer {
         this.mEndElement = endElement;
         this.mEndNamespaceList = endNamespaceList;
 
-        addChild(0, mStartNamespaceList);
-        addChild(1, mStartElement);
-        addChild(2, mNodeList);
-        addChild(3, mEndElement);
-        addChild(4, mEndNamespaceList);
+        setupBlock(0, mStartNamespaceList);
+        setupBlock(1, mStartElement);
+        setupBlock(2, mNodeList);
+        setupBlock(3, mEndElement);
+        setupBlock(4, mEndNamespaceList);
     }
 
     public ResXmlNodeList getNodeList() {
@@ -58,7 +58,7 @@ public class ResXmlElementChunk extends FixedBlockContainer {
 
     void onPreRemove(){
         mStartNamespaceList.clear();
-        mEndNamespaceList.clearChildes();
+        mEndNamespaceList.clearBlocks();
         mStartElement.onPreRemove();
     }
     public void setName(String name) {
@@ -97,7 +97,7 @@ public class ResXmlElementChunk extends FixedBlockContainer {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         new ElementChunkReader(this).read(reader);
     }
 }

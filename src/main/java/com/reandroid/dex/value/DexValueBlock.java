@@ -41,8 +41,8 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer
         super(2);
         valueTypeItem = new ByteItem();
         valueContainer = value;
-        addChild(0, valueTypeItem);
-        addChild(1, valueContainer);
+        setupBlock(0, valueTypeItem);
+        setupBlock(1, valueContainer);
         valueTypeItem.set((byte) type.getFlag(0));
     }
     DexValueBlock(DexValueType<?> type){

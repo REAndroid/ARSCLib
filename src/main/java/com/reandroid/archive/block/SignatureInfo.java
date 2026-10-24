@@ -21,9 +21,7 @@ import com.reandroid.archive.block.stamp.SchemeStampV2;
 import com.reandroid.archive.block.v2.SchemeV2;
 import com.reandroid.archive.block.v3.SchemeV3;
 import com.reandroid.archive.block.v3.SchemeV31;
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SingleBlockContainer;
-import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -33,76 +31,71 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
+public class SignatureInfo extends LengthPrefixedBlock {
 
     private final IntegerItem idItem;
     private final SingleBlockContainer<SignatureScheme> schemeContainer;
 
     public SignatureInfo() {
         super(2, true);
-        this.idItem = new IntegerItem();
+
+        this.idItem = new IdItem();
         this.schemeContainer = new SingleBlockContainer<>();
-        addChild(this.idItem);
-        addChild(this.schemeContainer);
-        this.idItem.setBlockLoad(this);
+
+        setupBlock(this.idItem);
+        setupBlock(this.schemeContainer);
     }
 
     public Iterator<CertificateBlock> getCertificates() {
         SignatureScheme scheme = getSignatureScheme();
-        if(scheme != null){
+        if (scheme != null) {
             return scheme.getCertificates();
         }
         return EmptyIterator.of();
     }
 
-    public int getIdValue(){
+    public int getIdValue() {
         return idItem.get();
     }
-    public SignatureId getId(){
+    public SignatureId getId() {
         return SignatureId.valueOf(getIdValue());
     }
-    public void setId(int id){
+    public void setId(int id) {
         idItem.set(id);
     }
-    public void setId(SignatureId signatureId){
+    public void setId(SignatureId signatureId) {
         setId(signatureId == null? 0 : signatureId.getId());
     }
-    public SignatureScheme getSignatureScheme(){
-        return schemeContainer.getItem();
+    public SignatureScheme getSignatureScheme() {
+        return schemeContainer.block();
     }
-    public void setSignatureScheme(SignatureScheme signatureScheme){
-        schemeContainer.setItem(signatureScheme);
+    public void setSignatureScheme(SignatureScheme signatureScheme) {
+        schemeContainer.block(signatureScheme);
     }
 
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == this.idItem){
-            onIdLoaded();
-        }
-    }
-    private void onIdLoaded(){
+    void onIdLoaded() {
         SignatureId signatureId = getId();
         SignatureScheme scheme;
-        if(signatureId == SignatureId.V2){
+        if (signatureId == SignatureId.V2) {
             scheme = new SchemeV2();
-        }else if(signatureId == SignatureId.V3){
+        } else if (signatureId == SignatureId.V3) {
             scheme = new SchemeV3();
-        }else if(signatureId == SignatureId.V31){
+        } else if (signatureId == SignatureId.V31) {
             scheme = new SchemeV31();
-        }else if(signatureId == SignatureId.STAMP_V1){
+        } else if (signatureId == SignatureId.STAMP_V1) {
             scheme = new SchemeStampV1();
-        }else if(signatureId == SignatureId.STAMP_V2){
+        } else if (signatureId == SignatureId.STAMP_V2) {
             scheme = new SchemeStampV2();
-        }else if(signatureId == SignatureId.PADDING){
+        } else if (signatureId == SignatureId.PADDING) {
             scheme = new SchemePadding();
-        }else {
+        } else {
             scheme = new UnknownScheme(signatureId);
         }
-        schemeContainer.setItem(scheme);
+        schemeContainer.block(scheme);
     }
     public void writeRaw(File file) throws IOException{
         File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
+        if (dir != null && !dir.exists()) {
             dir.mkdirs();
         }
         FileOutputStream outputStream = new FileOutputStream(file);
@@ -123,4 +116,15 @@ public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
         return getId() + ", scheme: " + getSignatureScheme();
     }
 
+    static class IdItem extends IntegerItem {
+        public IdItem() {
+            super();
+        }
+
+        @Override
+        public void readBytes(BlockReader reader) throws IOException {
+            super.readBytes(reader);
+            getParentInstance(SignatureInfo.class).onIdLoaded();
+        }
+    }
 }

@@ -77,7 +77,7 @@ public class SectionList extends FixedBlockContainer
 
         this.typeMap = new HashMap<>();
 
-        addChild(0, sectionArray);
+        setupBlock(0, sectionArray);
 
         this.dexHeader = dexHeader;
         this.mapList = mapList;
@@ -143,7 +143,7 @@ public class SectionList extends FixedBlockContainer
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         readSections(reader, null);
     }
     void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
@@ -276,7 +276,7 @@ public class SectionList extends FixedBlockContainer
             Section<?> section = iterator.next();
             section.onRemove(this);
         }
-        sectionArray.clearChildes();
+        sectionArray.clearBlocks();
         typeMap.clear();
     }
     public void clearPoolMap(SectionType<?> sectionType) {

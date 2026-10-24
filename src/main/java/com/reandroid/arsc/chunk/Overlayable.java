@@ -41,11 +41,11 @@ public class Overlayable extends Chunk<OverlayableHeader> implements
     private final BlockList<OverlayablePolicy> policyList;
 
     public Overlayable() {
-        super(new OverlayableHeader(), 1);
+        super(1, new OverlayableHeader());
 
         this.policyList = new BlockList<>(OverlayablePolicy.CREATOR);
         
-        addChild(this.policyList);
+        setupBlock(this.policyList);
     }
 
     public Iterator<OverlayablePolicy> policies() {
@@ -85,7 +85,7 @@ public class Overlayable extends Chunk<OverlayableHeader> implements
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
         checkInvalidChunk(headerBlock);
 

@@ -590,7 +590,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return getTableEntry().writeBytes(stream);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         TableEntry<?, ?> tableEntry = createTableEntry(reader);
         setTableEntry(tableEntry);
         tableEntry.readBytes(reader);

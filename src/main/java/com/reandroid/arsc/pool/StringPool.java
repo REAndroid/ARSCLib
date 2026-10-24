@@ -54,18 +54,18 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     private boolean stringLinkLocked;
 
     StringPool(boolean is_utf8, boolean stringLinkLocked, StringCreator<T> creator) {
-        super(new StringPoolHeader(), 6);
+        super(6, new StringPoolHeader());
 
         StringPoolHeader header = getHeaderBlock();
         header.setEncodingChangedListener(null);
         header.setUtf8(is_utf8);
 
         OffsetReferenceList<OffsetItem> offsetStrings = new OffsetReferenceList<>(
-                header.getCountStrings(),
+                header.countStrings(),
                 OffsetItem.CREATOR_OFFSET32);
 
         OffsetReferenceList<OffsetItem> offsetStyles = new OffsetReferenceList<>(
-                header.getCountStyles(),
+                header.countStyles(),
                 OffsetItem.CREATOR_OFFSET32);
 
         AlignItem stringsAlign = new AlignItem(true);
@@ -77,17 +77,17 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
                 creator);
 
         this.mArrayStyles = new StyleItemList(
-                header.getStartStyles(),
+                header.startStyles(),
                 offsetStyles);
 
-        StyleItemListEnd styleItemListEnd = new StyleItemListEnd(header.getCountStyles());
+        StyleItemListEnd styleItemListEnd = new StyleItemListEnd(header.countStyles());
 
-        addChild(offsetStrings);
-        addChild(offsetStyles);
-        addChild(mArrayStrings);
-        addChild(stringsAlign);
-        addChild(mArrayStyles);
-        addChild(styleItemListEnd);
+        setupBlock(offsetStrings);
+        setupBlock(offsetStyles);
+        setupBlock(mArrayStrings);
+        setupBlock(stringsAlign);
+        setupBlock(mArrayStyles);
+        setupBlock(styleItemListEnd);
 
         this.stringLinkLocked = stringLinkLocked;
 

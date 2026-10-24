@@ -48,19 +48,19 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends Annotatio
     }
 
     public int getDefinitionIndexValue() {
-        return getInteger(getBytesInternal(), 0);
+        return getInteger(bytes(), 0);
     }
     public void setDefinitionIndexValue(int value) {
         if (value == getDefinitionIndexValue()) {
             return;
         }
-        putInteger(getBytesInternal(),0, value);
+        putInteger(bytes(),0, value);
     }
     public int getValueOffset() {
-        return getInteger(getBytesInternal(), 4);
+        return getInteger(bytes(), 4);
     }
     public void setValueOffset(int value) {
-        putInteger(getBytesInternal(), 4, value);
+        putInteger(bytes(), 4, value);
     }
 
     public DEFINITION getDefinition() {
@@ -152,8 +152,8 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends Annotatio
         return null;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         pullItem();
     }
     private void pullItem() {

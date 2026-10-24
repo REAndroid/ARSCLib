@@ -31,8 +31,8 @@ public class DexPositionAlign extends AlignItem {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         super.align(reader.getPosition());
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 }

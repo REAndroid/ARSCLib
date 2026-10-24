@@ -44,7 +44,7 @@ public class IntegerItem extends BlockItem implements ReferenceItem, DirectStrea
         }
 
         mCache = value;
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (bigEndian) {
             putBigEndianInteger(bytes, 0, value);
         } else {
@@ -68,7 +68,7 @@ public class IntegerItem extends BlockItem implements ReferenceItem, DirectStrea
     @Override
     protected void onBytesChanged() {
         int i;
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (bigEndian) {
             i = getBigEndianInteger(bytes, 0);
         } else {

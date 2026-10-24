@@ -27,9 +27,9 @@ public class CountAndOffsetV41 extends CountAndOffset {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if (!isNull()) {
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
     }
     @Override

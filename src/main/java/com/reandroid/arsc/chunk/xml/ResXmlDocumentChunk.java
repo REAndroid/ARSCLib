@@ -33,15 +33,15 @@ public class ResXmlDocumentChunk extends Chunk<HeaderBlock> {
     private PackageBlock mPackageBlock;
 
     public ResXmlDocumentChunk() {
-        super(new HeaderBlock(ChunkType.XML),3);
+        super(3, new HeaderBlock(ChunkType.XML));
 
         this.mResXmlStringPool = new ResXmlStringPool(true);
         this.mResXmlIDMap = new ResXmlIDMap();
         this.mNodeList = new ResXmlNodeList();
 
-        addChild(mResXmlStringPool);
-        addChild(mResXmlIDMap);
-        addChild(mNodeList);
+        setupBlock(mResXmlStringPool);
+        setupBlock(mResXmlIDMap);
+        setupBlock(mNodeList);
     }
 
     public BlockList<ResXmlNode> getNodeListBlockInternal() {
@@ -66,7 +66,7 @@ public class ResXmlDocumentChunk extends Chunk<HeaderBlock> {
         return outputStream.toByteArray();
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
         if(headerBlock == null){
             throw new IOException("Not bin xml: " + reader);

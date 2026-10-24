@@ -82,8 +82,8 @@ public class InstructionList extends FixedBlockContainer implements
 
         this.blockAlign = blockAlign;
 
-        addChild(0, insBlockList);
-        addChild(1, blockAlign);
+        setupBlock(0, insBlockList);
+        setupBlock(1, blockAlign);
     }
 
     public RegistersEditor editRegisters() {

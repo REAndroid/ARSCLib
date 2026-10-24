@@ -45,9 +45,9 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
         this.numberBlock = numberBlock;
         this.elements = new BlockList<>();
         this.bottomContainer = new SingleBlockContainer<>();
-        addChild(0, this.numberBlock);
-        addChild(1, this.elements);
-        addChild(2, this.bottomContainer);
+        setupBlock(0, this.numberBlock);
+        setupBlock(1, this.elements);
+        setupBlock(2, this.bottomContainer);
     }
     public long getDataSize(){
         Block numberBlock = this.numberBlock;
@@ -85,7 +85,7 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
         this.elements.sort(comparator);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
+    public void readBytes(BlockReader reader) throws IOException{
         if(!reader.isAvailable()){
             return;
         }
@@ -117,10 +117,10 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
         setDataSize(size);
     }
     public Block getBottomBlock(){
-        return bottomContainer.getItem();
+        return bottomContainer.block();
     }
     public void setBottomBlock(Block block){
-        bottomContainer.setItem(block);
+        bottomContainer.block(block);
     }
 
 

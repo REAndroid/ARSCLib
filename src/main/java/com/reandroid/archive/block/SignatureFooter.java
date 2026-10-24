@@ -28,7 +28,7 @@ public class SignatureFooter extends ZipBlock{
     @Override
     public int readBytes(InputStream inputStream) throws IOException {
         setBytesLength(MIN_SIZE, false);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         return inputStream.read(bytes, 0, bytes.length);
     }
     public long getSignatureSize(){

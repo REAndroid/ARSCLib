@@ -62,9 +62,9 @@ public class InlineCache extends FixedBlockContainer
 
         this.pcMapList = new SizedBlockList<>(count, InlineCachePcMap.CREATOR);
 
-        addChild(0, (Block) dexPc);
-        addChild(1, (Block) dexPcMapSize);
-        addChild(2, pcMapList);
+        setupBlock(0, (Block) dexPc);
+        setupBlock(1, (Block) dexPcMapSize);
+        setupBlock(2, pcMapList);
     }
 
     public IntegerReference dexPc() {
@@ -83,8 +83,8 @@ public class InlineCache extends FixedBlockContainer
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
     }
 
     @Override

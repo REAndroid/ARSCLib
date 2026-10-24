@@ -31,7 +31,7 @@ abstract class DebugRegisterNumber extends DebugElementBlock {
     DebugRegisterNumber(int childesCount, int flag) {
         super(childesCount + 1, flag);
         this.registerNumber = new Ule128Item();
-        addChild(1, registerNumber);
+        setupBlock(1, registerNumber);
     }
     DebugRegisterNumber(int childesCount, DebugElementType<?> elementType) {
         this(childesCount, elementType.getFlag());

@@ -30,7 +30,6 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelSet;
 import com.reandroid.dex.program.TryItem;
-import com.reandroid.dex.smali.model.SmaliTryItem;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
@@ -153,7 +152,7 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
     private HandlerOffsetArray initHandlersOffset() {
         if (handlerOffsetArray == null) {
             handlerOffsetArray = new HandlerOffsetArray(getCodeItem().getTryCountReference());
-            addChild(INDEX_offsetArray, handlerOffsetArray);
+            setupBlock(INDEX_offsetArray, handlerOffsetArray);
         }
         return handlerOffsetArray;
     }
@@ -162,9 +161,9 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
             return;
         }
         tryItemsCount = new Ule128Item();
-        addChild(INDEX_itemsCount, tryItemsCount);
+        setupBlock(INDEX_itemsCount, tryItemsCount);
         tryItemArray = new BlockList<>(this);
-        addChild(INDEX_itemArray, tryItemArray);
+        setupBlock(INDEX_itemArray, tryItemArray);
     }
     public boolean isEmpty() {
         BlockList<InsTryItem> tryItemArray = this.tryItemArray;
@@ -190,7 +189,7 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
         initTryItemArray();
         if (positionAlign == null) {
             positionAlign = new DexPositionAlign();
-            addChild(INDEX_positionAlign, positionAlign);
+            setupBlock(INDEX_positionAlign, positionAlign);
         }
     }
     private void clear() {
@@ -205,7 +204,7 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
             tryItemArray = null;
         }
         if (tryItemArray != null) {
-            tryItemArray.clearChildes();
+            tryItemArray.clearBlocks();
             tryItemArray.setParent(null);
             tryItemArray.setIndex(-1);
             tryItemArray = null;
@@ -215,11 +214,11 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
             positionAlign.setIndex(-1);
             positionAlign = null;
         }
-        addChild(INDEX_offsetArray, null);
-        addChild(INDEX_itemsCount, null);
-        addChild(INDEX_unknownBytes, null);
-        addChild(INDEX_itemArray, null);
-        addChild(INDEX_positionAlign, null);
+        setupBlock(INDEX_offsetArray, null);
+        setupBlock(INDEX_itemsCount, null);
+        setupBlock(INDEX_unknownBytes, null);
+        setupBlock(INDEX_itemArray, null);
+        setupBlock(INDEX_positionAlign, null);
     }
 
     public void remove(InsTryItem tryItem) {
@@ -246,7 +245,7 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
                 InsTryItem tryItem = tryItemArray.getLast();
                 tryItem.onRemove();
             }
-            tryItemArray.clearChildes();
+            tryItemArray.clearBlocks();
         }
         HandlerOffsetArray array = this.handlerOffsetArray;
         if (array != null) {
@@ -260,18 +259,18 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         boolean is_null = getCodeItem().getTryCountReference().get() == 0;
         setNull(is_null);
         if (is_null) {
             return;
         }
-        this.handlerOffsetArray.onReadBytes(reader);
-        this.tryItemsCount.onReadBytes(reader);
+        this.handlerOffsetArray.readBytes(reader);
+        this.tryItemsCount.readBytes(reader);
         readUnknownBytes(reader);
         this.tryItemArray.setSize(handlerOffsetArray.size());
         this.tryItemArray.readChildes(reader);
-        this.positionAlign.onReadBytes(reader);
+        this.positionAlign.readBytes(reader);
     }
     private void setUnknownBytes(int count) {
         if (count <= 0 || isNull()) {
@@ -289,7 +288,7 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
             unknown = new ByteArray(count);
             this.unknownBytes = unknown;
             unknown.setParent(this);
-            addChild(INDEX_unknownBytes, unknown);
+            setupBlock(INDEX_unknownBytes, unknown);
         } else {
             unknown.setSize(count);
         }

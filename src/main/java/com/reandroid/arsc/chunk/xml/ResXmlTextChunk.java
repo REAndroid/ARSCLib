@@ -22,12 +22,11 @@ import com.reandroid.arsc.pool.ResXmlStringPool;
 
 public class ResXmlTextChunk extends BaseXmlChunk {
 
-    private final IntegerItem mReserved;
-
     public ResXmlTextChunk() {
-        super(ChunkType.XML_CDATA, 1);
-        this.mReserved = new IntegerItem();
-        addChild(mReserved);
+        super(1, ChunkType.XML_CDATA);
+
+        setupBlock(new IntegerItem()); // reserved
+
         setStringReference(0);
     }
     public String getText() {

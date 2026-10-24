@@ -32,10 +32,10 @@ public class SpecBlock extends Chunk<SpecHeader> implements
     private final SpecFlagsArray specFlagsArray;
 
     SpecBlock(SpecHeader header) {
-        super(header, 1);
+        super(1, header);
 
         this.specFlagsArray = new SpecFlagsArray(header.count());
-        addChild(specFlagsArray);
+        setupBlock(specFlagsArray);
     }
     public SpecBlock() {
         this(new SpecHeader());

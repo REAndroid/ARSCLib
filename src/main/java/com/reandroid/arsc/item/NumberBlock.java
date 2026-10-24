@@ -33,7 +33,7 @@ public class NumberBlock extends BlockItem implements LongReference {
     }
     @Override
     public void set(long value) {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int length = bytes.length;
         validate(length, value);
         putNumber(bytes, 0, length, value);
@@ -59,7 +59,7 @@ public class NumberBlock extends BlockItem implements LongReference {
         set(value);
     }
     private long unsigned() {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         return getUnsignedNumber(bytes, 0, bytes.length);
     }
     private void validate(int width, long value) {

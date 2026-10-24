@@ -40,7 +40,7 @@ public class ZipHeader extends ZipBlock{
     }
     private int readBasic(InputStream inputStream) throws IOException {
         setBytesLength(getMinByteLength(), false);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int beginLength = bytes.length;
         int read = inputStream.read(bytes, 0, beginLength);
         if(read != beginLength){

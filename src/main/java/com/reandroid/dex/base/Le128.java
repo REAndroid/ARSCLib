@@ -42,7 +42,7 @@ public abstract class Le128 extends DexBlockItem implements IntegerReference {
     }
     protected abstract void writeValue(int value);
     protected abstract int readLe128(BlockReader reader) throws IOException;
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         this.value = readLe128(reader);
     }
 

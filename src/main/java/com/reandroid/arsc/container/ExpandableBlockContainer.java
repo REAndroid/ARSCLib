@@ -16,49 +16,38 @@
 package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockContainer;
 
-public  class ExpandableBlockContainer extends BlockContainer<Block> {
-    private Block[] mChildes;
-    private int mCursor;
+public  class ExpandableBlockContainer extends FixedBlockContainer {
 
-    public ExpandableBlockContainer(int initialSize){
-        super();
-        this.mChildes=new Block[initialSize];
+    public ExpandableBlockContainer(int blocksSize) {
+        super(blocksSize);
     }
 
-    public final void addChild(Block block){
-        if(block == null){
-            return;
+    protected final void setupBlock(Block block) {
+        Object[] blocks = this.blocks();
+        int index = 0;
+        while (blocks[index] != null) {
+            index ++;
         }
-        int index = mCursor;
-        ensureCount(index + 1);
-        mChildes[index] = block;
-        block.setIndex(index);
-        block.setParent(this);
-        mCursor++;
+        setupBlock(index, block);
     }
-    private void ensureCount(int count){
-        if(count<= getChildesCount()){
-            return;
+    protected final void setupBlock(Block block1, Block block2) {
+        Object[] blocks = this.blocks();
+        int index = 0;
+        while (blocks[index] != null) {
+            index ++;
         }
-        Block[] old = mChildes;
-        mChildes = new Block[count];
-        for(int i = 0; i < old.length; i++){
-            mChildes[i] = old[i];
+        setupBlock(index ++, block1);
+        setupBlock(index, block2);
+    }
+    protected final void setupBlock(Block block1, Block block2, Block block3) {
+        Object[] blocks = this.blocks();
+        int index = 0;
+        while (blocks[index] != null) {
+            index ++;
         }
-    }
-    @Override
-    protected void onRefreshed() {
-
-    }
-
-    @Override
-    public final int getChildesCount() {
-        return mChildes.length;
-    }
-    @Override
-    public final Block[] getChildes() {
-        return mChildes;
+        setupBlock(index ++, block1);
+        setupBlock(index ++, block2);
+        setupBlock(index, block3);
     }
 }

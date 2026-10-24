@@ -37,7 +37,7 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<Sect
         super(blockItem, offset);
         this.sectionType = sectionType;
         this.usageType = usage;
-        Block.putInteger(getBytesInternal(), getOffset(), -1);
+        Block.putInteger(bytes(), getOffset(), -1);
     }
     public IdItemIndirectReference(SectionType<T> sectionType, SectionItem blockItem, int offset) {
         this(sectionType, blockItem, offset, IdItem.USAGE_NONE);
@@ -84,11 +84,11 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<Sect
 
     @Override
     public void set(int value) {
-        Block.putInteger(getBytesInternal(), getOffset(), value);
+        Block.putInteger(bytes(), getOffset(), value);
     }
     @Override
     public int get() {
-        return Block.getInteger(getBytesInternal(), getOffset());
+        return Block.getInteger(bytes(), getOffset());
     }
 
     @Override

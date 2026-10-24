@@ -53,8 +53,8 @@ public class ProfileClassList extends CountedBlockList<ProfileClass>
         return sorted;
     }
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         initIdx();
     }
 

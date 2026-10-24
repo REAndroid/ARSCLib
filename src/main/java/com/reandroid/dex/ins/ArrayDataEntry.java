@@ -76,7 +76,7 @@ public class ArrayDataEntry extends NumberBlock implements PayloadEntry {
 
     @Override
     public int hashCode() {
-        return Block.hashCodeOf(getBytesInternal());
+        return Block.hashCodeOf(bytes());
     }
 
     @Override
@@ -88,7 +88,7 @@ public class ArrayDataEntry extends NumberBlock implements PayloadEntry {
             return false;
         }
         ArrayDataEntry other = (ArrayDataEntry) obj;
-        return Block.areEqual(this.getBytesInternal(), other.getBytesInternal());
+        return Block.areEqual(this.bytes(), other.bytes());
     }
 
     @Override

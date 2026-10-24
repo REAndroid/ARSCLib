@@ -34,16 +34,16 @@ public class EntryHeaderMap extends ValueHeader {
         return null;
     }
     public int getParentId(){
-        return getInteger(getBytesInternal(), OFFSET_PARENT_ID);
+        return getInteger(bytes(), OFFSET_PARENT_ID);
     }
     public void setParentId(int parentId){
-        putInteger(getBytesInternal(), OFFSET_PARENT_ID, parentId);
+        putInteger(bytes(), OFFSET_PARENT_ID, parentId);
     }
     public int getValuesCount(){
-        return getInteger(getBytesInternal(), OFFSET_VALUE_COUNT);
+        return getInteger(bytes(), OFFSET_VALUE_COUNT);
     }
     public void setValuesCount(int valuesCount){
-        putInteger(getBytesInternal(), OFFSET_VALUE_COUNT, valuesCount);
+        putInteger(bytes(), OFFSET_VALUE_COUNT, valuesCount);
     }
 
     @Override

@@ -74,12 +74,12 @@ public class AnnotationItem extends DataItem
                 AnnotationElement.CREATOR, elementsCount);
         int i = 0;
         if (!valueEntry) {
-            addChildBlock(i++, visibility);
+            block(i++, visibility);
         }
 
-        addChildBlock(i++, typeId);
-        addChildBlock(i++, elementsCount);
-        addChildBlock(i, elementList);
+        block(i++, typeId);
+        block(i++, elementsCount);
+        block(i, elementList);
     }
     public AnnotationItem() {
         this(false);
@@ -138,7 +138,7 @@ public class AnnotationItem extends DataItem
         elementList.remove(i);
     }
     public void clear() {
-        elementList.clearChildes();
+        elementList.clearBlocks();
     }
     public AnnotationElement getOrCreate(String name) {
         AnnotationElement element = get(name);

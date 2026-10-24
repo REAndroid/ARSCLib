@@ -52,7 +52,7 @@ public abstract class BlockItem extends Block {
     }
     protected void onLengthChanged(int length) {
     }
-    protected byte[] getBytesInternal() {
+    public byte[] bytes() {
         return mBytes;
     }
     void setBytesInternal(byte[] bytes) {
@@ -113,14 +113,14 @@ public abstract class BlockItem extends Block {
         if (isNull()) {
             return 0;
         }
-        return getBytesInternal().length;
+        return bytes().length;
     }
     @Override
     public byte[] getBytes() {
         if (isNull()) {
             return null;
         }
-        return getBytesInternal();
+        return bytes();
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
@@ -135,8 +135,8 @@ public abstract class BlockItem extends Block {
         counter.addCount(countBytes());
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        byte[] bytes = getBytesInternal();
+    public void readBytes(BlockReader reader) throws IOException{
+        byte[] bytes = bytes();
         int length = bytes.length;
         if (length == 0) {
             return;
@@ -149,7 +149,7 @@ public abstract class BlockItem extends Block {
         if (isNull()) {
             return 0;
         }
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int length = bytes.length;
         if (length == 0) {
             return 0;
@@ -159,7 +159,7 @@ public abstract class BlockItem extends Block {
     }
 
     public int readBytes(InputStream inputStream) throws IOException {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (bytes == null || bytes.length == 0) {
             return 0;
         }
@@ -172,7 +172,6 @@ public abstract class BlockItem extends Block {
             offset += read;
         }
         onBytesChanged();
-        super.notifyBlockLoad();
         return offset;
     }
     public void setBytes(BlockItem blockItem) {
@@ -180,7 +179,7 @@ public abstract class BlockItem extends Block {
     }
     public void setBytes(BlockItem blockItem, boolean notify) {
         if (blockItem != this) {
-            byte[] coming = blockItem.getBytesInternal();
+            byte[] coming = blockItem.bytes();
             setBytesInternal(coming.clone(), notify);
         }
     }
@@ -192,7 +191,7 @@ public abstract class BlockItem extends Block {
     }
     public void write(boolean notify, byte[] bytes, int offset, int length) {
         if (length != 0) {
-            System.arraycopy(bytes, 0, getBytesInternal(), offset, length);
+            System.arraycopy(bytes, 0, bytes(), offset, length);
             if (notify) {
                 onBytesChanged();
             }

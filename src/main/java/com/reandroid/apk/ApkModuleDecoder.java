@@ -160,6 +160,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
             PathSanitizer sanitizer = PathSanitizer.create(getApkModule());
             sanitizer.setApkLogger(getApkLogger());
             sanitizer.sanitize();
+            getApkModule().getZipEntryMap().refresh();
         }
     }
     public void dumpSignatures(File mainDirectory) throws IOException {

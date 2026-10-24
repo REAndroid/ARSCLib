@@ -28,7 +28,7 @@ public class XmlIDMapHeader extends HeaderBlock {
         this.idsCount = new CountReference(this);
     }
 
-    public IntegerReference getIdsCount() {
+    public IntegerReference idsCount() {
         return idsCount;
     }
 

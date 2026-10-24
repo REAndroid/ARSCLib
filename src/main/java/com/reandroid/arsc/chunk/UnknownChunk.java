@@ -32,7 +32,7 @@ public class UnknownChunk extends Chunk<HeaderBlock> {
     private final CountedBlockItem body;
 
     UnknownChunk(HeaderBlock header) {
-        super(header, 1);
+        super(1, header);
 
         this.body = new CountedBlockItem(new IntegerReference() {
             @Override
@@ -44,7 +44,7 @@ public class UnknownChunk extends Chunk<HeaderBlock> {
             }
         });
 
-        addChild(body);
+        setupBlock(body);
     }
     public UnknownChunk() {
         this(new HeaderBlock(0, INITIAL_CHUNK_TYPE));
@@ -77,7 +77,6 @@ public class UnknownChunk extends Chunk<HeaderBlock> {
         int result;
         result = getHeaderBlock().readBytes(inputStream);
         result += getBody().readBytes(inputStream);
-        super.notifyBlockLoad();
         return result;
     }
     public final int writeBytes(File file) throws IOException{

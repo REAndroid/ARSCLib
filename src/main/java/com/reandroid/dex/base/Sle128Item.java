@@ -16,7 +16,6 @@
 package com.reandroid.dex.base;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.io.StreamUtil;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ public class Sle128Item extends Le128 {
     @Override
     protected void writeValue(int value) {
         setBytesLength(5, false);
-        int length = writeSleb128(getBytesInternal(), 0, value);
+        int length = writeSleb128(bytes(), 0, value);
         setBytesLength(length, false);
     }
     @Override
@@ -39,7 +38,7 @@ public class Sle128Item extends Le128 {
         int length = reader.getPosition() - position;
         reader.seek(position);
         setBytesLength(length, false);
-        reader.readFully(getBytesInternal());
+        reader.readFully(bytes());
         return value;
     }
 }

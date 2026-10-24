@@ -26,12 +26,12 @@ public class IdItemIndirectShortReference<T extends IdItem> extends IdItemIndire
 
     public IdItemIndirectShortReference(SectionType<T> sectionType, SectionItem blockItem, int offset, int usage) {
         super(sectionType, blockItem, offset, usage);
-        Block.putShort(getBytesInternal(), getOffset(), 0xffff);
+        Block.putShort(bytes(), getOffset(), 0xffff);
     }
 
     @Override
     public int get() {
-        return Block.getShortUnsigned(getBytesInternal(), getOffset());
+        return Block.getShortUnsigned(bytes(), getOffset());
     }
     @Override
     public void set(int value) {
@@ -39,7 +39,7 @@ public class IdItemIndirectShortReference<T extends IdItem> extends IdItemIndire
             throw new DexException("Short value out of range "
                     + HexUtil.toHex(value, 4) + " > 0xffff");
         }
-        Block.putShort(getBytesInternal(), getOffset(), value);
+        Block.putShort(bytes(), getOffset(), value);
     }
 
     @Override

@@ -52,10 +52,10 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
 
         this.debugSequence = new DebugSequence(lineStart);
 
-        addChildBlock(0, lineStart);
-        addChildBlock(1, debugParameterCount);
+        block(0, lineStart);
+        block(1, debugParameterCount);
         // index = 2, debugParametersArray
-        addChildBlock(3, debugSequence);
+        block(3, debugSequence);
 
         this.debugKey = new DataKey<>(this);
     }
@@ -144,22 +144,22 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        lineStart.onReadBytes(reader);
-        debugParameterCount.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        lineStart.readBytes(reader);
+        debugParameterCount.readBytes(reader);
         if (debugParameterCount.get() > 0) {
             BlockList<DebugParameterBlock> array = initParametersArray();
             array.setSize(debugParameterCount.get());
             array.readChildes(reader);
         }
-        debugSequence.onReadBytes(reader);
+        debugSequence.readBytes(reader);
     }
     private BlockList<DebugParameterBlock> initParametersArray() {
         BlockList<DebugParameterBlock> debugParametersArray = this.debugParametersArray;
         if (debugParametersArray == null) {
             debugParametersArray = new BlockList<>();
             this.debugParametersArray = debugParametersArray;
-            addChildBlock(2, debugParametersArray);
+            block(2, debugParametersArray);
             debugParametersArray.setCreator(CREATOR);
         }
         return debugParametersArray;
@@ -169,7 +169,7 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         BlockList<DebugParameterBlock> array = this.debugParametersArray;
         if (array != null) {
             this.debugParametersArray = null;
-            array.clearChildes();
+            array.clearBlocks();
         }
         this.debugSequence.clear();
     }

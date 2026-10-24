@@ -43,12 +43,12 @@ public class ProfileMetadataV2 extends ProfileMetadata {
         ShortItem classSetSize = new ShortItem();
         this.classList = new ProfileClassList(classSetSize);
 
-        addChild(0, (Block) profileIndex);
-        addChild(1, dexNameSize);
-        addChild(2, (Block) name);
-        addChild(3, (Block) typeIdCount);
-        addChild(4, classSetSize);
-        addChild(5, classList);
+        setupBlock(0, (Block) profileIndex);
+        setupBlock(1, dexNameSize);
+        setupBlock(2, (Block) name);
+        setupBlock(3, (Block) typeIdCount);
+        setupBlock(4, classSetSize);
+        setupBlock(5, classList);
     }
 
     public IntegerReference profileIndex() {

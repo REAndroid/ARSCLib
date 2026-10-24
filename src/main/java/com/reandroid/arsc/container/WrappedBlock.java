@@ -63,7 +63,7 @@ public class WrappedBlock extends Block implements BlockRefresh {
         getBaseBlock().onCountUpTo(counter);
     }
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         getBaseBlock().readBytes(reader);
     }
     @Override

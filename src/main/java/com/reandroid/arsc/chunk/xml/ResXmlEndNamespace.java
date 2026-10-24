@@ -44,12 +44,12 @@ public class ResXmlEndNamespace extends ResXmlNamespaceChunk
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
         if (headerBlock.getChunkSize() < 8) {
             super.onReadChildes(reader);
         } else {
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
     }
 

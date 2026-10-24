@@ -26,14 +26,14 @@ public class IndirectShort  extends IndirectItem<BlockItem> implements IntegerRe
     }
     @Override
     public int get(){
-        return Block.getShortUnsigned(getBytesInternal(), getOffset());
+        return Block.getShortUnsigned(bytes(), getOffset());
     }
     @Override
     public void set(int value){
-        Block.putShort(getBytesInternal(), getOffset(), value);
+        Block.putShort(bytes(), getOffset(), value);
     }
     public boolean isNull(){
-        return (getBytesInternal().length - getOffset()) < 2;
+        return (bytes().length - getOffset()) < 2;
     }
     @Override
     public String toString(){

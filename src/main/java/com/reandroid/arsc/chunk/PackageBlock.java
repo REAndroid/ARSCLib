@@ -84,16 +84,16 @@ public class PackageBlock extends Chunk<PackageHeader>
     private Object mTag;
 
     private PackageBlock(PackageHeader header) {
-        super(header, 3);
+        super(3, header);
 
         this.mTypeStringPool = new TypeStringPool(false, header.typeIdOffset());
         this.mSpecStringPool = new SpecStringPool(true);
 
         this.mBody = new PackageBody();
 
-        addChild(mTypeStringPool);
-        addChild(mSpecStringPool);
-        addChild(mBody);
+        setupBlock(mTypeStringPool);
+        setupBlock(mSpecStringPool);
+        setupBlock(mBody);
     }
     public PackageBlock() {
         this(new PackageHeader());
@@ -405,10 +405,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     @Override
     public int getId() {
-        return getHeaderBlock().getPackageId().get();
+        return getHeaderBlock().packageId().get();
     }
     public void setId(int id) {
-        getHeaderBlock().getPackageId().set(id);
+        getHeaderBlock().packageId().set(id);
         mPrefix = null;
         mHasValidPrefix = false;
     }
@@ -885,7 +885,7 @@ public class PackageBlock extends Chunk<PackageHeader>
                 return new byte[0];
             }
             @Override
-            public void onReadBytes(BlockReader reader) throws IOException {
+            public void readBytes(BlockReader reader) throws IOException {
                 throw new IOException("Can't read on empty package");
             }
             @Override

@@ -30,7 +30,7 @@ class HeaderPiece extends ByteArray implements DirectStreamReader {
 
     @Override
     public String toString(){
-        return printChars(getBytesInternal());
+        return printChars(bytes());
     }
 
     static String printHex(byte[] bytes){

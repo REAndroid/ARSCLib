@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.header.SpecOrTypeHeader;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.value.Entry;
@@ -375,21 +375,19 @@ public class TypeBlockArray extends BlockArray<TypeBlock> implements Creator<Typ
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         readTypes(reader);
     }
     public void readTypes(BlockReader reader) throws IOException {
-        boolean readOk = true;
-        while (readOk) {
-            readOk = readNextType(reader);
+        InfoHeader header = new InfoHeader();
+        while (header.readInfo(reader)) {
+            if (!readNextType(header, reader)) {
+                break;
+            }
         }
         this.mQualifiersMap = null;
     }
-    private boolean readNextType(BlockReader reader) throws IOException {
-        if (reader.available() < 10) {
-            return false;
-        }
-        SpecOrTypeHeader header = SpecOrTypeHeader.read(reader);
+    private boolean readNextType(InfoHeader header, BlockReader reader) throws IOException {
         if (header.getChunkType() != ChunkType.TYPE) {
             return false;
         }

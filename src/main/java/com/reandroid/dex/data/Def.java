@@ -62,8 +62,8 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         this.sectionType = sectionType;
         this.relativeId = new Ule128Item(true);
         this.accessFlags = new Ule128Item();
-        addChild(0, relativeId);
-        addChild(1, accessFlags);
+        setupBlock(0, relativeId);
+        setupBlock(1, accessFlags);
     }
     @Override
     public AnnotationSetKey getAnnotation() {
@@ -331,8 +331,8 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         cacheItem();
     }
     private void cacheItem() {

@@ -52,8 +52,8 @@ public class LibraryInfo extends FixedBlockContainer implements ResourceLibrary,
         this.mPackageId = new IntegerItem();
         this.mPackageName = new FixedLengthString(256);
 
-        addChild(0, mPackageId);
-        addChild(1, mPackageName);
+        setupBlock(0, mPackageId);
+        setupBlock(1, mPackageName);
     }
 
     @Override

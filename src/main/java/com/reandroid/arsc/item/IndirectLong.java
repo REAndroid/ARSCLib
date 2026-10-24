@@ -25,12 +25,12 @@ public class IndirectLong extends IndirectItem<BlockItem> implements LongReferen
 
     @Override
     public long getLong() {
-        return Block.getLong(getBytesInternal(), getOffset());
+        return Block.getLong(bytes(), getOffset());
     }
 
     @Override
     public void set(long value) {
-        Block.putLong(getBytesInternal(), getOffset(), value);
+        Block.putLong(bytes(), getOffset(), value);
     }
     @Override
     public int get(){
@@ -41,7 +41,7 @@ public class IndirectLong extends IndirectItem<BlockItem> implements LongReferen
         set((long) value);
     }
     public boolean isNull(){
-        return (getBytesInternal().length - getOffset()) < 8;
+        return (bytes().length - getOffset()) < 8;
     }
     @Override
     public String toString(){

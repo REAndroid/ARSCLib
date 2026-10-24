@@ -26,7 +26,7 @@ public class BottomBlock extends BlockList<LengthPrefixedBytes> {
         super();
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         while (reader.isAvailable()){
             LengthPrefixedBytes prefixedBytes = new LengthPrefixedBytes(false);
             prefixedBytes.readBytes(reader);

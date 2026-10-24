@@ -73,7 +73,7 @@ public class DeflatedBlockContainer extends FixedBlockContainer {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         BlockReader deflatedReader;
         if (isDeflated()) {
             byte[] uncompressed = readCompressed(
@@ -84,7 +84,7 @@ public class DeflatedBlockContainer extends FixedBlockContainer {
         } else {
             deflatedReader = reader;
         }
-        super.onReadBytes(deflatedReader);
+        super.readBytes(deflatedReader);
     }
 
     @Override

@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -31,45 +32,50 @@ import java.util.Iterator;
 
 public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
 
-    private final IntegerItem firstKey;
-    private final PackedSwitchDataList elements;
-
     private InsSparseSwitchData mReplacement;
 
     public InsPackedSwitchData() {
         super(3, Opcode.PACKED_SWITCH_PAYLOAD);
-        ShortItem elementCount = new ShortItem();
-        this.firstKey = new IntegerItem();
-        this.elements = new PackedSwitchDataList(this, elementCount);
 
-        addChild(1, elementCount);
-        addChild(2, firstKey);
-        addChild(3, elements);
+        ShortItem elementCount = new ShortItem();
+        IntegerItem firstKey = new IntegerItem();
+        PackedSwitchDataList elements = new PackedSwitchDataList(this, elementCount);
+
+        setupBlock(1, elementCount);
+        setupBlock(2, firstKey);
+        setupBlock(3, elements);
     }
 
     public int getFirstKey() {
-        return firstKey.get();
+        return firstKey().get();
     }
     public void setFirstKey(int firstKey) {
-        this.firstKey.set(firstKey);
+        this.firstKey().set(firstKey);
+    }
+
+    public IntegerReference firstKey() {
+        return block(2);
+    }
+    public PackedSwitchDataList elements() {
+        return block(3);
     }
 
     @Override
     public Iterator<PackedSwitchEntry> iterator() {
-        return ObjectsUtil.cast(elements.iterator());
+        return ObjectsUtil.cast(elements().iterator());
     }
     @Override
     public PackedSwitchEntry get(int index) {
-        return elements.get(index);
+        return elements().get(index);
     }
     @Override
     public int size() {
-        return elements.size();
+        return elements().size();
     }
     @Override
     public void setSize(int size) {
         Object lock = requestLock();
-        elements.setSize(size);
+        elements().setSize(size);
         releaseLock(lock);
     }
 
@@ -90,7 +96,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
         this.mReplacement = sparseData;
 
         sparseData.setSwitch(sparse);
-        sparseData.fromPackedSwitchData(this.elements);
+        sparseData.fromPackedSwitchData(this.elements());
 
         this.replace(sparseData);
 
@@ -116,7 +122,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
 
     @Override
     public Iterator<PackedSwitchEntry> getLabels() {
-        return elements.getLabels();
+        return elements().getLabels();
     }
 
     @Override
@@ -128,7 +134,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     public void merge(Ins ins) {
         InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
         setFirstKey(switchData.getFirstKey());
-        elements.merge(switchData.elements);
+        elements().merge(switchData.elements());
     }
 
     @Override
@@ -137,7 +143,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
         SmaliPayloadPackedSwitch smaliPayloadPackedSwitch =
                 (SmaliPayloadPackedSwitch) smaliInstruction;
         setFirstKey(smaliPayloadPackedSwitch.getFirstKey());
-        this.elements.fromSmali(smaliPayloadPackedSwitch);
+        this.elements().fromSmali(smaliPayloadPackedSwitch);
     }
 
     @Override
@@ -150,7 +156,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     @Override
     void toSmaliEntries(SmaliInstruction instruction) {
         super.toSmaliEntries(instruction);
-        this.elements.toSmali((SmaliPayloadPackedSwitch) instruction);
+        this.elements().toSmali((SmaliPayloadPackedSwitch) instruction);
     }
 
     @Override
@@ -158,7 +164,7 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
         getSmaliDirective().append(writer);
         writer.appendHex(getFirstKey());
         writer.indentPlus();
-        elements.append(writer);
+        elements().append(writer);
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }
@@ -166,8 +172,8 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     @Override
     public String toString() {
         return "InsPackedSwitchData{" +
-                ", firstKey=" + firstKey +
-                ", elements=" + elements +
+                ", firstKey=" + firstKey() +
+                ", elements=" + elements() +
                 '}';
     }
 

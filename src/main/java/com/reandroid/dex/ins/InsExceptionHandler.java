@@ -50,7 +50,7 @@ public abstract class InsExceptionHandler extends FixedDexContainerWithTool
         super(childesCount);
         this.catchAddress = catchAddress;
         if (catchAddress != null) {
-            addChild(index, catchAddress);
+            setupBlock(index, catchAddress);
         }
 
         this.startLabel = new TryStartLabel(this);

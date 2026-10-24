@@ -49,7 +49,7 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     public DexLayoutBlock() {
         super(1);
         this.sectionList = new SectionList();
-        addChild(0, sectionList);
+        setupBlock(0, sectionList);
 
         this.extendingClassMap = new MultiMap<>();
         this.interfaceMap = new MultiMap<>();

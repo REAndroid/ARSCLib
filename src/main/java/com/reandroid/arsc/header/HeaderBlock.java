@@ -18,8 +18,8 @@ package com.reandroid.arsc.header;
 import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.container.ExpandableBlockContainer;
+import com.reandroid.arsc.item.AlignItem;
 import com.reandroid.arsc.item.CountedBlockItem;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
@@ -30,26 +30,21 @@ import com.reandroid.utils.HexUtil;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class HeaderBlock extends FixedBlockContainer implements DirectStreamReader {
-    
-    private final ShortItem mType;
-    private final ShortItem mHeaderSize;
-    private final IntegerItem mChunkSize;
-    private final CountedBlockItem extraBytes;
+public class HeaderBlock extends ExpandableBlockContainer implements DirectStreamReader {
 
-    public HeaderBlock(int childesCount, int type) {
-        super(childesCount + 4);
-        this.mType = new ShortItem(type);
-        this.mHeaderSize = new ShortItem();
-        this.mChunkSize = new IntegerItem();
-        this.extraBytes = new ExtraBytesBlock(this);
-        addChild(0, mType);
-        addChild(1, mHeaderSize);
-        addChild(2, mChunkSize);
-        addChild(childesCount + 3, extraBytes);
+    public HeaderBlock(int blocksSize, int type) {
+        super(blocksSize + 4);
+
+        setupBlock(
+                new ShortItem(type), // chunk type
+                new ShortItem(),     // header size
+                new IntegerItem()    // chunk size
+        );
+
+        setupLast(new ExcessHeaderBytesBlock());
     }
-    public HeaderBlock(int childesCount, ChunkType chunkType) {
-        this(childesCount, chunkType.ID);
+    public HeaderBlock(int blocksSize, ChunkType chunkType) {
+        this(blocksSize, chunkType.ID);
     }
     public HeaderBlock(ChunkType chunkType) {
         this(0, chunkType.ID);
@@ -59,20 +54,17 @@ public class HeaderBlock extends FixedBlockContainer implements DirectStreamRead
         return countBytes();
     }
 
-    public CountedBlockItem getExtraBytes() {
-        return extraBytes;
-    }
     public ChunkType getChunkType() {
-        return ChunkType.get(mType.get());
+        return ChunkType.get(type().get());
     }
     public int getType() {
-        return mType.get();
+        return type().get();
     }
     public void setType(ChunkType chunkType) {
         setType(chunkType == null ? 0 : chunkType.ID);
     }
     public void setType(int type) {
-        mType.set(type);
+        type().set(type);
     }
 
     public int getHeaderSize() {
@@ -89,27 +81,25 @@ public class HeaderBlock extends FixedBlockContainer implements DirectStreamRead
     }
 
     public IntegerReference type() {
-        return mType;
+        return block(0);
     }
     public IntegerReference headerSize() {
-        return mHeaderSize;
+        return block(1);
     }
-    public IntegerItem chunkSize() {
-        return mChunkSize;
+    public IntegerReference chunkSize() {
+        return block(2);
+    }
+    public CountedBlockItem excessBytes() {
+        return blockLast();
     }
 
-    public final void refreshHeader() {
-        refreshHeaderSize();
-        refreshChunkSize();
-    }
-    private void refreshHeaderSize() {
+    public final void refreshHeader(Chunk<?> chunk) {
         setHeaderSize(countBytes());
-    }
-    private void refreshChunkSize() {
-        Block parent = getParentInstance(Chunk.class);
-        if (parent != null) {
-            setChunkSize(parent.countBytes());
-        }
+        AlignItem alignItem = chunk.getAlignment();
+        alignItem.clear();
+        int count = chunk.countBytes();
+        count += alignItem.align(count);
+        setChunkSize(count);
     }
     boolean readExtraBytes() {
         return true;
@@ -117,9 +107,7 @@ public class HeaderBlock extends FixedBlockContainer implements DirectStreamRead
 
     @Override
     public int readBytes(InputStream inputStream) throws IOException {
-        int result = DirectStreamReader.Util.readBlock(this, inputStream);
-        super.notifyBlockLoad();
-        return result;
+        return DirectStreamReader.Util.readBlock(this, inputStream);
     }
 
     @Override
@@ -127,7 +115,7 @@ public class HeaderBlock extends FixedBlockContainer implements DirectStreamRead
         // Not required, the parent should call refreshHeader()
     }
     @Override
-    protected void refreshChildes() {
+    protected void refreshBlocks() {
         // Not required
     }
     /**
@@ -151,31 +139,40 @@ public class HeaderBlock extends FixedBlockContainer implements DirectStreamRead
         builder.append(getHeaderSize());
         builder.append(", Chunk=");
         builder.append(getChunkSize());
+        int excess = excessBytes().size();
+        if (excess != 0) {
+            builder.append(", excessBytes=");
+            builder.append(excess);
+        }
         builder.append("}");
         return builder.toString();
     }
 
-    static class ExtraBytesBlock extends CountedBlockItem implements IntegerReference {
+    // For handling excess header bytes, unlikely used only when
+    // the value of headerSize is greater than the defined structure
+    static class ExcessHeaderBytesBlock extends CountedBlockItem implements IntegerReference {
 
-        private final HeaderBlock header;
-
-        public ExtraBytesBlock(HeaderBlock header) {
+        public ExcessHeaderBytesBlock() {
             super(null);
-            this.header = header;
         }
+
         @Override
         public IntegerReference countReference() {
             return this;
         }
 
+        private HeaderBlock header() {
+            return getParentInstance(HeaderBlock.class);
+        }
+
         @Override
         public boolean isNull() {
-            return !header.readExtraBytes();
+            return !header().readExtraBytes();
         }
 
         @Override
         public int get() {
-            HeaderBlock header = this.header;
+            HeaderBlock header = header();
             int count = 0;
             if (header.readExtraBytes()) {
                 count = header.countBytes() - this.countBytes();

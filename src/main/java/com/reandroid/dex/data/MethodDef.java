@@ -54,7 +54,7 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     public MethodDef() {
         super(1, SectionType.METHOD_ID);
         this.codeOffset = new DataItemUle128Reference<>(SectionType.CODE, UsageMarker.USAGE_DEFINITION);
-        addChild(2, codeOffset);
+        setupBlock(2, codeOffset);
     }
 
     @Override
@@ -315,8 +315,8 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         linkCodeItem();
     }
 

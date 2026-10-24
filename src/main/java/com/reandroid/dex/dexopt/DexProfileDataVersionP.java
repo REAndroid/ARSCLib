@@ -30,9 +30,9 @@ public class DexProfileDataVersionP extends DexProfileData {
         this.classList = new ProfileClassList(header.classSetSize);
         this.methodBitmap = new MethodBitmap(header.numMethodIds);
 
-        addChild(0, hotMethodList);
-        addChild(1, classList);
-        addChild(2, methodBitmap);
+        setupBlock(0, hotMethodList);
+        setupBlock(1, classList);
+        setupBlock(2, methodBitmap);
     }
 
     @Override

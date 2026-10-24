@@ -30,14 +30,14 @@ public class NumberValue extends DexBlockItem {
     }
 
     public long getSignedNumber(){
-        return getSignedNumber(getBytesInternal(), 0, getSize());
+        return getSignedNumber(bytes(), 0, getSize());
     }
     public long getUnsignedNumber(){
-        return getUnsignedNumber(getBytesInternal(), 0, getSize());
+        return getUnsignedNumber(bytes(), 0, getSize());
     }
     public void setNumberValue(byte value){
         setSize(1);
-        getBytesInternal()[0] = value;
+        bytes()[0] = value;
     }
     public void setNumberValue(short value){
         setSignedNumberValue(value & 0xffffL, value < 0);
@@ -51,16 +51,16 @@ public class NumberValue extends DexBlockItem {
     public void setUnsignedNumber(long value){
         int size = calculateUnsignedSize(value);
         setSize(size);
-        putNumber(getBytesInternal(), 0, size, value);
+        putNumber(bytes(), 0, size, value);
     }
     public void setNumber(long value, int size){
         setSize(size);
-        putNumber(getBytesInternal(), 0, size, value);
+        putNumber(bytes(), 0, size, value);
     }
     private void setSignedNumberValue(long value, boolean negative){
         int size = calculateSignedSize(value, negative);
         setSize(size);
-        putNumber(getBytesInternal(), 0, size, value);
+        putNumber(bytes(), 0, size, value);
     }
 
     public String toHex(){
@@ -71,7 +71,7 @@ public class NumberValue extends DexBlockItem {
         byte[] coming = value.getBytes();
         int length = coming.length;
         setBytesLength(length, false);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
 
         for(int i = 0; i < length; i++){
             bytes[i] = coming[i];

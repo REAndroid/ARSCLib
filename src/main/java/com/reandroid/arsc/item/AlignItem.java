@@ -64,7 +64,7 @@ public class AlignItem extends BlockItem {
         int size = size();
         int available = reader.available();
         if (size != 0 && available >= size) {
-            reader.readFully(getBytesInternal(), 0, size);
+            reader.readFully(bytes(), 0, size);
         }
     }
     public void clear() {
@@ -97,7 +97,7 @@ public class AlignItem extends BlockItem {
     }
     public void setFill(byte fill) {
         this.fill = fill;
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int length = bytes.length;
         for (int i = 0; i < length; i++) {
             bytes[i] = fill;
@@ -105,11 +105,11 @@ public class AlignItem extends BlockItem {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if (readable) {
             alignSafe(reader);
         } else {
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
     }
 

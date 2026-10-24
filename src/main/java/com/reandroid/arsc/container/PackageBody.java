@@ -17,11 +17,9 @@ package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.chunk.LibraryBlock;
 import com.reandroid.arsc.chunk.OverlayablePolicy;
 import com.reandroid.arsc.chunk.UnknownChunk;
-import com.reandroid.arsc.header.HeaderBlock;
-import com.reandroid.arsc.header.SpecOrTypeHeader;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.list.ExtraChunkList;
 import com.reandroid.arsc.list.LibraryBlockList;
@@ -49,12 +47,12 @@ public class PackageBody extends FixedBlockContainer {
         this.mOverlayablePolicyList = new BlockList<>(OverlayablePolicy.CREATOR);
         this.mUnknownChunkList = new BlockList<>(UnknownChunk.CREATOR);
 
-        addChild(0, mSpecTypePairArray);
-        addChild(1, mLibraryList);
-        addChild(2, mStagedAliasList);
-        addChild(3, mOverlayableList);
-        addChild(4, mOverlayablePolicyList);
-        addChild(5, mUnknownChunkList);
+        setupBlock(0, mSpecTypePairArray);
+        setupBlock(1, mLibraryList);
+        setupBlock(2, mStagedAliasList);
+        setupBlock(3, mOverlayableList);
+        setupBlock(4, mOverlayablePolicyList);
+        setupBlock(5, mUnknownChunkList);
     }
 
     public boolean isEmpty() {
@@ -67,10 +65,10 @@ public class PackageBody extends FixedBlockContainer {
 
     public void destroy() {
         getSpecTypePairArray().clear();
-        getLibraryList().clearChildes();
-        getStagedAliasList().clearChildes();
-        getOverlayableList().clearChildes();
-        getUnknownChunkList().clearChildes();
+        getLibraryList().clearBlocks();
+        getStagedAliasList().clearBlocks();
+        getOverlayableList().clearBlocks();
+        getUnknownChunkList().clearBlocks();
     }
 
     public SpecTypePairArray getSpecTypePairArray() {
@@ -106,21 +104,19 @@ public class PackageBody extends FixedBlockContainer {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        boolean readOk = true;
-        while (readOk) {
-            readOk = readNextBlock(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        InfoHeader infoHeader = new InfoHeader();
+        while (infoHeader.readInfo(reader)) {
+            if (!readNextBlock(infoHeader, reader)) {
+                break;
+            }
         }
     }
-    private boolean readNextBlock(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock = reader.readHeaderBlock();
-        if (headerBlock == null) {
-            return false;
-        }
-        int pos = reader.getPosition();
-        ChunkType chunkType = headerBlock.getChunkType();
+    private boolean readNextBlock(InfoHeader infoHeader, BlockReader reader) throws IOException {
+        int position = reader.getPosition();
+        ChunkType chunkType = infoHeader.getChunkType();
         if (chunkType == ChunkType.SPEC || chunkType == ChunkType.TYPE) {
-            readSpecOrType(reader);
+            readSpecOrType(infoHeader, reader);
         } else if (chunkType == ChunkType.LIBRARY) {
             readLibraryBlock(reader);
         } else if (chunkType == ChunkType.OVERLAYABLE) {
@@ -132,11 +128,10 @@ public class PackageBody extends FixedBlockContainer {
         } else {
             readUnknownChunk(reader);
         }
-        return pos != reader.getPosition();
+        return position != reader.getPosition();
     }
-    private void readSpecOrType(BlockReader reader) throws IOException {
-        SpecOrTypeHeader specHeader = SpecOrTypeHeader.read(reader);
-        mSpecTypePairArray.getOrCreate(specHeader.getId()).readBytes(reader);
+    private void readSpecOrType(InfoHeader infoHeader, BlockReader reader) throws IOException {
+        mSpecTypePairArray.getOrCreate(infoHeader.getId()).readBytes(reader);
     }
     private void readLibraryBlock(BlockReader reader) throws IOException {
         mLibraryList.createNext().readBytes(reader);

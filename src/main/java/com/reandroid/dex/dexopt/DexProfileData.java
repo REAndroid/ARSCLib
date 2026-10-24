@@ -48,8 +48,8 @@ public abstract class DexProfileData extends FixedBlockContainer implements Prof
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         setInitialized(true);
     }
 

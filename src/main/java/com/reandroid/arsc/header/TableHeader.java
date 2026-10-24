@@ -21,18 +21,14 @@ import com.reandroid.arsc.item.IntegerReference;
 
 public class TableHeader extends HeaderBlock {
 
-    private final IntegerItem packageCount;
-
     public TableHeader() {
         super(1, ChunkType.TABLE.ID);
 
-        this.packageCount = new IntegerItem();
-
-        addChild(3, packageCount);
+        setupBlock(3, new IntegerItem()); //packageCount
     }
 
-    public IntegerReference getPackageCount() {
-        return packageCount;
+    public IntegerReference packageCount() {
+        return block(3);
     }
 
     @Override
@@ -41,6 +37,6 @@ public class TableHeader extends HeaderBlock {
             return super.toString();
         }
         return getClass().getSimpleName()
-                +" {packageCount=" + getPackageCount() + '}';
+                +" {packageCount=" + packageCount() + '}';
     }
 }

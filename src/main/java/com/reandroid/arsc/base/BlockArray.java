@@ -35,7 +35,7 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         super.readChildes(reader);
     }
 
@@ -65,7 +65,7 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
         return iterator;
     }
     public void clear() {
-        super.clearChildes();
+        super.clearBlocks();
     }
     public void onPreRemove(T block) {
         block.setParent(null);

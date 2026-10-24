@@ -33,11 +33,12 @@ public class EntriesChunk<T extends Block> extends Chunk<CountHeader>
 
     private final CountedBlockList<T> itemList;
 
-    EntriesChunk(int initialChildesCount, CountHeader header, Creator<? extends T> creator) {
-        super(header, initialChildesCount + 1);
+    EntriesChunk(int initialSize, CountHeader header, Creator<? extends T> creator) {
+        super(initialSize + 1, header);
+
         this.itemList = new CountedBlockList<>(creator, header.count());
 
-        addChild(itemList);
+        setupBlock(itemList);
     }
     public EntriesChunk(CountHeader header, Creator<? extends T> creator) {
         this(0, header, creator);
@@ -59,7 +60,7 @@ public class EntriesChunk<T extends Block> extends Chunk<CountHeader>
         return itemList.iterator();
     }
     public void clear() {
-        itemList.clearChildes();
+        itemList.clearBlocks();
     }
     public T createNext() {
         return itemList.createNext();

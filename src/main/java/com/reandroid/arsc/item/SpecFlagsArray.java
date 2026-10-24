@@ -60,9 +60,9 @@ public class SpecFlagsArray extends IntegerArrayBlock implements BlockRefresh,
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         setSize(entryCount.get());
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 
     @Override

@@ -24,7 +24,7 @@ public class DebugStartLocalExtended extends DebugStartLocalBlock {
         super(1, DebugElementType.START_LOCAL_EXTENDED);
         this.mSignature = new Base1Ule128IdItemReference<>(SectionType.STRING_ID);
 
-        addChild(4, mSignature);
+        setupBlock(4, mSignature);
     }
 
     @Override

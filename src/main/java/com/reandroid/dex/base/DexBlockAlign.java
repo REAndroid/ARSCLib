@@ -30,8 +30,8 @@ public class DexBlockAlign extends AlignItem {
         super.align(block);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         super.align(block);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 }

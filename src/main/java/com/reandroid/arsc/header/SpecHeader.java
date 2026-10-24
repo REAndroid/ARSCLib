@@ -23,27 +23,19 @@ import com.reandroid.arsc.item.ShortItem;
 
 public class SpecHeader extends SpecOrTypeHeader {
 
-    private final ShortItem typesCount;
-    private final IntegerItem count;
-
     public SpecHeader() {
         super(3, ChunkType.SPEC);
 
-        ByteItem res0 = new ByteItem();
-        this.typesCount = new ShortItem();
-        this.count = new IntegerItem();
-
-        addChild(4, res0);
-        addChild(5, typesCount);
-        addChild(6, count);
+        setupBlock(4, new ByteItem());    // res0
+        setupBlock(5, new ShortItem());   // typesCount
+        setupBlock(6, new IntegerItem()); // count
     }
 
     public IntegerReference typesCount() {
-        return typesCount;
+        return block(5);
     }
-
     public IntegerReference count() {
-        return count;
+        return block(6);
     }
 
     @Override

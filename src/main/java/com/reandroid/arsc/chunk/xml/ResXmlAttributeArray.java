@@ -125,7 +125,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int size = getCountReference().get();
         setSize(size);
         if (size != 0) {
@@ -140,7 +140,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         }
     }
     public void clear() {
-        clearChildes();
+        clearBlocks();
         updateCountReference();
     }
 

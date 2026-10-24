@@ -23,60 +23,44 @@ import com.reandroid.arsc.item.ShortItem;
 
 public class StringPoolHeader extends HeaderBlock {
 
-    private final IntegerItem countStrings;
-    private final IntegerItem countStyles;
-    private final ByteItem flagSorted;
-    private final ByteItem flagUtf8;
-    private final ShortItem flagExtra;
-    private final IntegerItem startStrings;
-    private final IntegerItem startStyles;
-
     private EncodingChangedListener encodingChangedListener;
 
     public StringPoolHeader() {
         super(7, ChunkType.STRING.ID);
 
-        this.countStrings = new IntegerItem();
-        this.countStyles = new IntegerItem();
-        this.flagSorted = new ByteItem();
-        this.flagUtf8 = new ByteItem();
-        this.flagExtra = new ShortItem();
-        this.startStrings = new IntegerItem();
-        this.startStyles = new IntegerItem();
-
-        addChild(3, countStrings);
-        addChild(4, countStyles);
-        addChild(5, flagSorted);
-        addChild(6, flagUtf8);
-        addChild(7, flagExtra);
-        addChild(8, startStrings);
-        addChild(9, startStyles);
+        setupBlock(3, new IntegerItem()); // countStrings
+        setupBlock(4, new IntegerItem()); // countStyles
+        setupBlock(5, new ByteItem());    // flagSorted
+        setupBlock(6, new ByteItem());    // flagUtf8
+        setupBlock(7, new ShortItem());   // flagExtra
+        setupBlock(8, new IntegerItem()); // startStrings
+        setupBlock(9, new IntegerItem()); // startStyles
     }
 
-    public IntegerReference getCountStrings() {
-        return countStrings;
+    public IntegerReference countStrings() {
+        return block(3);
     }
-    public IntegerReference getCountStyles() {
-        return countStyles;
+    public IntegerReference countStyles() {
+        return block(4);
     }
-    public IntegerReference getFlagUtf8() {
-        return flagUtf8;
+    public IntegerReference flagSorted() {
+        return block(5);
     }
-    public IntegerReference getFlagSorted() {
-        return flagSorted;
+    public IntegerReference flagUtf8() {
+        return block(6);
     }
-    public IntegerReference getFlagExtra() {
-        return flagExtra;
+    public IntegerReference flagExtra() {
+        return block(7);
     }
-    public IntegerReference getStartStrings() {
-        return startStrings;
+    public IntegerReference startStrings() {
+        return block(8);
     }
-    public IntegerReference getStartStyles() {
-        return startStyles;
+    public IntegerReference startStyles() {
+        return block(9);
     }
 
     public boolean isUtf8() {
-        return getFlagUtf8().get() != 0;
+        return flagUtf8().get() != 0;
     }
     public void setUtf8(boolean utf8) {
         boolean changed = isUtf8() != utf8;
@@ -89,13 +73,13 @@ public class StringPoolHeader extends HeaderBlock {
         }
     }
     public void setUtf8Flag(boolean utf8) {
-        getFlagUtf8().set(utf8 ? 0x01 : 0x00);
+        flagUtf8().set(utf8 ? 0x01 : 0x00);
     }
     public boolean isSorted() {
-        return getFlagSorted().get() !=0;
+        return flagSorted().get() !=0;
     }
     public void setSorted(boolean sorted) {
-        getFlagSorted().set(sorted ? 0x01 : 0x00);
+        flagSorted().set(sorted ? 0x01 : 0x00);
     }
 
     public void setEncodingChangedListener(EncodingChangedListener listener) {
@@ -108,13 +92,13 @@ public class StringPoolHeader extends HeaderBlock {
             return super.toString();
         }
         return getClass().getSimpleName()
-                +" {strings=" + getCountStrings()
-                +", styles=" + getCountStyles()
-                +", utf8=" + isUtf8()
+                +" {strings=" + countStrings()
+                +", styles=" + countStyles()
                 +", sorted=" + isSorted()
-                +", flagExtra="+ getFlagExtra()
-                +", offset-strings=" + getStartStrings().get()
-                +", offset-styles=" + getStartStyles().get() + '}';
+                +", utf8=" + isUtf8()
+                +", flagExtra="+ flagExtra()
+                +", offset-strings=" + startStrings().get()
+                +", offset-styles=" + startStyles().get() + '}';
     }
 
     public interface EncodingChangedListener {

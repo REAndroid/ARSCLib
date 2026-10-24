@@ -22,7 +22,7 @@ public class LengthPrefixedBytes extends LengthPrefixedBlock{
     public LengthPrefixedBytes(boolean is_long) {
         super(1, is_long);
         this.byteArray = new ByteArray();
-        addChild(this.byteArray);
+        setupBlock(this.byteArray);
     }
 
     public ByteArray getByteArray() {

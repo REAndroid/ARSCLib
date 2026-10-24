@@ -59,8 +59,8 @@ public class SpecTypePair extends FixedBlockContainer
         this.mSpecBlock = new SpecBlock();
         this.mTypeBlockArray = new TypeBlockArray();
 
-        addChild(0, mSpecBlock);
-        addChild(1, mTypeBlockArray);
+        setupBlock(0, mSpecBlock);
+        setupBlock(1, mTypeBlockArray);
     }
 
     public Iterator<ValueItem> visitValues() {
@@ -280,7 +280,7 @@ public class SpecTypePair extends FixedBlockContainer
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
         if (headerBlock == null) {
             return;

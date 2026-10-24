@@ -24,99 +24,112 @@ import com.reandroid.arsc.io.BlockReader;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
-    private T mItem;
-    public SingleBlockContainer(){
+public class SingleBlockContainer<T extends Block> extends BlockContainer {
+    
+    private T block;
+    
+    public SingleBlockContainer() {
         super();
     }
+    
     @Override
-    protected void refreshChildes(){
-        T item = this.mItem;
-        if(item instanceof BlockRefresh){
-            ((BlockRefresh)item).refresh();
+    protected void refreshBlocks() {
+        T block = this.block;
+        if (block instanceof BlockRefresh) {
+            ((BlockRefresh)block).refresh();
         }
     }
     @Override
     protected void onRefreshed() {
     }
-    public T getItem() {
-        return mItem;
+    public T block() {
+        return block;
     }
-    public void setItem(T item) {
-        if(item == null){
-            T oldItem = this.mItem;
-            if(oldItem != null){
+    public void block(T item) {
+        if (item == null) {
+            T oldItem = this.block;
+            if (oldItem != null) {
                 oldItem.setIndex(-1);
                 oldItem.setParent(null);
             }
-            this.mItem = null;
-            return;
+            this.block = null;
+        } else {
+            this.block = item;
+            item.setIndex(getIndex());
+            item.setParent(this);
         }
-        this.mItem = item;
-        item.setIndex(getIndex());
-        item.setParent(this);
-    }
-    public boolean hasItem(){
-        return this.mItem != null;
     }
     @Override
     public byte[] getBytes() {
-        if(mItem != null){
-            return mItem.getBytes();
+        if (block != null) {
+            return block.getBytes();
         }
         return null;
     }
     @Override
     public int countBytes() {
-        if(mItem != null){
-            return mItem.countBytes();
+        Block block = this.block;
+        if (block != null) {
+            return block.countBytes();
         }
         return 0;
     }
 
     @Override
     public void onCountUpTo(BlockCounter counter) {
-        if(counter.FOUND){
+        if (counter.FOUND) {
             return;
         }
         counter.setCurrent(this);
-        if(counter.END == this){
+        if (counter.END == this) {
             counter.FOUND = true;
             return;
         }
-        if(mItem != null){
-            mItem.onCountUpTo(counter);
+        Block block = this.block;
+        if (block != null) {
+            block.onCountUpTo(counter);
         }
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        if(mItem != null){
-            mItem.readBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        Block block = this.block;
+        if (block != null) {
+            block.readBytes(reader);
         }
     }
     @Override
     public int onWriteBytes(OutputStream stream) throws IOException {
-        if(mItem != null){
-            return mItem.writeBytes(stream);
+        Block block = this.block;
+        if (block != null) {
+            return block.writeBytes(stream);
         }
         return 0;
     }
 
     @Override
-    public int getChildesCount() {
-        return this.mItem == null ? 0 : 1;
+    public final Object[] blocks() {
+        throw new IllegalArgumentException("Method not implemented");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T1> T1 block(int i) {
+        if (i == 0) {
+            return (T1) block();
+        }
+        throw new IndexOutOfBoundsException();
+    }
+    @Override
+    public <T1> T1 blockLast() {
+        return block(0);
     }
 
     @Override
-    public T[] getChildes() {
-        return null;
-    }
-
-    @Override
-    public String toString(){
-        if(mItem != null){
-            return mItem.toString();
+    public String toString() {
+        Block block = this.block;
+        if (block != null) {
+            return block.toString();
         }
         return getClass().getSimpleName() + ": EMPTY";
     }

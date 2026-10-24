@@ -16,7 +16,6 @@
 package com.reandroid.archive.block.v2;
 
 import com.reandroid.archive.block.CertificateBlock;
-import com.reandroid.archive.block.CertificateBlockV2;
 import com.reandroid.archive.block.SignatureId;
 import com.reandroid.archive.block.SignatureScheme;
 
@@ -29,7 +28,7 @@ public class SchemeV2 extends SignatureScheme {
     public SchemeV2(){
         super(1, SignatureId.V2);
         this.signedDataList = new V2SignedDataList();
-        addChild(this.signedDataList);
+        setupBlock(this.signedDataList);
     }
 
     @Override

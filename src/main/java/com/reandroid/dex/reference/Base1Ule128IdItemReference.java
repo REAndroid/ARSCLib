@@ -114,8 +114,8 @@ public class Base1Ule128IdItemReference<T extends IdItem> extends Ule128Item imp
         updateItemUsage();
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         pullItem();
     }
 

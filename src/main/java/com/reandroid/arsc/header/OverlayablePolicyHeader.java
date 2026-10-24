@@ -21,20 +21,14 @@ import com.reandroid.arsc.item.IntegerReference;
 
 public class OverlayablePolicyHeader extends CountHeader {
 
-    private final IntegerReference flags;
-
     public OverlayablePolicyHeader() {
         super(1, ChunkType.OVERLAYABLE_POLICY);
 
-        IntegerItem flags = new IntegerItem();
-
-        this.flags = flags;
-
-        addChild(3, flags);
+        setupBlock(3, new IntegerItem()); // flags
     }
 
     public IntegerReference flags() {
-        return flags;
+        return block(3);
     }
 
     @Override

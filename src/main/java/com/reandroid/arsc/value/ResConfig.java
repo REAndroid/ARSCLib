@@ -360,9 +360,10 @@ public class ResConfig extends ResConfigBase implements Mergeable<ResConfig>, JS
     }
     /*** END OF SET/GET VALUES ***/
 
+    //////////////////////////////
     public String getQualifiers() {
         int hash = this.hashCode();
-        if (mQualifiers == null || mQualifiersStamp!=hash) {
+        if (mQualifiers == null || mQualifiersStamp != hash) {
             mQualifiers = new QualifierBuilder(this).build();
             mQualifiersStamp = hash;
         }

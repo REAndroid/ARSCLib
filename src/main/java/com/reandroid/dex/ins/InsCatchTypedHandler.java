@@ -33,7 +33,7 @@ public class InsCatchTypedHandler extends InsExceptionHandler {
     public InsCatchTypedHandler() {
         super(1);
         this.typeId = new Ule128IdItemReference<>(SectionType.TYPE_ID, UsageMarker.USAGE_INSTRUCTION);
-        addChild(0, typeId);
+        setupBlock(0, typeId);
     }
     InsCatchTypedHandler(Ule128IdItemReference<TypeId> nullForCompact) {
         super();

@@ -38,21 +38,21 @@ import java.util.Objects;
 
 public class SizeXIns extends Ins {
 
-    private final ByteArray valueBytes;
     private final InsIdSectionReference sectionReference;
 
     public SizeXIns(Opcode<?> opcode, boolean hasSectionData) {
         super(opcode);
-        this.valueBytes = new ByteArray();
 
-        addChild(0, valueBytes);
-        valueBytes.setSize(opcode.size());
-        valueBytes.putShort(0, opcode.getValue());
+        ByteArray valueBytes = new ByteArray();
+
+        setupBlock(0, valueBytes);
+        valueBytes().setSize(opcode.size());
+        valueBytes().putShort(0, opcode.getValue());
 
         InsIdSectionReference sectionReference;
         if (hasSectionData) {
             sectionReference = new InsIdSectionReference(this);
-        }else {
+        } else {
             sectionReference = null;
         }
         this.sectionReference = sectionReference;
@@ -70,52 +70,52 @@ public class SizeXIns extends Ins {
     }
 
 
-    final ByteArray getValueBytes() {
-        return valueBytes;
+    final ByteArray valueBytes() {
+        return block(0);
     }
     long getLong(){
-        return getLong(valueBytes.getBytes(), 2);
+        return getLong(valueBytes().getBytes(), 2);
     }
     void setLong(long value){
-        putLong(valueBytes.getBytes(), 2, value);
+        putLong(valueBytes().getBytes(), 2, value);
     }
 
     int getInteger(){
-        return valueBytes.getInteger(2);
+        return valueBytes().getInteger(2);
     }
     void setInteger(int value){
-        valueBytes.putInteger(2, value);
+        valueBytes().putInteger(2, value);
     }
 
     int getShortUnsigned(int offset){
-        return valueBytes.getShortUnsigned(offset);
+        return valueBytes().getShortUnsigned(offset);
     }
     int getShortSigned(){
-        return valueBytes.getShort(2);
+        return valueBytes().getShort(2);
     }
     void setShort(int offset, int value){
         if((value & 0xffff0000) != 0 && value != (short) value) {
            throw new InstructionException("Short value out of range "
                     + HexUtil.toHex(value, 4) + " > 0xffff", this);
         }
-        valueBytes.putShort(offset, value);
+        valueBytes().putShort(offset, value);
     }
 
     int getByteSigned(){
-        return valueBytes.get(1);
+        return valueBytes().get(1);
     }
     void setByte(int offset, int value){
         if((value & 0xffffff00) != 0 && value != (byte) value) {
             throw new InstructionException("Byte value out of range "
                     + HexUtil.toHex(value & 0xffff, 2) + "> 0xff", this);
         }
-        valueBytes.put(offset, (byte) value);
+        valueBytes().put(offset, (byte) value);
     }
     int getByteUnsigned(int offset){
-        return valueBytes.getByteUnsigned(offset);
+        return valueBytes().getByteUnsigned(offset);
     }
     int getNibble(int index){
-        int i = valueBytes.getByteUnsigned(index / 2);
+        int i = valueBytes().getByteUnsigned(index / 2);
         int shift = (index % 2) * 4;
         return (i >> shift) & 0x0f;
     }
@@ -125,23 +125,23 @@ public class SizeXIns extends Ins {
                     + HexUtil.toHex(value, 1) + " > 0xf", this);
         }
         int i = index / 2;
-        int half = valueBytes.getByteUnsigned(i);
+        int half = valueBytes().getByteUnsigned(i);
         int shift = (index % 2) * 4;
         int mask = 0x0f;
         if(shift == 0){
             mask = 0xf0;
         }
         int result = (value << shift) | (half & mask);
-        valueBytes.put(i, (byte) result);
+        valueBytes().put(i, (byte) result);
     }
 
     @Override
     public int countBytes(){
-        return valueBytes.countBytes();
+        return valueBytes().countBytes();
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        valueBytes.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        valueBytes().readBytes(reader);
         pullSectionItem();
     }
     void pullSectionItem(){
@@ -314,7 +314,7 @@ public class SizeXIns extends Ins {
         SizeXIns coming = (SizeXIns) ins;
         SectionType<? extends IdItem> sectionType = coming.getSectionType();
         if(sectionType == null){
-            this.valueBytes.set(coming.valueBytes.getBytes().clone());
+            this.valueBytes().set(coming.valueBytes().getBytes().clone());
             return;
         }
         setKey(coming.getKey());

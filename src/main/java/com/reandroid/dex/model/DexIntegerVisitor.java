@@ -67,7 +67,7 @@ public class DexIntegerVisitor extends CombiningIterator<IntegerReference, Integ
         if (ins instanceof ConstNumber) {
             return SingleIterator.of((ConstNumber) ins);
         } else if (ins instanceof PayloadData) {
-            return ((PayloadData) ins).getReferences();
+            return ((PayloadData<?>) ins).getReferences();
         } else {
             return EmptyIterator.of();
         }

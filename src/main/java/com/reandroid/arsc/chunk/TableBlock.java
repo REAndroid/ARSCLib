@@ -18,6 +18,7 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.ARSCLib;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.TableHeader;
@@ -41,7 +42,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 
 public class TableBlock extends Chunk<TableHeader>
@@ -49,6 +49,8 @@ public class TableBlock extends Chunk<TableHeader>
 
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
+    private final BlockList<UnknownChunk> mUnknownChunkList;
+
     private final List<TableBlock> mFrameWorks;
     private ApkFile mApkFile;
     private ReferenceResolver referenceResolver;
@@ -56,14 +58,17 @@ public class TableBlock extends Chunk<TableHeader>
     private PackageBlock mEmptyTablePackage;
 
     private TableBlock(TableHeader header) {
-        super(header, 2);
+        super(3, header);
 
         this.mTableStringPool = new TableStringPool(true);
-        this.mPackageArray = new PackageArray(header.getPackageCount());
+        this.mPackageArray = new PackageArray(header.packageCount());
+        this.mUnknownChunkList = new BlockList<>(UnknownChunk.CREATOR);
+
         this.mFrameWorks = new ArrayCollection<>();
 
-        addChild(mTableStringPool);
-        addChild(mPackageArray);
+        setupBlock(mTableStringPool);
+        setupBlock(mPackageArray);
+        setupBlock(mUnknownChunkList);
     }
     public TableBlock() {
         this(new TableHeader());
@@ -376,7 +381,7 @@ public class TableBlock extends Chunk<TableHeader>
         PackageBlock current;
         if (context == null) {
             current = getCurrentPackage();
-        }else {
+        } else {
             current = context;
         }
         Iterator<PackageBlock> iterator = this.iterator();
@@ -648,7 +653,7 @@ public class TableBlock extends Chunk<TableHeader>
 
     private void refreshPackageCount() {
         int count = getPackageArray().size();
-        getHeaderBlock().getPackageCount().set(count);
+        getHeaderBlock().packageCount().set(count);
     }
     @Override
     protected void onChunkRefreshed() {
@@ -661,7 +666,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if (reader.available() == 0) {
             setNull(true);
             return;
@@ -672,25 +677,22 @@ public class TableBlock extends Chunk<TableHeader>
             throw new IOException("Not resource table: " + tableHeader);
         }
         boolean stringPoolLoaded = false;
-        InfoHeader infoHeader = InfoHeader.read(reader);
-        PackageArray packageArray = mPackageArray;
-        packageArray.clear();
-        while(infoHeader != null && reader.isAvailable()) {
-            ChunkType chunkType=infoHeader.getChunkType();
-            if (chunkType==ChunkType.STRING) {
+        mPackageArray.clear();
+
+        InfoHeader infoHeader = new InfoHeader();
+
+        while (infoHeader.readInfo(reader)) {
+            ChunkType chunkType = infoHeader.getChunkType();
+            if (chunkType == ChunkType.STRING) {
                 if (!stringPoolLoaded) {
                     mTableStringPool.readBytes(reader);
-                    stringPoolLoaded=true;
+                    stringPoolLoaded = true;
                 }
-            }else if (chunkType==ChunkType.PACKAGE) {
-                PackageBlock packageBlock=packageArray.createNext();
-                packageBlock.readBytes(reader);
-            }else {
-                UnknownChunk unknownChunk = new UnknownChunk();
-                unknownChunk.readBytes(reader);
-                addChild(unknownChunk);
+            } else if (chunkType == ChunkType.PACKAGE) {
+                mPackageArray.createNext().readBytes(reader);
+            } else {
+                mUnknownChunkList.createNext().readBytes(reader);
             }
-            infoHeader=reader.readHeaderBlock();
         }
         reader.close();
         linkStringsInternal();

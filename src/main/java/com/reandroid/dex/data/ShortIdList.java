@@ -51,9 +51,9 @@ public class ShortIdList<T extends IdItem> extends DataItem
 
         positionAlign = new DexPositionAlign();
 
-        addChildBlock(0, countReference);
-        addChildBlock(1, referenceList);
-        addChildBlock(2, positionAlign);
+        block(0, countReference);
+        block(1, referenceList);
+        block(2, positionAlign);
     }
 
     @Override

@@ -24,59 +24,61 @@ import com.reandroid.arsc.item.IntegerReference;
 import java.io.IOException;
 
 public class FixedDexContainer extends FixedBlockContainer {
+
     public FixedDexContainer(int childesCount) {
         super(childesCount);
     }
+
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        Block[] childes = getChildes();
-        if(childes == null){
+    public void readBytes(BlockReader reader) throws IOException {
+        Object[] blocks = blocks();
+        if (blocks == null) {
             return;
         }
-        int length = childes.length;
-        if(skipReading(this, reader)){
+        int length = blocks.length;
+        if (skipReading(this, reader)) {
             return;
         }
-        for(int i = 0; i < length; i++){
-            Block block = childes[i];
-            if(block == null){
+        for (int i = 0; i < length; i++) {
+            Block block = (Block) blocks[i];
+            if (block == null) {
                 continue;
             }
-            if(skipReading(block, reader)){
+            if (skipReading(block, reader)) {
                 continue;
             }
             block.readBytes(reader);
         }
     }
     protected void nonCheckRead(BlockReader reader) throws IOException {
-        Block[] childes = getChildes();
-        if(childes == null){
+        Object[] blocks = blocks();
+        if (blocks == null) {
             return;
         }
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            Block block = childes[i];
-            if(block != null){
-                block.readBytes(reader);
+        int length = blocks.length;
+        for (int i = 0; i < length; i++) {
+            Object block = blocks[i];
+            if (block != null) {
+                ((Block) block).readBytes(reader);
             }
         }
     }
-    private boolean skipReading(Block block, BlockReader reader){
-        if(!(block instanceof OffsetSupplier)){
+    private boolean skipReading(Block block, BlockReader reader) {
+        if (!(block instanceof OffsetSupplier)) {
             return false;
         }
         OffsetSupplier offsetSupplier = (OffsetSupplier) block;
         IntegerReference reference = offsetSupplier.getOffsetReference();
-        if(reference != null){
+        if (reference != null) {
             int offset = reference.get();
-            if(!isValidOffset(offset)){
+            if (!isValidOffset(offset)) {
                 return true;
             }
             reader.seek(offset);
         }
         return false;
     }
-    protected boolean isValidOffset(int offset){
+    protected boolean isValidOffset(int offset) {
         return offset > 0;
     }
 }

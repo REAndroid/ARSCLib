@@ -45,17 +45,17 @@ public class ProfileDataHeader extends FixedBlockContainer {
         this.numMethodIds = new IntegerItem();
         this.name = new ProfString(dexNameSize);
 
-        addChild(0, dexNameSize);
-        addChild(1, (Block) classSetSize);
-        addChild(2, (Block) hotMethodRegionSize);
-        addChild(3, (Block) dexChecksum);
-        addChild(4, (Block) numMethodIds);
-        addChild(5, (Block) name);
+        setupBlock(0, dexNameSize);
+        setupBlock(1, (Block) classSetSize);
+        setupBlock(2, (Block) hotMethodRegionSize);
+        setupBlock(3, (Block) dexChecksum);
+        setupBlock(4, (Block) numMethodIds);
+        setupBlock(5, (Block) name);
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
     }
 
     @Override

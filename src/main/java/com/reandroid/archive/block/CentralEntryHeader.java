@@ -52,7 +52,7 @@ public class CentralEntryHeader extends CommonHeader {
             return 0;
         }
         setCommentLength(commentLength);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int read = inputStream.read(bytes, getOffsetComment(), commentLength);
         if(read != commentLength){
             throw new IOException("Stream ended before reading comment: read="
@@ -86,7 +86,7 @@ public class CentralEntryHeader extends CommonHeader {
             mComment = comment;
             return;
         }
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         System.arraycopy(strBytes, 0, bytes, getOffsetComment(), length);
         mComment = comment;
     }

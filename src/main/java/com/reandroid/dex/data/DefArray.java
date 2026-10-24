@@ -117,7 +117,7 @@ public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> imp
         return item;
     }
     public void clear() {
-        clearChildes();
+        clearBlocks();
     }
 
     private ClassId searchClassId() {
@@ -227,8 +227,8 @@ public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> imp
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
     }
 
     public void merge(DefArray<T> defArray) {

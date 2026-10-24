@@ -45,8 +45,8 @@ public class MethodBitmap extends FixedBlockContainer
         this.startupList = new BooleanList(countReference);
         this.postStartupList = new BooleanList(countReference);
 
-        addChild(0, startupList);
-        addChild(1, postStartupList);
+        setupBlock(0, startupList);
+        setupBlock(1, postStartupList);
     }
 
     public int size() {
@@ -154,14 +154,14 @@ public class MethodBitmap extends FixedBlockContainer
         return pool.getBytes();
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         BooleanList startupList = this.startupList;
         BooleanList postStartupList = this.postStartupList;
         int itemsCount = this.countReference.get();
         startupList.setSize(itemsCount);
         postStartupList.setSize(itemsCount);
         BitItem pool = new BitItem(itemsCount * 2);
-        pool.onReadBytes(reader);
+        pool.readBytes(reader);
         int offset = 0;
         offset = startupList.readFrom(pool, offset);
         postStartupList.readFrom(pool, offset);

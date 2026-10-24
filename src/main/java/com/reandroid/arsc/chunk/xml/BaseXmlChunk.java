@@ -30,17 +30,17 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mStringReference;
 
-    BaseXmlChunk(ChunkType chunkType, SingleBlockContainer<Block> firstPlaceHolder, int initialChildesCount) {
-        super(new XmlNodeHeader(chunkType), firstPlaceHolder, initialChildesCount + 2);
+    BaseXmlChunk(int initialSize, ChunkType chunkType, SingleBlockContainer<Block> firstPlaceHolder) {
+        super(initialSize + 2, new XmlNodeHeader(chunkType), firstPlaceHolder);
 
         this.mNamespaceReference = new IntegerItem(NULL_REFERENCE);
         this.mStringReference = new IntegerItem(NULL_REFERENCE);
 
-        addChild(mNamespaceReference);
-        addChild(mStringReference);
+        setupBlock(mNamespaceReference);
+        setupBlock(mStringReference);
     }
-    BaseXmlChunk(ChunkType chunkType, int initialChildesCount) {
-        this(chunkType, new SingleBlockContainer<>(), initialChildesCount);
+    BaseXmlChunk(int initialSize, ChunkType chunkType) {
+        this(initialSize, chunkType, new SingleBlockContainer<>());
     }
 
     void onPreRemove() {
@@ -48,12 +48,12 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         if (stringPool == null) {
             return;
         }
-        stringPool.removeReference(getHeaderBlock().getCommentReference());
+        stringPool.removeReference(getHeaderBlock().commentReference());
         stringPool.removeReference(mNamespaceReference);
         stringPool.removeReference(mStringReference);
     }
     void linkStringReferences() {
-        linkStringReference(getHeaderBlock().getCommentReference());
+        linkStringReference(getHeaderBlock().commentReference());
         linkStringReference(mNamespaceReference);
         linkStringReference(mStringReference);
     }
@@ -70,22 +70,22 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         }
     }
     public void setLineNumber(int val) {
-        getHeaderBlock().getLineNumber().set(val);
+        getHeaderBlock().lineNumber().set(val);
     }
     public int getLineNumber() {
-        return getHeaderBlock().getLineNumber().get();
+        return getHeaderBlock().lineNumber().get();
     }
     public void setCommentReference(int reference) {
         if (reference == getCommentReference()) {
             return;
         }
-        IntegerItem comment = getHeaderBlock().getCommentReference();
+        IntegerItem comment = getHeaderBlock().commentReference();
         unLinkStringReference(comment);
-        getHeaderBlock().getCommentReference().set(reference);
+        getHeaderBlock().commentReference().set(reference);
         linkStringReference(comment);
     }
     public int getCommentReference() {
-        return getHeaderBlock().getCommentReference().get();
+        return getHeaderBlock().commentReference().get();
     }
     void setNamespaceReference(int value) {
         if (value == getNamespaceReference()) {

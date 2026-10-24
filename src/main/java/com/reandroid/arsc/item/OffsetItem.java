@@ -162,7 +162,7 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
 
         @Override
         protected int readOffset() {
-            int offset = getShortUnsigned(getBytesInternal(), 0);
+            int offset = getShortUnsigned(bytes(), 0);
             if (offset == NO_ENTRY16) {
                 offset = NO_ENTRY;
             } else {
@@ -179,7 +179,7 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
                 offset = offset / 4;
                 validateValueRange(offset);
             }
-            putShort(getBytesInternal(), 0, offset);
+            putShort(bytes(), 0, offset);
         }
 
         @Override
@@ -197,12 +197,12 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
 
         @Override
         protected int readOffset() {
-            return getInteger(getBytesInternal(), 0);
+            return getInteger(bytes(), 0);
         }
 
         @Override
         protected void writeOffset(int offset) {
-            putInteger(getBytesInternal(), 0, offset);
+            putInteger(bytes(), 0, offset);
         }
         @Override
         public int compareTo(OffsetItem offsetItem) {
@@ -228,7 +228,7 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
             if (idx != mIdx) {
                 validateValueRange(idx);
                 this.mIdx = idx;
-                putShort(getBytesInternal(), 0, idx);
+                putShort(bytes(), 0, idx);
             }
         }
         @Override
@@ -239,19 +239,19 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
         @Override
         protected void onBytesChanged() {
             super.onBytesChanged();
-            this.mIdx = getShortUnsigned(getBytesInternal(), 0);
+            this.mIdx = getShortUnsigned(bytes(), 0);
         }
 
         @Override
         protected int readOffset() {
-            return getShortUnsigned(getBytesInternal(), 2) * 4;
+            return getShortUnsigned(bytes(), 2) * 4;
         }
 
         @Override
         protected void writeOffset(int offset) {
             int value = offset / 4;
             validateValueRange(value);
-            putShort(getBytesInternal(), 2, value);
+            putShort(bytes(), 2, value);
         }
 
         @Override

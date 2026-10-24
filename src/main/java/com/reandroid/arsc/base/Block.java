@@ -15,7 +15,6 @@
   */
 package com.reandroid.arsc.base;
 
-import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.NumbersUtil;
@@ -30,7 +29,6 @@ public abstract class Block {
     private int mIndex;
     private Block mParent;
     private boolean mNull;
-    private BlockLoad mBlockLoad;
     
     public Block() {
         this.mIndex = -1;
@@ -50,25 +48,9 @@ public abstract class Block {
         return locator.getResult();
     }
     public abstract void onCountUpTo(BlockCounter counter);
-    public final void readBytes(BlockReader reader) throws IOException{
-        onReadBytes(reader);
-        notifyBlockLoad(reader);
+    public void readBytes(BlockReader reader) throws IOException {
     }
-    public final void setBlockLoad(BlockLoad blockLoad) {
-        this.mBlockLoad = blockLoad;
-    }
-    public void notifyBlockLoad() throws IOException {
-        notifyBlockLoad(null);
-    }
-    private void notifyBlockLoad(BlockReader reader) throws IOException{
-        BlockLoad blockLoad = this.mBlockLoad;
-        if (blockLoad != null) {
-            blockLoad.onBlockLoaded(reader, this);
-        }
-    }
-    protected void onReadBytes(BlockReader reader) throws IOException{
-    }
-    public final int writeBytes(OutputStream stream) throws IOException{
+    public final int writeBytes(OutputStream stream) throws IOException {
         if (isNull()) {
             return 0;
         }
@@ -339,7 +321,7 @@ public abstract class Block {
         return result;
     }
 
-    public static boolean areEqual(Block[] blocks1, Block[] blocks2) {
+    public static boolean areEqualBlocks(Object[] blocks1, Object[] blocks2) {
         if (blocks1 == blocks2) {
             return true;
         }
@@ -351,7 +333,18 @@ public abstract class Block {
             return false;
         }
         for (int i = 0; i < length; i++) {
-            if (!areEqual(blocks1[i], blocks2[i])) {
+            Object block1 = blocks1[i];
+            Object block2 = blocks2[i];
+            if (block1 == null && block2 == null) {
+                continue;
+            }
+            if (!(block1 instanceof Block) || !(block2 instanceof Block)) {
+                if (ObjectsUtil.equals(block1, block2)) {
+                    continue;
+                }
+                return false;
+            }
+            if (!areEqual((Block) block1, (Block) block2)) {
                 return false;
             }
         }
@@ -383,13 +376,13 @@ public abstract class Block {
         }
         return true;
     }
-    public static int hashCodeOf(Block[] blocks) {
+    public static int hashCodeOf(Object[] blocks) {
         if (blocks == null) {
             return 0;
         }
         return hashCodeOf(blocks, 0, blocks.length);
     }
-    public static int hashCodeOf(Block[] blocks, int start, int length) {
+    public static int hashCodeOf(Object[] blocks, int start, int length) {
         if (blocks == null || blocks.length == 0) {
             return 0;
         }
@@ -399,11 +392,14 @@ public abstract class Block {
         }
         return hash;
     }
-    public static int hashCodeOf(Block block) {
+    public static int hashCodeOf(Object block) {
         if (block == null) {
             return 0;
         }
-        return hashCodeOf(block.getBytes());
+        if (!(block instanceof Block)) {
+            return ObjectsUtil.hash(block);
+        }
+        return hashCodeOf(((Block) block).getBytes());
     }
     public static int hashCodeOf(byte[] bytes) {
         if (bytes == null) {

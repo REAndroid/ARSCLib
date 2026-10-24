@@ -58,8 +58,8 @@ public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
         this.handlersCount = new Sle128Item();
         this.catchTypedHandlerList = new BlockList<>();
 
-        addChild(0, handlersCount);
-        addChild(1, catchTypedHandlerList);
+        setupBlock(0, handlersCount);
+        setupBlock(1, catchTypedHandlerList);
     }
     private InsTryItem() {
         super(0);
@@ -292,7 +292,7 @@ public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
         InsCatchAllHandler catchAllHandler = this.getCatchAllHandler();
         if (catchAllHandler == null) {
             catchAllHandler = new InsCatchAllHandler();
-            addChild(2, catchAllHandler);
+            setupBlock(2, catchAllHandler);
             this.catchAllHandler = catchAllHandler;
         }
         return catchAllHandler;
@@ -305,7 +305,7 @@ public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int maxPosition = reader.getPosition();
 
         int position = getHandlerOffsetArray().getItemsStart()
@@ -625,7 +625,7 @@ public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
         protected void onRefreshed() {
         }
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
+        public void readBytes(BlockReader reader) throws IOException {
         }
         @Override
         void updateCount() {

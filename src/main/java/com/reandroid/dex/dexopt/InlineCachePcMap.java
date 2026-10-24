@@ -39,9 +39,9 @@ public class InlineCachePcMap extends FixedBlockContainer
         ByteItem numClasses = new ByteItem();
         this.classList = new ProfileClassList(numClasses);
 
-        addChild(0, (Block) profileIndex);
-        addChild(1, numClasses);
-        addChild(2, classList);
+        setupBlock(0, (Block) profileIndex);
+        setupBlock(1, numClasses);
+        setupBlock(2, classList);
     }
 
     public IntegerReference profileIndex() {
@@ -52,8 +52,8 @@ public class InlineCachePcMap extends FixedBlockContainer
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
     }
 
     @Override

@@ -98,14 +98,14 @@ public class ShortArrayBlock extends BlockItem implements IntegerArray {
         if(index < 0 || index >= size()){
             return 0;
         }
-        return getShortUnsigned(getBytesInternal(), index * 2);
+        return getShortUnsigned(bytes(), index * 2);
     }
     @Override
     public int size(){
         return getBytesLength() / 2;
     }
     public void put(int index, int value){
-        putShort(getBytesInternal(), index * 2, value);
+        putShort(bytes(), index * 2, value);
     }
     @Override
     public String toString(){

@@ -56,10 +56,10 @@ public class ClassData extends DataItem implements SmaliFormat {
         this.directMethodsCount = new Ule128Item();
         this.virtualMethodCount = new Ule128Item();
 
-        addChildBlock(0, staticFieldsCount);
-        addChildBlock(1, instanceFieldsCount);
-        addChildBlock(2, directMethodsCount);
-        addChildBlock(3, virtualMethodCount);
+        block(0, staticFieldsCount);
+        block(1, instanceFieldsCount);
+        block(2, directMethodsCount);
+        block(3, virtualMethodCount);
     }
 
     @Override
@@ -211,7 +211,7 @@ public class ClassData extends DataItem implements SmaliFormat {
         if (defArray == null) {
             defArray = new StaticFieldDefArray(staticFieldsCount);
             this.staticFields = defArray;
-            addChildBlock(4, staticFields);
+            block(4, staticFields);
             defArray.setClassId(getClassId());
         }
         return defArray;
@@ -221,7 +221,7 @@ public class ClassData extends DataItem implements SmaliFormat {
         if (defArray == null) {
             defArray = new FieldDefArray(instanceFieldsCount);
             this.instanceFields = defArray;
-            addChildBlock(5, instanceFields);
+            block(5, instanceFields);
             defArray.setClassId(getClassId());
         }
         return defArray;
@@ -231,7 +231,7 @@ public class ClassData extends DataItem implements SmaliFormat {
         if (defArray == null) {
             defArray = new MethodDefArray(directMethodsCount);
             this.directMethods = defArray;
-            addChildBlock(6, defArray);
+            block(6, defArray);
             defArray.setClassId(getClassId());
         }
         return defArray;
@@ -241,7 +241,7 @@ public class ClassData extends DataItem implements SmaliFormat {
         if (defArray == null) {
             defArray = new MethodDefArray(virtualMethodCount);
             this.virtualMethods = defArray;
-            addChildBlock(7, defArray);
+            block(7, defArray);
             defArray.setClassId(getClassId());
         }
         return defArray;
@@ -268,19 +268,19 @@ public class ClassData extends DataItem implements SmaliFormat {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         if (staticFieldsCount.get() != 0) {
-            initStaticFieldsArray().onReadBytes(reader);
+            initStaticFieldsArray().readBytes(reader);
         }
         if (instanceFieldsCount.get() != 0) {
-            initInstanceFieldsArray().onReadBytes(reader);
+            initInstanceFieldsArray().readBytes(reader);
         }
         if (directMethodsCount.get() != 0) {
-            initDirectMethodsArray().onReadBytes(reader);
+            initDirectMethodsArray().readBytes(reader);
         }
         if (virtualMethodCount.get() != 0) {
-            initVirtualMethodsArray().onReadBytes(reader);
+            initVirtualMethodsArray().readBytes(reader);
         }
     }
 
@@ -297,7 +297,7 @@ public class ClassData extends DataItem implements SmaliFormat {
         super.removeSelf();
         Iterator<DefArray<?>> iterator = getDefArrays();
         while (iterator.hasNext()) {
-            iterator.next().clearChildes();
+            iterator.next().clearBlocks();
         }
         setClassId(null);
     }

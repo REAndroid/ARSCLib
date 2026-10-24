@@ -43,10 +43,10 @@ public class ByteItem extends BlockItem implements IntegerReference, DirectStrea
         set((byte) val);
     }
     public void set(byte value) {
-        getBytesInternal()[0] = value;
+        bytes()[0] = value;
     }
     public byte getByte() {
-        return getBytesInternal()[0];
+        return bytes()[0];
     }
     @Override
     public int get() {

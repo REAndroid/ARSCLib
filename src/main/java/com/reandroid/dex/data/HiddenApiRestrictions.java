@@ -36,9 +36,9 @@ public class HiddenApiRestrictions extends DataItem{
         this.sizeReference = new IntegerItem();
         this.hiddenApiIndexList = new HiddenApiIndexList();
         this.hiddenApiDataList = new HiddenApiDataList();
-        addChildBlock(0, sizeReference);
-        addChildBlock(1, hiddenApiIndexList);
-        addChildBlock(2, hiddenApiDataList);
+        block(0, sizeReference);
+        block(1, hiddenApiIndexList);
+        block(2, hiddenApiDataList);
     }
 
     public HiddenApiFlagValue getFlagValue(Key key) {
@@ -65,9 +65,9 @@ public class HiddenApiRestrictions extends DataItem{
         if (!isAllNoRestrictions()) {
             return;
         }
-        getHiddenApiIndexList().clearChildes();
+        getHiddenApiIndexList().clearBlocks();
         HiddenApiDataList hiddenApiDataList = getHiddenApiDataList();
-        hiddenApiDataList.setItem(null);
+        hiddenApiDataList.block(null);
         hiddenApiDataList.setParent(null);
         this.removeSelf();
         section.removeSelf();
@@ -112,14 +112,14 @@ public class HiddenApiRestrictions extends DataItem{
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         sizeReference.readBytes(reader);
         reader.offset(-sizeReference.countBytes());
         int size = sizeReference.get();
         BlockReader restrictionsReader = reader.create(size);
         restrictionsReader.offset(sizeReference.countBytes());
-        hiddenApiIndexList.onReadBytes(restrictionsReader);
-        hiddenApiDataList.onReadBytes(restrictionsReader);
+        hiddenApiIndexList.readBytes(restrictionsReader);
+        hiddenApiDataList.readBytes(restrictionsReader);
         restrictionsReader.close();
         reader.seek(size);
     }

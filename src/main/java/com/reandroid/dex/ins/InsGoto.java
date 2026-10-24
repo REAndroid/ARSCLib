@@ -19,7 +19,6 @@ import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
@@ -129,7 +128,7 @@ public class InsGoto extends SizeXIns implements InstructionLabel {
             insBlockList.link();
         }
         this.opcode = opcode;
-        ByteArray byteArray = getValueBytes();
+        ByteArray byteArray = valueBytes();
         byteArray.setSize(0);
         byteArray.setSize(opcode.size());
         byteArray.putShort(0, opcode.getValue());

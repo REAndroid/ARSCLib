@@ -96,8 +96,8 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
     @Override
     public abstract TypeKey getDataTypeKey();
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        getValueTypeItem().onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        getValueTypeItem().readBytes(reader);
         NumberValue container = getValueContainer();
         container.setSize(getValueSize() + 1);
         container.readBytes(reader);

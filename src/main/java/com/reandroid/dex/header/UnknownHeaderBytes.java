@@ -16,9 +16,9 @@ public class UnknownHeaderBytes extends ByteArray implements DirectStreamReader,
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         updateSize();
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class UnknownHeaderBytes extends ByteArray implements DirectStreamReader,
     public String toString() {
         int size = size();
         if (size > 0 && size <= 32) {
-            return "size = " + size + " [" + HexUtil.toHexString(getBytesInternal()) + "]";
+            return "size = " + size + " [" + HexUtil.toHexString(bytes()) + "]";
         }
         return super.toString();
     }

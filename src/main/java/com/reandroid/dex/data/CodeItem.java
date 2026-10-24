@@ -65,8 +65,8 @@ public class CodeItem extends DataItem implements RegistersTable,
 
         this.codeItemKey = new DataKey<>(this);
 
-        addChildBlock(0, header);
-        addChildBlock(1, instructionList);
+        block(0, header);
+        block(1, instructionList);
     }
 
     @Override
@@ -224,7 +224,7 @@ public class CodeItem extends DataItem implements RegistersTable,
     void initTryBlock() {
         if (this.tryBlock == null) {
             this.tryBlock = new InsTryBlock(this);
-            addChildBlock(2, this.tryBlock);
+            block(2, this.tryBlock);
         }
     }
     @Override
@@ -420,8 +420,8 @@ public class CodeItem extends DataItem implements RegistersTable,
             }
         }
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
-            super.onReadBytes(reader);
+        public void readBytes(BlockReader reader) throws IOException {
+            super.readBytes(reader);
             this.debugInfoOffset.pullItem();
             this.debugInfoOffset.addUniqueUser(this.codeItem);
             if (this.tryBlockCount.get() != 0) {

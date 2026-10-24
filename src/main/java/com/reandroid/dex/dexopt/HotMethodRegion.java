@@ -50,9 +50,9 @@ public class HotMethodRegion extends FixedBlockContainer implements
         this.inlineCacheList = new CountedBlockList<>(InlineCache.CREATOR, inlineCacheSize);
         this.idx = -1;
 
-        addChild(0, (Block) diffWithLastMethodDexIndex);
-        addChild(1, inlineCacheSize);
-        addChild(2, inlineCacheList);
+        setupBlock(0, (Block) diffWithLastMethodDexIndex);
+        setupBlock(1, inlineCacheSize);
+        setupBlock(2, inlineCacheList);
     }
 
     public MethodKey getKey() {

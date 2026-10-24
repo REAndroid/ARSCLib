@@ -40,7 +40,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
     public DebugSequence(IntegerReference lineStart) {
         super(2);
         this.lineStart = lineStart;
-        addChild(1, DebugEndSequence.INSTANCE);
+        setupBlock(1, DebugEndSequence.INSTANCE);
     }
 
     public<T1 extends DebugElementBlock> T1 getOrCreateAtAddress(DebugElementType<T1> elementType, int address) {
@@ -144,7 +144,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int position = reader.getPosition();
         int count = 0;
         while (reader.read() != 0) {
@@ -235,7 +235,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         return unlockElementList().add(element);
     }
     public void clear() {
-        getElementList().clearChildes();
+        getElementList().clearBlocks();
     }
     public boolean isRemoved() {
         DebugInfo debugInfo = getParentInstance(DebugInfo.class);
@@ -260,7 +260,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         if (elementList == null || BlockList.isImmutableEmpty(elementList)) {
             elementList = new BlockList<>();
             this.elementList = elementList;
-            addChild(0, elementList);
+            setupBlock(0, elementList);
         }
         return elementList;
     }

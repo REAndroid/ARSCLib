@@ -29,6 +29,6 @@ public class IdSectionArray<T extends IdItem> extends SectionArray<T> {
     }
 
     public void readChild(BlockReader reader, T item) throws IOException{
-        item.onReadBytes(reader);
+        item.readBytes(reader);
     }
 }

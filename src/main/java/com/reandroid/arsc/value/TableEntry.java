@@ -82,7 +82,7 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         HEADER header = getHeader();
         header.readBytes(reader);
         VALUE value = getValue();

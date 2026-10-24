@@ -53,7 +53,7 @@ public class AnnotationElement extends FixedBlockContainer implements
     public AnnotationElement() {
         super(2);
         this.elementName = new StringUle128Reference(StringId.USAGE_METHOD_NAME);
-        addChild(0, elementName);
+        setupBlock(0, elementName);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class AnnotationElement extends FixedBlockContainer implements
         valueBlock.setKey(value);
     }
     public DexValueBlock<?> getValueBlock() {
-        return (DexValueBlock<?>) getChildes()[1];
+        return block(1);
     }
 
     public<T1 extends DexValueBlock<?>> T1 getOrCreateValue(DexValueType<T1> valueType) {
@@ -99,7 +99,7 @@ public class AnnotationElement extends FixedBlockContainer implements
         return ObjectsUtil.cast(value);
     }
     public void setValue(DexValueBlock<?> dexValue) {
-        addChild(1, dexValue);
+        setupBlock(1, dexValue);
     }
     public boolean is(DexValueType<?> valueType) {
         return getValueType() == valueType;
@@ -132,11 +132,11 @@ public class AnnotationElement extends FixedBlockContainer implements
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        this.elementName.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        this.elementName.readBytes(reader);
         DexValueBlock<?> value = DexValueType.create(reader);
         setValue(value);
-        value.onReadBytes(reader);
+        value.readBytes(reader);
     }
 
     public void replaceKeys(Key search, Key replace) {

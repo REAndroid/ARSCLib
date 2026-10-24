@@ -27,7 +27,7 @@ public abstract class DebugAdvance extends DebugElementBlock {
     DebugAdvance(DebugElementType<?> elementType, Le128 advance) {
         super(1, elementType);
         this.advance = advance;
-        addChild(1, advance);
+        setupBlock(1, advance);
     }
     public int getAdvance(){
         return advance.get();

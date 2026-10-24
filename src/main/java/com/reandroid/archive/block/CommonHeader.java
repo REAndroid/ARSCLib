@@ -22,9 +22,7 @@ import com.reandroid.utils.HexUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 public abstract class CommonHeader extends ZipHeader {
     private final int offsetFileName;
@@ -75,7 +73,7 @@ public abstract class CommonHeader extends ZipHeader {
             return 0;
         }
         setFileNameLength(fileNameLength);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int read = inputStream.read(bytes, offsetFileName, fileNameLength);
         if(read != fileNameLength){
             throw new IOException("Stream ended before reading file name: read="
@@ -90,7 +88,7 @@ public abstract class CommonHeader extends ZipHeader {
             return 0;
         }
         setExtraLength(extraLength);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int offset = getOffsetExtra();
         int read = inputStream.read(bytes, offset, extraLength);
         if(read != extraLength){
@@ -115,7 +113,7 @@ public abstract class CommonHeader extends ZipHeader {
         return getByteUnsigned(OFFSET_platform);
     }
     public void setPlatform(int value){
-        getBytesInternal()[OFFSET_platform] = (byte) value;
+        bytes()[OFFSET_platform] = (byte) value;
     }
     public GeneralPurposeFlag getGeneralPurposeFlag() {
         return generalPurposeFlag;
@@ -196,7 +194,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(length==0){
             return result;
         }
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int offset = getOffsetExtra();
         System.arraycopy(bytes, offset, result, 0, length);
         return result;
@@ -301,7 +299,7 @@ public abstract class CommonHeader extends ZipHeader {
             mFileName = fileName;
             return;
         }
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         System.arraycopy(nameBytes, 0, bytes, offsetFileName, length);
         mFileName = fileName;
     }
@@ -316,7 +314,7 @@ public abstract class CommonHeader extends ZipHeader {
     }
     private String decodeFileName(){
         int length = getFileNameLength();
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int offset = offsetFileName;
         int max = bytes.length - offset;
         if(max<=0){
@@ -329,7 +327,7 @@ public abstract class CommonHeader extends ZipHeader {
     }
     public String decodeComment(){
         int length = getExtraLength();
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int offset = getOffsetExtra();
         int max = bytes.length - offset;
         if(max<=0){

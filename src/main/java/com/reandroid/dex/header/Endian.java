@@ -44,7 +44,7 @@ public class Endian extends HeaderPiece{
         if(isLittle()){
             return "LITTLE";
         }
-        return printHex(getBytesInternal());
+        return printHex(bytes());
     }
 
     public static final int BIG = 0x78563412;

@@ -91,7 +91,7 @@ public class SectionArray<T extends SectionItem> extends BlockListArray<T> imple
     }
 
     public void clear(){
-        clearChildes();
+        clearBlocks();
         destroy();
     }
 }

@@ -232,12 +232,12 @@ public class StringItem extends StringBlock implements
         }
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if (reader.available() < 4) {
             return;
         }
         setBytesLength(calculateReadLength(reader), false);
-        reader.readFully(getBytesInternal());
+        reader.readFully(bytes());
         onBytesChanged();
     }
     int calculateReadLength(BlockReader reader) throws IOException {
@@ -555,7 +555,7 @@ public class StringItem extends StringBlock implements
                 lenBytes[1] = (byte) (l2);
                 lenBytes[0] = (byte) (l1 | 0x80);
             } else {
-                lenBytes = new ShortItem((short) strLen).getBytesInternal();
+                lenBytes = new ShortItem((short) strLen).bytes();
                 lenBytes[1] = lenBytes[0];
                 lenBytes[0] = (byte) str.length();
             }
@@ -584,7 +584,7 @@ public class StringItem extends StringBlock implements
             lenBytes[1] = (byte) (high | 0x80);
             lenBytes[0] = (byte) low;
         } else {
-            lenBytes = new ShortItem((short) strLen).getBytesInternal();
+            lenBytes = new ShortItem((short) strLen).bytes();
         }
         return addBytes(lenBytes, bytes, new byte[2]);
     }

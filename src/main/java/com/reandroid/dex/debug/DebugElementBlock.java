@@ -47,7 +47,7 @@ public abstract class DebugElementBlock extends FixedDexContainerWithTool implem
         this.elementType = new ByteItem();
         this.elementType.set((byte) flag);
 
-        addChild(0, elementType);
+        setupBlock(0, elementType);
     }
     DebugElementBlock(int childesCount, DebugElementType<?> elementType) {
         this(childesCount, elementType.getFlag());
@@ -308,7 +308,7 @@ public abstract class DebugElementBlock extends FixedDexContainerWithTool implem
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         super.nonCheckRead(reader);
     }
 

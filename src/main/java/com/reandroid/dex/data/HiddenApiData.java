@@ -90,10 +90,10 @@ class HiddenApiData extends FixedDexContainer
 
         initializeValueList();
 
-        addChild(0, staticFields);
-        addChild(1, instanceFields);
-        addChild(2, directMethods);
-        addChild(3, virtualMethods);
+        setupBlock(0, staticFields);
+        setupBlock(1, instanceFields);
+        setupBlock(2, directMethods);
+        setupBlock(3, virtualMethods);
 
         linkDefArray(classId);
 
@@ -178,13 +178,13 @@ class HiddenApiData extends FixedDexContainer
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int offset = getOffset();
         if(offset == 0){
             throw new IOException("Can not read at zero");
         }
         reader.seek(offset);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
     @Override
     public boolean equals(Object obj) {
@@ -236,7 +236,7 @@ class HiddenApiData extends FixedDexContainer
         }
 
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
+        public void readBytes(BlockReader reader) throws IOException {
         }
         @Override
         public int onWriteBytes(OutputStream stream) throws IOException {

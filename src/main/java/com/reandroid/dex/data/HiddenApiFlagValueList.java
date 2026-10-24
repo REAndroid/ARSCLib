@@ -109,7 +109,7 @@ class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         readChildes(reader);
     }
 
@@ -134,7 +134,7 @@ class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
             return 0;
         }
         @Override
-        protected void onReadBytes(BlockReader reader) throws IOException {
+        public void readBytes(BlockReader reader) throws IOException {
         }
         @Override
         public void readChildes(BlockReader reader) throws IOException {

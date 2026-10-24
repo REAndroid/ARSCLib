@@ -43,7 +43,7 @@ public class StringItemList<T extends StringItem> extends OffsetBlockList<T> imp
                           StringPoolHeader header,
                           OffsetReferenceList<?> offsetReferenceList,
                           StringCreator<? extends T> stringCreator) {
-        super(header.getStartStrings(), offsetReferenceList);
+        super(header.startStrings(), offsetReferenceList);
 
         this.alignment = alignment;
         this.header = header;

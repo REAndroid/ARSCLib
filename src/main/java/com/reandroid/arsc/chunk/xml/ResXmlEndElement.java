@@ -20,7 +20,7 @@ import com.reandroid.arsc.chunk.ChunkType;
 public class ResXmlEndElement extends BaseXmlChunk  {
 
     public ResXmlEndElement() {
-        super(ChunkType.XML_END_ELEMENT, 0);
+        super(0, ChunkType.XML_END_ELEMENT);
     }
 
     @Override

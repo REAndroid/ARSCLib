@@ -35,7 +35,7 @@ public class DebugSetSourceFileBlock extends DebugElementBlock {
     public DebugSetSourceFileBlock() {
         super(1, DebugElementType.SET_SOURCE_FILE);
         this.mName = new Base1Ule128IdItemReference<>(SectionType.STRING_ID);
-        addChild(1, mName);
+        setupBlock(1, mName);
     }
 
     @Override

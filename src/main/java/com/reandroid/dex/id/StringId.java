@@ -89,11 +89,11 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
 
     @Override
     public void set(int value) {
-        putInteger(getBytesInternal(), 0, value);
+        putInteger(bytes(), 0, value);
     }
     @Override
     public int get() {
-        return getInteger(getBytesInternal(), 0);
+        return getInteger(bytes(), 0);
     }
     @Override
     public void refresh() {
@@ -125,9 +125,9 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        getStringData().onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
+        getStringData().readBytes(reader);
     }
 
     @Override

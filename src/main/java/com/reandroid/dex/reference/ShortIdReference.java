@@ -88,8 +88,8 @@ public class ShortIdReference<T extends IdItem> extends ShortItem
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         pullItem();
     }
 

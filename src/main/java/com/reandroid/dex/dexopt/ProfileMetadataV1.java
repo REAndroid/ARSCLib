@@ -27,7 +27,7 @@ public class ProfileMetadataV1 extends ProfileMetadata {
         this.header = header;
         this.classList = new ProfileClassList(header.classSetSize);
 
-        addChild(0, classList);
+        setupBlock(0, classList);
     }
 
     @Override

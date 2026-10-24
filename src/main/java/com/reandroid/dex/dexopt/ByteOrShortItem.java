@@ -34,7 +34,7 @@ public class ByteOrShortItem extends BlockItem implements IntegerReference {
 
     @Override
     public int get() {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (is_byte.get()) {
             return bytes[0] & 0xff;
         }
@@ -45,7 +45,7 @@ public class ByteOrShortItem extends BlockItem implements IntegerReference {
     public void set(int value) {
         boolean isByte = this.is_byte.get();
         setBytesLength(isByte ? 1 : 2, false);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (isByte) {
             bytes[0] = (byte) value;
         } else {
@@ -54,9 +54,9 @@ public class ByteOrShortItem extends BlockItem implements IntegerReference {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         setBytesLength(is_byte.get() ? 1 : 2, false);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 
     @Override

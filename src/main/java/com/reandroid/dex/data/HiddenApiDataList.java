@@ -32,7 +32,7 @@ class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiData>>
     public HiddenApiDataList(){
         super();
         this.dataList = new BlockList<>();
-        setItem(dataList);
+        block(dataList);
     }
     public HiddenApiData getAtOffset(int offset){
         BlockList<HiddenApiData> dataList = this.dataList;
@@ -74,7 +74,7 @@ class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiData>>
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         HiddenApiIndexList hiddenApiIndexList = getHiddenApiList();
         Iterator<HiddenApiIndex> iterator = hiddenApiIndexList.getHiddenApis();
         while (iterator.hasNext()){
@@ -82,7 +82,7 @@ class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiData>>
             HiddenApiData hiddenApiData = new HiddenApiData();
             add(hiddenApiData);
             hiddenApiIndex.linkData(hiddenApiData);
-            hiddenApiData.onReadBytes(reader);
+            hiddenApiData.readBytes(reader);
         }
         Comparator<HiddenApiData> comparator = (data1, data2) ->
                 CompareUtil.compare(data1.getOffset(), data2.getOffset());

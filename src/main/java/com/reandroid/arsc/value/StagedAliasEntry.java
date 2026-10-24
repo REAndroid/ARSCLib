@@ -45,17 +45,17 @@ public class StagedAliasEntry extends BlockItem implements StagedAliasInfo,
 
     @Override
     public int getStaged() {
-        return getInteger(getBytesInternal(), 0);
+        return getInteger(bytes(), 0);
     }
     public void setStagedResId(int id) {
-        putInteger(getBytesInternal(), 0, id);
+        putInteger(bytes(), 0, id);
     }
     @Override
     public int getFinalized() {
-        return getInteger(getBytesInternal(), 4);
+        return getInteger(bytes(), 4);
     }
     public void setFinalizedResId(int id) {
-        putInteger(getBytesInternal(),4, id);
+        putInteger(bytes(),4, id);
     }
     public void set(int stagedId, int finalizedId) {
         setStagedResId(stagedId);

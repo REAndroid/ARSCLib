@@ -47,7 +47,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
     private final UnknownBytes unknownBytes;
 
     public ResXmlStartElement(ResXmlEndElement endElement) {
-        super(ChunkType.XML_START_ELEMENT, null, 9);
+        super(9, ChunkType.XML_START_ELEMENT, null);
 
         this.mResXmlEndElement = endElement;
 
@@ -115,15 +115,15 @@ public class ResXmlStartElement extends BaseXmlChunk {
 
         this.mAttributeArray = new ResXmlAttributeArray(unitSize, _attributeCount);
 
-        addChild(mAttributeStart);
-        addChild(_unitSizeReferenceBlock);
-        addChild(_attributeCount);
-        addChild(mIdAttributePosition);
-        addChild(mClassAttributePosition);
-        addChild(mStyleAttributePosition);
-        addChild(firstPlaceHolder2);
-        addChild(unknownBytes);
-        addChild(mAttributeArray);
+        setupBlock(mAttributeStart);
+        setupBlock(_unitSizeReferenceBlock);
+        setupBlock(_attributeCount);
+        setupBlock(mIdAttributePosition);
+        setupBlock(mClassAttributePosition);
+        setupBlock(mStyleAttributePosition);
+        setupBlock(firstPlaceHolder2);
+        setupBlock(unknownBytes);
+        setupBlock(mAttributeArray);
     }
 
     IntegerReference getAttributeStart() {
@@ -330,7 +330,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
         @Override
         public byte[] getBytes() {
-            return super.getBytesInternal();
+            return super.bytes();
         }
         public void setBytes(byte[] bytes) {
             int length = bytes.length;
@@ -348,7 +348,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
 
         @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
+        public void readBytes(BlockReader reader) throws IOException {
             ResXmlStartElement startElement = this.startElement;
             int size;
             if (startElement.getAttributeCount().get() == 0) {
@@ -357,7 +357,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
                 size = startElement.getAttributesOffset().get() - reader.getPosition();
             }
             setBytesLength(size, false);
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
 
         @Override

@@ -51,8 +51,8 @@ public class ProfileDataBody extends ProfileBody {
 
         this.dataList = new CountedBlockList<>(creator, count);
 
-        addChild(0, headerList);
-        addChild(1, dataList);
+        setupBlock(0, headerList);
+        setupBlock(1, dataList);
     }
 
     @Override

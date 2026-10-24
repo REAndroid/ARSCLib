@@ -36,7 +36,7 @@ public class Ule128Item extends Le128 implements IntegerReference {
     @Override
     protected void writeValue(int value) {
         setBytesLength((large ? 5 : 4), false);
-        int length = writeUleb128(getBytesInternal(), 0, value);
+        int length = writeUleb128(bytes(), 0, value);
         setBytesLength(length, false);
     }
 
@@ -47,7 +47,7 @@ public class Ule128Item extends Le128 implements IntegerReference {
         int length = reader.getPosition() - position;
         reader.seek(position);
         setBytesLength(length, false);
-        reader.readFully(getBytesInternal());
+        reader.readFully(bytes());
         return value;
     }
 }

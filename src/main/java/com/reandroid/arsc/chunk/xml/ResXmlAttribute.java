@@ -59,7 +59,7 @@ public class ResXmlAttribute extends AttributeValue implements
 
     public ResXmlAttribute(int attributeUnitSize) {
         super(attributeUnitSize, OFFSET_SIZE);
-        byte[] bts = getBytesInternal();
+        byte[] bts = bytes();
         putInteger(bts, OFFSET_NS, -1);
         putInteger(bts, OFFSET_NAME, -1);
         putInteger(bts, OFFSET_STRING, -1);
@@ -423,7 +423,7 @@ public class ResXmlAttribute extends AttributeValue implements
     }
 
     int getNamespaceReference() {
-        return getInteger(getBytesInternal(), OFFSET_NS);
+        return getInteger(bytes(), OFFSET_NS);
     }
     public boolean setNamespace(String uri, String prefix) {
         if (uri == null && prefix == null) {
@@ -483,14 +483,14 @@ public class ResXmlAttribute extends AttributeValue implements
     }
     void setUriReference(int ref) {
         StringItem stringItem = getStringItem(getNamespaceReference());
-        putInteger(getBytesInternal(), OFFSET_NS, ref);
+        putInteger(bytes(), OFFSET_NS, ref);
         if (stringItem != null) {
             stringItem.removeReference(mNSReference);
         }
         mNSReference = link(OFFSET_NS);
     }
     int getNameReference() {
-        return getInteger(getBytesInternal(), OFFSET_NAME);
+        return getInteger(bytes(), OFFSET_NAME);
     }
     void setNameReference(int ref) {
         if (ref == getNameReference()) {
@@ -498,12 +498,12 @@ public class ResXmlAttribute extends AttributeValue implements
         }
         unLinkNameId(getResXmlID());
         unlink(mNameReference);
-        putInteger(getBytesInternal(), OFFSET_NAME, ref);
+        putInteger(bytes(), OFFSET_NAME, ref);
         mNameReference = link(OFFSET_NAME);
         linkNameId();
     }
     int getValueStringReference() {
-        return getInteger(getBytesInternal(), OFFSET_STRING);
+        return getInteger(bytes(), OFFSET_STRING);
     }
     void setValueStringReference(int ref) {
         if (ref == getValueStringReference() && mValueStringReference != null) {
@@ -518,7 +518,7 @@ public class ResXmlAttribute extends AttributeValue implements
         if (stringItem != null) {
             ref = stringItem.getIndex();
         }
-        putInteger(getBytesInternal(), OFFSET_STRING, ref);
+        putInteger(bytes(), OFFSET_STRING, ref);
         ReferenceItem referenceItem = null;
         if (stringItem != null) {
             referenceItem = new ReferenceBlock<>(this, OFFSET_STRING);
@@ -528,8 +528,8 @@ public class ResXmlAttribute extends AttributeValue implements
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         super.onDataLoaded();
         linkAll();
         linkStartNameSpace();
@@ -618,7 +618,7 @@ public class ResXmlAttribute extends AttributeValue implements
         if (stringPool == null) {
             return null;
         }
-        int ref = getInteger(getBytesInternal(), offset);
+        int ref = getInteger(bytes(), offset);
         StringItem stringItem = stringPool.get(ref);
         if (stringItem == null) {
             return null;

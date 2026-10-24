@@ -39,7 +39,7 @@ public class SizedBlockList<T extends Block> extends BlockList<T> {
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int size = bytesSize.get();
         BlockReader itemsReader = reader.create(size);
         while (itemsReader.isAvailable()) {

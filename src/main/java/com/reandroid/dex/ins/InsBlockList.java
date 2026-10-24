@@ -361,7 +361,7 @@ public class InsBlockList extends BlockList<Ins> {
         mLockedBy = null;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         mLockedBy = new Object();
         int insCodeUnits = codeUnitsReference.get();
         int position = reader.getPosition() + insCodeUnits * 2;
@@ -394,7 +394,7 @@ public class InsBlockList extends BlockList<Ins> {
         }
         mLockedBy = new Object();
         mLocked = true;
-        clearChildes();
+        clearBlocks();
         int size = insBlockList.size();
         ensureCapacity(size);
         for(int i = 0; i < size; i++) {

@@ -42,7 +42,7 @@ public class ByteArray extends BlockItem {
         int valuesLength = values.length;
         int length = current + valuesLength;
         setBytesLength(length, false);
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         System.arraycopy(values, 0, bytes, current, valuesLength);
     }
     public final void set(byte[] values) {
@@ -52,7 +52,7 @@ public class ByteArray extends BlockItem {
         return getBytes();
     }
     public final void fill(byte value) {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int length = bytes.length;
         for (int i = 0; i < length; i++) {
             bytes[i] = value;
@@ -74,7 +74,7 @@ public class ByteArray extends BlockItem {
     }
 
     public byte get(int index) {
-        return getBytesInternal()[index];
+        return bytes()[index];
     }
     public int getByteUnsigned(int index) {
         return 0xff & get(index);
@@ -83,38 +83,38 @@ public class ByteArray extends BlockItem {
         put(index, (byte) byteValue);
     }
     public final void put(int index, byte value) {
-        getBytesInternal()[index] = value;
+        bytes()[index] = value;
     }
     public boolean getBit(int byteOffset, int bitIndex) {
-        return getBit(getBytesInternal(), byteOffset, bitIndex);
+        return getBit(bytes(), byteOffset, bitIndex);
     }
     public void putBit(int byteOffset, int bitIndex, boolean bit) {
-        putBit(getBytesInternal(), byteOffset, bitIndex, bit);
+        putBit(bytes(), byteOffset, bitIndex, bit);
     }
     public final void putShort(int offset, int value) {
         putShort(offset, (short) value);
     }
     public final void putShort(int offset, short val) {
-        Block.putShort(getBytesInternal(), offset, val);
+        Block.putShort(bytes(), offset, val);
     }
     public final int getShortUnsigned(int offset) {
         return 0xffff & getShort(offset);
     }
     public final short getShort(int offset) {
-        return Block.getShort(getBytesInternal(), offset);
+        return Block.getShort(bytes(), offset);
     }
     public final void putInteger(int offset, int val) {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if ((offset + 4) > bytes.length) {
             return;
         }
         Block.putInteger(bytes, offset, val);
     }
     public final int getInteger(int offset) {
-        return Block.getInteger(getBytesInternal(), offset);
+        return Block.getInteger(bytes(), offset);
     }
     public final void putByteArray(int offset, byte[] array) {
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         int available = bytes.length - offset;
         if (available <= 0) {
             return;
@@ -126,7 +126,7 @@ public class ByteArray extends BlockItem {
         System.arraycopy(array, 0, bytes, offset, length);
     }
     public final byte[] getByteArray(int offset, int length) {
-        byte[] bts = getBytesInternal();
+        byte[] bts = bytes();
         byte[] result = new byte[length];
         if (result.length >= 0) {
             System.arraycopy(bts, offset, result, 0, result.length);
@@ -135,8 +135,8 @@ public class ByteArray extends BlockItem {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
     }
     @Override
     public int readBytes(InputStream inputStream) throws IOException {

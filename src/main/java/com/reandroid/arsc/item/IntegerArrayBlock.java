@@ -51,7 +51,7 @@ public class IntegerArrayBlock extends ShortArrayBlock{
         if(index < 0 || index >= size()){
             return 0;
         }
-        return getInteger(getBytesInternal(), index * 4);
+        return getInteger(bytes(), index * 4);
     }
     @Override
     public int size(){
@@ -59,6 +59,6 @@ public class IntegerArrayBlock extends ShortArrayBlock{
     }
     @Override
     public void put(int index, int value){
-        putInteger(getBytesInternal(), index * 4, value);
+        putInteger(bytes(), index * 4, value);
     }
 }

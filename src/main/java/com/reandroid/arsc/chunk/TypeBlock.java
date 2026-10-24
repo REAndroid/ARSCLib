@@ -49,15 +49,15 @@ public class TypeBlock extends Chunk<TypeHeader>
 
 
     TypeBlock(TypeHeader header, int id) {
-        super(header, 2);
+        super(2, header);
 
         header.setId(id);
 
         EntryItemOffsetList entryOffsets = new EntryItemOffsetList(header.count());
         this.mEntryArray = new EntryItemList(header, entryOffsets);
 
-        addChild(entryOffsets);
-        addChild(mEntryArray);
+        setupBlock(entryOffsets);
+        setupBlock(mEntryArray);
     }
     public TypeBlock(int id) {
         this(new TypeHeader(), id);

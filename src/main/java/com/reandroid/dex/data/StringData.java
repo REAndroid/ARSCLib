@@ -46,7 +46,7 @@ public class StringData extends DataItem
     public StringData() {
         super(1);
         this.mDataContainer = new StringDataContainer(this);
-        addChildBlock(0, mDataContainer);
+        block(0, mDataContainer);
     }
 
     public void removeSelf(){
@@ -146,7 +146,7 @@ public class StringData extends DataItem
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         int start = reader.getPosition();
         int position = getOffset();
         reader.seek(position);
@@ -155,7 +155,7 @@ public class StringData extends DataItem
         reader.seek(position);
         StringDataContainer container = this.mDataContainer;
         container.setLength(length + 1);
-        reader.readFully(container.getBytesInternal());
+        reader.readFully(container.bytes());
         reader.seek(start);
         this.mKey = StringKey.create(text);
     }
@@ -219,7 +219,7 @@ public class StringData extends DataItem
     private String decodeString(){
         String text;
         try {
-            text = decodeString(StreamUtil.createByteReader(mDataContainer.getBytesInternal()));
+            text = decodeString(StreamUtil.createByteReader(mDataContainer.bytes()));
         } catch (IOException exception) {
             text = null;
         }
@@ -228,7 +228,7 @@ public class StringData extends DataItem
     private void encodeString(String text){
         int length = text.length();
         mDataContainer.setLength(length * 3 + 4);
-        final byte[] buffer = mDataContainer.getBytesInternal();
+        final byte[] buffer = mDataContainer.bytes();
         int position = DexBlockItem.writeUleb128(buffer, 0, length);
         for (int i = 0; i < length; i++) {
             char ch = text.charAt(i);
@@ -332,10 +332,6 @@ public class StringData extends DataItem
         }
         void setLength(int length){
             setBytesLength(length, false);
-        }
-        @Override
-        public byte[] getBytesInternal() {
-            return super.getBytesInternal();
         }
         @Override
         protected void onBytesChanged() {

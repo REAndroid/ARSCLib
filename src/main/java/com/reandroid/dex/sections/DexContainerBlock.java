@@ -96,7 +96,7 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         }
     }
     public void clear() {
-        clearChildes();
+        clearBlocks();
     }
 
     @Override
@@ -111,8 +111,8 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         notifyAdded(item);
     }
     @Override
-    public void clearChildes() {
-        super.clearChildes();
+    public void clearBlocks() {
+        super.clearBlocks();
         notifyLayoutsCleared();
     }
 
@@ -231,7 +231,7 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         readChildes(reader);
     }
     @Override

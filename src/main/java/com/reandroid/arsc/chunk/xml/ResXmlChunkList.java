@@ -24,7 +24,7 @@ class ResXmlChunkList<T extends BaseXmlChunk> extends BlockList<T> {
     }
 
     public void clear() {
-        clearChildes();
+        clearBlocks();
     }
     @Override
     public void onPreRemove(T item) {

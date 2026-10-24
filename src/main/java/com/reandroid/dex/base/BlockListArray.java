@@ -51,7 +51,7 @@ public class BlockListArray<T extends Block> extends BlockArray<T>
         this.countAndOffset = ParallelIntegerPair.combine(this.countAndOffset, countAndOffset);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         IntegerPair countAndOffset = getCountAndOffset();
         if(skipReading(countAndOffset, reader)){
             return;

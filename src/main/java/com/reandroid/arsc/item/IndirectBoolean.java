@@ -29,11 +29,11 @@ public class IndirectBoolean implements BooleanReference{
 
     @Override
     public boolean get() {
-        return BlockItem.getBit(blockItem.getBytesInternal(), byteOffset, bitIndex);
+        return BlockItem.getBit(blockItem.bytes(), byteOffset, bitIndex);
     }
     @Override
     public void set(boolean value) {
-        BlockItem.putBit(blockItem.getBytesInternal(), byteOffset, bitIndex, value);
+        BlockItem.putBit(blockItem.bytes(), byteOffset, bitIndex, value);
     }
     @Override
     public String toString() {

@@ -173,11 +173,11 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
 
     @Override
     public void set(int value) {
-        Block.putInteger(getBytesInternal(), getOffset(), value);
+        Block.putInteger(bytes(), getOffset(), value);
     }
     @Override
     public int get() {
-        return Block.getInteger(getBytesInternal(), getOffset());
+        return Block.getInteger(bytes(), getOffset());
     }
 
 

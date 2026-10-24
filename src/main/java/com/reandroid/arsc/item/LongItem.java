@@ -38,7 +38,7 @@ public class LongItem extends BlockItem implements LongReference, DirectStreamRe
             return;
         }
         mCache = value;
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (bigEndian) {
             putBigEndianLong(bytes, 0, value);
         } else {
@@ -64,7 +64,7 @@ public class LongItem extends BlockItem implements LongReference, DirectStreamRe
     @Override
     protected void onBytesChanged() {
         long l;
-        byte[] bytes = getBytesInternal();
+        byte[] bytes = bytes();
         if (bigEndian) {
             l = getBigEndianLong(bytes, 0);
         } else {

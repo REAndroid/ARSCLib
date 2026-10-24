@@ -48,9 +48,9 @@ public class CountedBlockItem extends BlockItem {
         }
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         setBytesLength(countReference().get(), false);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
     @Override
     public int readBytes(InputStream inputStream) throws IOException {

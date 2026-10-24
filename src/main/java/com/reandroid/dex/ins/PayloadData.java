@@ -27,11 +27,13 @@ import java.util.Iterator;
 public abstract class PayloadData<T extends PayloadEntry> extends Ins
         implements SmaliRegion, Iterable<T> {
 
-    public PayloadData(int childesCount, Opcode<?> opcode) {
-        super(childesCount + 1, opcode);
+    public PayloadData(int blocksSize, Opcode<?> opcode) {
+        super(blocksSize + 1, opcode);
+
         ShortItem opcodeItem = new ShortItem();
         opcodeItem.set(opcode.getValue());
-        addChild(0, opcodeItem);
+
+        setupBlock(0, opcodeItem);
     }
 
     @Override
@@ -57,15 +59,15 @@ public abstract class PayloadData<T extends PayloadEntry> extends Ins
     }
     void updateNopAlignment() {
         InstructionList instructionList = getInstructionList();
-        if(instructionList == null) {
+        if (instructionList == null) {
             return;
         }
         int position = instructionList.countUpTo(this);
-        if(position % 4 == 0) {
+        if (position % 4 == 0) {
             return;
         }
         InsNop insNop = getNopAlignment();
-        if(insNop != null) {
+        if (insNop != null) {
             instructionList.remove(insNop);
         } else {
             instructionList.add(false, getIndex(), Opcode.NOP.newInstance());
@@ -73,9 +75,9 @@ public abstract class PayloadData<T extends PayloadEntry> extends Ins
     }
     private InsNop getNopAlignment() {
         InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
+        if (instructionList != null) {
             Ins ins = instructionList.get(getIndex() - 1);
-            if(ins instanceof InsNop) {
+            if (ins instanceof InsNop) {
                 return (InsNop) ins;
             }
         }
@@ -107,22 +109,22 @@ public abstract class PayloadData<T extends PayloadEntry> extends Ins
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == this){
+        if (obj == this) {
             return true;
         }
-        if(obj == null || getClass() != obj.getClass()){
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
         PayloadData<?> payloadData = (PayloadData<?>) obj;
-        if(getIndex() != payloadData.getIndex()){
+        if (getIndex() != payloadData.getIndex()) {
             return false;
         }
-        return Block.areEqual(getChildes(), payloadData.getChildes());
+        return Block.areEqualBlocks(blocks(), payloadData.blocks());
     }
 
     @Override
     public int hashCode() {
-        return Block.hashCodeOf(getChildes()) + getIndex();
+        return Block.hashCodeOf(blocks()) + getIndex();
     }
 
 }

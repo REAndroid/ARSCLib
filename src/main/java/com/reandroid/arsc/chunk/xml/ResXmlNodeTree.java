@@ -129,7 +129,7 @@ public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResX
     }
     @Override
     public void clear() {
-        getNodeList().clearChildes();
+        getNodeList().clearBlocks();
     }
 
     @Override

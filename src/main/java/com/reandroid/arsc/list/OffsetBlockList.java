@@ -54,7 +54,7 @@ public class OffsetBlockList<T extends Block> extends BlockList<T> {
         return size() == 0;
     }
     public void clear() {
-        clearChildes();
+        clearBlocks();
     }
     public AlignItem getAlignment() {
         return null;
@@ -116,7 +116,7 @@ public class OffsetBlockList<T extends Block> extends BlockList<T> {
     }
 
     @Override
-    protected void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if (getOffsetReferenceList().size() != 0) {
             int position = getStart().get();
             reader.seek(position);

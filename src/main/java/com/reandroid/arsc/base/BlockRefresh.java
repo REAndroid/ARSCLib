@@ -16,5 +16,22 @@
 package com.reandroid.arsc.base;
 
 public interface BlockRefresh {
+
     void refresh();
+
+    class RefreshUtil {
+        public static void refresh(Object obj) {
+            if (obj instanceof BlockRefresh) {
+                ((BlockRefresh) obj).refresh();
+            }
+        }
+        public static void refresh(Object[] blocks) {
+            if (blocks != null) {
+                int length = blocks.length;
+                for (int i = 0; i < length; i++) {
+                    refresh(blocks[i]);
+                }
+            }
+        }
+    }
 }

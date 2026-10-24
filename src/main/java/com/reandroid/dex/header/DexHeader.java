@@ -82,25 +82,25 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
 
         this.unknown = new UnknownHeaderBytes();
 
-        addChildBlock(0, magic);
-        addChildBlock(1, version);
-        addChildBlock(2, checksum);
-        addChildBlock(3, signature);
-        addChildBlock(4, (Block) fileSize);
-        addChildBlock(5, (Block) headerSize);
-        addChildBlock(6, endian);
-        addChildBlock(7, (Block) map);
+        block(0, magic);
+        block(1, version);
+        block(2, checksum);
+        block(3, signature);
+        block(4, (Block) fileSize);
+        block(5, (Block) headerSize);
+        block(6, endian);
+        block(7, (Block) map);
 
-        addChildBlock(8, string_id);
-        addChildBlock(9, type_id);
-        addChildBlock(10, proto_id);
-        addChildBlock(11, field_id);
-        addChildBlock(12, method_id);
-        addChildBlock(13, class_id);
-        addChildBlock(14, data);
-        addChildBlock(15, containerInfo);
+        block(8, string_id);
+        block(9, type_id);
+        block(10, proto_id);
+        block(11, field_id);
+        block(12, method_id);
+        block(13, class_id);
+        block(14, data);
+        block(15, containerInfo);
 
-        addChildBlock(16, unknown);
+        block(16, unknown);
 
         setOffsetReference(containerInfo.getOffsetReference());
     }
@@ -168,13 +168,13 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
         int result = 0;
         int size = 17;
         for (int i = 0; i < size; i++) {
-            Block block = getChildBlockAt(i);
+            Block block = block(i);
             result += ((DirectStreamReader) block).readBytes(inputStream);
         }
         return result;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         super.nonCheckRead(reader);
     }
 

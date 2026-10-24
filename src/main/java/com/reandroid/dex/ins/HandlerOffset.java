@@ -35,22 +35,22 @@ public class HandlerOffset extends BlockItem implements Comparable<HandlerOffset
         return getIndex();
     }
     public int getStartAddress() {
-        return Block.getInteger(getBytesInternal(), 0);
+        return Block.getInteger(bytes(), 0);
     }
     public void setStartAddress(int value) {
-        Block.putInteger(getBytesInternal(), 0, value);
+        Block.putInteger(bytes(), 0, value);
     }
     public int getCatchCodeUnit() {
-        return Block.getShortUnsigned(getBytesInternal(), 4);
+        return Block.getShortUnsigned(bytes(), 4);
     }
     public void setCatchCodeUnit(int value) {
-        Block.putShort(getBytesInternal(), 4, value);
+        Block.putShort(bytes(), 4, value);
     }
     public int getOffset() {
-        return Block.getShortUnsigned(getBytesInternal(), 6);
+        return Block.getShortUnsigned(bytes(), 6);
     }
     public void setOffset(int value) {
-        Block.putShort(getBytesInternal(), 6, value);
+        Block.putShort(bytes(), 6, value);
     }
 
     InsTryItem getTryItem() {

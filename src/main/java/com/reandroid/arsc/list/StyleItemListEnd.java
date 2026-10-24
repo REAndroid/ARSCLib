@@ -42,7 +42,7 @@ public class StyleItemListEnd extends BlockItem implements BlockRefresh {
         setBytesLength(size, false);
         if (size != 0) {
             byte b = (byte) 0xff;
-            byte[] bytes = getBytesInternal();
+            byte[] bytes = bytes();
             for (int i = 0; i < size; i++) {
                 bytes[i] = b;
             }
@@ -55,14 +55,14 @@ public class StyleItemListEnd extends BlockItem implements BlockRefresh {
         updateSize();
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         if (updateSize()) {
-            super.onReadBytes(reader);
+            super.readBytes(reader);
         }
     }
 
     @Override
     public String toString() {
-        return HexUtil.toHexString(getBytesInternal());
+        return HexUtil.toHexString(bytes());
     }
 }

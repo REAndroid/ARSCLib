@@ -34,7 +34,7 @@ public class Magic extends HeaderPiece {
         super.set(DEFAULT_BYTES.clone());
     }
     public boolean isValid(){
-        return ByteArray.equals(getBytesInternal(), DEFAULT_BYTES);
+        return ByteArray.equals(bytes(), DEFAULT_BYTES);
     }
 
     public boolean isDisableVerification() {
@@ -45,11 +45,11 @@ public class Magic extends HeaderPiece {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void readBytes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
         if (!isDisableVerification() && !isValid()) {
             throw new IOException("Invalid dex magic: '"
-                    + HexUtil.toHexString(getBytesInternal())
+                    + HexUtil.toHexString(bytes())
                     + "', expecting '" + HexUtil.toHexString(DEFAULT_BYTES) + "'");
         }
     }

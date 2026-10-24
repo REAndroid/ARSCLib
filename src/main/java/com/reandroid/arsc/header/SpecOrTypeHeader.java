@@ -25,18 +25,14 @@ import java.io.IOException;
 
 public class SpecOrTypeHeader extends HeaderBlock {
 
-    private final ByteItem id;
     private final boolean mReadExtraBytes;
 
-    public SpecOrTypeHeader(int childesCount, int type, boolean readExtra) {
-        super(childesCount + 1, type);
-        this.id = new ByteItem();
+    public SpecOrTypeHeader(int blocksSize, int type, boolean readExtra) {
+        super(blocksSize + 1, type);
+
         this.mReadExtraBytes = readExtra;
 
-        addChild(3, id);
-    }
-    public SpecOrTypeHeader(int childesCount, int type) {
-        this(childesCount, type, true);
+        setupBlock(3, new ByteItem());
     }
     public SpecOrTypeHeader(int childesCount, ChunkType chunkType) {
         this(childesCount, chunkType.ID, true);
@@ -46,7 +42,7 @@ public class SpecOrTypeHeader extends HeaderBlock {
     }
 
     public IntegerReference id() {
-        return id;
+        return block(3);
     }
     public int getId() {
         return id().get();

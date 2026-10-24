@@ -32,9 +32,9 @@ public class ProfString extends StringBlock {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    public void readBytes(BlockReader reader) throws IOException {
         setBytesLength(lengthReference.get(), false);
-        super.onReadBytes(reader);
+        super.readBytes(reader);
     }
 
     @Override

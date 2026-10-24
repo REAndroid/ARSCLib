@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.AlignItem;
 
@@ -26,53 +27,39 @@ import java.io.IOException;
 
 public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContainer {
 
-    private final T mHeaderBlock;
     private final SingleBlockContainer<Block> firstPlaceHolder;
-    private AlignItem alignItem;
 
-    protected Chunk(T headerBlock, SingleBlockContainer<Block> firstPlaceHolder, int initialChildesCount) {
-        super(initialChildesCount + (firstPlaceHolder == null ? 2 : 3));
+    protected Chunk(int blocksSize, T headerBlock, SingleBlockContainer<Block> firstPlaceHolder) {
+        super(blocksSize + (firstPlaceHolder == null ? 2 : 3));
 
-        this.mHeaderBlock = headerBlock;
         this.firstPlaceHolder = firstPlaceHolder;
 
-        addChild(headerBlock);
+        setupBlock(headerBlock);
         if (firstPlaceHolder != null) {
-            addChild(firstPlaceHolder);
+            setupBlock(firstPlaceHolder);
         }
+        setupLast(new AlignItem(true));
     }
-    protected Chunk(T headerBlock, int initialChildesCount) {
-        this(headerBlock, new SingleBlockContainer<>(), initialChildesCount);
+    protected Chunk(int initialSize, T headerBlock) {
+        this(initialSize, headerBlock, new SingleBlockContainer<>());
     }
 
-    public AlignItem getAlignItem() {
-        AlignItem alignItem = this.alignItem;
-        if (alignItem == null) {
-            alignItem = new AlignItem();
-            addChild(alignItem);
-            this.alignItem = alignItem;
-        }
-        return alignItem;
+    public AlignItem getAlignment() {
+        return blockLast();
     }
 
     public SingleBlockContainer<Block> getFirstPlaceHolder() {
         return firstPlaceHolder;
     }
     public T getHeaderBlock() {
-        return mHeaderBlock;
+        return block(0);
     }
     @Override
     protected final void onRefreshed() {
-        updateAlign();
-        getHeaderBlock().refreshHeader();
         onChunkRefreshed();
+        getHeaderBlock().refreshHeader(this);
     }
 
-    private void updateAlign() {
-        AlignItem alignItem = getAlignItem();
-        alignItem.setSize(0);
-        alignItem.align(this);
-    }
     protected void onChunkRefreshed() {
 
     }
@@ -80,8 +67,8 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
 
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock = reader.readHeaderBlock();
+    public void readBytes(BlockReader reader) throws IOException {
+        HeaderBlock headerBlock = InfoHeader.read(reader);
         checkInvalidChunk(headerBlock);
         BlockReader chunkReader = reader.create(headerBlock.getChunkSize());
         onReadChildes(chunkReader);
@@ -89,11 +76,8 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
         chunkReader.close();
         onChunkLoaded();
     }
-    protected void onReadChildes(BlockReader reader) throws IOException{
-        AlignItem alignItem = getAlignItem();
-        alignItem.setSize(0);
-        super.onReadBytes(reader);
-        alignItem.alignSafe(reader);
+    protected void onReadChildes(BlockReader reader) throws IOException {
+        super.readBytes(reader);
     }
     void checkInvalidChunk(HeaderBlock headerBlock) throws IOException {
         ChunkType chunkType = headerBlock.getChunkType();
