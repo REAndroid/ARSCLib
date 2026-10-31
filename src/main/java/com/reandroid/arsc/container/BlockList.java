@@ -483,7 +483,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         item.setIndex(index);
         item.setParent(this);
         mItems.add(index, item);
-        updateIndex(index);
+        int size = mItems.size();
+        if (index < size - 1) {
+            updateIndex(index, size);
+        }
         onChanged();
     }
     private boolean updateIndex() {
@@ -507,7 +510,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if (end > count) {
             end = count;
         }
-        List<T> items = this.getChildes();
+        List<T> items = this.mItems;
         for (int i = start; i < end; i++) {
             T item = items.get(i);
             if (item.getIndex() != i) {
@@ -615,7 +618,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         }
         trimToSize();
         onPreRefresh();
-        refreshChildes();
+        refreshBlockElements();
         onRefreshed();
         onChanged();
     }
@@ -627,10 +630,11 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     public void onChanged() {
         mItems.onChanged();
     }
-    protected void refreshChildes() {
-        Iterator<?> iterator = iterator();
-        while (iterator.hasNext()) {
-            Object item = iterator.next();
+    protected void refreshBlockElements() {
+        ArrayCollection<T> list = this.mItems;
+        int size = list.size();
+        for (int i = 0; i < size; i++) {
+            Object item = list.get(i);
             if (item instanceof BlockRefresh) {
                 ((BlockRefresh) item).refresh();
             }
@@ -639,24 +643,27 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     @Override
     public byte[] getBytes() {
         byte[] results = null;
-        Iterator<T> iterator = iterator();
-        while (iterator.hasNext()) {
-            results = addBytes(results, iterator.next().getBytes());
+        ArrayCollection<T> list = this.mItems;
+        int size = list.size();
+        for (int i = 0; i < size; i++) {
+            results = addBytes(results, list.get(i).getBytes());
         }
         return results;
     }
     @Override
     public int countBytes() {
+        return countElementBytes();
+    }
+    public int countElementBytes() {
         int result = 0;
-        int size = size();
+        ArrayCollection<T> list = this.mItems;
+        int size = list.size();
         if (size != 0) {
             if (hasSameByteSizeEntries()) {
-                result = size * get(0).countBytes();
+                result = size * list.get(0).countBytes();
             } else {
-                T first = get(0);
-                result = first.countBytes();
-                for (int i = 1; i < size; i++) {
-                    result += get(i).countBytes();
+                for (int i = 0; i < size; i++) {
+                    result += list.get(i).countBytes();
                 }
             }
         }
@@ -675,11 +682,15 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         }
         if (skipIndividualCounting(counter)) {
             counter.addCount(countBytes());
-            return;
+        } else {
+            onCountUpToEntries(counter);
         }
-        int size = size();
+    }
+    public void onCountUpToEntries(BlockCounter counter) {
+        ArrayCollection<T> list = this.mItems;
+        int size = list.size();
         for (int i = 0; i < size && !counter.FOUND; i++) {
-            T item = get(i);
+            T item = list.get(i);
             if (item == null) {
                 continue;
             }
@@ -709,7 +720,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         this.mSameByteSizeEntries = value;
     }
 
-    public void readChildes(BlockReader reader) throws IOException {
+    public void readBlockElements(BlockReader reader) throws IOException {
         int size = this.size();
         for (int i = 0; i < size; i++) {
             get(i).readBytes(reader);
@@ -719,13 +730,12 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {
         int result = 0;
-        int size = size();
-        for (int i = 0; i < size; i++) {
-            T item = get(i);
-            if (item == null) {
-                continue;
+        if (!isNull()) {
+            ArrayCollection<T> list = mItems;
+            int size = list.size();
+            for (int i = 0; i < size; i++) {
+                result += list.get(i).writeBytes(stream);
             }
-            result += item.writeBytes(stream);
         }
         return result;
     }

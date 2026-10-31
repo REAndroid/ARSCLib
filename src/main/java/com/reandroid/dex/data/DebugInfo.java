@@ -150,7 +150,7 @@ public class DebugInfo extends DataItem implements KeyReference, Comparable<Debu
         if (debugParameterCount.get() > 0) {
             BlockList<DebugParameterBlock> array = initParametersArray();
             array.setSize(debugParameterCount.get());
-            array.readChildes(reader);
+            array.readBlockElements(reader);
         }
         debugSequence.readBytes(reader);
     }

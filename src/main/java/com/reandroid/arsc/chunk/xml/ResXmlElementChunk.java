@@ -23,33 +23,38 @@ import java.io.IOException;
 
 public class ResXmlElementChunk extends FixedBlockContainer {
 
-    private final ResXmlStartNamespaceList mStartNamespaceList;
-    private final ResXmlStartElement mStartElement;
-    private final ResXmlNodeList mNodeList;
-    private final ResXmlEndElement mEndElement;
-    private final ResXmlChunkList<ResXmlEndNamespace> mEndNamespaceList;
-
     public ResXmlElementChunk() {
         super(5);
 
         ResXmlChunkList<ResXmlEndNamespace> endNamespaceList = new ResXmlChunkList<>();
-        this.mStartNamespaceList = new ResXmlStartNamespaceList(endNamespaceList);
+        ResXmlStartNamespaceList startNamespaceList = new ResXmlStartNamespaceList(endNamespaceList);
 
         ResXmlEndElement endElement = new ResXmlEndElement();
-        this.mStartElement = new ResXmlStartElement(endElement);
-        this.mNodeList = new ResXmlNodeList();
-        this.mEndElement = endElement;
-        this.mEndNamespaceList = endNamespaceList;
+        ResXmlStartElement startElement = new ResXmlStartElement(endElement);
 
-        setupBlock(0, mStartNamespaceList);
-        setupBlock(1, mStartElement);
-        setupBlock(2, mNodeList);
-        setupBlock(3, mEndElement);
-        setupBlock(4, mEndNamespaceList);
+        ResXmlNodeList nodeList = new ResXmlNodeList();
+
+        setupBlock(0, startNamespaceList);
+        setupBlock(1, startElement);
+        setupBlock(2, nodeList);
+        setupBlock(3, endElement);
+        setupBlock(4, endNamespaceList);
     }
 
+    ResXmlStartNamespaceList getStartNamespaceList() {
+        return block(0);
+    }
+    ResXmlStartElement getStartElement() {
+        return block(1);
+    }
     public ResXmlNodeList getNodeList() {
-        return mNodeList;
+        return block(2);
+    }
+    ResXmlEndElement getEndElement(){
+        return block(3);
+    }
+    ResXmlChunkList<ResXmlEndNamespace> getEndNamespaceList() {
+        return block(4);
     }
 
     ResXmlElement element() {
@@ -57,9 +62,9 @@ public class ResXmlElementChunk extends FixedBlockContainer {
     }
 
     void onPreRemove(){
-        mStartNamespaceList.clear();
-        mEndNamespaceList.clearBlocks();
-        mStartElement.onPreRemove();
+        getStartNamespaceList().clear();
+        getEndNamespaceList().clearBlocks();
+        getStartElement().onPreRemove();
     }
     public void setName(String name) {
         ResXmlStartElement startElement = getStartElement();
@@ -80,20 +85,8 @@ public class ResXmlElementChunk extends FixedBlockContainer {
         }
     }
 
-    ResXmlStartNamespaceList getStartNamespaceList(){
-        return mStartNamespaceList;
-    }
-
-    ResXmlStartElement getStartElement(){
-        return mStartElement;
-    }
-
-    ResXmlEndElement getEndElement(){
-        return mEndElement;
-    }
-
     void linkStringReferences() {
-        mStartElement.linkStringReferences();
+        getStartElement().linkStringReferences();
     }
 
     @Override

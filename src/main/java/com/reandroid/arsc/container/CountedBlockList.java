@@ -23,7 +23,6 @@ import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Predicate;
 
 public class CountedBlockList<T extends Block> extends BlockList<T> implements DirectStreamReader {
 
@@ -51,7 +50,7 @@ public class CountedBlockList<T extends Block> extends BlockList<T> implements D
     @Override
     public void readBytes(BlockReader reader) throws IOException {
         setSize(getCountReference().get());
-        readChildes(reader);
+        readBlockElements(reader);
     }
 
     @Override

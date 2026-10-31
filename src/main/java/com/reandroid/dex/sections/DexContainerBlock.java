@@ -232,10 +232,10 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        readChildes(reader);
+        readBlockElements(reader);
     }
     @Override
-    public void readChildes(BlockReader reader) throws IOException {
+    public void readBlockElements(BlockReader reader) throws IOException {
         readBytes(reader, null);
     }
     public void readBytes(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {

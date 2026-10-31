@@ -131,6 +131,12 @@ public class InsPackedSwitchData extends InsSwitchPayload<PackedSwitchEntry> {
     }
 
     @Override
+    public void refresh() {
+        elements().refresh();
+        super.refresh();
+    }
+
+    @Override
     public void merge(Ins ins) {
         InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
         setFirstKey(switchData.getFirstKey());

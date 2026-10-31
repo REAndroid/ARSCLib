@@ -123,8 +123,8 @@ public class Ins4rcc extends Size8Ins implements RegistersSet, DualKeyReference 
     }
 
     @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
+    public void refresh() {
+        super.refresh();
         this.reference2.refresh();
     }
 

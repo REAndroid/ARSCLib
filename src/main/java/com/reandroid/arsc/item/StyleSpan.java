@@ -17,12 +17,13 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.common.Mergeable;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.xml.Span;
 
-public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject> {
+public class StyleSpan extends BlockItem implements Span, Mergeable<Span>, JSONConvert<JSONObject> {
 
     private final SpanStringReference stringReference;
     private final IndirectInteger firstChar;
@@ -82,6 +83,7 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
         return Span.splitAttribute(getTagWithAttributes());
     }
 
+    @Override
     public void merge(Span span) {
         if (span != null && span != this) {
             set(span.getTagWithAttributes(), span.getFirstChar(), span.getLastChar());

@@ -17,9 +17,9 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.container.BlockList;
-import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.container.BlockListWithFooter;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.common.Mergeable;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
@@ -30,19 +30,18 @@ import com.reandroid.xml.StyleElement;
 import com.reandroid.xml.StyleSpanEventSet;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 
-public class StyleItem extends FixedBlockContainer implements
-        SpanSet<StyleSpan>, Comparable<StyleItem>, Iterable<StyleSpan>, JSONConvert<JSONArray> {
+public class StyleItem extends BlockListWithFooter<StyleSpan> implements
+        SpanSet<StyleSpan>, Comparable<StyleItem>, Mergeable<SpanSet<?>>, JSONConvert<JSONArray> {
 
     private StyleIndexReference indexReference;
     private StringItem mStringItem;
 
     public StyleItem() {
-        super(2);
-
-        setupBlock(0, new BlockList<>(StyleSpan.CREATOR));
-        setupBlock(1, new IntegerItem(-1));
+        super(END_BLOCK, StyleSpan.CREATOR);
     }
 
     public void add(String tag, int first, int last) {
@@ -51,27 +50,18 @@ public class StyleItem extends FixedBlockContainer implements
     public void add(Span span) {
         add(span.getTagWithAttributes(), span.getFirstChar(), span.getLastChar());
     }
-    public StyleSpan createNext() {
-        return spanList().createNext();
-    }
-    public StyleSpan get(int i) {
-        return spanList().get(i);
-    }
+
     @Override
     public int getSpansCount() {
-        return spanList().size();
+        return size();
     }
     @Override
     public boolean hasSpans() {
-        return spanList().size() != 0;
-    }
-    @Override
-    public Iterator<StyleSpan> iterator() {
-        return spanList().clonedIterator();
+        return size() != 0;
     }
     @Override
     public Iterator<StyleSpan> getSpans() {
-        return spanList().iterator();
+        return super.iterator();
     }
 
     @Override
@@ -95,20 +85,12 @@ public class StyleItem extends FixedBlockContainer implements
         return raw;
     }
 
-    private BlockList<StyleSpan> spanList() {
-        return block(0);
-    }
-    private IntegerItem endBlock() {
-        return block(1);
-    }
-
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        BlockList<StyleSpan> spanList = this.spanList();
-        while (reader.readInteger() != -1) {
-            spanList.createNext().readBytes(reader);
+        while (!isEndBlock(reader)) {
+            createNext().readBytes(reader);
         }
-        endBlock().readBytes(reader);
+        footer().readBytes(reader);
     }
 
     public StyleDocument build(String text) {
@@ -139,17 +121,19 @@ public class StyleItem extends FixedBlockContainer implements
         if (getParent() == null) {
             return;
         }
-        for (StyleSpan styleSpan : this) {
-            styleSpan.onRemoved();
+        Iterator<StyleSpan> iterator = clonedIterator();
+        while (iterator.hasNext()) {
+            iterator.next().onRemoved();
         }
-        spanList().clearBlocks();
+        clearBlocks();
     }
     public void onRemoved() {
         clearStyle();
     }
     public void linkStringsInternal() {
-        for (StyleSpan styleSpan : this) {
-            styleSpan.link();
+        Iterator<StyleSpan> iterator = clonedIterator();
+        while (iterator.hasNext()) {
+            iterator.next().link();
         }
     }
     public void setStringItemInternal(StringItem stringItem) {
@@ -234,16 +218,16 @@ public class StyleItem extends FixedBlockContainer implements
             createNext().fromJson(json.getJSONObject(i));
         }
     }
+    @Override
     public void merge(SpanSet<?> spanSet) {
         if (spanSet == null || spanSet == this) {
             return;
         }
-        BlockList<StyleSpan> spanList = this.spanList();
-        spanList.setSize(spanSet.getSpansCount());
+        setSize(spanSet.getSpansCount());
         Iterator<? extends Span> iterator = spanSet.getSpans();
         int i = 0;
         while (iterator.hasNext()) {
-            spanList.get(i).merge(iterator.next());
+            get(i).merge(iterator.next());
             i ++;
         }
     }
@@ -267,9 +251,18 @@ public class StyleItem extends FixedBlockContainer implements
 
     @Override
     public String toString() {
-        return "Spans count = " + getSpansCount();
+        return "spans = " + getSpansCount();
     }
 
+    private static boolean isEndBlock(BlockReader reader) throws IOException {
+        int position = reader.getPosition();
+        int index = 0;
+        while (index < 4 && reader.read() == 0xff) {
+            index ++;
+        }
+        reader.seek(position);
+        return index == 4;
+    }
     static final class StyleIndexReference implements WeakStringReference {
 
         private final StyleItem styleItem;
@@ -294,6 +287,44 @@ public class StyleItem extends FixedBlockContainer implements
                 return (T1) styleItem;
             }
             return null;
+        }
+    }
+    private static final EndBlock END_BLOCK = new EndBlock();
+
+    static class EndBlock extends Block {
+
+        private final byte[] bytes;
+
+        public EndBlock() {
+            super();
+            byte b = (byte) 0xff;
+            this.bytes = new byte[]{b, b, b, b};
+        }
+
+
+        @Override
+        public int countBytes() {
+            return 4;
+        }
+        @Override
+        public byte[] getBytes() {
+            return bytes;
+        }
+        @Override
+        public void readBytes(BlockReader reader) throws IOException {
+            reader.offset(4);
+        }
+        public int readBytes(InputStream inputStream) throws IOException {
+            return inputStream.read(bytes.clone(), 0, 4);
+        }
+        @Override
+        protected int onWriteBytes(OutputStream stream) throws IOException {
+            stream.write(bytes, 0, 4);
+            return 4;
+        }
+        @Override
+        public String toString() {
+            return "END";
         }
     }
 

@@ -16,6 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
@@ -60,7 +61,8 @@ public class ResXmlStartElement extends BaseXmlChunk {
         mClassAttributePosition = new ResXmlAttributePosition(ResXmlAttributePosition.TYPE_CLASS);
         mStyleAttributePosition = new ResXmlAttributePosition(ResXmlAttributePosition.TYPE_STYLE);
 
-        firstPlaceHolder2 = new SingleBlockContainer<>();
+        SingleBlockContainer<Block> firstPlaceHolder2 = Chunk.createFirstPlaceHolder();
+        this.firstPlaceHolder2 = firstPlaceHolder2;
 
         this.attributesOffset = new IntegerReference() {
 
@@ -121,7 +123,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
         setupBlock(mIdAttributePosition);
         setupBlock(mClassAttributePosition);
         setupBlock(mStyleAttributePosition);
-        setupBlock(firstPlaceHolder2);
+        if (firstPlaceHolder2 != null) {
+            setupBlock(firstPlaceHolder2);
+        }
         setupBlock(unknownBytes);
         setupBlock(mAttributeArray);
     }

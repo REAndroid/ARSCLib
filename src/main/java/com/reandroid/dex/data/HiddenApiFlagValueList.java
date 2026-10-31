@@ -110,7 +110,7 @@ class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        readChildes(reader);
+        readBlockElements(reader);
     }
 
     static class Compact extends HiddenApiFlagValueList{
@@ -137,7 +137,7 @@ class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
         public void readBytes(BlockReader reader) throws IOException {
         }
         @Override
-        public void readChildes(BlockReader reader) throws IOException {
+        public void readBlockElements(BlockReader reader) throws IOException {
         }
         @Override
         protected int onWriteBytes(OutputStream stream) throws IOException {

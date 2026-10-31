@@ -46,8 +46,8 @@ public class SizeXIns extends Ins {
         ByteArray valueBytes = new ByteArray();
 
         setupBlock(0, valueBytes);
-        valueBytes().setSize(opcode.size());
-        valueBytes().putShort(0, opcode.getValue());
+        valueBytes.setSize(opcode.size());
+        valueBytes.putShort(0, opcode.getValue());
 
         InsIdSectionReference sectionReference;
         if (hasSectionData) {
@@ -213,10 +213,10 @@ public class SizeXIns extends Ins {
     }
 
     @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
+    public void refresh() {
+        super.refresh();
         InsIdSectionReference sectionItem = this.sectionReference;
-        if(sectionItem != null){
+        if (sectionItem != null) {
             sectionItem.refresh();
         }
     }
@@ -426,8 +426,7 @@ public class SizeXIns extends Ins {
         } else if (operandType.hasSectionId()) {
             ((SmaliInstructionOperand.SmaliKeyOperand)operand).setKey(getKey());
         } else if (operandType == OperandType.LABEL) {
-            SmaliLabel smaliLabel = ((SmaliInstructionOperand.SmaliLabelOperand) operand)
-                    .getAsLabel();
+            SmaliLabel smaliLabel = operand.getAsLabel();
             InstructionLabel label = (InstructionLabel) this;
             smaliLabel.setLabelName(label.getLabelName());
         }

@@ -100,7 +100,7 @@ public class OffsetBlockList<T extends Block> extends BlockList<T> {
     }
 
     @Override
-    protected void refreshChildes() {
+    protected void refreshBlockElements() {
         int size = size();
         if (size != 0 && get(0) instanceof BlockRefresh) {
             for (int i = 0; i < size; i++) {
@@ -121,7 +121,7 @@ public class OffsetBlockList<T extends Block> extends BlockList<T> {
             int position = getStart().get();
             reader.seek(position);
             BlockReader listReader = reader.create(reader.available());
-            readChildes(listReader);
+            readBlockElements(listReader);
             position = position + listReader.getPosition();
             listReader.close();
             reader.seek(position);
@@ -129,7 +129,7 @@ public class OffsetBlockList<T extends Block> extends BlockList<T> {
     }
 
     @Override
-    public void readChildes(BlockReader reader) throws IOException {
+    public void readBlockElements(BlockReader reader) throws IOException {
         OffsetReferenceList<?> referenceList = getOffsetReferenceList();
         int size = referenceList.size();
         this.setSize(size);

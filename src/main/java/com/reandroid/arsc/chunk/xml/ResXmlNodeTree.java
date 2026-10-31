@@ -21,7 +21,10 @@ import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.InstanceIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.xml.base.NodeTree;
 import org.xmlpull.v1.XmlSerializer;
 

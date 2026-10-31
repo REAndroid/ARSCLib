@@ -36,7 +36,7 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        super.readChildes(reader);
+        super.readBlockElements(reader);
     }
 
     @Override

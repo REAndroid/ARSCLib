@@ -47,7 +47,17 @@ public abstract class Block {
         onCountUpTo(locator);
         return locator.getResult();
     }
-    public abstract void onCountUpTo(BlockCounter counter);
+    public void onCountUpTo(BlockCounter counter) {
+        if (counter.FOUND) {
+            return;
+        }
+        if (counter.END == this) {
+            counter.FOUND = true;
+            return;
+        }
+        counter.setCurrent(this);
+        counter.addCount(countBytes());
+    }
     public void readBytes(BlockReader reader) throws IOException {
     }
     public final int writeBytes(OutputStream stream) throws IOException {

@@ -53,7 +53,7 @@ public class OffsetReferenceList<T extends OffsetItem> extends BlockList<T> impl
     }
 
     @Override
-    protected void refreshChildes() {
+    protected void refreshBlockElements() {
     }
 
     @Override

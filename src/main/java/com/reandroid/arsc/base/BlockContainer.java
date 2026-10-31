@@ -32,7 +32,7 @@ public abstract class BlockContainer extends Block implements BlockRefresh {
     protected abstract void onRefreshed();
 
     @Override
-    public final void refresh() {
+    public void refresh() {
         if (isNull()) {
             return;
         }

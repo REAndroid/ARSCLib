@@ -45,6 +45,9 @@ public class InsSparseSwitchData extends InsSwitchPayload<SparseSwitchEntry> {
         CountedBlockList<IntegerItem> elements = new CountedBlockList<>(IntegerItem.CREATOR, elementCount);
         CountedBlockList<SparseSwitchEntryKey> keys = new CountedBlockList<>(SparseSwitchEntryKey.CREATOR, elementCount);
 
+        elements.setHasSameByteSizeEntries(true);
+        keys.setHasSameByteSizeEntries(true);
+        
         setupBlock(1, elementCount);
         setupBlock(2, elements);
         setupBlock(3, keys);
@@ -141,15 +144,19 @@ public class InsSparseSwitchData extends InsSwitchPayload<SparseSwitchEntry> {
     public InsSparseSwitch getSwitch() {
         return (InsSparseSwitch) super.getSwitch();
     }
+
     @Override
-    protected void onPreRefresh() {
+    public void refresh() {
+        elements().refresh();
+        keys().refresh();
         sort();
-        super.onPreRefresh();
+        super.refresh();
     }
+
     void fromPackedSwitchData(PackedSwitchDataList packedSwitchDataList) {
         int length = packedSwitchDataList.size();
         setSize(length);
-        for(int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             get(i).fromPackedSwitch(packedSwitchDataList.get(i));
         }
     }
@@ -158,7 +165,7 @@ public class InsSparseSwitchData extends InsSwitchPayload<SparseSwitchEntry> {
         InsSparseSwitchData switchData = (InsSparseSwitchData) ins;
         int size = switchData.size();
         this.setSize(size);
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             get(i).merge(switchData.get(i));
         }
     }
@@ -169,7 +176,7 @@ public class InsSparseSwitchData extends InsSwitchPayload<SparseSwitchEntry> {
         SmaliPayloadSparseSwitch smaliPayload = (SmaliPayloadSparseSwitch) smaliInstruction;
         int count = smaliPayload.getCount();
         this.setSize(count);
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             get(i).fromSmali(smaliPayload.getEntry(i));
         }
         mSortRequired = true;
@@ -190,7 +197,7 @@ public class InsSparseSwitchData extends InsSwitchPayload<SparseSwitchEntry> {
         writer.append(getSmaliDirective().getName());
         int size = size();
         writer.indentPlus();
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             get(i).append(writer);
         }
         writer.indentMinus();

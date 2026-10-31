@@ -85,9 +85,9 @@ public abstract class PayloadData<T extends PayloadEntry> extends Ins
     }
 
     @Override
-    protected void onPreRefresh() {
+    public void refresh() {
         updateNopAlignment();
-        super.onPreRefresh();
+        super.refresh();
     }
 
     public abstract Iterator<IntegerReference> getReferences();

@@ -41,7 +41,7 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
         setupLast(new AlignItem(true));
     }
     protected Chunk(int initialSize, T headerBlock) {
-        this(initialSize, headerBlock, new SingleBlockContainer<>());
+        this(initialSize, headerBlock, createFirstPlaceHolder());
     }
 
     public AlignItem getAlignment() {
@@ -89,4 +89,12 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
     public String toString() {
         return getClass().getSimpleName() +  ": " + getHeaderBlock();
     }
+
+    protected static SingleBlockContainer<Block> createFirstPlaceHolder() {
+        if (ENABLE_FIRST_PLACE_HOLDER) {
+            return new SingleBlockContainer<>();
+        }
+        return null;
+    }
+    public static boolean ENABLE_FIRST_PLACE_HOLDER;
 }

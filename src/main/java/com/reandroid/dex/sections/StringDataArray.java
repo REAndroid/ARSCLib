@@ -62,7 +62,7 @@ public class StringDataArray extends DataSectionArray<StringData> {
     public void readBytes(BlockReader reader) throws IOException {
     }
     @Override
-    public void readChildes(BlockReader reader) throws IOException {
+    public void readBlockElements(BlockReader reader) throws IOException {
     }
 
 

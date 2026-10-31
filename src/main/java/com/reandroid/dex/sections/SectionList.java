@@ -180,7 +180,11 @@ public class SectionList extends FixedBlockContainer
             add(section);
         }
         if (ownsSection(section)) {
-            section.readBytes(reader);
+            try {
+                section.readBytes(reader);
+            } catch (NullPointerException e) {
+                throw new IOException(section.getSectionType() + " " + e.getMessage(), e);
+            }
         } else {
             ensureMapList(section);
         }

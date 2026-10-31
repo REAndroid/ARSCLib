@@ -40,7 +40,7 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         setupBlock(mStringReference);
     }
     BaseXmlChunk(int initialSize, ChunkType chunkType) {
-        this(initialSize, chunkType, new SingleBlockContainer<>());
+        this(initialSize, chunkType, Chunk.createFirstPlaceHolder());
     }
 
     void onPreRemove() {

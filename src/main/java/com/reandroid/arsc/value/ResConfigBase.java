@@ -262,12 +262,10 @@ class ResConfigBase extends FixedBlockContainer {
     }
 
     @Override
-    protected void onPreRefresh() {
+    public void refresh() {
         configSize().set(countBytes());
-        super.onPreRefresh();
     }
-    protected void onRefreshed() {
-    }
+
     int compareLocale(ResConfigBase config) {
         ResConfigValueContainer valuesContainer = this.valueContainer();
         ResConfigValueContainer configContainer = config.valueContainer();

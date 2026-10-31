@@ -34,7 +34,7 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer {
     
     @Override
     protected void refreshBlocks() {
-        T block = this.block;
+        Object block = this.block;
         if (block instanceof BlockRefresh) {
             ((BlockRefresh)block).refresh();
         }

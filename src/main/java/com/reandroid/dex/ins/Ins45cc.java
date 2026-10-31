@@ -125,8 +125,8 @@ public class Ins45cc extends Size8Ins implements RegistersSet, DualKeyReference 
     }
 
     @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
+    public void refresh() {
+        super.refresh();
         reference2.refresh();
     }
 

@@ -56,6 +56,10 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         this(1, opcode);
     }
 
+    @Override
+    public void refresh() {
+    }
+
     public MethodDef getMethodDef() {
         InstructionList instructionList = getInstructionList();
         if (instructionList != null) {

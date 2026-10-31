@@ -32,17 +32,17 @@ public class PackedSwitchDataList extends CountedBlockList<PackedSwitchEntry>
 
     private final InsPackedSwitchData switchData;
 
-    public PackedSwitchDataList(InsPackedSwitchData switchData, IntegerReference itemCount){
+    public PackedSwitchDataList(InsPackedSwitchData switchData, IntegerReference itemCount) {
         super(InsPackedSwitchData.CREATOR, itemCount);
         this.switchData = switchData;
     }
 
-    public int getFirstKey(){
+    public int getFirstKey() {
         return switchData.getFirstKey();
     }
-    public int getBaseAddress(){
+    public int getBaseAddress() {
         InsPackedSwitch packedSwitch = switchData.getSwitch();
-        if(packedSwitch == null){
+        if (packedSwitch == null) {
             return 0;
         }
         return packedSwitch.getAddress();
@@ -54,12 +54,13 @@ public class PackedSwitchDataList extends CountedBlockList<PackedSwitchEntry>
         this.switchData.onDataChange(index, value);
     }
 
-    public void merge(PackedSwitchDataList dataList){
+    public void merge(PackedSwitchDataList dataList) {
         int size = dataList.size();
         setSize(size);
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             get(i).merge(dataList.get(i));
         }
+        getCountReference().set(size);
     }
     public void fromSmali(SmaliPayloadPackedSwitch smali) {
         SmaliSet<SmaliPackedSwitchEntry> entries = smali.getEntries();
@@ -68,6 +69,7 @@ public class PackedSwitchDataList extends CountedBlockList<PackedSwitchEntry>
         for (int i = 0; i < size; i++) {
             get(i).fromSmali(entries.get(i));
         }
+        getCountReference().set(size);
     }
     public void toSmali(SmaliPayloadPackedSwitch smali) {
         int size = this.size();
@@ -79,7 +81,7 @@ public class PackedSwitchDataList extends CountedBlockList<PackedSwitchEntry>
     @Override
     public void append(SmaliWriter writer) throws IOException {
         int size = size();
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             get(i).append(writer);
         }
     }
@@ -89,4 +91,8 @@ public class PackedSwitchDataList extends CountedBlockList<PackedSwitchEntry>
         return iterator();
     }
 
+    @Override
+    protected boolean hasSameByteSizeEntries() {
+        return true;
+    }
 }

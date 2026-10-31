@@ -62,6 +62,10 @@ public class StyleItemList extends OffsetBlockList<StyleItem> {
         super.onPreRemove(item);
     }
 
+    @Override
+    protected void refreshBlockElements() {
+    }
+
     public void linkStyleStringsInternal() {
         if (!stringsLinked) {
             stringsLinked = true;

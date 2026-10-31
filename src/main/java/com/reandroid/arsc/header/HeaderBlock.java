@@ -111,13 +111,10 @@ public class HeaderBlock extends ExpandableBlockContainer implements DirectStrea
     }
 
     @Override
-    protected void onRefreshed() {
-        // Not required, the parent should call refreshHeader()
-    }
-    @Override
-    protected void refreshBlocks() {
+    public void refresh() {
         // Not required
     }
+
     /**
      * Prints bytes in hex for debug/testing
      * */

@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.common.Mergeable;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.IdUsageIterator;
@@ -40,7 +41,8 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class InsTryBlock extends FixedDexContainerWithTool implements
-        Creator<InsTryItem>, Iterable<InsTryItem>, InstructionLabelSet, IdUsageIterator {
+        Creator<InsTryItem>, Mergeable<InsTryBlock>, Iterable<InsTryItem>,
+        InstructionLabelSet, IdUsageIterator {
 
     private final CodeItem codeItem;
     private HandlerOffsetArray handlerOffsetArray;
@@ -269,7 +271,7 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
         this.tryItemsCount.readBytes(reader);
         readUnknownBytes(reader);
         this.tryItemArray.setSize(handlerOffsetArray.size());
-        this.tryItemArray.readChildes(reader);
+        this.tryItemArray.readBlockElements(reader);
         this.positionAlign.readBytes(reader);
     }
     private void setUnknownBytes(int count) {
@@ -414,7 +416,11 @@ public class InsTryBlock extends FixedDexContainerWithTool implements
         }
         return result;
     }
+    @Override
     public void merge(InsTryBlock tryBlock) {
+        if (tryBlock == null || tryBlock == this) {
+            return;
+        }
         boolean is_null = tryBlock.isNull();
         setNull(is_null);
         if (is_null) {
