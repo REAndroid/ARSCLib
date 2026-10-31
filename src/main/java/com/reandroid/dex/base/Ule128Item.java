@@ -42,10 +42,10 @@ public class Ule128Item extends Le128 implements IntegerReference {
 
     @Override
     protected int readLe128(BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         int value = readUleb128(StreamUtil.createByteReader(reader), (large ? 5 : 4));
-        int length = reader.getPosition() - position;
-        reader.seek(position);
+        int length = reader.position() - position;
+        reader.position(position);
         setBytesLength(length, false);
         reader.readFully(bytes());
         return value;

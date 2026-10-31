@@ -74,7 +74,7 @@ public class DataSectionArray<T extends DataItem> extends SectionArray<T> {
 
     @Override
     public void readElementBlock(BlockReader reader, T item) throws IOException {
-        int offset = reader.getPosition();
+        int offset = reader.position();
         item.setPosition(offset);
         item.readBytes(reader);
     }

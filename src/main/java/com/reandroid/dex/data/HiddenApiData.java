@@ -183,7 +183,7 @@ class HiddenApiData extends FixedDexContainer
         if(offset == 0){
             throw new IOException("Can not read at zero");
         }
-        reader.seek(offset);
+        reader.position(offset);
         super.readBytes(reader);
     }
     @Override

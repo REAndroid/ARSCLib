@@ -113,7 +113,7 @@ public class PackageBody extends FixedBlockContainer {
         }
     }
     private boolean readNextBlock(InfoHeader infoHeader, BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         ChunkType chunkType = infoHeader.getChunkType();
         if (chunkType == ChunkType.SPEC || chunkType == ChunkType.TYPE) {
             readSpecOrType(infoHeader, reader);
@@ -128,7 +128,7 @@ public class PackageBody extends FixedBlockContainer {
         } else {
             readUnknownChunk(reader);
         }
-        return position != reader.getPosition();
+        return position != reader.position();
     }
     private void readSpecOrType(InfoHeader infoHeader, BlockReader reader) throws IOException {
         mSpecTypePairArray.getOrCreate(infoHeader.getId()).readBytes(reader);

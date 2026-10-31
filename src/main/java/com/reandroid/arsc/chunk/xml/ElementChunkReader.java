@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.UnknownChunk;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.ArrayCollection;
 
@@ -41,7 +42,7 @@ class ElementChunkReader {
 
     public void read(BlockReader reader) throws IOException {
         while (reader.isAvailable()) {
-            Block block = getNext(reader.readHeaderBlock());
+            Block block = getNext(InfoHeader.read(reader));
             if (block == null) {
                 break;
             }

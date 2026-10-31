@@ -358,7 +358,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
             if (startElement.getAttributeCount().get() == 0) {
                 size = 0;
             } else {
-                size = startElement.getAttributesOffset().get() - reader.getPosition();
+                size = startElement.getAttributesOffset().get() - reader.position();
             }
             setBytesLength(size, false);
             super.readBytes(reader);

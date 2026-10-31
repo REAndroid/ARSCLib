@@ -147,12 +147,12 @@ public class SectionList extends FixedBlockContainer
         readSections(reader, null);
     }
     void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         DexHeader header = getHeader();
         header.getOffsetReference().set(position);
         readSpecialSections(reader);
         readBody(reader, filter);
-        reader.seek(position + header.getFileSize());
+        reader.position(position + header.getFileSize());
     }
     private void readSpecialSections(BlockReader reader) throws IOException {
         getSection(SectionType.HEADER).readBytes(reader);

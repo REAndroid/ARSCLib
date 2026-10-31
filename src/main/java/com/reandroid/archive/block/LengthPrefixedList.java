@@ -102,11 +102,11 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
     private void readElements(BlockReader reader) throws IOException{
         int preserve = bottomContainer.countBytes() + 4;
         while (reader.available() > preserve){
-            int position = reader.getPosition();
+            int position = reader.position();
             T element = newInstance();
             element = add(element);
             element.readBytes(reader);
-            if(position == reader.getPosition()){
+            if(position == reader.position()){
                 break;
             }
         }

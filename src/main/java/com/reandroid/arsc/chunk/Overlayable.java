@@ -18,6 +18,7 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.OverlayableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.json.JSONArray;
@@ -86,7 +87,7 @@ public class Overlayable extends Chunk<OverlayableHeader> implements
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock = reader.readHeaderBlock();
+        HeaderBlock headerBlock = InfoHeader.read(reader);
         checkInvalidChunk(headerBlock);
 
         int size = headerBlock.getChunkSize();
@@ -101,11 +102,11 @@ public class Overlayable extends Chunk<OverlayableHeader> implements
         onChunkLoaded();
     }
     private void readOverlayablePolicies(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock = reader.readHeaderBlock();
+        HeaderBlock headerBlock = InfoHeader.read(reader);
         BlockList<OverlayablePolicy> policyList = this.policyList;
         while (headerBlock != null && headerBlock.getChunkType() == ChunkType.OVERLAYABLE_POLICY) {
             policyList.createNext().readBytes(reader);
-            headerBlock = reader.readHeaderBlock();
+            headerBlock = InfoHeader.read(reader);
         }
     }
 

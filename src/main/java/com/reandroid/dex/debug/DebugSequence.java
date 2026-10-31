@@ -145,7 +145,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         int count = 0;
         while (reader.read() != 0) {
             count++;
@@ -153,7 +153,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         if (count == 0) {
             return;
         }
-        reader.seek(position);
+        reader.position(position);
         BlockList<DebugElementBlock> elementList = unlockElementList();
         unlockElementList().ensureCapacity(count);
         DebugElementType<?> type = readNext(reader);

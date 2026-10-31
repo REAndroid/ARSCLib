@@ -78,7 +78,7 @@ public class InfoHeader extends HeaderBlock {
         int available = reader.available();
         int min = getMinimumSize();
         if (available >= min) {
-            int position = reader.getPosition();
+            int position = reader.position();
             try {
                 Object[] blocks = blocks();
                 for (int i = 0; i < 3; i++) {
@@ -90,7 +90,7 @@ public class InfoHeader extends HeaderBlock {
                 result = true;
             } catch (IOException ignored) {
             }
-            reader.seek(position);
+            reader.position(position);
         }
         return result;
     }
@@ -103,16 +103,11 @@ public class InfoHeader extends HeaderBlock {
         infoHeader.readBytes(inputStream);
         return infoHeader;
     }
-    public static InfoHeader readHeaderBlock(BlockReader blockReader) throws IOException {
-        InfoHeader infoHeader = new InfoHeader();
-        infoHeader.readBytes(blockReader);
-        return infoHeader;
+    public static InfoHeader readHeaderBlock(BlockReader reader) throws IOException {
+        return read(reader);
     }
     public static InfoHeader readHeaderBlock(byte[] bytes) throws IOException {
-        BlockReader reader = new BlockReader(bytes);
-        InfoHeader infoHeader = new InfoHeader();
-        infoHeader.readBytes(reader);
-        return infoHeader;
+        return read(new BlockReader(bytes));
     }
 
     public static InfoHeader read(BlockReader reader) throws IOException {

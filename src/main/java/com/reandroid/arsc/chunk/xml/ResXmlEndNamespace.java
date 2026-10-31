@@ -17,6 +17,7 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.CompareUtil;
 
@@ -45,7 +46,7 @@ public class ResXmlEndNamespace extends ResXmlNamespaceChunk
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock = reader.readHeaderBlock();
+        HeaderBlock headerBlock = InfoHeader.read(reader);
         if (headerBlock.getChunkSize() < 8) {
             super.onReadChildes(reader);
         } else {

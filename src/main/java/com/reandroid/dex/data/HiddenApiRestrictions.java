@@ -121,7 +121,7 @@ public class HiddenApiRestrictions extends DataItem{
         hiddenApiIndexList.readBytes(restrictionsReader);
         hiddenApiDataList.readBytes(restrictionsReader);
         restrictionsReader.close();
-        reader.seek(size);
+        reader.position(size);
     }
     @Override
     public SectionType<HiddenApiRestrictions> getSectionType() {

@@ -89,7 +89,7 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
         boolean noEntry = isNoEntry();
         int offset = getOffset();
         if (!noEntry) {
-            int maximumPosition = reader.getPosition() + reader.available();
+            int maximumPosition = reader.position() + reader.available();
             if (offset < 0 || offset > maximumPosition) {
                 if (!ignoreOutOfRange) {
                     throw new IOException("Offset " + offset + " is out of range " + maximumPosition);
@@ -102,16 +102,16 @@ public abstract class OffsetItem extends BlockItem implements DirectStreamReader
         }
         target.setNull(noEntry);
         if (!noEntry) {
-            int position = reader.getPosition();
-            reader.seek(offset);
+            int position = reader.position();
+            reader.position(offset);
             try {
                 target.readBytes(reader);
             }catch (Exception ex) {
                 throw new IOException("Error at:" + toString() + ex.getMessage() , ex);
             }
-            int current = reader.getPosition();
+            int current = reader.position();
             if (current < position) {
-                reader.seek(position);
+                reader.position(position);
             }
         }
     }

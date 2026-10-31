@@ -224,11 +224,11 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     }
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         reader.readFully(bytes());
-        if(!isCompact()) {
-            reader.seek(position);
-            int size = reader.readUnsignedShort();
+        if (!isCompact()) {
+            reader.position(position);
+            int size = reader.peekUShort();
             setBytesLength(size, false);
             reader.readFully(bytes());
         }

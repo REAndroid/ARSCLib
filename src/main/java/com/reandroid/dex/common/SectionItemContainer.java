@@ -169,7 +169,7 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
             if (!isValidOffset(offset)) {
                 return true;
             }
-            reader.seek(offset);
+            reader.position(offset);
         }
         return false;
     }

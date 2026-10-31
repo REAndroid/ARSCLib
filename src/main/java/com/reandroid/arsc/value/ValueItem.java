@@ -239,17 +239,17 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
     }
     private int initializeBytes(BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         int offset = this.sizeOffset;
         reader.offset(offset);
-        int readSize = reader.readUnsignedShort();
+        int readSize = reader.peekUShort();
         int size = readSize;
         if (size < 8) {
             if (reader.available() >= 8) {
                 size = 8;
             }
         }
-        reader.seek(position);
+        reader.position(position);
         setBytesLength(offset + size, false);
         return readSize;
     }

@@ -878,19 +878,18 @@ public class TableBlock extends Chunk<TableHeader>
 
     public static boolean isResTableBlock(InputStream inputStream) {
         try {
-            HeaderBlock headerBlock= BlockReader.readHeaderBlock(inputStream);
+            HeaderBlock headerBlock = InfoHeader.readHeaderBlock(inputStream);
             return isResTableBlock(headerBlock);
         } catch (IOException ignored) {
             return false;
         }
     }
     public static boolean isResTableBlock(BlockReader blockReader) {
-        if (blockReader==null) {
+        if (blockReader == null) {
             return false;
         }
         try {
-            HeaderBlock headerBlock = blockReader.readHeaderBlock();
-            return isResTableBlock(headerBlock);
+            return isResTableBlock(InfoHeader.read(blockReader));
         } catch (IOException ignored) {
             return false;
         }

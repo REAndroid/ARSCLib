@@ -74,7 +74,7 @@ public class BlockListArray<T extends Block> extends BlockArray<T>
             if (!isValidOffset(offset)) {
                 return true;
             }
-            reader.seek(offset);
+            reader.position(offset);
         }
         return false;
     }
@@ -93,7 +93,7 @@ public class BlockListArray<T extends Block> extends BlockArray<T>
             return;
         }
         PositionedItem positionedItem = (PositionedItem) block;
-        positionedItem.setPosition(reader.getPosition());
+        positionedItem.setPosition(reader.position());
     }
     protected boolean isValidOffset(int offset) {
         if (offset == 0) {

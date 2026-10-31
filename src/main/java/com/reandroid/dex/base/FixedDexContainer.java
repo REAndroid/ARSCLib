@@ -74,7 +74,7 @@ public class FixedDexContainer extends FixedBlockContainer {
             if (!isValidOffset(offset)) {
                 return true;
             }
-            reader.seek(offset);
+            reader.position(offset);
         }
         return false;
     }

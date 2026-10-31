@@ -306,11 +306,11 @@ public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        int maxPosition = reader.getPosition();
+        int maxPosition = reader.position();
 
         int position = getHandlerOffsetArray().getItemsStart()
                 + getHandlerOffset().getOffset();
-        reader.seek(position);
+        reader.position(position);
         this.handlersCount.readBytes(reader);
         int count = this.handlersCount.get();
         boolean hasCatchAll = false;
@@ -328,9 +328,9 @@ public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
         if (hasCatchAll) {
             initCatchAllHandler().readBytes(reader);
         }
-        if (maxPosition > reader.getPosition()) {
+        if (maxPosition > reader.position()) {
             // Should never reach here
-            reader.seek(maxPosition);
+            reader.position(maxPosition);
         }
     }
     @Override

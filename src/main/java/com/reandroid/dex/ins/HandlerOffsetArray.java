@@ -90,7 +90,7 @@ public class HandlerOffsetArray extends CountedBlockList<HandlerOffset> {
     @Override
     public void readBytes(BlockReader reader) throws IOException {
         super.readBytes(reader);
-        itemsStart = reader.getPosition();
+        itemsStart = reader.position();
     }
 
     public void merge(HandlerOffsetArray offsetArray){

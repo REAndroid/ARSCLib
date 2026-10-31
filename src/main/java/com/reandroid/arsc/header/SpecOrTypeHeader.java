@@ -74,9 +74,9 @@ public class SpecOrTypeHeader extends HeaderBlock {
         if (reader.available() < header.countBytes()) {
             throw new IOException("Too few bytes to read spec header, available = " + reader.available());
         }
-        int pos = reader.getPosition();
+        int pos = reader.position();
         header.readBytes(reader);
-        reader.seek(pos);
+        reader.position(pos);
         return header;
     }
 }

@@ -139,9 +139,9 @@ public class TypeHeader extends SpecOrTypeHeader {
         if (reader.available() < typeHeader.getMinimumSize()) {
             throw new IOException("Too few bytes to read type header, available = " + reader.available());
         }
-        int pos = reader.getPosition();
+        int pos = reader.position();
         typeHeader.readBytes(reader);
-        reader.seek(pos);
+        reader.position(pos);
         return typeHeader;
     }
 

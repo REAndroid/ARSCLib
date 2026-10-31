@@ -147,16 +147,16 @@ public class StringData extends DataItem
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        int start = reader.getPosition();
+        int start = reader.position();
         int position = getOffset();
-        reader.seek(position);
+        reader.position(position);
         String text = decodeString(StreamUtil.createByteReader(reader));
-        int length = reader.getPosition() - position;
-        reader.seek(position);
+        int length = reader.position() - position;
+        reader.position(position);
         StringDataContainer container = this.mDataContainer;
         container.setLength(length + 1);
         reader.readFully(container.bytes());
-        reader.seek(start);
+        reader.position(start);
         this.mKey = StringKey.create(text);
     }
 

@@ -395,9 +395,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock> implements Creator<Typ
         if (id != 0 && header.getId() != id) {
             return false;
         }
-        int position = reader.getPosition();
+        int position = reader.position();
         createNext().readBytes(reader);
-        return reader.getPosition() > position;
+        return reader.position() > position;
     }
     public int getHighestEntryId() {
         int result = -1;

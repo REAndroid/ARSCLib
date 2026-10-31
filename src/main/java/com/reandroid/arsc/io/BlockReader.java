@@ -16,23 +16,30 @@
 package com.reandroid.arsc.io;
 
 import com.reandroid.arsc.header.InfoHeader;
-import com.reandroid.arsc.header.SpecHeader;
-import com.reandroid.arsc.header.TypeHeader;
+import com.reandroid.utils.NumbersUtil;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class BlockReader extends InputStream {
-    private final Object mLock = new Object();
 
-    private byte[] BUFFER;
+    private byte[] buffer;
+    private byte[] mOneByte;
+    private boolean mFinished;
+
     private final int mStart;
     private final int mLength;
     private int mPosition;
+
     private boolean mIsClosed;
     private int mMark;
 
     public BlockReader(byte[] buffer, int start, int length) {
-        this.BUFFER = buffer;
+        this.buffer = buffer;
         this.mStart = start;
         this.mLength = length;
         this.mPosition = 0;
@@ -49,165 +56,148 @@ public class BlockReader extends InputStream {
     public BlockReader(File file) throws IOException {
         this(loadBuffer(file));
     }
-    public int readUnsignedShort() throws IOException {
-        return 0x0000ffff & readShort();
+    
+    public int peekUShort() throws IOException {
+        return peekShort() & 0xffff;
     }
-    public short readShort() throws IOException {
-        int pos = getPosition();
-        byte[] bts = new byte[2];
-        readFully(bts);
-        seek(pos);
-        return toShort(bts);
+    public short peekShort() throws IOException {
+        int position = position();
+        byte[] bytes = new byte[2];
+        readFully(bytes);
+        position(position);
+        return toShort(bytes);
     }
-    public int readInteger() throws IOException {
-        int pos = getPosition();
+    public int peekInteger() throws IOException {
+        int position = position();
         byte[] bytes = new byte[4];
         readFully(bytes);
-        seek(pos);
+        position(position);
         return toInt(bytes);
     }
-    public InfoHeader readHeaderBlock() throws IOException {
-        return InfoHeader.read(this);
+    public byte[] buffer() {
+        return buffer;
     }
-    private int toInt(byte[] bytes){
-        return bytes[0] & 0xff |
-                (bytes[1] & 0xff) << 8 |
-                (bytes[2] & 0xff) << 16 |
-                (bytes[3] & 0xff) << 24;
-    }
-    private short toShort(byte[] bytes){
-        return (short) (bytes[0] & 0xff |
-                (bytes[1] & 0xff) << 8);
-    }
-    public byte[] getBuffer(){
-        return BUFFER;
-    }
-    public byte[] getBytes(){
-        int len = length();
-        if(this.BUFFER.length == len){
-            return BUFFER;
+    public byte[] getBytes() {
+        int length = length();
+        byte[] buffer = buffer();
+        if (buffer.length == length) {
+            return buffer;
         }
-        byte[] bytes = new byte[len];
-        if(len==0){
+        byte[] bytes = new byte[length];
+        if (length == 0) {
             return bytes;
         }
-        System.arraycopy(BUFFER, mStart, bytes, 0, len);
+        System.arraycopy(buffer, mStart, bytes, 0, length);
         return bytes;
     }
-    public BlockReader create(int len){
-        return create(getPosition(), len);
+    public BlockReader create(int length) {
+        return create(position(), length);
     }
-    public BlockReader create(int start, int len){
-        int max = start + len;
-        if(len < 0 || max > this.mLength){
-            len = this.mLength - start;
+    public BlockReader create(int start, int length) {
+        int max = start + length;
+        if (length < 0 || max > this.mLength) {
+            length = this.mLength - start;
         }
         start = start + this.mStart;
-        return new BlockReader(BUFFER, start, len);
+        return new BlockReader(buffer(), start, length);
     }
-    public boolean isAvailable(){
-        if(mIsClosed){
-            return false;
-        }
-        return available()>0;
-    }
-    public void offset(int off){
-        int pos=getPosition()+off;
-        seek(pos);
-    }
-    public void seek(int position){
-        if(position < 0){
-            position = 0;
-        }else if(position > length()){
-            position = length();
-        }
-        setPosition(position);
-    }
-    private void setPosition(int position){
-        synchronized (mLock){
-            mPosition = position;
-        }
-    }
-    public int length(){
+
+    public int length() {
         return mLength;
     }
+    public int start() {
+        return mStart;
+    }
+
     public byte[] readBytes(int length) throws IOException {
-        byte[] result = new byte[length];
-        if(length == 0){
-            return result;
-        }
-        int readLength = read(result);
-        if(readLength < 0){
-            throw new EOFException("Finished reading: "+ mPosition);
-        }
-        if(length == readLength){
-            return result;
-        }
-        byte[] bytes = new byte[readLength];
-        System.arraycopy(result, 0, bytes, 0, readLength);
+        byte[] bytes = new byte[length];
+        readFully(bytes);
         return bytes;
     }
-    public int readFully(byte[] bytes) throws IOException{
-        return readFully(bytes, 0, bytes.length);
+    public int readFully(byte[] bytes) throws IOException {
+        int length = bytes.length;
+        if (read(bytes, 0, length) != length) {
+            throw new IOException("Finished reading: " + position());
+        }
+        return length;
     }
-    public int readFully(byte[] bytes, int length) throws IOException{
-        if(length == 0){
+
+    @Override
+    public int read(byte[] bytes) throws IOException {
+        return read(bytes, 0, bytes.length);
+    }
+
+    @Override
+    public int read(byte[] bytes, int start, int length) throws IOException {
+        if (length == 0) {
             return 0;
         }
-        return readFully(bytes, 0, length);
-    }
-    public int readFully(byte[] bytes, int start, int length) throws IOException {
-        if(length == 0){
-            return 0;
+        requireNotClosed();
+        int available = requireNotFinished();
+        if (available <= 0) {
+            return -1;
         }
-        if(mIsClosed){
+        int arrayPosition = mStart + mPosition;
+        length = NumbersUtil.min(length, available);
+        System.arraycopy(buffer(), arrayPosition, bytes, start, length);
+        mPosition += length;
+        return length;
+    }
+    private void requireNotClosed() throws IOException {
+        if (mIsClosed) {
             throw new IOException("Stream is closed");
         }
-        if(mPosition >= mLength){
-            throw new EOFException("Finished reading: "+mPosition);
-        }
-        if(length > bytes.length){
-            length = bytes.length;
-        }
-        synchronized (mLock){
-            int actualPosition = mStart + mPosition;
-            int i;
-            for(i = 0; i < length; i++){
-                bytes[start + i] = BUFFER[actualPosition + i];
-                mPosition ++;
-                if(mPosition >= mLength){
-                    i++;
-                    break;
-                }
-            }
-            return i;
-        }
     }
-    public int getPosition(){
+    private int requireNotFinished() throws IOException {
+        int available = available();
+        if (available > 0) {
+            mFinished = false;
+            return available;
+        } else if (mFinished) {
+            throw new IOException("Finished reading: " + position());
+        } else {
+            mFinished = true;
+        }
+        return available;
+    }
+
+    public int position() {
         return mPosition;
     }
-    public int getActualPosition(){
-        return mStart + mPosition;
+    public void position(int position) {
+        if (position < 0) {
+            position = 0;
+        }
+        int length = length();
+        if (position > length) {
+            position = length;
+        }
+        mPosition = position;
+    }
+    public boolean isAvailable() {
+        if (mIsClosed) {
+            return false;
+        }
+        return available() > 0;
+    }
+    public void offset(int offset) {
+        position(position() + offset);
     }
     @Override
     public int read() throws IOException {
-        if(mIsClosed){
-            throw new IOException("Stream is closed");
+        byte[] oneByte = this.mOneByte;
+        if (oneByte == null) {
+            oneByte = new byte[1];
+            this.mOneByte = oneByte;
         }
-        int i = mPosition;
-        if(i >= mLength){
-            throw new EOFException("Finished reading: "+i);
+        if (read(oneByte, 0, 1) == 1) {
+            return oneByte[0] & 0xff;
         }
-        synchronized (mLock){
-            int actPos = mStart + i;
-            int val = BUFFER[actPos] & 0xff;
-            mPosition ++;
-            return val;
-        }
+        return -1;
     }
     @Override
-    public void mark(int pos){
-        mMark=pos;
+    public void mark(int position) {
+        mMark = position;
     }
     @Override
     public boolean markSupported() {
@@ -215,46 +205,47 @@ public class BlockReader extends InputStream {
     }
 
     @Override
-    public int available(){
-        return mLength-mPosition;
+    public int available() {
+        return mLength - mPosition;
     }
     @Override
-    public void reset() throws IOException{
-        if(mIsClosed){
-            throw new IOException("Can not reset stream is closed");
-        }
-        mPosition=mMark;
+    public void reset() throws IOException {
+        requireNotClosed();
+        position(mMark);
     }
     @Override
-    public void close(){
-        mIsClosed=true;
-        BUFFER=null;
-        mMark=0;
+    public void close() {
+        mIsClosed = true;
+        mPosition = mLength;
+        mMark = 0;
+        buffer = null;
+        mOneByte = null;
     }
     @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": ");
-        if(mIsClosed){
+        if (mIsClosed) {
             builder.append("Closed");
-        }else{
-            int av=available();
-            if(av==0){
+        } else {
+            int available = available();
+            int position = position();
+            if (available == 0) {
                 builder.append("Finished: ");
-                builder.append(getPosition());
-            }else {
-                if(mStart>0){
+                builder.append(position);
+            } else {
+                if (mStart > 0) {
                     builder.append("START=");
                     builder.append(mStart);
                     builder.append(", ACTUAL=");
-                    builder.append(getActualPosition());
+                    builder.append(mStart + position);
                     builder.append(", ");
                 }
                 builder.append("POS=");
-                builder.append(getPosition());
+                builder.append(position());
                 builder.append(", available=");
-                builder.append(av);
+                builder.append(available);
             }
         }
         return builder.toString();
@@ -262,43 +253,80 @@ public class BlockReader extends InputStream {
 
 
     private static byte[] loadBuffer(File file) throws IOException {
-        FileInputStream in=new FileInputStream(file);
-        byte[] result = loadBuffer(in);
+        if (!file.isFile()) {
+            throw new FileNotFoundException("No such file: " + file);
+        }
+        FileInputStream in = new FileInputStream(file);
+        byte[] result = loadBuffer(in, (int) file.length());
         in.close();
         return result;
     }
     private static byte[] loadBuffer(InputStream in) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        byte[] buff=new byte[40960];
-        int len;
-        while((len=in.read(buff))>0){
-            outputStream.write(buff, 0, len);
+        int bufferLength = 40960;
+        byte[] buffer = new byte[bufferLength];
+        int read;
+        while ((read = in.read(buffer, 0, bufferLength)) >= 0) {
+            outputStream.write(buffer, 0, read);
         }
-        if(in instanceof FileInputStream){
+        if (in instanceof FileInputStream) {
             in.close();
         }
         outputStream.close();
         return outputStream.toByteArray();
     }
     private static byte[] loadBuffer(InputStream in, int length) throws IOException {
-        byte[] buff=new byte[length];
-        if(length==0){
-            return buff;
+        byte[] buffer = new byte[length];
+        if (length == 0) {
+            return buffer;
         }
-        int readLength = in.read(buff, 0, length);
-        if(readLength < length){
-            throw new IOException("Read length is less than expected: length="
-                    +length+", read="+readLength);
+        int read = -1;
+        int offset = 0;
+        while (length > 0 && (read = in.read(buffer, offset, length)) >= 0) {
+            length -= read;
+            offset += read;
         }
-        return buff;
+        if (length > 0) {
+            throw new IOException("Too few bytes to read");
+        }
+        return buffer;
     }
-    public static InfoHeader readHeaderBlock(File file) throws IOException{
-        return InfoHeader.readHeaderBlock(file);
+    private static int toInt(byte[] bytes) {
+        return bytes[0] & 0xff |
+                (bytes[1] & 0xff) << 8 |
+                (bytes[2] & 0xff) << 16 |
+                (bytes[3] & 0xff) << 24;
     }
-    public static InfoHeader readHeaderBlock(InputStream inputStream) throws IOException{
+    private static short toShort(byte[] bytes) {
+        return (short) (bytes[0] & 0xff |
+                (bytes[1] & 0xff) << 8);
+    }
+
+    // use InfoHeader.read(reader)
+    @Deprecated
+    public InfoHeader readHeaderBlock() throws IOException {
+        return InfoHeader.read(this);
+    }
+    // use position(int position)
+    @Deprecated
+    public void seek(int position) {
+        position(position);
+    }
+    @Deprecated
+    public int getActualPosition() {
+        return mStart + position();
+    }
+    // use position()
+    @Deprecated
+    public int getPosition() {
+        return position();
+    }
+    @Deprecated
+    public static InfoHeader readHeaderBlock(InputStream inputStream) throws IOException {
         return InfoHeader.readHeaderBlock(inputStream);
     }
-    public static InfoHeader readHeaderBlock(byte[] bytes) throws IOException{
+    @Deprecated
+    public static InfoHeader readHeaderBlock(byte[] bytes) throws IOException {
         return InfoHeader.readHeaderBlock(bytes);
     }
 }

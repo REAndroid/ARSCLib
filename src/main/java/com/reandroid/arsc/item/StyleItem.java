@@ -255,12 +255,12 @@ public class StyleItem extends BlockListWithFooter<StyleSpan> implements
     }
 
     private static boolean isEndBlock(BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         int index = 0;
         while (index < 4 && reader.read() == 0xff) {
             index ++;
         }
-        reader.seek(position);
+        reader.position(position);
         return index == 4;
     }
     static final class StyleIndexReference implements WeakStringReference {

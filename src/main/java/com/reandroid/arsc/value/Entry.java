@@ -638,10 +638,10 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         this.mTableEntry = null;
     }
     private TableEntry<?, ?> createTableEntry(BlockReader reader) throws IOException {
-        int startPosition = reader.getPosition();
+        int startPosition = reader.position();
         reader.offset(2);
-        boolean is_complex = (0x0001 & reader.readShort()) == 0x0001;
-        reader.seek(startPosition);
+        boolean is_complex = (0x0001 & reader.peekShort()) == 0x0001;
+        reader.position(startPosition);
         return createTableEntry(is_complex);
     }
     private TableEntry<?, ?> createTableEntry(boolean is_complex) {

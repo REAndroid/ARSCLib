@@ -21,6 +21,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
@@ -281,14 +282,14 @@ public class SpecTypePair extends FixedBlockContainer
 
     @Override
     public void readBytes(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock = reader.readHeaderBlock();
+        HeaderBlock headerBlock = InfoHeader.read(reader);
         if (headerBlock == null) {
             return;
         }
         ChunkType chunkType = headerBlock.getChunkType();
         if (chunkType == ChunkType.SPEC) {
             getSpecBlock().readBytes(reader);
-        } else if (chunkType != ChunkType.TYPE){
+        } else if (chunkType != ChunkType.TYPE) {
             throw new IOException("Unexpected block: " + headerBlock
                     + ", Should be: " + ChunkType.SPEC);
         }

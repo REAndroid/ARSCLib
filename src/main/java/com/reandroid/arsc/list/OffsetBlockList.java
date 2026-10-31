@@ -119,12 +119,12 @@ public class OffsetBlockList<T extends Block> extends BlockList<T> {
     public void readBytes(BlockReader reader) throws IOException {
         if (getOffsetReferenceList().size() != 0) {
             int position = getStart().get();
-            reader.seek(position);
+            reader.position(position);
             BlockReader listReader = reader.create(reader.available());
             readBlockElements(listReader);
-            position = position + listReader.getPosition();
+            position = position + listReader.position();
             listReader.close();
-            reader.seek(position);
+            reader.position(position);
         }
     }
 

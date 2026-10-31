@@ -364,24 +364,24 @@ public class InsBlockList extends BlockList<Ins> {
     public void readBytes(BlockReader reader) throws IOException {
         mLockedBy = new Object();
         int insCodeUnits = codeUnitsReference.get();
-        int position = reader.getPosition() + insCodeUnits * 2;
-        int zeroPosition = reader.getPosition();
+        int position = reader.position() + insCodeUnits * 2;
+        int zeroPosition = reader.position();
 
         int count = (insCodeUnits + 1) / 2;
         ensureCapacity(count);
 
-        while (reader.getPosition() < position) {
+        while (reader.position() < position) {
             Opcode<?> opcode = Opcode.read(reader);
             Ins ins = opcode.newInstance();
             add(ins);
             ins.readBytes(reader);
         }
         trimToSize();
-        if (position != reader.getPosition()) {
+        if (position != reader.position()) {
             // should not reach here
-            reader.seek(position);
+            reader.position(position);
         }
-        int totalRead = reader.getPosition() - zeroPosition;
+        int totalRead = reader.position() - zeroPosition;
         blockAlign.align(totalRead);
         reader.offset(blockAlign.size());
         mLocked = false;

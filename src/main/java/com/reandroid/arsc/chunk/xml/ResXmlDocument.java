@@ -4,6 +4,7 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
@@ -388,7 +389,7 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
     }
     public static boolean isResXmlBlock(InputStream inputStream) {
         try {
-            HeaderBlock headerBlock = BlockReader.readHeaderBlock(inputStream);
+            HeaderBlock headerBlock = InfoHeader.readHeaderBlock(inputStream);
             return isResXmlBlock(headerBlock);
         } catch (IOException ignored) {
             return false;
@@ -396,19 +397,18 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
     }
     public static boolean isResXmlBlock(byte[] bytes){
         try {
-            HeaderBlock headerBlock = BlockReader.readHeaderBlock(bytes);
+            HeaderBlock headerBlock = InfoHeader.readHeaderBlock(bytes);
             return isResXmlBlock(headerBlock);
         } catch (IOException ignored) {
             return false;
         }
     }
-    public static boolean isResXmlBlock(BlockReader blockReader){
-        if(blockReader==null){
+    public static boolean isResXmlBlock(BlockReader blockReader) {
+        if (blockReader == null) {
             return false;
         }
         try {
-            HeaderBlock headerBlock = blockReader.readHeaderBlock();
-            return isResXmlBlock(headerBlock);
+            return isResXmlBlock(InfoHeader.read(blockReader));
         } catch (IOException ignored) {
             return false;
         }

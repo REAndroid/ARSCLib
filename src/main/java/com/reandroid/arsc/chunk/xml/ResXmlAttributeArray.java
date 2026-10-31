@@ -133,9 +133,9 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             for (int i = 0; i < size; i++) {
                 ResXmlAttribute attribute = get(i);
                 attribute.setAttributesUnitSize(unitSize);
-                int position = reader.getPosition();
+                int position = reader.position();
                 attribute.readBytes(reader);
-                reader.seek(position + unitSize);
+                reader.position(position + unitSize);
             }
         }
     }

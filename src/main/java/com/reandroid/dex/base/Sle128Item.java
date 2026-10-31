@@ -33,10 +33,10 @@ public class Sle128Item extends Le128 {
     }
     @Override
     protected int readLe128(BlockReader reader) throws IOException {
-        int position = reader.getPosition();
+        int position = reader.position();
         int value = readSleb128(StreamUtil.createByteReader(reader));
-        int length = reader.getPosition() - position;
-        reader.seek(position);
+        int length = reader.position() - position;
+        reader.position(position);
         setBytesLength(length, false);
         reader.readFully(bytes());
         return value;

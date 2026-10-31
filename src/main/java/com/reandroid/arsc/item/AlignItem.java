@@ -60,11 +60,11 @@ public class AlignItem extends BlockItem {
         return size;
     }
     public void alignSafe(BlockReader reader) throws IOException {
-        align(reader.getPosition());
+        align(reader.position());
         int size = size();
         int available = reader.available();
         if (size != 0 && available >= size) {
-            reader.readFully(bytes(), 0, size);
+            reader.read(bytes(), 0, size);
         }
     }
     public void clear() {
