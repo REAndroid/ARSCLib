@@ -54,7 +54,7 @@ public class ApkBundle implements Closeable {
         if (base == null) {
             base = getLargestTableModule();
         }
-        result.merge(base, force);
+        result.merge(base, force, false);
         AndroidManifestBlockMerger manifestMerger = getManifestMerger();
         if (manifestMerger != null) {
             manifestMerger.reset();
@@ -72,7 +72,7 @@ public class ApkBundle implements Closeable {
             if (signatureBlock == null) {
                 signatureBlock = asb;
             }
-            result.merge(module, force);
+            result.merge(module, force, false);
             if (manifestMerger != null) {
                 manifestMerger.merge(module.getAndroidManifest());
             }
@@ -110,18 +110,20 @@ public class ApkBundle implements Closeable {
         }
         return name;
     }
-    private ApkModule getLargestTableModule() {
+    private ApkModule getLargestTableModule() throws IOException {
+        // Compared by entry size, so the tables are not all parsed just to pick one
         ApkModule apkModule = null;
-        int chunkSize = 0;
+        long largest = 0;
         for (ApkModule module:getApkModuleList()) {
             if (!module.hasTableBlock()) {
                 continue;
             }
-            TableBlock tableBlock=module.getTableBlock();
-            int size=tableBlock.getHeaderBlock().getChunkSize();
-            if (apkModule == null || size>chunkSize) {
-                chunkSize=size;
-                apkModule=module;
+            TableBlock loaded = module.getLoadedTableBlock();
+            long size = loaded != null ? loaded.getHeaderBlock().getChunkSize()
+                    : module.getInputSource(TableBlock.FILE_NAME).getLength();
+            if (apkModule == null || size > largest) {
+                largest = size;
+                apkModule = module;
             }
         }
         return apkModule;
