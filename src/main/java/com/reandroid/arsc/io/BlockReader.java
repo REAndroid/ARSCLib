@@ -28,7 +28,7 @@ import java.io.InputStream;
 public class BlockReader extends InputStream {
 
     private byte[] buffer;
-    private byte[] mOneByte;
+    private byte[] mFourBytes;
     private boolean mFinished;
 
     private final int mStart;
@@ -56,21 +56,28 @@ public class BlockReader extends InputStream {
     public BlockReader(File file) throws IOException {
         this(loadBuffer(file));
     }
-    
+
+    public int peekUByte() throws IOException {
+        int position = position();
+        byte[] bytes = getFourBytes();
+        readFully(bytes, 0, 1);
+        position(position);
+        return bytes[0] & 0xff;
+    }
     public int peekUShort() throws IOException {
         return peekShort() & 0xffff;
     }
     public short peekShort() throws IOException {
         int position = position();
-        byte[] bytes = new byte[2];
-        readFully(bytes);
+        byte[] bytes = getFourBytes();
+        readFully(bytes, 0, 2);
         position(position);
         return toShort(bytes);
     }
     public int peekInteger() throws IOException {
         int position = position();
-        byte[] bytes = new byte[4];
-        readFully(bytes);
+        byte[] bytes = getFourBytes();
+        readFully(bytes, 0, 4);
         position(position);
         return toInt(bytes);
     }
@@ -115,13 +122,24 @@ public class BlockReader extends InputStream {
         return bytes;
     }
     public int readFully(byte[] bytes) throws IOException {
-        int length = bytes.length;
-        if (read(bytes, 0, length) != length) {
-            throw new IOException("Finished reading: " + position());
+        return readFully(bytes, 0, bytes.length);
+    }
+    public int readFully(byte[] bytes, int offset, int length) throws IOException {
+        int read;
+        if ((read = read(bytes, offset, length)) != length) {
+            throw new IOException("Few bytes to read: " + read + "/" + length);
         }
         return length;
     }
 
+    @Override
+    public int read() throws IOException {
+        byte[] bytes = getFourBytes();
+        if (read(bytes, 0, 1) == 1) {
+            return bytes[0] & 0xff;
+        }
+        return -1;
+    }
     @Override
     public int read(byte[] bytes) throws IOException {
         return read(bytes, 0, bytes.length);
@@ -143,6 +161,18 @@ public class BlockReader extends InputStream {
         mPosition += length;
         return length;
     }
+
+    private byte[] getFourBytes() {
+        synchronized (this) {
+            byte[] bytes = this.mFourBytes;
+            if (bytes == null) {
+                bytes = new byte[4];
+                this.mFourBytes = bytes;
+            }
+            return bytes;
+        }
+    }
+
     private void requireNotClosed() throws IOException {
         if (mIsClosed) {
             throw new IOException("Stream is closed");
@@ -165,6 +195,9 @@ public class BlockReader extends InputStream {
         return mPosition;
     }
     public void position(int position) {
+        if (mIsClosed) {
+            return;
+        }
         if (position < 0) {
             position = 0;
         }
@@ -182,18 +215,6 @@ public class BlockReader extends InputStream {
     }
     public void offset(int offset) {
         position(position() + offset);
-    }
-    @Override
-    public int read() throws IOException {
-        byte[] oneByte = this.mOneByte;
-        if (oneByte == null) {
-            oneByte = new byte[1];
-            this.mOneByte = oneByte;
-        }
-        if (read(oneByte, 0, 1) == 1) {
-            return oneByte[0] & 0xff;
-        }
-        return -1;
     }
     @Override
     public void mark(int position) {
@@ -219,7 +240,7 @@ public class BlockReader extends InputStream {
         mPosition = mLength;
         mMark = 0;
         buffer = null;
-        mOneByte = null;
+        mFourBytes = null;
     }
     @Override
     public String toString() {
@@ -280,7 +301,7 @@ public class BlockReader extends InputStream {
         if (length == 0) {
             return buffer;
         }
-        int read = -1;
+        int read;
         int offset = 0;
         while (length > 0 && (read = in.read(buffer, offset, length)) >= 0) {
             length -= read;
