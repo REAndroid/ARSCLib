@@ -260,7 +260,7 @@ public class ApkModuleTest {
     private TableBlock createTableBlock(AndroidManifestBlock manifestBlock){
         TableBlock tableBlock = new TableBlock();
         String packageName = manifestBlock.getPackageName();
-        int packageId = 0x7f;
+        int packageId = TestUtils.MAIN_PACKAGE_ID;
         PackageBlock packageBlock = tableBlock.newPackage(
                 packageId, packageName);
         packageBlock.getHeaderBlock().setTypeIdOffset(0);
@@ -636,7 +636,7 @@ public class ApkModuleTest {
     private AndroidManifestBlock createManifest() throws IOException {
         FrameworkApk frameworkApk = AndroidFrameworks.getLatest();
         AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
-        manifestBlock.setPackageName("com.reandroid.arsc");
+        manifestBlock.setPackageName(TestUtils.MAIN_PACKAGE_NAME);
         manifestBlock.setVersionCode(1);
         manifestBlock.setVersionName("1.0");
 

@@ -7,6 +7,23 @@ import java.io.File;
 
 public class TestUtils {
 
+    public static final int MAIN_PACKAGE_ID = 0x7f;
+    public static final String MAIN_PACKAGE_NAME = "com.reandroid.arsc";
+
+    public static String squeezeWhiteSpaces(String s) {
+        if (s == null || s.length() == 0) {
+            return s;
+        }
+        s = s.replace('\n', ' ');
+        s = s.replace('\r', ' ');
+        s = s.replace('\t', ' ');
+        s = s.replace('\f', ' ');
+        s = s.replace('\b', ' ');
+        while (s.contains("  ")) {
+            s = s.replace("  ", " ");
+        }
+        return s;
+    }
     public static File getTesApkDirectory(){
         return new File("test-apk");
     }
