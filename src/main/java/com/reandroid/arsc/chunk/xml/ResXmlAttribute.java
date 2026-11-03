@@ -672,7 +672,7 @@ public class ResXmlAttribute extends AttributeValue implements
             return -1;
         }
         if (id1 != 0) {
-            return CompareUtil.compare(id1, id2);
+            return CompareUtil.compareUnsigned(id1, id2);
         }
         String name1 = getName();
         if (name1 == null) {
