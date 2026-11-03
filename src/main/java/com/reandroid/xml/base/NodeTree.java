@@ -45,6 +45,6 @@ public interface NodeTree<T extends Node> extends Node {
         return iterator(instance, null);
     }
     default <T1 extends Node> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter) {
-        return new InstanceIterator<>(iterator(), instance, filter);
+        return InstanceIterator.of(iterator(), instance, filter);
     }
 }

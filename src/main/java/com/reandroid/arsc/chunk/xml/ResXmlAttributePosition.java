@@ -150,17 +150,22 @@ public class ResXmlAttributePosition extends ShortItem {
         return attribute == null || attribute.isNull() ||
                 attribute.isUndefined() || attribute.getParent() == null;
     }
+    public static boolean isPositionalAttribute(String name, int id) {
+        return getPositionType(name, id) != -1;
+    }
     public static int getPositionType(ResXmlAttribute attribute) {
-        int id = attribute.getNameId();
+        return getPositionType(attribute.getName(), attribute.getNameId());
+    }
+    public static int getPositionType(String name, int id) {
         if (id != 0) {
             if (id == ResXmlAttribute.ATTRIBUTE_RESOURCE_ID_id) {
                 return TYPE_ID;
             }
         } else {
-            if (ResXmlAttribute.ATTRIBUTE_NAME_CLASS.equals(attribute.getName())) {
+            if (ResXmlAttribute.ATTRIBUTE_NAME_CLASS.equals(name)) {
                 return TYPE_CLASS;
             }
-            if (ResXmlAttribute.ATTRIBUTE_NAME_STYLE.equals(attribute.getName())) {
+            if (ResXmlAttribute.ATTRIBUTE_NAME_STYLE.equals(name)) {
                 return TYPE_STYLE;
             }
         }

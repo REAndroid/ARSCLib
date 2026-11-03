@@ -38,6 +38,8 @@ import java.util.Iterator;
 public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         implements JSONConvert<JSONArray> {
 
+    private boolean mPositionalAttributeChanged;
+
     public ResXmlAttributeArray(IntegerReference unitSize, IntegerReference countReference) {
         super(new AttributesCreator(unitSize), countReference);
     }
@@ -47,6 +49,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     }
     @Override
     public boolean sort(Comparator<? super ResXmlAttribute> comparator) {
+        computePositionalAttributes();
         if (super.sort(comparator)) {
             getStartElement().refreshAttributePositions();
             return true;
@@ -55,11 +58,22 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     }
 
     private void computePositionalAttributes() {
-        ResXmlStartElement startElement = getStartElement();
+        if (mPositionalAttributeChanged) {
+            mPositionalAttributeChanged = false;
+            ResXmlStartElement startElement = getStartElement();
 
-        startElement.getIdAttributePosition().computePosition();
-        startElement.getClassAttributePosition().computePosition();
-        startElement.getStyleAttributePosition().computePosition();
+            startElement.getIdAttributePosition().computePosition();
+            startElement.getClassAttributePosition().computePosition();
+            startElement.getStyleAttributePosition().computePosition();
+        }
+    }
+    public void onAttributeNameChanged(String oldName, int oldId, String name, int id) {
+        if (!mPositionalAttributeChanged) {
+            if (oldId != id || !ObjectsUtil.equals(oldName, name)) {
+                mPositionalAttributeChanged = ResXmlAttributePosition.isPositionalAttribute(name, id)
+                        || ResXmlAttributePosition.isPositionalAttribute(oldName, oldId);
+            }
+        }
     }
     private ResXmlAttributePosition getPosition(int positionType) {
         if (positionType != -1) {
@@ -265,7 +279,6 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             for (int i = 0; i < length; i++) {
                 get(start + i).fromJson(json.getJSONObject(i));
             }
-            computePositionalAttributes();
             sort();
         }
     }
@@ -312,7 +325,6 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             }
         }
         if (count != 0) {
-            computePositionalAttributes();
             sort();
         }
     }

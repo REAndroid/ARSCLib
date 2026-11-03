@@ -120,6 +120,12 @@ public interface Namespace {
             return null;
         }
     }
+    static String createUriForPrefix(String prefix) {
+        if (prefix == null) {
+            return URI_RES_AUTO;
+        }
+        return "http://schemas.android.com/apk/res/" + prefix;
+    }
 
     String URI_ANDROID = ObjectsUtil.of("http://schemas.android.com/apk/res/android");
     String URI_RES_AUTO = ObjectsUtil.of("http://schemas.android.com/apk/res-auto");

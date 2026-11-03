@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
@@ -59,10 +60,10 @@ public class ResXmlAttribute extends AttributeValue implements
 
     public ResXmlAttribute(int attributeUnitSize) {
         super(attributeUnitSize, OFFSET_SIZE);
-        byte[] bts = bytes();
-        putInteger(bts, OFFSET_NS, -1);
-        putInteger(bts, OFFSET_NAME, -1);
-        putInteger(bts, OFFSET_STRING, -1);
+        byte[] bytes = bytes();
+        Block.putInteger(bytes, OFFSET_NS, -1);
+        Block.putInteger(bytes, OFFSET_NAME, -1);
+        Block.putInteger(bytes, OFFSET_STRING, -1);
     }
     public ResXmlAttribute() {
         this(20);
@@ -304,27 +305,38 @@ public class ResXmlAttribute extends AttributeValue implements
     }
     @Override
     public void setNameId(int resourceId) {
+        String oldName = getName();
+        int oldResourceId = getNameId();
         ResXmlIDMap xmlIDMap = getResXmlIDMap();
         if (xmlIDMap == null) {
             return;
         }
         ResXmlID xmlID = xmlIDMap.getOrCreate(resourceId);
         setNameReference(xmlID.getIndex());
+        ResXmlAttributeArray attributeArray = getParentInstance(ResXmlAttributeArray.class);
+        if (attributeArray != null) {
+            attributeArray.onAttributeNameChanged(oldName, oldResourceId, getName(), resourceId);
+        }
     }
     @Override
     public void setName(String name, int resourceId) {
-        if (ObjectsUtil.equals(name, getName()) && resourceId == getNameId()) {
+        String oldName = getName();
+        int oldResourceId = getNameId();
+        if (resourceId == oldResourceId && ObjectsUtil.equals(name, oldName)) {
             return;
         }
         unlink(mNameReference);
         unLinkNameId(getResXmlID());
         ResXmlString xmlString = getOrCreateAttributeName(name, resourceId);
-        if (xmlString == null) {
-            return;
+        if (xmlString != null) {
+            setNameReference(xmlString.getIndex());
+            mNameReference = link(OFFSET_NAME);
+            linkNameId();
         }
-        setNameReference(xmlString.getIndex());
-        mNameReference = link(OFFSET_NAME);
-        linkNameId();
+        ResXmlAttributeArray attributeArray = getParentInstance(ResXmlAttributeArray.class);
+        if (attributeArray != null) {
+            attributeArray.onAttributeNameChanged(oldName, oldResourceId, name, resourceId);
+        }
     }
     private void linkStartNameSpace() {
         unLinkStartNameSpace();
