@@ -15,7 +15,6 @@
  */
 package com.reandroid.common;
 
-import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 
@@ -34,16 +33,6 @@ public interface Namespace {
                 name = name.substring(i + 1);
             }
             return name;
-        }
-        public static boolean packageNameMatches(ResourceLibrary lib, String packageName) {
-            if (packageName == null) {
-                return false;
-            }
-            if (PREFIX_ANDROID.equals(lib.getName())) {
-                return PREFIX_ANDROID.equals(packageName);
-            }
-            return packageName.equals(lib.getName())
-                    || packageName.equals(lib.getPrefix());
         }
         public static String createUriForPrefix(String prefix) {
             if (prefix == null) {
@@ -113,27 +102,30 @@ public interface Namespace {
             return isValidPrefix(prefix);
         }
         public static boolean isValidPrefix(String prefix) {
-            if (prefix == null || prefix.length() == 0) {
+            if (prefix == null) {
                 return false;
             }
-            char[] chars = prefix.toCharArray();
-            if (!isValidPrefixChar(chars[0])) {
+            int length = prefix.length();
+            if (length == 0) {
                 return false;
             }
-            for(int i = 1; i < chars.length; i++) {
-                char ch = chars[i];
-                if (isValidPrefixChar(ch) || isValidPrefixSymbol(ch)) {
+            if (!isValidPrefixChar(prefix.charAt(0))) {
+                return false;
+            }
+            for (int i = 1; i < length; i++) {
+                char c = prefix.charAt(i);
+                if (isValidPrefixChar(c) || isValidPrefixSymbol(c)) {
                     continue;
                 }
                 return false;
             }
             return true;
         }
-        public static boolean isValidPrefixChar(char ch) {
+        private static boolean isValidPrefixChar(char ch) {
             return (ch <= 'Z' && ch >= 'A')
                     || (ch <= 'z' && ch >= 'a');
         }
-        public static boolean isValidPrefixSymbol(char ch) {
+        private static boolean isValidPrefixSymbol(char ch) {
             return (ch <= '9' && ch >= '0')
                     || ch == '_';
         }

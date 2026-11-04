@@ -84,7 +84,15 @@ public class LibraryInfo extends FixedBlockContainer implements ResourceLibrary,
     }
     @Override
     public boolean packageNameMatches(String packageName) {
-        return Namespace.Util.packageNameMatches(this, packageName);
+        if (packageName == null) {
+            return false;
+        }
+        String name = getName();
+        if (Namespace.Util.PREFIX_ANDROID.equals(name)) {
+            return Namespace.Util.PREFIX_ANDROID.equals(packageName);
+        }
+        return packageName.equals(name)
+                || packageName.equals(getPrefix());
     }
 
     @Override
