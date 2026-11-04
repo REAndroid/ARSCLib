@@ -79,6 +79,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     private final PackageBody mBody;
 
     private String mPrefix;
+    private String mUri;
     private boolean mHasValidPrefix;
 
     private Object mTag;
@@ -410,6 +411,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     public void setId(int id) {
         getHeaderBlock().packageId().set(id);
         mPrefix = null;
+        mUri = null;
         mHasValidPrefix = false;
     }
     @Override
@@ -419,6 +421,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     public void setName(String name) {
         getHeaderBlock().packageName().set(name);
         mPrefix = null;
+        mUri = null;
         mHasValidPrefix = false;
     }
     @Override
@@ -445,40 +448,35 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     @Override
     public String getUri() {
-        if (isAndroid()) {
-            return Namespace.Util.URI_ANDROID;
-        }
-        if (isNonAndroidMulti()) {
-            return Namespace.Util.createUriForPrefix(getPrefix());
-        }
-        return Namespace.Util.URI_RES_AUTO;
-    }
-    private boolean isNonAndroidMulti() {
-        TableBlock tableBlock = getTableBlock();
-        int size = tableBlock.size();
-        boolean nonAndroid = false;
-        for (int i = 0; i < size; i++) {
-            if (!tableBlock.get(i).isAndroid()) {
-                if (nonAndroid) {
-                    return true;
-                }
-                nonAndroid = true;
+        String uri = this.mUri;
+        if (uri == null) {
+            if (isAndroid()) {
+                uri = Namespace.Util.URI_ANDROID;
+            } else if (isMultiPackage()) {
+                uri = Namespace.Util.createUriForPrefix(getPrefix());
+            } else {
+                uri = Namespace.Util.URI_RES_AUTO;
             }
+            this.mUri = uri;
         }
-        return false;
+        return uri;
     }
     @Override
-    public boolean packageNameMatches(String packageName) {
-        if (packageName == null) {
+    public boolean packageNameMatches(String packageOrUri) {
+        if (packageOrUri == null) {
             return false;
         }
-        if (packageName.equals(getName())) {
+        if (packageOrUri.equals(getName())) {
             return true;
         }
-        if (packageName.equals(getPrefix()) && mHasValidPrefix) {
+        if (packageOrUri.startsWith("http")
+                && packageOrUri.equals(getUri())) {
             return true;
         }
-        return getLibraryList().containsLibrary(packageName);
+        if (packageOrUri.equals(getPrefix()) && mHasValidPrefix) {
+            return true;
+        }
+        return getLibraryList().containsLibrary(packageOrUri);
     }
     private boolean isAndroid() {
         return getId() == 0x01 && Namespace.Util.PREFIX_ANDROID.equals(getName());
