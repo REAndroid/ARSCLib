@@ -379,18 +379,25 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public Iterator<PackageBlock> getPackages(PackageBlock context) {
         PackageBlock current;
+        int size = size();
         if (context == null) {
             current = getCurrentPackage();
         } else {
             current = context;
         }
-        Iterator<PackageBlock> iterator = this.iterator();
-        if (current == null) {
-            return iterator;
+        PackageBlock first = null;
+        if (current != null) {
+            first = get(0);
+        }
+        if (size != 0 && first == current) {
+            return iterator();
+        }
+        if (size == 0) {
+            return SingleIterator.of(current);
         }
         return new CombiningIterator<>(
                 SingleIterator.of(current),
-                new FilterIterator.Except<>(iterator, current)
+                new FilterIterator.Except<>(iterator(), current)
         );
     }
     public void removePackage(PackageBlock packageBlock) {
