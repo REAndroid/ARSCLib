@@ -4,6 +4,7 @@ import com.reandroid.apk.AndroidFrameworks;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.common.Namespace;
 import com.reandroid.xml.XMLFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,7 +21,7 @@ public class ResXmlDocumentTest {
         ResXmlDocument document = new ResXmlDocument();
         ResXmlElement root = document.getOrCreateElement("manifest");
         ResXmlElement child = root.newElement("child");
-        child.setNamespace(ResourceLibrary.URI_RES_AUTO, "prefix");
+        child.setNamespace(Namespace.Util.URI_RES_AUTO, "prefix");
 
         Assert.assertEquals("prefix:child", child.getName(true));
 
@@ -66,8 +67,8 @@ public class ResXmlDocumentTest {
         Assert.assertNotNull(root.searchAttributeByName("package"));
 
         attribute = root.getOrCreateAttribute(
-                ResourceLibrary.URI_RES_AUTO,
-                ResourceLibrary.PREFIX_APP,
+                Namespace.Util.URI_RES_AUTO,
+                Namespace.Util.PREFIX_APP,
                 "attr_1", 0x7f010000);
         attribute.setValueAsBoolean(true);
 
@@ -87,8 +88,8 @@ public class ResXmlDocumentTest {
         Assert.assertNull(root.searchAttributeByName("package"));
 
         attribute = root.getOrCreateAttribute(
-                ResourceLibrary.URI_RES_AUTO,
-                ResourceLibrary.PREFIX_APP,
+                Namespace.Util.URI_RES_AUTO,
+                Namespace.Util.PREFIX_APP,
                 "attr_1", 0x7f010000);
         attribute.setValueAsBoolean(true);
 
@@ -97,14 +98,14 @@ public class ResXmlDocumentTest {
         Assert.assertNull(root.searchAttributeByResourceId(0x7f010000));
 
         attribute = root.getOrCreateAttribute(
-                ResourceLibrary.URI_ANDROID,
-                ResourceLibrary.PREFIX_ANDROID,
+                Namespace.Util.URI_ANDROID,
+                Namespace.Util.PREFIX_ANDROID,
                 "attr_1", 0x7f010000);
         attribute.setValueAsBoolean(true);
 
         attribute = root.getOrCreateAttribute(
-                ResourceLibrary.URI_RES_AUTO,
-                ResourceLibrary.PREFIX_APP,
+                Namespace.Util.URI_RES_AUTO,
+                Namespace.Util.PREFIX_APP,
                 "attr_2", 0x7f010000);
         attribute.setValueAsBoolean(true);
 

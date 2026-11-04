@@ -429,14 +429,14 @@ public class PackageBlock extends Chunk<PackageHeader>
         boolean hasValidPrefix;
         String prefix;
         if (getId() == 0x01) {
-            prefix = ResourceLibrary.PREFIX_ANDROID;
-            hasValidPrefix = ResourceLibrary.PREFIX_ANDROID.equals(getName());
+            prefix = Namespace.Util.PREFIX_ANDROID;
+            hasValidPrefix = Namespace.Util.PREFIX_ANDROID.equals(getName());
         } else {
-            prefix = ResourceLibrary.toPrefix(getName());
-            hasValidPrefix = Namespace.isValidPrefix(prefix)
-                    && !ResourceLibrary.PREFIX_ANDROID.equals(prefix);
+            prefix = Namespace.Util.toPrefix(getName());
+            hasValidPrefix = Namespace.Util.isValidPrefix(prefix)
+                    && !Namespace.Util.PREFIX_ANDROID.equals(prefix);
             if (!hasValidPrefix) {
-                prefix = ResourceLibrary.PREFIX_APP;
+                prefix = Namespace.Util.PREFIX_APP;
             }
         }
         mPrefix = prefix;
@@ -446,12 +446,12 @@ public class PackageBlock extends Chunk<PackageHeader>
     @Override
     public String getUri() {
         if (isAndroid()) {
-            return ResourceLibrary.URI_ANDROID;
+            return Namespace.Util.URI_ANDROID;
         }
         if (isNonAndroidMulti()) {
-            return Namespace.createUriForPrefix(getPrefix());
+            return Namespace.Util.createUriForPrefix(getPrefix());
         }
-        return Namespace.URI_RES_AUTO;
+        return Namespace.Util.URI_RES_AUTO;
     }
     private boolean isNonAndroidMulti() {
         TableBlock tableBlock = getTableBlock();
@@ -481,7 +481,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getLibraryList().containsLibrary(packageName);
     }
     private boolean isAndroid() {
-        return getId() == 0x01 && ResourceLibrary.PREFIX_ANDROID.equals(getName());
+        return getId() == 0x01 && Namespace.Util.PREFIX_ANDROID.equals(getName());
     }
     public TableBlock getTableBlock() {
         Block parent = getParent();

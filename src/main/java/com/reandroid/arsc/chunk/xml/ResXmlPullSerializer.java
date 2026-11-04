@@ -17,6 +17,7 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.common.Namespace;
 import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -164,10 +165,10 @@ public class ResXmlPullSerializer implements XmlSerializer {
         ResXmlNamespace resXmlNamespace = element.getNamespaceForUri(namespace);
         if(resXmlNamespace == null && generatePrefix){
             String prefix;
-            if(namespace.equals(ResourceLibrary.URI_ANDROID)){
-                prefix = ResourceLibrary.PREFIX_ANDROID;
+            if(namespace.equals(Namespace.Util.URI_ANDROID)){
+                prefix = Namespace.Util.PREFIX_ANDROID;
             }else {
-                prefix = ResourceLibrary.PREFIX_APP;
+                prefix = Namespace.Util.PREFIX_APP;
             }
             resXmlNamespace = element.getOrCreateNamespace(namespace, prefix);
         }

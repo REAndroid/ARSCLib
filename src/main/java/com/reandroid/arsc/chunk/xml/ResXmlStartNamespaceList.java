@@ -52,7 +52,7 @@ public class ResXmlStartNamespaceList extends ResXmlChunkList<ResXmlStartNamespa
             if (ObjectsUtil.equals(uri, namespace.getUri())) {
                 if (result == null) {
                     result = namespace;
-                } else if (Namespace.isValidPrefix(namespace.getPrefix())) {
+                } else if (Namespace.Util.isValidPrefix(namespace.getPrefix())) {
                     result = namespace;
                 }
             }
@@ -69,10 +69,10 @@ public class ResXmlStartNamespaceList extends ResXmlChunkList<ResXmlStartNamespa
             return namespace;
         }
         String uri;
-        if (Namespace.PREFIX_ANDROID.equals(prefix)) {
-            uri = Namespace.URI_ANDROID;
+        if (Namespace.Util.PREFIX_ANDROID.equals(prefix)) {
+            uri = Namespace.Util.URI_ANDROID;
         } else {
-            uri = Namespace.URI_RES_AUTO;
+            uri = Namespace.Util.URI_RES_AUTO;
         }
         return getOrCreate(uri, prefix);
     }
@@ -84,7 +84,7 @@ public class ResXmlStartNamespaceList extends ResXmlChunkList<ResXmlStartNamespa
             if (ObjectsUtil.equals(prefix, namespace.getPrefix())) {
                 if (result == null) {
                     result = namespace;
-                } else if (Namespace.isValidUri(namespace.getUri())) {
+                } else if (Namespace.Util.isValidUri(namespace.getUri())) {
                     result = namespace;
                 }
             }
@@ -352,7 +352,7 @@ public class ResXmlStartNamespaceList extends ResXmlChunkList<ResXmlStartNamespa
             }
             name = XMLUtil.splitName(name);
             String value = parser.getAttributeValue(i);
-            if(Namespace.isValidNamespace(value, prefix)){
+            if(Namespace.Util.isValidNamespace(value, prefix)){
                 ensureNamespace(value, name, 0);
             }
         }

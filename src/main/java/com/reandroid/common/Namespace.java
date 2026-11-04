@@ -15,120 +15,144 @@
  */
 package com.reandroid.common;
 
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 
 public interface Namespace {
+
     String getPrefix();
     String getUri();
 
-    static boolean isValidNamespace(String uri, String prefix) {
-        return isValidUri(uri) && isValidPrefix(prefix);
-    }
-    static boolean isValidUri(String uri, int resourceId) {
-        int packageId = (resourceId >> 24 ) & 0xff;
-        if(packageId == 0) {
-            if(StringsUtil.isEmpty(uri)) {
-                return true;
+    class Util {
+        public static String toPrefix(String name) {
+            if (name == null) {
+                return null;
             }
-            return isExternalUri(uri);
-        }
-        if(packageId == 0x1) {
-            return URI_ANDROID.equals(uri);
-        }
-        if(URI_ANDROID.equals(uri) || !isValidUri(uri)) {
-            return false;
-        }
-        return !isExternalUri(uri);
-    }
-    static boolean isValidUri(String uri, String packageName) {
-        if(PREFIX_ANDROID.equals(packageName)) {
-            return URI_ANDROID.equals(uri);
-        }
-        if(URI_ANDROID.equals(uri)) {
-            return false;
-        }
-        return isValidUri(uri);
-    }
-    static boolean isValidUri(String uri) {
-        if(uri == null || uri.length() < 3){
-            return false;
-        }
-        // TODO: Properly check for valid uri
-        return uri.contains("://");
-    }
-    static boolean isExternalUri(String uri) {
-        return uri != null && !uri.contains("schemas.android.com");
-    }
-    static boolean isValidPrefix(String prefix, String packageName) {
-        if(PREFIX_ANDROID.equals(packageName)) {
-            return PREFIX_ANDROID.equals(prefix);
-        }
-        if(PREFIX_ANDROID.equals(prefix)) {
-            return false;
-        }
-        return isValidPrefix(prefix);
-    }
-    static boolean isValidPrefix(String prefix) {
-        if(prefix == null || prefix.length() == 0){
-            return false;
-        }
-        char[] chars = prefix.toCharArray();
-        if(!isValidPrefixChar(chars[0])){
-            return false;
-        }
-        for(int i = 1; i < chars.length; i++){
-            char ch = chars[i];
-            if(isValidPrefixChar(ch) || isValidPrefixSymbol(ch)){
-                continue;
+            int i = name.lastIndexOf('.');
+            if (i > 0) {
+                name = name.substring(i + 1);
             }
-            return false;
+            return name;
         }
-        return true;
-    }
-    static boolean isValidPrefixChar(char ch){
-        return (ch <= 'Z' && ch >= 'A')
-                || (ch <= 'z' && ch >= 'a');
-    }
-    static boolean isValidPrefixSymbol(char ch){
-        return (ch <= '9' && ch >= '0')
-                || ch == '_';
-    }
-    static String prefixForResourceId(int resourceId) {
-        if(resourceId == 0) {
-            return null;
+        public static boolean packageNameMatches(ResourceLibrary lib, String packageName) {
+            if (packageName == null) {
+                return false;
+            }
+            if (PREFIX_ANDROID.equals(lib.getName())) {
+                return PREFIX_ANDROID.equals(packageName);
+            }
+            return packageName.equals(lib.getName())
+                    || packageName.equals(lib.getPrefix());
         }
-        int packageId = (resourceId >> 24) & 0xff;
-        if(packageId == 0x1) {
-            return PREFIX_ANDROID;
-        }else if(packageId != 0){
-            return PREFIX_APP;
-        }else {
-            return null;
+        public static String createUriForPrefix(String prefix) {
+            if (prefix == null) {
+                return URI_RES_AUTO;
+            }
+            return "http://schemas.android.com/apk/res/" + prefix;
         }
-    }
-    static String uriForResourceId(int resourceId) {
-        if(resourceId == 0) {
-            return null;
+        public static String uriForResourceId(int resourceId) {
+            if (resourceId == 0) {
+                return null;
+            }
+            int packageId = (resourceId >> 24) & 0xff;
+            if (packageId == 0x1) {
+                return URI_ANDROID;
+            } else if (packageId != 0) {
+                return URI_RES_AUTO;
+            } else {
+                return null;
+            }
         }
-        int packageId = (resourceId >> 24) & 0xff;
-        if(packageId == 0x1) {
-            return URI_ANDROID;
-        }else if(packageId != 0){
-            return URI_RES_AUTO;
-        }else {
-            return null;
-        }
-    }
-    static String createUriForPrefix(String prefix) {
-        if (prefix == null) {
-            return URI_RES_AUTO;
-        }
-        return "http://schemas.android.com/apk/res/" + prefix;
-    }
 
-    String URI_ANDROID = ObjectsUtil.of("http://schemas.android.com/apk/res/android");
-    String URI_RES_AUTO = ObjectsUtil.of("http://schemas.android.com/apk/res-auto");
-    String PREFIX_ANDROID = ObjectsUtil.of("android");
-    String PREFIX_APP = ObjectsUtil.of("app");
+        public static boolean isValidNamespace(String uri, String prefix) {
+            return isValidUri(uri) && isValidPrefix(prefix);
+        }
+        public static boolean isValidUri(String uri, int resourceId) {
+            int packageId = (resourceId >> 24 ) & 0xff;
+            if (packageId == 0) {
+                if (StringsUtil.isEmpty(uri)) {
+                    return true;
+                }
+                return isExternalUri(uri);
+            }
+            if (packageId == 0x1) {
+                return URI_ANDROID.equals(uri);
+            }
+            if (URI_ANDROID.equals(uri) || !isValidUri(uri)) {
+                return false;
+            }
+            return !isExternalUri(uri);
+        }
+        public static boolean isValidUri(String uri, String packageName) {
+            if (PREFIX_ANDROID.equals(packageName)) {
+                return URI_ANDROID.equals(uri);
+            }
+            if (URI_ANDROID.equals(uri)) {
+                return false;
+            }
+            return isValidUri(uri);
+        }
+        public static boolean isValidUri(String uri) {
+            if (uri == null || uri.length() < 3) {
+                return false;
+            }
+            // TODO: Properly check for valid uri
+            return uri.contains("://");
+        }
+        public static boolean isExternalUri(String uri) {
+            return uri != null && !uri.contains("schemas.android.com");
+        }
+        public static boolean isValidPrefix(String prefix, String packageName) {
+            if (PREFIX_ANDROID.equals(packageName)) {
+                return PREFIX_ANDROID.equals(prefix);
+            }
+            if (PREFIX_ANDROID.equals(prefix)) {
+                return false;
+            }
+            return isValidPrefix(prefix);
+        }
+        public static boolean isValidPrefix(String prefix) {
+            if (prefix == null || prefix.length() == 0) {
+                return false;
+            }
+            char[] chars = prefix.toCharArray();
+            if (!isValidPrefixChar(chars[0])) {
+                return false;
+            }
+            for(int i = 1; i < chars.length; i++) {
+                char ch = chars[i];
+                if (isValidPrefixChar(ch) || isValidPrefixSymbol(ch)) {
+                    continue;
+                }
+                return false;
+            }
+            return true;
+        }
+        public static boolean isValidPrefixChar(char ch) {
+            return (ch <= 'Z' && ch >= 'A')
+                    || (ch <= 'z' && ch >= 'a');
+        }
+        public static boolean isValidPrefixSymbol(char ch) {
+            return (ch <= '9' && ch >= '0')
+                    || ch == '_';
+        }
+        public static String prefixForResourceId(int resourceId) {
+            if (resourceId == 0) {
+                return null;
+            }
+            int packageId = (resourceId >> 24) & 0xff;
+            if (packageId == 0x1) {
+                return PREFIX_ANDROID;
+            } else if (packageId != 0) {
+                return PREFIX_APP;
+            } else {
+                return null;
+            }
+        }
+        public static final String URI_ANDROID = ObjectsUtil.of("http://schemas.android.com/apk/res/android");
+        public static final String URI_RES_AUTO = ObjectsUtil.of("http://schemas.android.com/apk/res-auto");
+        public static final String PREFIX_ANDROID = ObjectsUtil.of("android");
+        public static final String PREFIX_APP = ObjectsUtil.of("app");
+    }
 }

@@ -158,10 +158,10 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         updateCountReference();
     }
 
-    public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId){
+    public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId) {
         return getOrCreateAttribute(
-                Namespace.URI_ANDROID,
-                Namespace.PREFIX_ANDROID,
+                Namespace.Util.URI_ANDROID,
+                Namespace.Util.PREFIX_ANDROID,
                 name,
                 resourceId);
     }
@@ -184,13 +184,13 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         }
         return attribute;
     }
-    private ResXmlAttribute searchAttribute(String name, int resourceId){
-        if(resourceId == 0){
+    private ResXmlAttribute searchAttribute(String name, int resourceId) {
+        if (resourceId == 0) {
             return searchAttributeByName(name);
         }
         return searchAttributeByResourceId(resourceId);
     }
-    public ResXmlAttribute searchAttributeByName(String name){
+    public ResXmlAttribute searchAttributeByName(String name) {
         if (name == null) {
             return null;
         }
@@ -199,7 +199,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         for (int i = 0; i < size; i++) {
             ResXmlAttribute attribute = get(i);
             if (attribute.equalsName(name)) {
-                if(attribute.getNameId() != 0){
+                if (attribute.getNameId() != 0) {
                     withIdAttribute = attribute;
                     continue;
                 }
@@ -215,13 +215,13 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         int size = size();
         for (int i = 0; i < size; i++) {
             ResXmlAttribute attribute = get(i);
-            if(resourceId == attribute.getNameId()){
+            if (resourceId == attribute.getNameId()) {
                 return attribute;
             }
         }
         return null;
     }
-    public ResXmlAttribute searchAttribute(String namespace, String name){
+    public ResXmlAttribute searchAttribute(String namespace, String name) {
         int size = size();
         for (int i = 0; i < size; i++) {
             ResXmlAttribute attribute = get(i);
@@ -300,7 +300,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
             String prefix = XMLUtil.splitPrefix(name);
             name = XMLUtil.splitName(name);
             String value = parser.getAttributeValue(i);
-            if (Namespace.isValidNamespace(value, prefix)) {
+            if (Namespace.Util.isValidNamespace(value, prefix)) {
                 continue;
             }
             if (prefix == null) {
@@ -311,7 +311,7 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
                 uri = parser.getAttributeNamespace(i);
                 if (StringsUtil.isEmpty(uri)) {
                     ResXmlNamespace ns = element().getNamespaceForPrefix(prefix);
-                    if(ns != null){
+                    if (ns != null) {
                         uri = ns.getUri();
                     }
                 }

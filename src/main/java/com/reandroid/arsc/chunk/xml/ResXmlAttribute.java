@@ -76,9 +76,9 @@ public class ResXmlAttribute extends AttributeValue implements
         if (getNameId() == 0) {
             if (removeNoIdPrefix) {
                 String uri = getUri();
-                if (!Namespace.isExternalUri(uri) ||
-                        !Namespace.isValidUri(uri) ||
-                        !Namespace.isValidPrefix(getPrefix())) {
+                if (!Namespace.Util.isExternalUri(uri) ||
+                        !Namespace.Util.isValidUri(uri) ||
+                        !Namespace.Util.isValidPrefix(getPrefix())) {
                     return setNamespace(null, null);
                 }
             }
@@ -94,9 +94,9 @@ public class ResXmlAttribute extends AttributeValue implements
         if (nameId == 0) {
             if (removeNoIdPrefix) {
                 String uri = getUri();
-                if (!Namespace.isExternalUri(uri) ||
-                        !Namespace.isValidUri(uri) ||
-                        !Namespace.isValidPrefix(getPrefix())) {
+                if (!Namespace.Util.isExternalUri(uri) ||
+                        !Namespace.Util.isValidUri(uri) ||
+                        !Namespace.Util.isValidPrefix(getPrefix())) {
                     return setNamespace(null, null);
                 }
             }
@@ -124,8 +124,8 @@ public class ResXmlAttribute extends AttributeValue implements
         String uri = getUri();
         String packageName = packageBlock.getName();
         if (!packageBlock.isMultiPackage() &&
-                Namespace.isValidPrefix(prefix, packageName) &&
-                Namespace.isValidUri(uri, packageName)) {
+                Namespace.Util.isValidPrefix(prefix, packageName) &&
+                Namespace.Util.isValidUri(uri, packageName)) {
             return false;
         }
         prefix = packageBlock.getPrefix();
@@ -190,8 +190,8 @@ public class ResXmlAttribute extends AttributeValue implements
         int resourceId = getNameId();
         String prefix = getPrefix();
         if (resourceId == 0) {
-            if (Namespace.isValidPrefix(prefix) &&
-                    Namespace.isExternalUri(getUri())) {
+            if (Namespace.Util.isValidPrefix(prefix) &&
+                    Namespace.Util.isExternalUri(getUri())) {
                 return prefix;
             }
             return null;
@@ -200,11 +200,11 @@ public class ResXmlAttribute extends AttributeValue implements
         if (resourceEntry != null) {
             PackageBlock packageBlock = resourceEntry.getPackageBlock();
             if (packageBlock.isMultiPackage() ||
-                    !Namespace.isValidPrefix(prefix, packageBlock.getName())) {
+                    !Namespace.Util.isValidPrefix(prefix, packageBlock.getName())) {
                 prefix = packageBlock.getPrefix();
             }
         } else {
-            prefix = Namespace.prefixForResourceId(resourceId);
+            prefix = Namespace.Util.prefixForResourceId(resourceId);
         }
         return prefix;
     }
@@ -212,15 +212,15 @@ public class ResXmlAttribute extends AttributeValue implements
         String uri = getUri();
         int resourceId = getNameId();
         if (resourceId == 0) {
-            if (!Namespace.isExternalUri(uri)) {
+            if (!Namespace.Util.isExternalUri(uri)) {
                 uri = null;
             }
             return uri;
         }
         ResourceEntry resourceEntry = resolveName();
-        if (!Namespace.isValidUri(uri, resourceId)) {
+        if (!Namespace.Util.isValidUri(uri, resourceId)) {
             if (resourceEntry == null) {
-                uri = Namespace.uriForResourceId(resourceId);
+                uri = Namespace.Util.uriForResourceId(resourceId);
             } else {
                 uri = resourceEntry.getPackageBlock().getUri();
             }
@@ -730,7 +730,7 @@ public class ResXmlAttribute extends AttributeValue implements
     }
     public ResourceEntry encodeAttributeName(String uri, String prefix, String name) throws IOException {
         setNamespace(uri, prefix);
-        if (!Namespace.isValidUri(uri) || Namespace.isExternalUri(uri)) {
+        if (!Namespace.Util.isValidUri(uri) || Namespace.Util.isExternalUri(uri)) {
             setName(name, 0);
             return null;
         }

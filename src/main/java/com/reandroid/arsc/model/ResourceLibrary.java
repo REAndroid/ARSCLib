@@ -21,25 +21,4 @@ public interface ResourceLibrary extends Namespace {
     int getId();
     String getName();
     boolean packageNameMatches(String packageName);
-
-    static String toPrefix(String name){
-        if(name == null){
-            return null;
-        }
-        int i = name.lastIndexOf('.');
-        if(i > 0){
-            name = name.substring(i + 1);
-        }
-        return name;
-    }
-    static boolean packageNameMatches(ResourceLibrary lib, String packageName){
-        if(packageName == null){
-            return false;
-        }
-        if(PREFIX_ANDROID.equals(lib.getName())){
-            return PREFIX_ANDROID.equals(packageName);
-        }
-        return packageName.equals(lib.getName())
-                || packageName.equals(lib.getPrefix());
-    }
 }

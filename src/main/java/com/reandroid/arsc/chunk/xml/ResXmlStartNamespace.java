@@ -17,8 +17,8 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.ResXmlString;
-import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.ResXmlStringPool;
+import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.StringsUtil;
@@ -173,7 +173,7 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk
             setPrefix("ns" + getIndex());
         }
         if (StringsUtil.isBlank(getUri())) {
-            setUri(ResourceLibrary.URI_RES_AUTO);
+            setUri(Namespace.Util.URI_RES_AUTO);
         }
     }
 

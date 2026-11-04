@@ -25,6 +25,7 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.item.FixedLengthString;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.common.Namespace;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -72,18 +73,18 @@ public class LibraryInfo extends FixedBlockContainer implements ResourceLibrary,
     }
     @Override
     public String getPrefix() {
-        return ResourceLibrary.toPrefix(getName());
+        return Namespace.Util.toPrefix(getName());
     }
     @Override
     public String getUri() {
-        if (getId() == 0x01 && ResourceLibrary.PREFIX_ANDROID.equals(getName())) {
-            return ResourceLibrary.URI_ANDROID;
+        if (getId() == 0x01 && Namespace.Util.PREFIX_ANDROID.equals(getName())) {
+            return Namespace.Util.URI_ANDROID;
         }
-        return ResourceLibrary.URI_RES_AUTO;
+        return Namespace.Util.URI_RES_AUTO;
     }
     @Override
     public boolean packageNameMatches(String packageName) {
-        return ResourceLibrary.packageNameMatches(this, packageName);
+        return Namespace.Util.packageNameMatches(this, packageName);
     }
 
     @Override
