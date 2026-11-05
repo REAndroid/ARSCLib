@@ -12,6 +12,9 @@ import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValueMap;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.xml.XMLFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -115,6 +118,57 @@ public class PackageBlockTest {
 
         array.refresh();
         return attr;
+    }
+
+    @Test
+    public void testParsePublicXml() {
+        TableBlock tableBlock = new TableBlock();
+
+        PackageBlock packageBlock = tableBlock.newPackage(
+                TestUtils.MAIN_PACKAGE_ID, TestUtils.MAIN_PACKAGE_NAME);
+
+        String pubXml = "<?xml version='1.0' encoding='utf-8' ?>\n" +
+                "<resources package=\"" + TestUtils.MAIN_PACKAGE_NAME
+                + "\" id=\"0x" + HexUtil.toHex2(TestUtils.MAIN_PACKAGE_ID) + "\">\n" +
+
+                "  <public id=\"0x7f010000\" type=\"anim\" name=\"name_0\" />\n" +
+                "  <public id=\"0x7f010001\" type=\"anim\" name=\"name_1\" />\n" +
+                "  <public id=\"0x7f010002\" type=\"anim\" name=\"name_2\" />\n" +
+                "  <public id=\"0x7f010003\" type=\"anim\" name=\"name_3\" />\n" +
+
+
+                "  <public id=\"0x7f020000\" type=\"attr\" name=\"name_0\" />\n" +
+                "  <public id=\"0x7f020001\" type=\"attr\" name=\"name_1\" />\n" +
+                "  <public id=\"0x7f020002\" type=\"attr\" name=\"name_2\" />\n" +
+                "  <public id=\"0x7f020003\" type=\"attr\" name=\"name_3\" />\n" +
+
+                "</resources>";
+
+        Exception exception;
+        try {
+            packageBlock.parsePublicXml(XMLFactory.newPullParser(pubXml));
+            exception = null;
+        } catch (Exception e) {
+            exception = e;
+        }
+        Assert.assertNull("Exception parsing public.xml: ", exception);
+
+        Assert.assertEquals("Package name: ", TestUtils.MAIN_PACKAGE_NAME, packageBlock.getName());
+        Assert.assertEquals("Resources types count: ", 2,
+                packageBlock.getSpecTypePairArray().size());
+
+        Assert.assertEquals("Resources count: ", 8,
+                CollectionUtil.count(packageBlock.getResources()));
+
+        ResourceEntry entryAnimName0 = packageBlock.getResource("anim", "name_0");
+        Assert.assertNotNull("Null resource entry anim/name_0", entryAnimName0);
+        Assert.assertEquals("Resource id anim/name_0: ", 0x7f010000, entryAnimName0.getResourceId());
+        Assert.assertEquals("Resource type anim/name_0: ", "anim", entryAnimName0.getType());
+
+        ResourceEntry entryAttrName3 = packageBlock.getResource("attr", "name_3");
+        Assert.assertNotNull("Null resource entry anim/name_3", entryAttrName3);
+        Assert.assertEquals("Resource id attr/name_3: ", 0x7f020003, entryAttrName3.getResourceId());
+        Assert.assertEquals("Resource type attr/name_3: ", "attr", entryAttrName3.getType());
     }
 
     @Test
