@@ -47,6 +47,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     public ApkModuleXmlDecoder(ApkModule apkModule) {
         super(apkModule);
         this.decodedEntries = new HashMap<>();
+        this.keepResPath = false;
     }
 
     public void setKeepResPath(boolean keepResPath) {
@@ -67,7 +68,6 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         decodeTableBlock(mainDirectory, tableBlock);
         decodeResFiles(mainDirectory);
         decodeValues(mainDirectory, tableBlock);
-        decodeExtras(mainDirectory, tableBlock);
     }
 
     private void decodeTableBlock(File mainDirectory, TableBlock tableBlock) throws IOException {
@@ -89,20 +89,18 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
             decodeResFile(mainDirectory, resFile);
         }
     }
-    private void decodeResFile(File mainDirectory, ResFile resFile)
-            throws IOException{
+    private void decodeResFile(File mainDirectory, ResFile resFile) throws IOException {
         if (resFile.isBinaryXml()) {
-            try{
+            try {
                 decodeResXml(mainDirectory, resFile);
-            }catch (Exception ex) {
-                logOrThrow("Failed to decode: "
-                        + resFile.getFilePath(), ex);
+            } catch (Exception ex) {
+                logOrThrow("Failed to decode: " + resFile.getFilePath(), ex);
             }
             return;
         }
         String path = resFile.getFilePath();
-        if (path.endsWith(".xml")) {
-            logMessage("Ignore non bin xml: " + path);
+        if (path.toLowerCase().endsWith(".xml")) {
+            logMessageFew("non-binary-xml","Ignore non binary xml: " + path);
             return;
         }
         decodeResRaw(mainDirectory, resFile);
@@ -164,24 +162,27 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     private void decodePublicXml(File mainDirectory, PackageBlock packageBlock)
             throws IOException {
         File packageDirectory = toPackageDirectory(mainDirectory, packageBlock);
-        logMessage("public.xml: "
-                + packageBlock.getName() + " -> " + packageDirectory.getName());
-        File file = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_RES);
-        file = new File(file, PackageBlock.DIRECTORY_NAME_VALUES);
-        file = new File(file, PackageBlock.FILE_NAME_PUBLIC_XML);
-        packageBlock.serializePublicXml(file);
+
+        logMessage("Decode: " + packageBlock.getName() + " -> "
+                + packageDirectory.getName() + "/../public.xml");
+
+        packageBlock.serializePublicXml(
+                toValuesXmlFile(packageDirectory, PackageBlock.FILE_NAME_PUBLIC_XML)
+        );
+
+        decodeExtras(packageDirectory, packageBlock);
     }
     private void decodeEmptyTable(File mainDirectory, TableBlock tableBlock) throws IOException {
-        logMessage("Decoding empty table ...");
+        logMessage("Decode: empty table ...");
         File packageDirectory = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
         packageDirectory = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_PREFIX + "1");
-        logMessage("Empty public.xml: "
-                + packageDirectory.getName());
-        File file = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_RES);
-        file = new File(file, PackageBlock.DIRECTORY_NAME_VALUES);
-        file = new File(file, PackageBlock.FILE_NAME_PUBLIC_XML);
+
+        logMessage("Empty public.xml: " + packageDirectory.getName());
+
         PackageBlock packageBlock = tableBlock.pickOrEmptyPackage();
-        packageBlock.serializePublicXml(file);
+        packageBlock.serializePublicXml(
+                toValuesXmlFile(packageDirectory, PackageBlock.DIRECTORY_NAME_RES)
+        );
     }
     @Override
     public void decodeAndroidManifest(File mainDirectory)
@@ -215,7 +216,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
             throws IOException {
         AndroidManifestBlock manifestBlock = getApkModule().getAndroidManifest();
         File file = new File(mainDirectory, AndroidManifest.FILE_NAME);
-        logMessage("Decoding: " + file.getName());
+        logMessage("Decode: " + file.getName());
         PackageBlock packageBlock = manifestBlock.getPackageBlock();
         if (packageBlock == null) {
             int packageId = manifestBlock.guessCurrentPackageId();
@@ -231,7 +232,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     private void decodeAndroidManifestBin(File mainDirectory)
             throws IOException {
         File file = new File(mainDirectory, AndroidManifest.FILE_NAME_BIN);
-        logMessage("Decode manifest binary: " + file.getName());
+        logMessage("Decode: manifest binary: " + file.getName());
         ApkModule apkModule = getApkModule();
         InputSource inputSource = apkModule.getManifestOriginalSource();
         if (inputSource == null) {
@@ -257,16 +258,18 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         serializeXml(packageBlock, document, outFile);
     }
     private void addDecodedEntry(Entry entry) {
-        if (entry.isNull()) {
-            return;
+        if (!entry.isNull()) {
+            Integer resourceId = entry.getResourceId();
+            ResConfig resConfig = entry.getResConfig();
+            Set<ResConfig> resConfigSet = decodedEntries.get(resourceId);
+            if (resConfigSet == null) {
+                resConfigSet = new HashSet<>();
+                resConfigSet.add(resConfig);
+                decodedEntries.put(resourceId, resConfigSet);
+            } else {
+                resConfigSet.add(resConfig);
+            }
         }
-        Integer resourceId = entry.getResourceId();
-        Set<ResConfig> resConfigSet = decodedEntries.get(resourceId);
-        if (resConfigSet == null) {
-            resConfigSet = new HashSet<>();
-            decodedEntries.put(resourceId, resConfigSet);
-        }
-        resConfigSet.add(entry.getResConfig());
     }
     private boolean containsDecodedEntry(Entry entry) {
         Set<ResConfig> resConfigSet = decodedEntries.get(entry.getResourceId());
@@ -280,24 +283,18 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         XmlCoder xmlCoder = XmlCoder.getInstance();
         xmlCoder.VALUES_XML.decodeTable(resourcesDir, tableBlock, this);
     }
-
-    private void decodeExtras(File mainDirectory, TableBlock tableBlock) throws IOException {
-        for (PackageBlock packageBlock : tableBlock) {
-            File packageDirectory = toPackageDirectory(mainDirectory, packageBlock);
-            decodeExtras(packageDirectory, packageBlock.getLibraryList());
-            decodeExtras(packageDirectory, packageBlock.getOverlayableList());
-            decodeExtras(packageDirectory, packageBlock.getStagedAliasList());
-        }
+    private void decodeExtras(File packageDirectory, PackageBlock packageBlock) throws IOException {
+        decodeExtra(packageDirectory, packageBlock.getLibraryList());
+        decodeExtra(packageDirectory, packageBlock.getOverlayableList());
+        decodeExtra(packageDirectory, packageBlock.getStagedAliasList());
     }
-    private void decodeExtras(File packageDirectory, ExtraChunkList<?> extraChunkList) throws IOException {
-        if(!extraChunkList.isBlank()) {
-
-            File file = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_RES);
-            file = new File(file, PackageBlock.DIRECTORY_NAME_VALUES);
+    private void decodeExtra(File packageDirectory, ExtraChunkList<?> extraChunkList) throws IOException {
+        if (!extraChunkList.isBlank()) {
             String fileName = extraChunkList.fileNameXml();
-            file = new File(file, fileName);
+            File file = toValuesXmlFile(packageDirectory, fileName);
 
-            logMessage("Decode: " + fileName);
+            logMessage("Decode: " + packageDirectory.getName() + "/../" + fileName);
+
             XmlSerializer serializer = new XmlIndentingSerializer(XMLFactory.newSerializer(file));
             XMLFactory.setEnableIndentAttributes(serializer, false);
             extraChunkList.serialize(serializer);
@@ -307,5 +304,12 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     @Override
     public boolean test(Entry entry) {
         return containsDecodedEntry(entry);
+    }
+
+    private static File toValuesXmlFile(File packageDirectory, String fileName) {
+        File file = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_RES);
+        file = new File(file, PackageBlock.DIRECTORY_NAME_VALUES);
+        file = new File(file, fileName);
+        return file;
     }
 }

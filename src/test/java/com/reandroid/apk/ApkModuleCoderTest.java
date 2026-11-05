@@ -29,6 +29,7 @@ public class ApkModuleCoderTest {
         File dir = TestUtils.getTempDir();
         dir = new File(dir, "decode_xml");
         ApkModuleXmlDecoder decoder = new ApkModuleXmlDecoder(apkModule);
+        decoder.setKeepResPath(false);
         decoder.decode(dir);
         mDir_xml = dir;
     }

@@ -15,15 +15,26 @@
  */
 package com.reandroid.apk;
 
-public abstract class ApkModuleCoder {
-    private APKLogger apkLogger;
-    public ApkModuleCoder() {
+import java.util.HashMap;
+import java.util.Map;
 
+public abstract class ApkModuleCoder {
+
+    private static final int FEW_LOGS_THRESHOLD = 5;
+
+    private APKLogger apkLogger;
+    private Map<Object, Integer> mFewLogsCount;
+
+    public ApkModuleCoder() {
     }
 
     public abstract ApkModule getApkModule();
     public void setApkLogger(APKLogger apkLogger) {
+        if (apkLogger == this.apkLogger) {
+            return;
+        }
         this.apkLogger = apkLogger;
+        this.mFewLogsCount = null;
     }
     APKLogger getApkLogger() {
         return apkLogger;
@@ -33,6 +44,40 @@ public abstract class ApkModuleCoder {
         if (apkLogger != null) {
             apkLogger.logMessage(msg);
         }
+    }
+    void logMessageFew(Object countTag, String msg) {
+        APKLogger logger = this.apkLogger;
+        if (logger == null) {
+            return;
+        }
+        if (countFewLog(countTag)) {
+            logger.logVerbose(msg);
+        } else {
+            logger.logMessage(msg);
+        }
+    }
+    private boolean countFewLog(Object countTag) {
+        if (countTag == null) {
+            return false;
+        }
+        Map<Object, Integer> map = this.mFewLogsCount;
+        if (map == null) {
+            map = new HashMap<>();
+            this.mFewLogsCount = map;
+        }
+        Integer count = map.get(countTag);
+        if (count == null) {
+            count = 1;
+        } else {
+            int i = count;
+            if (i >= FEW_LOGS_THRESHOLD) {
+                return true;
+            }
+            count = i + 1;
+        }
+        map.remove(countTag);
+        map.put(countTag, count);
+        return false;
     }
     void logError(String msg, Throwable tr) {
         APKLogger apkLogger = this.apkLogger;
