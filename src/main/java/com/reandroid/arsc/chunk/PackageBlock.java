@@ -461,22 +461,18 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return uri;
     }
-    @Override
-    public boolean packageNameMatches(String packageOrUri) {
-        if (packageOrUri == null) {
+    public boolean matchesNameOrNamespace(String packageOrNamespace) {
+        if (packageOrNamespace == null) {
             return false;
         }
-        if (packageOrUri.equals(getName())) {
+        if (packageOrNamespace.equals(getName())) {
             return true;
         }
-        if (packageOrUri.startsWith("http")
-                && packageOrUri.equals(getUri())) {
+        if (packageOrNamespace.startsWith("http")
+                && packageOrNamespace.equals(getUri())) {
             return true;
         }
-        if (packageOrUri.equals(getPrefix()) && mHasValidPrefix) {
-            return true;
-        }
-        return getLibraryList().containsLibrary(packageOrUri);
+        return packageOrNamespace.equals(getPrefix()) && mHasValidPrefix;
     }
     private boolean isAndroid() {
         return getId() == 0x01 && Namespace.Util.PREFIX_ANDROID.equals(getName());

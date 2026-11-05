@@ -357,7 +357,7 @@ public class TableBlock extends Chunk<TableHeader>
             @Override
             public boolean test(PackageBlock packageBlock) {
                 if (packageName != null && packageName.length() > 0) {
-                    return packageBlock.packageNameMatches(packageName);
+                    return packageBlock.matchesNameOrNamespace(packageName);
                 }
                 return TableBlock.this == packageBlock.getTableBlock();
             }
@@ -411,7 +411,7 @@ public class TableBlock extends Chunk<TableHeader>
             @Override
             public boolean test(PackageBlock packageBlock) {
                 if (packageName != null) {
-                    return packageBlock.packageNameMatches(packageName);
+                    return packageBlock.matchesNameOrNamespace(packageName);
                 }
                 return TableBlock.this == packageBlock.getTableBlock();
             }
@@ -439,7 +439,7 @@ public class TableBlock extends Chunk<TableHeader>
             @Override
             public boolean test(PackageBlock packageBlock) {
                 if (packageName != null) {
-                    return packageBlock.packageNameMatches(packageName);
+                    return packageBlock.matchesNameOrNamespace(packageName);
                 }
                 return TableBlock.this == packageBlock.getTableBlock();
             }

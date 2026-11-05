@@ -38,7 +38,7 @@ public class LibraryBlock extends EntriesChunk<LibraryInfo> implements XmlSerial
         int size = size();
         for (int i = 0; i < size; i++) {
             LibraryInfo info = get(i);
-            if (info.packageNameMatches(packageName)) {
+            if (info.matchesNameOrNamespace(packageName)) {
                 return info;
             }
         }

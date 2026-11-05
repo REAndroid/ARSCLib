@@ -20,5 +20,4 @@ import com.reandroid.common.Namespace;
 public interface ResourceLibrary extends Namespace {
     int getId();
     String getName();
-    boolean packageNameMatches(String packageName);
 }
